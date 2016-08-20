@@ -1,0 +1,4 @@
+{:production          true
+ :port                3000
+ :github-access-token "c9323a357c2beeebe4e8d618e0fda47dc9e15f62"
+ :github-user         "kagel"}
