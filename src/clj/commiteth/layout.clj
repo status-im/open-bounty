@@ -20,6 +20,7 @@
       (parser/render-file
         template
         (assoc params
+          :authorize-url (commiteth.github.core/authorize-url)
           :page template
           :csrf-token *anti-forgery-token*
           :servlet-context *app-context*)))

@@ -29,6 +29,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [luminus-nrepl "0.1.4"]
                  [buddy "1.0.0"]
+                 [buddy/buddy-auth "1.1.0"]
                  [luminus-migrations "0.2.6"]
                  [conman "0.6.0"]
                  [org.postgresql/postgresql "9.4.1209"]

@@ -1,6 +1,4 @@
-{:dev                 true
- :port                3000
+{:dev        true
+ :port       3000
  ;; when :nrepl-port is set the application starts the nREPL server on load
- :nrepl-port          7000
- :github-access-token "c9323a357c2beeebe4e8d618e0fda47dc9e15f62"
- :github-user         "kagel"}
+ :nrepl-port 7000}

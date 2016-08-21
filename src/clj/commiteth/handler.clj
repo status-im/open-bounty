@@ -2,6 +2,7 @@
   (:require [compojure.core :refer [routes wrap-routes]]
             [commiteth.layout :refer [error-page]]
             [commiteth.routes.home :refer [home-routes]]
+            [commiteth.routes.redirect :refer [redirect-routes]]
             [commiteth.routes.services :refer [service-routes]]
             [compojure.route :as route]
             [commiteth.env :refer [defaults]]
@@ -17,6 +18,7 @@
     (-> #'home-routes
       (wrap-routes middleware/wrap-csrf)
       (wrap-routes middleware/wrap-formats))
+    #'redirect-routes
     #'service-routes
     (route/not-found
       (:body

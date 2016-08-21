@@ -34,7 +34,7 @@
    [:div.jumbotron
     [:h1 "Welcome to commitETH"]
     [:p [:a.btn.btn-block.btn-social.btn-github
-         {:href "http://github.com"}
+         {:href js/authorizeUrl}
          [:i.fa.fa-github]
          "Sign in with GitHub"]]]])
 
