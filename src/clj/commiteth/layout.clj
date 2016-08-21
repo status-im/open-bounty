@@ -4,7 +4,8 @@
             [markdown.core :refer [md-to-html-string]]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
-            [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]))
+            [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
+            [commiteth.github.core :as github]))
 
 (declare ^:dynamic *identity*)
 (declare ^:dynamic *app-context*)
@@ -20,7 +21,7 @@
       (parser/render-file
         template
         (assoc params
-          :authorize-url (commiteth.github.core/authorize-url)
+          :authorize-url (github/authorize-url)
           :page template
           :csrf-token *anti-forgery-token*
           :servlet-context *app-context*)))
