@@ -11,3 +11,8 @@
   :set-active-page
   (fn [db [_ page]]
     (assoc db :page page)))
+
+(reg-event-db
+  :set-active-user
+  (fn [db [_ user]]
+    (assoc db :user user)))

@@ -15,6 +15,11 @@
        :address nil
        :created (new Date)})))
 
+(defn get-user
+  [login]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-user con-db {:login login})))
+
 (defn exists?
   [login]
   (jdbc/with-db-connection [con-db *db*]

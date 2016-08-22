@@ -1,4 +1,5 @@
 (ns commiteth.db)
 
 (def default-db
-  {:page :home})
+  {:page :home
+   :user nil})

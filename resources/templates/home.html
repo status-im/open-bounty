@@ -22,6 +22,11 @@
     var context = "{{servlet-context}}";
     var csrfToken = "{{csrf-token}}";
     var authorizeUrl = "{{authorize-url}}";
+    var user = "{{login}}";
+    if (user === "") {
+        user = null;
+    }
+    var token = "{{token}}";
 </script>
 {% script "/js/app.js" %}
 </body>

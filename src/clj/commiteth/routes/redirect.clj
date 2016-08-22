@@ -5,15 +5,19 @@
             [commiteth.github.core :as github]
             [commiteth.db.users :as users]
             [commiteth.layout :refer [error-page]]
-            [ring.util.response :as response]))
+            [ring.util.http-response :refer [content-type ok]]
+            [ring.util.response :as response]
+            [commiteth.layout :refer [render]]
+            [cheshire.core :refer [generate-string]]))
 
-(defn- create-user
+(defn- get-or-create-user
   [token]
   (let [user (github/get-user token)
         {email :email
          name  :name
          login :login} user]
-    (if-not (users/exists? login)
+    (or
+      (users/get-user login)
       (users/create-user login name email token))))
 
 (defroutes redirect-routes
@@ -25,6 +29,6 @@
         (:body
           (error-page {:status 401
                        :title  error}))
-        (do
-          (create-user access-token)
-          (response/redirect "/"))))))
+        (let [user (get-or-create-user access-token)]
+          (-> (response/redirect "/")
+            (assoc :session {:identity user})))))))

@@ -18,6 +18,18 @@
                                                 {:href     uri
                                                  :on-click #(reset! collapsed? true)} title]]))
 
+(defn login-link []
+  (let [user (rf/subscribe [:user])]
+    (if-let [login (:login @user)]
+      [:li.pull-right
+       [:span.profile-link (str "Logged in as " login)]
+       [:a.btn.btn-primary.btn-sm {:href "/logout"} "Logout"]]
+      [:li.pull-right
+       [:a.btn.btn-social.btn-github
+        {:href js/authorizeUrl}
+        [:i.fa.fa-github]
+        "Sign in with GitHub"]])))
+
 (defn navbar []
   (r/with-let [collapsed? (r/atom true)]
     [:nav.navbar.navbar-light.bg-faded
@@ -27,16 +39,13 @@
       (when-not @collapsed? {:class "in"})
       [:a.navbar-brand {:href "#/"} "commiteth"]
       [:ul.nav.navbar-nav
-       [nav-link "#/" "Home" :home collapsed?]]]]))
+       [nav-link "#/" "Home" :home collapsed?]
+       [login-link]]]]))
 
 (defn home-page []
   [:div.container
    [:div.jumbotron
-    [:h1 "Welcome to commitETH"]
-    [:p [:a.btn.btn-block.btn-social.btn-github
-         {:href js/authorizeUrl}
-         [:i.fa.fa-github]
-         "Sign in with GitHub"]]]])
+    [:h3 "Welcome to commitETH"]]])
 
 (def pages
   {:home #'home-page})
@@ -69,8 +78,13 @@
 (defn mount-components []
   (r/render [#'page] (.getElementById js/document "app")))
 
+(defn load-user []
+  (when-let [login js/user]
+    (rf/dispatch [:set-active-user {:login login :token js/token}])))
+
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
   (hook-browser-navigation!)
+  (load-user)
   (mount-components))
