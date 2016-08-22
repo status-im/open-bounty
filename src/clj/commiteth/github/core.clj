@@ -1,5 +1,6 @@
 (ns commiteth.github.core
   (:require [tentacles.repos :as repos]
+            [tentacles.users :as users]
             [ring.util.codec :as codec]
             [clj-http.client :as http])
   (:import [java.util UUID]))
@@ -26,9 +27,16 @@
                     :redirect_uri  redirect-uri
                     :state         state}}))
 
+(defn- auth-params
+  [token]
+  {:oauth-token  token
+   :client-id    client-id
+   :client-token client-secret})
+
 (defn list-repos
   [token]
-  (repos/repos
-    {:oauth-token  token
-     :client-id    client-id
-     :client-token client-secret}))
+  (repos/repos (auth-params token)))
+
+(defn get-user
+  [token]
+  (users/me (auth-params token)))
