@@ -4,7 +4,8 @@
             [schema.core :as s]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]))
+            [buddy.auth :refer [authenticated?]]
+            [commiteth.db.users :as users]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -24,43 +25,21 @@
 (defapi service-routes
   {:swagger {:ui   "/swagger-ui"
              :spec "/swagger.json"
-             :data {:info {:version     "1.0.0"
-                           :title       "Sample API"
-                           :description "Sample Services"}}}}
+             :data {:info {:version     "0.1"
+                           :title       "commitETH API"
+                           :description "commitETH API"}}}}
 
   (GET "/authenticated" []
     :auth-rules authenticated?
     :current-user user
     (ok {:user user}))
+
   (context "/api" []
-    :tags ["thingie"]
-
-    (GET "/plus" []
-      :return Long
-      :query-params [x :- Long, {y :- Long 1}]
-      :summary "x+y with query-parameters. y defaults to 1."
-      (ok (+ x y)))
-
-    (POST "/minus" []
-      :return Long
-      :body-params [x :- Long, y :- Long]
-      :summary "x-y with body-parameters."
-      (ok (- x y)))
-
-    (GET "/times/:x/:y" []
-      :return Long
-      :path-params [x :- Long, y :- Long]
-      :summary "x*y with path-parameters"
-      (ok (* x y)))
-
-    (POST "/divide" []
-      :return Double
-      :form-params [x :- Long, y :- Long]
-      :summary "x/y with form-parameters"
-      (ok (/ x y)))
-
-    (GET "/power" []
-      :return Long
-      :header-params [x :- Long, y :- Long]
-      :summary "x^y with header-parameters"
-      (ok (long (Math/pow x y))))))
+    (POST "/user/address" []
+      :auth-rules authenticated?
+      :body-params [user :- String, address :- String]
+      :summary "Update user address"
+      (let [result (users/update-user-address user address)]
+        (if (= 1 result)
+          (ok)
+          (internal-server-error))))))

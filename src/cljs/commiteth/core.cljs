@@ -8,7 +8,8 @@
             [ajax.core :refer [GET POST]]
             [commiteth.ajax :refer [load-interceptors!]]
             [commiteth.handlers]
-            [commiteth.subscriptions])
+            [commiteth.subscriptions]
+            [reagent.core :as reagent])
   (:import goog.History))
 
 (defn nav-link [uri title page collapsed?]
@@ -21,8 +22,9 @@
 (defn login-link []
   (let [user (rf/subscribe [:user])]
     (if-let [login (:login @user)]
-      [:li.pull-right
-       [:span.profile-link (str "Logged in as " login)]
+      [:li.pull-right.p
+       [:span.profile-link "Logged in as "
+        [:a {:href "/#/profile"} login]]
        [:a.btn.btn-primary.btn-sm {:href "/logout"} "Logout"]]
       [:li.pull-right
        [:a.btn.btn-social.btn-github
@@ -43,17 +45,53 @@
        [login-link]]]]))
 
 (defn home-page []
-  [:div.container
-   [:div.jumbotron
-    [:h3 "Welcome to commitETH"]]])
+  [:div
+   [:h3 "Welcome to commitETH"]])
+
+(defn input [{:keys [value-path]}]
+  (let [val  (reagent/atom nil)
+        save #(let [v (-> @val str clojure.string/trim)]
+               (when (seq v)
+                 (rf/dispatch [:assoc-in value-path v])))]
+    (fn [props]
+      [:input.form-control
+       (merge props {:type       "text"
+                     :value      @val
+                     :auto-focus true
+                     :on-blur    save
+                     :on-change  #(reset! val (-> % .-target .-value))})])))
+
+(defn save-address
+  [login address]
+  (fn [_]
+    (rf/dispatch [:save-user-address login address])))
+
+(defn address-settings []
+  (let [user    (rf/subscribe [:user])
+        login   (:login @user)
+        address (rf/subscribe [:address])]
+    (fn []
+      [:div.form-group
+       [:label "Address"]
+       [input {:placeholder "Address"
+               :value-path  [:address]}]
+       [:button.btn.btn-primary.btn-lg
+        {:on-click (save-address login @address)}
+        "Save"]])))
+
+(defn profile-page []
+  [:div.profile-settings
+   [:h1 "Profile"]
+   [address-settings]])
 
 (def pages
-  {:home #'home-page})
+  {:home    #'home-page
+   :profile #'profile-page})
 
 (defn page []
-  [:div
+  [:div.app
    [navbar]
-   [(pages @(rf/subscribe [:page]))]])
+   [:div.container [(pages @(rf/subscribe [:page]))]]])
 
 ;; -------------------------
 ;; Routes
@@ -61,6 +99,8 @@
 
 (secretary/defroute "/" []
   (rf/dispatch [:set-active-page :home]))
+(secretary/defroute "/profile" []
+  (rf/dispatch [:set-active-page :profile]))
 
 ;; -------------------------
 ;; History

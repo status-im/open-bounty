@@ -24,3 +24,8 @@
   [login]
   (jdbc/with-db-connection [con-db *db*]
     (some? (db/get-user con-db {:login login}))))
+
+(defn update-user-address
+  [login address]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-user-address! con-db {:login login :address address})))

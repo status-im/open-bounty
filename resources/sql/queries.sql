@@ -13,7 +13,7 @@ WHERE id = :id;
 -- :name update-user-address! :! :n
 UPDATE users
 SET address = :address
-WHERE id = :id;
+WHERE login = :login;
 
 -- :name get-user :? :1
 -- :doc retrieve a user given the login.

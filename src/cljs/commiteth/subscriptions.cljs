@@ -10,3 +10,8 @@
   :user
   (fn [db _]
     (:user db)))
+
+(reg-sub
+  :address
+  (fn [db _]
+    (:address db)))
