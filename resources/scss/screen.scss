@@ -35,3 +35,10 @@ html, body {
   padding-right: 1em;
   color: rgba(0,0,0,.3);
 }
+
+.navbar-toggler, .nav-item {
+  float: left;
+  display: inline-block;
+  padding-left: 10px;
+  padding-right: 10px;
+}

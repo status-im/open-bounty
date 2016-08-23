@@ -21,13 +21,13 @@
         {:href     uri
          :on-click #(reset! collapsed? true)} title]])))
 
-(defn login-link []
+(defn login-link [collapsed?]
   (let [user (rf/subscribe [:user])]
     (fn []
       (if-let [login (:login @user)]
         [:li.pull-right.p
          [:span.profile-link "Logged in as "
-          [:a {:href "/#/profile"} login]]
+          [:a {:href "/#/profile" :on-click #(reset! collapsed? true)} login]]
          [:a.btn.btn-primary.btn-sm {:href "/logout"} "Logout"]]
         [:li.pull-right
          [:a.btn.btn-social.btn-github
@@ -43,10 +43,9 @@
         {:on-click #(swap! collapsed? not)} "☰"]
        [:div.collapse.navbar-toggleable-xs
         (when-not @collapsed? {:class "in"})
-        [:a.navbar-brand {:href "#/"} "commiteth"]
         [:ul.nav.navbar-nav
          [nav-link "#/" "Home" :home collapsed?]
-         [login-link]]]])))
+         [login-link collapsed?]]]])))
 
 (defn home-page []
   (fn []
