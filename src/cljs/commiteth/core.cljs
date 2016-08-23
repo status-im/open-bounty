@@ -13,40 +13,45 @@
   (:import goog.History))
 
 (defn nav-link [uri title page collapsed?]
-  (let [selected-page (rf/subscribe [:page])] [:li.nav-item
-                                               {:class (when (= page @selected-page) "active")}
-                                               [:a.nav-link
-                                                {:href     uri
-                                                 :on-click #(reset! collapsed? true)} title]]))
+  (let [selected-page (rf/subscribe [:page])]
+    (fn []
+      [:li.nav-item
+       {:class (when (= page @selected-page) "active")}
+       [:a.nav-link
+        {:href     uri
+         :on-click #(reset! collapsed? true)} title]])))
 
 (defn login-link []
   (let [user (rf/subscribe [:user])]
-    (if-let [login (:login @user)]
-      [:li.pull-right.p
-       [:span.profile-link "Logged in as "
-        [:a {:href "/#/profile"} login]]
-       [:a.btn.btn-primary.btn-sm {:href "/logout"} "Logout"]]
-      [:li.pull-right
-       [:a.btn.btn-social.btn-github
-        {:href js/authorizeUrl}
-        [:i.fa.fa-github]
-        "Sign in with GitHub"]])))
+    (fn []
+      (if-let [login (:login @user)]
+        [:li.pull-right.p
+         [:span.profile-link "Logged in as "
+          [:a {:href "/#/profile"} login]]
+         [:a.btn.btn-primary.btn-sm {:href "/logout"} "Logout"]]
+        [:li.pull-right
+         [:a.btn.btn-social.btn-github
+          {:href js/authorizeUrl}
+          [:i.fa.fa-github]
+          "Sign in with GitHub"]]))))
 
 (defn navbar []
   (r/with-let [collapsed? (r/atom true)]
-    [:nav.navbar.navbar-light.bg-faded
-     [:button.navbar-toggler.hidden-sm-up
-      {:on-click #(swap! collapsed? not)} "☰"]
-     [:div.collapse.navbar-toggleable-xs
-      (when-not @collapsed? {:class "in"})
-      [:a.navbar-brand {:href "#/"} "commiteth"]
-      [:ul.nav.navbar-nav
-       [nav-link "#/" "Home" :home collapsed?]
-       [login-link]]]]))
+    (fn []
+      [:nav.navbar.navbar-light.bg-faded
+       [:button.navbar-toggler.hidden-sm-up
+        {:on-click #(swap! collapsed? not)} "☰"]
+       [:div.collapse.navbar-toggleable-xs
+        (when-not @collapsed? {:class "in"})
+        [:a.navbar-brand {:href "#/"} "commiteth"]
+        [:ul.nav.navbar-nav
+         [nav-link "#/" "Home" :home collapsed?]
+         [login-link]]]])))
 
 (defn home-page []
-  [:div
-   [:h3 "Welcome to commitETH"]])
+  (fn []
+    [:div
+     [:h3 "Welcome to commitETH"]]))
 
 (defn input [{:keys [value-path]}]
   (let [val  (reagent/atom nil)
@@ -80,18 +85,20 @@
         "Save"]])))
 
 (defn profile-page []
-  [:div.profile-settings
-   [:h1 "Profile"]
-   [address-settings]])
+  (fn []
+    [:div.profile-settings
+     [:h1 "Profile"]
+     [address-settings]]))
 
 (def pages
   {:home    #'home-page
    :profile #'profile-page})
 
 (defn page []
-  [:div.app
-   [navbar]
-   [:div.container [(pages @(rf/subscribe [:page]))]]])
+  (fn []
+    [:div.app
+     [navbar]
+     [:div.container [(pages @(rf/subscribe [:page]))]]]))
 
 ;; -------------------------
 ;; Routes
