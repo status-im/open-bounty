@@ -29,11 +29,6 @@
                            :title       "commitETH API"
                            :description "commitETH API"}}}}
 
-  (GET "/authenticated" []
-    :auth-rules authenticated?
-    :current-user user
-    (ok {:user user}))
-
   (context "/api" []
     (POST "/user/address" []
       :auth-rules authenticated?
@@ -42,4 +37,8 @@
       (let [result (users/update-user-address user address)]
         (if (= 1 result)
           (ok)
-          (internal-server-error))))))
+          (internal-server-error))))
+    (GET "/user" []
+      :auth-rules authenticated?
+      :current-user user
+      (ok {:user (users/get-user (:login user))}))))

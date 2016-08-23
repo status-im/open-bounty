@@ -21,12 +21,19 @@
 (reg-event-db
   :set-active-user
   (fn [db [_ user]]
+    (dispatch [:load-user-profile])
     (assoc db :user user)))
 
 (reg-event-db
-  :set-user-address
-  (fn [db [_ address]]
-    (assoc db :address address)))
+  :load-user-profile
+  (GET "/api/user"
+    {:headers {"Accept" "application/transit+json"}
+     :handler #(dispatch [:set-user-profile %])}))
+
+(reg-event-db
+  :set-user-profile
+  (fn [db [_ user-profile]]
+    (assoc db :user-profile user-profile)))
 
 (defn save-user-address [params]
   (POST "/api/user/address"

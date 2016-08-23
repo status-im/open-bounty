@@ -12,6 +12,8 @@
     (:user db)))
 
 (reg-sub
-  :address
-  (fn [db _]
-    (:address db)))
+  :get-in
+  (fn [db [_ path] ]
+    (get-in db path)))
+
+(def user-address-path [:user-profile :user :address])
