@@ -5,7 +5,9 @@
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
-            [commiteth.db.users :as users]))
+            [commiteth.db.users :as users]
+            [commiteth.db.repositories :as repositories]
+            [commiteth.github.core :as github]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -41,4 +43,18 @@
     (GET "/user" []
       :auth-rules authenticated?
       :current-user user
-      (ok {:user (users/get-user (:login user))}))))
+      (ok {:user (users/get-user (:login user))}))
+    (GET "/user/repositories" []
+      :auth-rules authenticated?
+      :current-user user
+      (ok {:repositories (github/list-repos (:token user))}))
+    (GET "/repositories" []
+      :auth-rules authenticated?
+      :current-user user
+      (ok (repositories/get-enabled (:login user))))
+    (POST "/repository/toggle" {:keys [params]}
+      :auth-rules authenticated?
+      :current-user user
+      (ok (or
+            (repositories/create params)
+            (repositories/toggle (:id params)))))))

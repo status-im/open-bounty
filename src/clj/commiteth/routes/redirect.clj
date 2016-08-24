@@ -17,7 +17,7 @@
          name  :name
          login :login} user]
     (or
-      (users/get-user login)
+      (users/update-user-token login token)
       (users/create-user login name email token))))
 
 (defroutes redirect-routes

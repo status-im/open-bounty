@@ -29,3 +29,9 @@
   [login address]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-user-address! con-db {:login login :address address})))
+
+(defn update-user-token
+  "Updates user token and returns updated user"
+  [login token]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-user-token! con-db {:login login :token token})))

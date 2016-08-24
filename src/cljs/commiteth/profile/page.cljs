@@ -1,7 +1,8 @@
 (ns commiteth.profile.page
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [input]]
-            [commiteth.subscriptions :refer [user-address-path]]))
+            [commiteth.common :refer [input checkbox]]
+            [commiteth.subscriptions :refer [user-address-path]]
+            [clojure.set :refer [rename-keys]]))
 
 (defn save-address
   [login address]
@@ -21,8 +22,24 @@
         {:on-click (save-address login @address)}
         "Save"]])))
 
+(defn repository-row [repo]
+  (let [repo-id (:id repo)]
+    ^{:key repo-id}
+    [:li.list-group-item
+     [checkbox {:value-path [:enabled-repos repo-id]
+                :on-change  #(rf/dispatch [:toggle-repo repo])}]
+     [:span (:name repo)]]))
+
+(defn repos-list []
+  (let [repos (rf/subscribe [:repos])]
+    (fn []
+      [:ul.list-group
+       (map repository-row @repos)])))
+
 (defn profile-page []
   (fn []
     [:div.profile-settings
-     [:h1 "Profile"]
-     [address-settings]]))
+     [:h3 "Profile"]
+     [address-settings]
+     [:h3 "Repositories"]
+     [repos-list]]))

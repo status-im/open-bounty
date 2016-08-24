@@ -33,9 +33,32 @@
    :client-id    client-id
    :client-token client-secret})
 
+(def repo-fields
+  [:id
+   :name
+   :full_name
+   :description
+   :html_url
+   :has_issues
+   :open_issues
+   :issues_url
+   :fork
+   :created_at
+   :permissions
+   :private])
+
+(def login-field [:owner :login])
+
 (defn list-repos
+  "List all repos managed by the given user."
   [token]
-  (repos/repos (auth-params token)))
+  (->>
+    (map #(merge
+           {:login (get-in % login-field)}
+           (select-keys % repo-fields))
+      (repos/repos (merge (auth-params token) {:type "all"})))
+    (filter #(not (:fork %)))
+    (filter #(-> % :permissions :admin))))
 
 (defn get-user
   [token]

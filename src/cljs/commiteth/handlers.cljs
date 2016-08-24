@@ -22,18 +22,57 @@
   :set-active-user
   (fn [db [_ user]]
     (dispatch [:load-user-profile])
+    (dispatch [:load-user-repos])
+    (dispatch [:load-enabled-repos])
     (assoc db :user user)))
 
 (reg-event-db
   :load-user-profile
-  (GET "/api/user"
-    {:headers {"Accept" "application/transit+json"}
-     :handler #(dispatch [:set-user-profile %])}))
+  (fn [db [_]]
+    (GET "/api/user"
+      {:headers {"Accept" "application/transit+json"}
+       :handler #(dispatch [:set-user-profile %])})
+    db))
 
 (reg-event-db
   :set-user-profile
   (fn [db [_ user-profile]]
     (assoc db :user-profile user-profile)))
+
+(reg-event-db
+  :set-user-repos
+  (fn [db [_ repos]]
+    (assoc db :repos repos)))
+
+(reg-event-db
+  :load-user-repos
+  (fn [db [_]]
+    (GET "/api/user/repositories"
+      {:headers {"Accept" "application/transit+json"}
+       :handler #(dispatch [:set-user-repos (:repositories %)])})
+    db))
+
+(reg-event-db
+  :set-enabled-repos
+  (fn [db [_ repos]]
+    (assoc db :enabled-repos (zipmap repos (repeat true)))))
+
+(reg-event-db
+  :load-enabled-repos
+  (fn [db [_]]
+    (GET "/api/repositories"
+      {:headers {"Accept" "application/transit+json"}
+       :handler #(dispatch [:set-enabled-repos %])})
+    db))
+
+(reg-event-db
+  :toggle-repo
+  (fn [db [_ repo]]
+    (POST "/api/repository/toggle"
+      {:headers {"Accept" "application/transit+json"}
+       :params  (select-keys repo [:id :login :name])
+       :handler #(println %)})
+    db))
 
 (defn save-user-address [params]
   (POST "/api/user/address"

@@ -9,7 +9,8 @@
             [commiteth.ajax :refer [load-interceptors!]]
             [commiteth.handlers]
             [commiteth.subscriptions]
-            [commiteth.profile.page :refer [profile-page]])
+            [commiteth.profile.page :refer [profile-page]]
+            [commiteth.home.page :refer [home-page]])
   (:import goog.History))
 
 (defn nav-link [uri title page collapsed?]
@@ -46,11 +47,6 @@
         [:ul.nav.navbar-nav
          [nav-link "#/" "Home" :home collapsed?]
          [login-link collapsed?]]]])))
-
-(defn home-page []
-  (fn []
-    [:div
-     [:h3 "Welcome to commitETH"]]))
 
 (def pages
   {:home    #'home-page
