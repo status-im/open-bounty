@@ -1,7 +1,15 @@
 (ns commiteth.handlers
   (:require [commiteth.db :as db]
-            [re-frame.core :refer [dispatch reg-event-db]]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
             [ajax.core :refer [GET POST]]))
+
+(reg-fx
+  :http
+  (fn [{:keys [method url on-success params]}]
+    (method url
+      {:headers {"Accept" "application/transit+json"}
+       :handler on-success
+       :params  params})))
 
 (reg-event-db
   :initialize-db
@@ -18,21 +26,21 @@
   (fn [db [_ page]]
     (assoc db :page page)))
 
-(reg-event-db
+(reg-event-fx
   :set-active-user
-  (fn [db [_ user]]
-    (dispatch [:load-user-profile])
-    (dispatch [:load-user-repos])
-    (dispatch [:load-enabled-repos])
-    (assoc db :user user)))
+  (fn [{:keys [db]} [_ user]]
+    {:db         (assoc db :user user)
+     :dispatch-n [[:load-user-profile]
+                  [:load-user-repos]
+                  [:load-enabled-repos]]}))
 
-(reg-event-db
+(reg-event-fx
   :load-user-profile
-  (fn [db [_]]
-    (GET "/api/user"
-      {:headers {"Accept" "application/transit+json"}
-       :handler #(dispatch [:set-user-profile %])})
-    db))
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method     GET
+            :url        "/api/user"
+            :on-success #(dispatch [:set-user-profile %])}}))
 
 (reg-event-db
   :set-user-profile
@@ -44,44 +52,41 @@
   (fn [db [_ repos]]
     (assoc db :repos repos)))
 
-(reg-event-db
+(reg-event-fx
   :load-user-repos
-  (fn [db [_]]
-    (GET "/api/user/repositories"
-      {:headers {"Accept" "application/transit+json"}
-       :handler #(dispatch [:set-user-repos (:repositories %)])})
-    db))
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method     GET
+            :url        "/api/user/repositories"
+            :on-success #(dispatch [:set-user-repos (:repositories %)])}}))
 
 (reg-event-db
   :set-enabled-repos
   (fn [db [_ repos]]
     (assoc db :enabled-repos (zipmap repos (repeat true)))))
 
-(reg-event-db
+(reg-event-fx
   :load-enabled-repos
-  (fn [db [_]]
-    (GET "/api/repositories"
-      {:headers {"Accept" "application/transit+json"}
-       :handler #(dispatch [:set-enabled-repos %])})
-    db))
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method     GET
+            :url        "/api/repositories"
+            :on-success #(dispatch [:set-enabled-repos %])}}))
 
-(reg-event-db
+(reg-event-fx
   :toggle-repo
-  (fn [db [_ repo]]
-    (POST "/api/repository/toggle"
-      {:headers {"Accept" "application/transit+json"}
-       :params  (select-keys repo [:id :login :name])
-       :handler #(println %)})
-    db))
+  (fn [{:keys [db]} [_ repo]]
+    {:db   db
+     :http {:method     POST
+            :url        "/api/repository/toggle"
+            :on-success #(println %)
+            :params     (select-keys repo [:id :login :name])}}))
 
-(defn save-user-address [params]
-  (POST "/api/user/address"
-    {:headers {"Accept" "application/transit+json"}
-     :params  params
-     :handler #(println %)}))
-
-(reg-event-db
+(reg-event-fx
   :save-user-address
-  (fn [db [_ user address]]
-    (save-user-address {:user user :address address})
-    db))
+  (fn [{:keys [db]} [_ user address]]
+    {:db   db
+     :http {:method     POST
+            :url        "/api/user/address"
+            :on-success #(println %)
+            :params     {:user user :address address}}}))
