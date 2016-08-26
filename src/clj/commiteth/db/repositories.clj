@@ -24,3 +24,9 @@
     (jdbc/with-db-connection [con-db *db*]
       (db/get-enabled-repositories con-db {:login login}))
     (mapcat vals)))
+
+(defn update-hook-id
+  "Updates github webhook id for a given repository"
+  [repo-id hook-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-hook-id con-db {:repo_id repo-id :hook_id hook-id})))

@@ -4,7 +4,10 @@
             [commiteth.routes.home :refer [home-routes]]
             [commiteth.routes.redirect :refer [redirect-routes]]
             [commiteth.routes.services :refer [service-routes]]
+            [commiteth.routes.webhooks :refer [webhook-routes]]
             [compojure.route :as route]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [commiteth.env :refer [defaults]]
             [mount.core :as mount]
             [commiteth.middleware :as middleware]))
@@ -19,6 +22,9 @@
       (wrap-routes middleware/wrap-csrf)
       (wrap-routes middleware/wrap-formats))
     #'redirect-routes
+    (-> #'webhook-routes
+      (wrap-routes wrap-json-params)
+      (wrap-routes wrap-keyword-params))
     #'service-routes
     (route/not-found
       (:body

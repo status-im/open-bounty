@@ -22,6 +22,7 @@
                  [org.webjars.bower/tether "1.3.3"]
                  [org.clojure/tools.logging "0.3.1"]
                  [compojure "1.5.1"]
+                 [ring/ring-json "0.4.0"]
                  [ring-webjars "0.1.1"]
                  [ring/ring-defaults "0.2.1"]
                  [mount "0.1.10"]

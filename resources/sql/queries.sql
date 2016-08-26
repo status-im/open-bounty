@@ -37,7 +37,7 @@ WHERE login = :login;
 UPDATE repositories
 SET enabled = NOT enabled
 WHERE repo_id = :repo_id
-RETURNING repo_id, login, repo, enabled;
+RETURNING repo_id, login, repo, enabled, hook_id;
 
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
@@ -56,4 +56,10 @@ RETURNING repo_id, login, repo, enabled;
 -- :doc returns enabled repositories for a given login
 SELECT repo_id
 FROM repositories
-WHERE login = :login AND enabled = TRUE
+WHERE login = :login AND enabled = TRUE;
+
+-- :name update-hook-id :! :n
+-- :doc updates hook_id of a specified repository
+UPDATE repositories
+SET hook_id = :hook_id
+WHERE repo_id = :repo_id;

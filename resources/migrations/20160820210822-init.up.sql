@@ -21,3 +21,11 @@ CREATE UNIQUE INDEX repositories_user_repo_pk ON repositories (login, repo);
 CREATE UNIQUE INDEX repositories_repo_id_pk ON repositories (repo_id);
 CREATE INDEX repositories_login_repo_index ON repositories (login, repo);
 CREATE INDEX repositories_repo_id_index ON repositories (repo_id);
+
+CREATE TABLE issues
+(
+  repo_id  INTEGER NOT NULL,
+  issue_id INTEGER NOT NULL,
+  address  VARCHAR(42),
+  CONSTRAINT issues_repo_id_issue_id_pk PRIMARY KEY (repo_id, issue_id)
+);
