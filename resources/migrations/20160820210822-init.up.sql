@@ -1,31 +1,38 @@
-CREATE TABLE users (
-  id      VARCHAR(40) PRIMARY KEY, -- user id
-  login   VARCHAR(64) UNIQUE NOT NULL, -- github login
-  name    VARCHAR(128), -- user name
-  email   VARCHAR(128), -- user email, if present
-  token   VARCHAR(40)        NOT NULL, -- github oauth token
-  address VARCHAR(42), -- ETH address
-  created TIME -- user created date
+CREATE TABLE users
+(
+  id      INTEGER PRIMARY KEY  NOT NULL,
+  login   VARCHAR(64)          NOT NULL,
+  name    VARCHAR(128),
+  email   VARCHAR(128),
+  token   VARCHAR(40),
+  address VARCHAR(42),
+  created TIME
 );
-CREATE UNIQUE INDEX users_login_key ON users (login);
 
 CREATE TABLE repositories
 (
-  login   VARCHAR(64) NOT NULL, -- github user
-  repo    VARCHAR(64) NOT NULL, -- github repo
-  updated TIME, -- date of the last crawl
-  repo_id INTEGER     NOT NULL, -- github repository id
-  enabled BOOLEAN DEFAULT TRUE
+  repo_id INTEGER PRIMARY KEY  NOT NULL,
+  user_id INTEGER,
+  login   VARCHAR(64)          NOT NULL,
+  repo    VARCHAR(64)          NOT NULL,
+  updated TIME,
+  enabled BOOLEAN DEFAULT TRUE,
+  hook_id INTEGER
 );
-CREATE UNIQUE INDEX repositories_user_repo_pk ON repositories (login, repo);
-CREATE UNIQUE INDEX repositories_repo_id_pk ON repositories (repo_id);
-CREATE INDEX repositories_login_repo_index ON repositories (login, repo);
-CREATE INDEX repositories_repo_id_index ON repositories (repo_id);
 
 CREATE TABLE issues
 (
-  repo_id  INTEGER NOT NULL,
-  issue_id INTEGER NOT NULL,
-  address  VARCHAR(42),
-  CONSTRAINT issues_repo_id_issue_id_pk PRIMARY KEY (repo_id, issue_id)
+  issue_id     INTEGER PRIMARY KEY  NOT NULL,
+  repo_id      INTEGER              NOT NULL,
+  address      VARCHAR(256),
+  issue_number INTEGER,
+  commit_id    VARCHAR(40)
+);
+
+CREATE TABLE pull_requests
+(
+  pr_id   INTEGER PRIMARY KEY  NOT NULL,
+  repo_id INTEGER,
+  user_id INTEGER,
+  parents VARCHAR(4099) -- 100 commit SHAs + 99 commas
 );

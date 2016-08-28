@@ -34,16 +34,16 @@
   (context "/api" []
     (POST "/user/address" []
       :auth-rules authenticated?
-      :body-params [user :- String, address :- String]
+      :body-params [user-id :- String, address :- String]
       :summary "Update user address"
-      (let [result (users/update-user-address user address)]
+      (let [result (users/update-user-address user-id address)]
         (if (= 1 result)
           (ok)
           (internal-server-error))))
     (GET "/user" []
       :auth-rules authenticated?
       :current-user user
-      (ok {:user (users/get-user (:login user))}))
+      (ok {:user (users/get-user (:id user))}))
     (GET "/user/repositories" []
       :auth-rules authenticated?
       :current-user user
@@ -51,7 +51,7 @@
     (GET "/repositories" []
       :auth-rules authenticated?
       :current-user user
-      (ok (repositories/get-enabled (:login user))))
+      (ok (repositories/get-enabled (:id user))))
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?
       :current-user user

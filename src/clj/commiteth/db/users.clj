@@ -1,13 +1,13 @@
 (ns commiteth.db.users
   (:require [commiteth.db.core :refer [*db*] :as db]
             [clojure.java.jdbc :as jdbc])
-  (:import [java.util Date UUID]))
+  (:import [java.util Date]))
 
 (defn create-user
-  [login name email token]
+  [user-id login name email token]
   (jdbc/with-db-connection [con-db *db*]
     (db/create-user! con-db
-      {:id      (str (UUID/randomUUID))
+      {:id      user-id
        :login   login
        :name    name
        :email   email
@@ -16,22 +16,22 @@
        :created (new Date)})))
 
 (defn get-user
-  [login]
+  [user-id]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-user con-db {:login login})))
+    (db/get-user con-db {:id user-id})))
 
 (defn exists?
-  [login]
+  [user-id]
   (jdbc/with-db-connection [con-db *db*]
-    (some? (db/get-user con-db {:login login}))))
+    (some? (db/get-user con-db {:id user-id}))))
 
 (defn update-user-address
-  [login address]
+  [user-id address]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-user-address! con-db {:login login :address address})))
+    (db/update-user-address! con-db {:id user-id :address address})))
 
 (defn update-user-token
   "Updates user token and returns updated user"
-  [login token]
+  [user-id token]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-user-token! con-db {:login login :token token})))
+    (db/update-user-token! con-db {:id user-id :token token})))

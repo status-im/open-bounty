@@ -84,9 +84,9 @@
 
 (reg-event-fx
   :save-user-address
-  (fn [{:keys [db]} [_ user address]]
+  (fn [{:keys [db]} [_ user-id address]]
     {:db   db
      :http {:method     POST
             :url        "/api/user/address"
             :on-success #(println %)
-            :params     {:user user :address address}}}))
+            :params     {:user_id user-id :address address}}}))

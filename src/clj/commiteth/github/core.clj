@@ -41,6 +41,9 @@
    :client-id    client-id
    :client-token client-secret})
 
+(defn- self-auth-params []
+  {:auth (str self ":" self-password)})
+
 (def repo-fields
   [:id
    :name
@@ -85,11 +88,17 @@
 (defn remove-webhook
   [token user repo hook-id]
   (println "removing webhook")
-  (println token user repo hook-id)
   (repos/delete-hook user repo hook-id (auth-params token)))
 
 (defn post-comment
   [user repo issue-id]
   (issues/create-comment user repo issue-id
-    "a comment with an image link to the web service"
-    {:auth (str self ":" self-password)}))
+    "a comment with an image link to the web service" (self-auth-params)))
+
+(defn get-commit
+  [user repo commit-id]
+  (repos/specific-commit user repo commit-id (self-auth-params)))
+
+(defn get-issue-events
+  [user repo issue-id]
+  (issues/issue-events user repo issue-id (self-auth-params)))

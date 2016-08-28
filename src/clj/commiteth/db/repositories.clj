@@ -19,10 +19,10 @@
 
 (defn get-enabled
   "Lists enabled repositories ids for a given login"
-  [login]
+  [user-id]
   (->>
     (jdbc/with-db-connection [con-db *db*]
-      (db/get-enabled-repositories con-db {:login login}))
+      (db/get-enabled-repositories con-db {:user_id user-id}))
     (mapcat vals)))
 
 (defn update-hook-id

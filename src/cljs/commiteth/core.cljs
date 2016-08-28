@@ -85,7 +85,7 @@
 
 (defn load-user []
   (when-let [login js/user]
-    (rf/dispatch [:set-active-user {:login login :token js/token}])))
+    (rf/dispatch [:set-active-user {:login login :id js/userId :token js/token}])))
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])

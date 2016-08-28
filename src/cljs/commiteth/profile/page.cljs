@@ -5,13 +5,13 @@
             [clojure.set :refer [rename-keys]]))
 
 (defn save-address
-  [login address]
+  [user-id address]
   (fn [_]
-    (rf/dispatch [:save-user-address login address])))
+    (rf/dispatch [:save-user-address user-id address])))
 
 (defn address-settings []
   (let [user    (rf/subscribe [:user])
-        login   (:login @user)
+        user-id (:id @user)
         address (rf/subscribe [:get-in user-address-path])]
     (fn []
       [:div.form-group
@@ -19,7 +19,7 @@
        [input {:placeholder "Address"
                :value-path  user-address-path}]
        [:button.btn.btn-primary.btn-lg
-        {:on-click (save-address login @address)}
+        {:on-click (save-address user-id @address)}
         "Save"]])))
 
 (defn repository-row [repo]

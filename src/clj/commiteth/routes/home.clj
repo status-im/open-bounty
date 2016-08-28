@@ -4,8 +4,8 @@
             [ring.util.http-response :as response]
             [clojure.java.io :as io]))
 
-(defn home-page [{login :login token :token}]
-  (layout/render "home.html" {:login login :token token}))
+(defn home-page [{user-id :id login :login token :token}]
+  (layout/render "home.html" {:userId user-id :login login :token token}))
 
 (defroutes home-routes
   (GET "/" {{identity :identity} :session}

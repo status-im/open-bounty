@@ -13,12 +13,13 @@
 (defn- get-or-create-user
   [token]
   (let [user (github/get-user token)
-        {email :email
-         name  :name
-         login :login} user]
+        {email   :email
+         name    :name
+         login   :login
+         user-id :id} user]
     (or
-      (users/update-user-token login token)
-      (users/create-user login name email token))))
+      (users/update-user-token user-id token)
+      (users/create-user user-id login name email token))))
 
 (defroutes redirect-routes
   (GET "/callback" [code state]
