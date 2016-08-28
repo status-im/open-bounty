@@ -36,15 +36,17 @@
       login   :login
       name    :name}  :user
      id               :id
+     pr-number        :number
      merge-commit-sha :merge_commit_sha} :pull_request}]
   (future
     (->>
       (github/get-commit owner repo-name merge-commit-sha)
       (get-commit-parents)
       (hash-map :parents)
-      (merge {:repo_id repo-id
-              :pr_id   id
-              :user_id user-id})
+      (merge {:repo_id   repo-id
+              :pr_id     id
+              :pr_number pr-number
+              :user_id   user-id})
       (pull-requests/create))
     (users/create-user user-id login name nil nil)))
 
@@ -66,15 +68,17 @@
   [issue]
   (when-let [action (:action issue)]
     (when (labeled-as-bounty? action issue)
-      (github/post-comment
-        (get-in issue [:repository :owner :login])
-        (get-in issue [:repository :name])
-        (get-in issue [:issue :number]))
-      (let [repo-id      (get-in issue [:repository :id])
-            issue        (:issue issue)
-            issue-id     (:id issue)
-            issue-number (:number issue)]
-        (issues/create repo-id issue-id issue-number (gen-address))))
+      (let [repository    (:repository issue)
+            {repo-id              :id
+             {owner-login :login} :owner
+             repo-name            :name} repository
+            issue         (:issue issue)
+            {issue-id     :id
+             issue-number :number
+             issue-title  :title} issue
+            issue-address (gen-address)]
+        (github/post-comment owner-login repo-name issue-number issue-address)
+        (issues/create repo-id issue-id issue-number issue-title issue-address)))
     (when (and
             (= "closed" action)
             (has-bounty-label? issue))

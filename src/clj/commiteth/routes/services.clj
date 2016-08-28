@@ -7,6 +7,7 @@
             [buddy.auth :refer [authenticated?]]
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repositories]
+            [commiteth.db.bounties :as bounties]
             [commiteth.github.core :as github]))
 
 (defn access-error [_ _]
@@ -36,7 +37,7 @@
       :auth-rules authenticated?
       :body-params [user-id :- String, address :- String]
       :summary "Update user address"
-      (let [result (users/update-user-address user-id address)]
+      (let [result (users/update-user-address (Integer/parseInt user-id) address)]
         (if (= 1 result)
           (ok)
           (internal-server-error))))
@@ -52,6 +53,14 @@
       :auth-rules authenticated?
       :current-user user
       (ok (repositories/get-enabled (:id user))))
+    (GET "/bounties" []
+      :auth-rules authenticated?
+      :current-user user
+      (ok (bounties/list-fixed-issues (:id user))))
+    (GET "/issues" []
+      :auth-rules authenticated?
+      :current-user user
+      (ok (bounties/list-not-fixed-issues (:id user))))
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?
       :current-user user

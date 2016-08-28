@@ -5,4 +5,6 @@
    :user          nil
    :user-profile  nil
    :repos         []
-   :enabled-repos {}})
+   :enabled-repos {}
+   :bounties      []
+   :issues        []})

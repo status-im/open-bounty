@@ -32,7 +32,35 @@
     {:db         (assoc db :user user)
      :dispatch-n [[:load-user-profile]
                   [:load-user-repos]
-                  [:load-enabled-repos]]}))
+                  [:load-enabled-repos]
+                  [:load-bounties]
+                  [:load-issues]]}))
+
+(reg-event-fx
+  :load-bounties
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method     GET
+            :url        "/api/bounties"
+            :on-success #(dispatch [:set-bounties %])}}))
+
+(reg-event-db
+  :set-bounties
+  (fn [db [_ bounties]]
+    (assoc db :bounties bounties)))
+
+(reg-event-fx
+  :load-issues
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method     GET
+            :url        "/api/issues"
+            :on-success #(dispatch [:set-issues %])}}))
+
+(reg-event-db
+  :set-issues
+  (fn [db [_ issues]]
+    (assoc db :issues issues)))
 
 (reg-event-fx
   :load-user-profile
@@ -89,4 +117,4 @@
      :http {:method     POST
             :url        "/api/user/address"
             :on-success #(println %)
-            :params     {:user_id user-id :address address}}}))
+            :params     {:user-id user-id :address address}}}))

@@ -16,11 +16,6 @@ html, body {
 }
 
 .profile-settings {
-  padding-top: 20px;
-
-  .form-group {
-    padding-top: 20px;
-  }
 
   button {
     margin-top: 20px;
@@ -41,4 +36,9 @@ html, body {
   display: inline-block;
   padding-left: 10px;
   padding-right: 10px;
+}
+
+h3 {
+  padding-top: 40px;
+  padding-bottom: 20px;
 }

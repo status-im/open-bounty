@@ -17,6 +17,16 @@
     (:repos db)))
 
 (reg-sub
+  :bounties
+  (fn [db _]
+    (:bounties db)))
+
+(reg-sub
+  :issues
+  (fn [db _]
+    (:issues db)))
+
+(reg-sub
   :get-in
   (fn [db [_ path]]
     (get-in db path)))

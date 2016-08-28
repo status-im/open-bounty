@@ -78,11 +78,12 @@ WHERE repo_id = :repo_id;
 
 -- :name create-issue! :! :n
 -- :doc creates issue
-INSERT INTO issues (repo_id, issue_id, issue_number, address)
+INSERT INTO issues (repo_id, issue_id, issue_number, title, address)
   SELECT
     :repo_id,
     :issue_id,
     :issue_number,
+    :title,
     :address
   WHERE NOT exists(SELECT 1
                    FROM issues
@@ -93,16 +94,17 @@ INSERT INTO issues (repo_id, issue_id, issue_number, address)
 UPDATE issues
 SET commit_id = :commit_id
 WHERE issue_id = :issue_id
-RETURNING repo_id, issue_id, issue_number, address, commit_id;
+RETURNING repo_id, issue_id, issue_number, title, address, commit_id;
 
 -- Pull Requests -------------------------------------------------------------------
 
 -- :name create-pull-request! :! :n
 -- :doc creates pull request
-INSERT INTO pull_requests (repo_id, pr_id, user_id, parents)
+INSERT INTO pull_requests (repo_id, pr_id, pr_number, user_id, parents)
   SELECT
     :repo_id,
     :pr_id,
+    :pr_number,
     :user_id,
     :parents
   WHERE NOT exists(SELECT 1
@@ -114,14 +116,19 @@ INSERT INTO pull_requests (repo_id, pr_id, user_id, parents)
 -- :name bounties-list :? :*
 -- :doc lists fixed issues
 SELECT
-  i.address AS issue_address,
-  i.repo_id AS repo_id,
-  p.pr_id   AS pr_id,
-  p.user_id AS user_id,
-  u.address AS payout_address,
-  u.login   AS user_login,
-  u.name    AS user_name,
-  r.repo    AS repo_name
+  i.address      AS issue_address,
+  i.issue_id     AS issue_id,
+  i.issue_number AS issue_number,
+  i.title        AS issue_title,
+  i.repo_id      AS repo_id,
+  p.pr_id        AS pr_id,
+  p.user_id      AS user_id,
+  p.pr_number    AS pr_number,
+  u.address      AS payout_address,
+  u.login        AS user_login,
+  u.name         AS user_name,
+  r.login        AS owner_name,
+  r.repo         AS repo_name
 FROM issues i
   INNER JOIN pull_requests p
     ON p.parents LIKE '%' || i.commit_id || '%'
@@ -131,3 +138,19 @@ FROM issues i
   INNER JOIN repositories r
     ON r.repo_id = i.repo_id
 WHERE r.user_id = :owner_id;
+
+-- :name issues-list :? :*
+-- :doc lists all issues
+SELECT
+  i.address      AS issue_address,
+  i.issue_id     AS issue_id,
+  i.issue_number AS issue_number,
+  i.title        AS issue_title,
+  i.repo_id      AS repo_id,
+  r.login        AS owner_name,
+  r.repo         AS repo_name
+FROM issues i
+  INNER JOIN repositories r
+    ON r.repo_id = i.repo_id
+WHERE r.user_id = :owner_id
+      AND i.commit_id IS NULL;

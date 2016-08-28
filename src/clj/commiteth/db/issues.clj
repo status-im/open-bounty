@@ -5,11 +5,12 @@
 
 (defn create
   "Creates issue"
-  [repo-id issue-id issue-number address]
+  [repo-id issue-id issue-number issue-title address]
   (jdbc/with-db-connection [con-db *db*]
     (db/create-issue! con-db {:repo_id      repo-id
                               :issue_id     issue-id
                               :issue_number issue-number
+                              :title        issue-title
                               :address      address})))
 
 (defn close
