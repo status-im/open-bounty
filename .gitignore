@@ -13,5 +13,4 @@ profiles.clj
 .idea
 *.iml
 *.ipr
-/resources/public/css/screen.css
 *.log

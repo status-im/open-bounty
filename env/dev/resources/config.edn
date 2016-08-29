@@ -1,4 +1,8 @@
-{:dev        true
- :port       3000
+{:dev                  true
+ :port                 3000
  ;; when :nrepl-port is set the application starts the nREPL server on load
- :nrepl-port 7000}
+ :nrepl-port           7000
+ :database-url         "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
+ :server-address       "http://localhost:3000"
+ :github-client-id     "caf23d90246fa99ca545"
+ :github-client-secret "e8e7a088e7769c77e9e2d87c47ef81df51080bf3"}

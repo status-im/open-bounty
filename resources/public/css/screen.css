@@ -1,0 +1,33 @@
+html, body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  height: 100%;
+  padding-top: 0px; }
+
+.app {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  max-width: 100%; }
+
+.container {
+  padding-top: 20px; }
+
+.profile-settings button {
+  margin-top: 20px; }
+
+.profile-link {
+  display: inline-block;
+  padding-top: .425rem;
+  padding-bottom: .425rem;
+  padding-right: 1em;
+  color: rgba(0, 0, 0, 0.3); }
+
+.navbar-toggler, .nav-item {
+  float: left;
+  display: inline-block;
+  padding-left: 10px;
+  padding-right: 10px; }
+
+h3 {
+  padding-top: 40px;
+  padding-bottom: 20px; }

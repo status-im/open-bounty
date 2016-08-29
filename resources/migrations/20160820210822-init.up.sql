@@ -22,17 +22,20 @@ CREATE TABLE repositories
 
 CREATE TABLE issues
 (
-  issue_id     INTEGER PRIMARY KEY  NOT NULL,
-  repo_id      INTEGER              NOT NULL,
-  address      VARCHAR(256),
+  repo_id      INTEGER NOT NULL,
+  issue_id     INTEGER NOT NULL,
   issue_number INTEGER,
-  commit_id    VARCHAR(40)
+  title        VARCHAR(256),
+  address      VARCHAR(256),
+  commit_id    VARCHAR(40),
+  CONSTRAINT issues_repo_id_issue_id_pk PRIMARY KEY (repo_id, issue_id)
 );
 
 CREATE TABLE pull_requests
 (
-  pr_id   INTEGER PRIMARY KEY  NOT NULL,
-  repo_id INTEGER,
-  user_id INTEGER,
-  parents VARCHAR(4099) -- 100 commit SHAs + 99 commas
+  pr_id     INTEGER PRIMARY KEY  NOT NULL,
+  pr_number INTEGER,
+  repo_id   INTEGER,
+  user_id   INTEGER,
+  parents   VARCHAR(4099) -- 100 commit SHAs + 99 commas
 );

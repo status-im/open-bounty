@@ -51,16 +51,17 @@ RETURNING repo_id, login, repo, enabled, hook_id;
 
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
-INSERT INTO repositories (repo_id, login, repo, enabled)
+INSERT INTO repositories (repo_id, user_id, login, repo, enabled)
   SELECT
     :repo_id,
+    :user_id,
     :login,
     :repo,
     :enabled
   WHERE NOT exists(SELECT 1
                    FROM repositories
                    WHERE repo_id = :repo_id)
-RETURNING repo_id, login, repo, enabled;
+RETURNING repo_id, user_id, login, repo, enabled;
 
 -- :name get-enabled-repositories :? :*
 -- :doc returns enabled repositories for a given login

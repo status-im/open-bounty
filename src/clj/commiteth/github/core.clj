@@ -4,12 +4,14 @@
             [tentacles.repos :as repos]
             [tentacles.issues :as issues]
             [ring.util.codec :as codec]
-            [clj-http.client :as http])
+            [clj-http.client :as http]
+            [commiteth.config :refer [env]])
   (:import [java.util UUID]))
 
-(def client-id "caf23d90246fa99ca545")
-(def client-secret "e8e7a088e7769c77e9e2d87c47ef81df51080bf3")
-(def redirect-uri "http://localhost:3000/callback")
+(defn server-address []  (:server-address env))
+(defn client-id [] (:github-client-id env))
+(defn client-secret [] (:github-client-secret env))
+(defn redirect-uri [] (str (server-address) "/callback"))
 (def allow-signup true)
 (def hook-secret "Mu0eiV8ooy7IogheexathocaiSeLeineiLue0au8")
 
@@ -18,8 +20,8 @@
 (def self-password "Fahh7ithoh8Ahghe")
 
 (defn authorize-url []
-  (let [params (codec/form-encode {:client_id    client-id
-                                   :redirect_uri redirect-uri
+  (let [params (codec/form-encode {:client_id    (client-id)
+                                   :redirect_uri (redirect-uri)
                                    :scope        "admin:repo_hook"
                                    :allow_signup allow-signup
                                    :state        (str (UUID/randomUUID))})]
@@ -29,17 +31,17 @@
   [code state]
   (http/post "https://github.com/login/oauth/access_token"
     {:content-type :json
-     :form-params  {:client_id     client-id
-                    :client_secret client-secret
+     :form-params  {:client_id     (client-id)
+                    :client_secret (client-secret)
                     :code          code
-                    :redirect_uri  redirect-uri
+                    :redirect_uri  (redirect-uri)
                     :state         state}}))
 
 (defn- auth-params
   [token]
   {:oauth-token  token
-   :client-id    client-id
-   :client-token client-secret})
+   :client-id    (client-id)
+   :client-token (client-secret)})
 
 (defn- self-auth-params []
   {:auth (str self ":" self-password)})
@@ -79,7 +81,7 @@
   [token user repo]
   (println "adding webhook")
   (repos/create-hook user repo "web"
-    {:url          "http://localhost:3000/webhook"
+    {:url          (str (server-address) "/webhook")
      :content_type "json"}
     (merge (auth-params token)
       {:events ["issues", "issue_comment", "pull_request"]

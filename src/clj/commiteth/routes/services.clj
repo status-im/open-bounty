@@ -64,13 +64,15 @@
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?
       :current-user user
-      (ok (let [repo-id (:id params)
-                result  (or
-                          (repositories/create params)
-                          (repositories/toggle repo-id))
-                token   (:token user)
-                login   (:login user)
-                repo    (:name params)]
+      (ok (let [{repo-id :id
+                 repo    :name} params
+                {token   :token
+                 login   :login
+                 user-id :id} user
+                result (or
+                         (repositories/create (merge params {:user_id user-id}))
+                         (repositories/toggle repo-id))
+                ]
             (if (:enabled result)
               ;; @todo: do we really want to make this call at this moment?
               (let [created-hook (github/add-webhook token login repo)]
