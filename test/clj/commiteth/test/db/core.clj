@@ -12,7 +12,7 @@
     (mount/start
       #'commiteth.config/env
       #'commiteth.db.core/*db*)
-    (migrations/migrate ["migrate"] (select-keys env [:database-url]))
+    (migrations/migrate ["migrate"] (select-keys env [:jdbc-database-url]))
     (f)))
 
 (deftest test-users

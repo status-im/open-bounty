@@ -53,7 +53,7 @@ repl-server
       (mount/start
         #'commiteth.config/env
         #'commiteth.db.core/*db*)
-      (migrations/migrate args (select-keys env [:database-url]))
+      (migrations/migrate args (select-keys env [:jdbc-database-url]))
       (System/exit 0))
     :else
     (start-app args)))
