@@ -15,6 +15,6 @@
 
 (defn close
   "Updates issue with commit_id"
-  [issue-id commit-id]
+  [commit-id issue-id]
   (jdbc/with-db-connection [con-db *db*]
     (db/close-issue! con-db {:issue_id issue-id :commit_id commit-id})))

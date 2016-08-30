@@ -10,45 +10,41 @@
 
 (def label-name "bounty")
 
-(defn find-issue-closed-event
-  [events]
-  (first (filter #(= "closed" (:event %)) events)))
+(defn find-issue-event
+  [events type]
+  (first (filter #(= type (:event %)) events)))
+
+(defn find-commit-id
+  [user repo issue-number event-type]
+  (->
+    (github/get-issue-events user repo issue-number)
+    (find-issue-event event-type)
+    (:commit_id)))
 
 (defn handle-issue-closed
   [{{{user :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
   (future
-    (->>
-      (github/get-issue-events user repo issue-number)
-      (find-issue-closed-event)
-      (:commit_id)
-      (issues/close issue-id))))
-
-(defn get-commit-parents
-  [commit]
-  (->> commit :parents (map :sha) (join ",")))
+    (when-let [commit-id (find-commit-id user repo issue-number "closed")]
+      (issues/close commit-id issue-id))))
 
 (defn handle-pull-request-closed
   [{{{owner :login} :owner
-     repo-name      :name
-     repo-id        :id}                 :repository
+     repo           :name
+     repo-id        :id}      :repository
     {{user-id :id
       login   :login
-      name    :name}  :user
-     id               :id
-     pr-number        :number
-     merge-commit-sha :merge_commit_sha} :pull_request}]
+      name    :name} :user
+     id              :id
+     pr-number       :number} :pull_request}]
   (future
-    (->>
-      (github/get-commit owner repo-name merge-commit-sha)
-      (get-commit-parents)
-      (hash-map :parents)
-      (merge {:repo_id   repo-id
-              :pr_id     id
-              :pr_number pr-number
-              :user_id   user-id})
-      (pull-requests/create))
-    (users/create-user user-id login name nil nil)))
+    (when-let [commit-id (find-commit-id owner repo pr-number "merged")]
+      (pull-requests/create {:repo_id   repo-id
+                             :pr_id     id
+                             :pr_number pr-number
+                             :user_id   user-id
+                             :commit_id commit-id})
+      (users/create-user user-id login name nil nil))))
 
 (defn labeled-as-bounty?
   [action issue]

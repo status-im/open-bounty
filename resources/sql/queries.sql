@@ -101,13 +101,12 @@ RETURNING repo_id, issue_id, issue_number, title, address, commit_id;
 
 -- :name create-pull-request! :! :n
 -- :doc creates pull request
-INSERT INTO pull_requests (repo_id, pr_id, pr_number, user_id, parents)
+INSERT INTO pull_requests (repo_id, pr_id, pr_number, user_id)
   SELECT
     :repo_id,
     :pr_id,
     :pr_number,
-    :user_id,
-    :parents
+    :user_id
   WHERE NOT exists(SELECT 1
                    FROM pull_requests
                    WHERE repo_id = :repo_id AND pr_id = :pr_id);
@@ -132,7 +131,7 @@ SELECT
   r.repo         AS repo_name
 FROM issues i
   INNER JOIN pull_requests p
-    ON p.parents LIKE '%' || i.commit_id || '%'
+    ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
        AND p.repo_id = i.repo_id
   INNER JOIN users u
     ON u.id = p.user_id
