@@ -65,7 +65,7 @@
      pr-body         :body} :pull_request}]
   (future
     (let [commit-id    (find-commit-id owner repo pr-number "merged")
-          issue-number (extract-issue-number pr-body)
+          issue-number (first (extract-issue-number pr-body))
           m            {:commit_id commit-id :issue_number issue-number}]
       (when (or commit-id issue-number)
         (pull-requests/create (merge m {:repo_id   repo-id
