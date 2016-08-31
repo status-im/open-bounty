@@ -25,7 +25,7 @@
   [{{{user :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
   (future
-    (when-let [commit-id (find-commit-id user repo issue-number "closed")]
+    (when-let [commit-id (find-commit-id user repo issue-number "referenced")]
       (issues/close commit-id issue-id))))
 
 (defn handle-pull-request-closed
