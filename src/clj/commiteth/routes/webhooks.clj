@@ -53,6 +53,18 @@
                    (catch NumberFormatException _)))
             (re-seq % pr-body)) keywords))
 
+(defn has-bounty-label?
+  [issue]
+  (let [labels (:labels issue)]
+    (some #(= label-name (:name %)) labels)))
+
+(defn validate-issue-number
+  "Checks if an issue has a bounty label attached and returns its number"
+  [user repo issue-number]
+  (when-let [issue (github/get-issue user repo issue-number)]
+    (when (has-bounty-label? issue)
+      issue-number)))
+
 (defn handle-pull-request-closed
   [{{{owner :login} :owner
      repo           :name
@@ -65,7 +77,10 @@
      pr-body         :body} :pull_request}]
   (future
     (let [commit-id    (find-commit-id owner repo pr-number "merged")
-          issue-number (first (extract-issue-number pr-body))
+          issue-number (->>
+                         (extract-issue-number pr-body)
+                         (first)
+                         (validate-issue-number owner repo))
           m            {:commit_id commit-id :issue_number issue-number}]
       (when (or commit-id issue-number)
         (pull-requests/create (merge m {:repo_id   repo-id
@@ -79,11 +94,6 @@
   (and
     (= "labeled" action)
     (= label-name (get-in issue [:label :name]))))
-
-(defn has-bounty-label?
-  [issue]
-  (let [labels (get-in issue [:issue :labels])]
-    (some #(= label-name (:name %)) labels)))
 
 (defn gen-address []
   (UUID/randomUUID))
@@ -105,7 +115,7 @@
         (issues/create repo-id issue-id issue-number issue-title issue-address)))
     (when (and
             (= "closed" action)
-            (has-bounty-label? issue))
+            (has-bounty-label? (:issue issue)))
       (handle-issue-closed issue)))
   (ok (str issue)))
 

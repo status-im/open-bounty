@@ -8,7 +8,7 @@
             [commiteth.config :refer [env]])
   (:import [java.util UUID]))
 
-(defn server-address []  (:server-address env))
+(defn server-address [] (:server-address env))
 (defn client-id [] (:github-client-id env))
 (defn client-secret [] (:github-client-secret env))
 (defn redirect-uri [] (str (server-address) "/callback"))
@@ -100,6 +100,10 @@
 (defn get-commit
   [user repo commit-id]
   (repos/specific-commit user repo commit-id (self-auth-params)))
+
+(defn get-issue
+  [user repo issue-number]
+  (issues/specific-issue user repo issue-number (self-auth-params)))
 
 (defn get-issue-events
   [user repo issue-id]
