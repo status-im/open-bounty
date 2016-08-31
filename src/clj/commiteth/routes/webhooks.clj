@@ -6,7 +6,8 @@
             [commiteth.db.users :as users]
             [ring.util.http-response :refer [ok]]
             [clojure.string :refer [join]])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [java.lang Integer]))
 
 (def label-name "bounty")
 
@@ -31,23 +32,47 @@
     (when-let [commit-id (find-commit-id user repo issue-number "referenced")]
       (issues/close commit-id issue-id))))
 
+(def keywords
+  [#"(?i)close\s+#(\d+)"
+   #"(?i)closes\s+#(\d+)"
+   #"(?i)closed\s+#(\d+)"
+   #"(?i)fix\s+#(\d+)"
+   #"(?i)fixes\s+#(\d+)"
+   #"(?i)fixed\s+#(\d+)"
+   #"(?i)resolve\s+#(\d+)"
+   #"(?i)resolves\s+#(\d+)"
+   #"(?i)resolved\s+#(\d+)"])
+
+(defn extract-issue-number
+  [pr-body]
+  (mapcat #(keep
+            (fn [s]
+              (try (let [issue-number (Integer/parseInt (second s))]
+                     (when (pos? issue-number)
+                       issue-number))
+                   (catch NumberFormatException _)))
+            (re-seq % pr-body)) keywords))
+
 (defn handle-pull-request-closed
   [{{{owner :login} :owner
      repo           :name
-     repo-id        :id}      :repository
+     repo-id        :id}    :repository
     {{user-id :id
       login   :login
       name    :name} :user
      id              :id
-     pr-number       :number} :pull_request}]
+     pr-number       :number
+     pr-body         :body} :pull_request}]
   (future
-    (when-let [commit-id (find-commit-id owner repo pr-number "merged")]
-      (pull-requests/create {:repo_id   repo-id
-                             :pr_id     id
-                             :pr_number pr-number
-                             :user_id   user-id
-                             :commit_id commit-id})
-      (users/create-user user-id login name nil nil))))
+    (let [commit-id    (find-commit-id owner repo pr-number "merged")
+          issue-number (extract-issue-number pr-body)
+          m            {:commit_id commit-id :issue_number issue-number}]
+      (when (or commit-id issue-number)
+        (pull-requests/create (merge m {:repo_id   repo-id
+                                        :pr_id     id
+                                        :pr_number pr-number
+                                        :user_id   user-id}))
+        (users/create-user user-id login name nil nil)))))
 
 (defn labeled-as-bounty?
   [action issue]
