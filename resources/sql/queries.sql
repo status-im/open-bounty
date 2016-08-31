@@ -101,11 +101,12 @@ RETURNING repo_id, issue_id, issue_number, title, address, commit_id;
 
 -- :name create-pull-request! :! :n
 -- :doc creates pull request
-INSERT INTO pull_requests (repo_id, pr_id, pr_number, user_id)
+INSERT INTO pull_requests (repo_id, pr_id, pr_number, commit_id, user_id)
   SELECT
     :repo_id,
     :pr_id,
     :pr_number,
+    :commit_id,
     :user_id
   WHERE NOT exists(SELECT 1
                    FROM pull_requests

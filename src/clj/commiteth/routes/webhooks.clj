@@ -11,14 +11,17 @@
 (def label-name "bounty")
 
 (defn find-issue-event
-  [events type]
-  (first (filter #(= type (:event %)) events)))
+  [events type owner]
+  (first (filter #(and
+                   (= owner (get-in % [:actor :login]))
+                   (= type (:event %)))
+           events)))
 
 (defn find-commit-id
   [user repo issue-number event-type]
   (->
     (github/get-issue-events user repo issue-number)
-    (find-issue-event event-type)
+    (find-issue-event event-type user)
     (:commit_id)))
 
 (defn handle-issue-closed
