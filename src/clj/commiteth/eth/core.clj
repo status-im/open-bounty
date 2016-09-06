@@ -13,17 +13,16 @@
 
 (defn eth-rpc
   [method params]
-  (let [body    (json/write-str {:jsonrpc "2.0"
-                                 :method  method
-                                 :params  params
-                                 :id      1})
-        options {:body body}
-        result  (:body @(post eth-rpc-url options))]
-    (:result (json/read-str result :key-fn keyword))))
-
-(defn compile-solidity
-  [source]
-  (eth-rpc "eth_compileSolidity" [source]))
+  (let [body     (json/write-str {:jsonrpc "2.0"
+                                  :method  method
+                                  :params  params
+                                  :id      1})
+        options  {:body body}
+        response (:body @(post eth-rpc-url options))
+        result   (json/read-str response :key-fn keyword)]
+    (when-let [error (:error result)]
+      (log/error "Method: " method ", error: " error))
+    (:result result)))
 
 (defn send-transaction
   [from to value & [params]]
@@ -38,10 +37,7 @@
 
 (defn deploy-contract
   []
-  (let [contract-src  (-> "sol/wallet.sol" io/resource slurp)
-        contract-name :Wallet
-        contract-data (compile-solidity contract-src)
-        contract-code (get-in contract-data [contract-name :code])]
+  (let [contract-code (-> "contracts/wallet.data" io/resource slurp)]
     (send-transaction (eth-account) nil 1
       {:gas  "1248650"
        :data contract-code})))
