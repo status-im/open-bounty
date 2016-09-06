@@ -39,7 +39,7 @@
   []
   (let [contract-code (-> "contracts/wallet.data" io/resource slurp)]
     (send-transaction (eth-account) nil 1
-      {:gas  "1248650"
+      {:gas  1248650
        :data contract-code})))
 
 ;; @todo: move to another ns
