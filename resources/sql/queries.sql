@@ -79,13 +79,12 @@ WHERE repo_id = :repo_id;
 
 -- :name create-issue! :! :n
 -- :doc creates issue
-INSERT INTO issues (repo_id, issue_id, issue_number, title, address)
+INSERT INTO issues (repo_id, issue_id, issue_number, title)
   SELECT
     :repo_id,
     :issue_id,
     :issue_number,
-    :title,
-    :address
+    :title
   WHERE NOT exists(SELECT 1
                    FROM issues
                    WHERE repo_id = :repo_id AND issue_id = :issue_id);
@@ -95,7 +94,27 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title, address)
 UPDATE issues
 SET commit_id = :commit_id
 WHERE issue_id = :issue_id
-RETURNING repo_id, issue_id, issue_number, title, address, commit_id;
+RETURNING repo_id, issue_id, issue_number, title, commit_id, contract_address;
+
+-- :name update-transaction-hash :! :n
+-- :doc updates transaction-hash for a given issue
+UPDATE issues
+SET transaction_hash = :transaction_hash
+WHERE issue_id = :issue_id;
+
+-- :name update-contract-address :! :n
+-- :doc updates contract-address for a given issue
+UPDATE issues
+SET contract_address = :contract_address
+WHERE issue_id = :issue_id;
+
+-- :name list-pending-deployments :? :*
+-- :doc retrieves pending transaction ids
+SELECT
+  issue_id,
+  transaction_hash
+FROM issues
+WHERE contract_address IS NULL;
 
 -- Pull Requests -------------------------------------------------------------------
 
@@ -118,19 +137,19 @@ INSERT INTO pull_requests (repo_id, pr_id, pr_number, issue_number, commit_id, u
 -- :name bounties-list :? :*
 -- :doc lists fixed issues
 SELECT
-  i.address      AS issue_address,
-  i.issue_id     AS issue_id,
-  i.issue_number AS issue_number,
-  i.title        AS issue_title,
-  i.repo_id      AS repo_id,
-  p.pr_id        AS pr_id,
-  p.user_id      AS user_id,
-  p.pr_number    AS pr_number,
-  u.address      AS payout_address,
-  u.login        AS user_login,
-  u.name         AS user_name,
-  r.login        AS owner_name,
-  r.repo         AS repo_name
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.issue_number     AS issue_number,
+  i.title            AS issue_title,
+  i.repo_id          AS repo_id,
+  p.pr_id            AS pr_id,
+  p.user_id          AS user_id,
+  p.pr_number        AS pr_number,
+  u.address          AS payout_address,
+  u.login            AS user_login,
+  u.name             AS user_name,
+  r.login            AS owner_name,
+  r.repo             AS repo_name
 FROM issues i
   INNER JOIN pull_requests p
     ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
@@ -144,13 +163,13 @@ WHERE r.user_id = :owner_id;
 -- :name issues-list :? :*
 -- :doc lists all issues
 SELECT
-  i.address      AS issue_address,
-  i.issue_id     AS issue_id,
-  i.issue_number AS issue_number,
-  i.title        AS issue_title,
-  i.repo_id      AS repo_id,
-  r.login        AS owner_name,
-  r.repo         AS repo_name
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.issue_number     AS issue_number,
+  i.title            AS issue_title,
+  i.repo_id          AS repo_id,
+  r.login            AS owner_name,
+  r.repo             AS repo_name
 FROM issues i
   INNER JOIN repositories r
     ON r.repo_id = i.repo_id

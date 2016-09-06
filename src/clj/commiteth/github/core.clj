@@ -93,9 +93,9 @@
   (repos/delete-hook user repo hook-id (auth-params token)))
 
 (defn post-comment
-  [user repo issue-id issue-address]
+  [user repo issue-id]
   (issues/create-comment user repo issue-id
-    (str "a comment with an image link to the web service. Issue address is " issue-address) (self-auth-params)))
+    (str "a comment with an image link to the web service.") (self-auth-params)))
 
 (defn get-commit
   [user repo commit-id]

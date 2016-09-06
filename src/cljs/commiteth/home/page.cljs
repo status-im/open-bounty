@@ -19,15 +19,15 @@
   [address]
   (.-length address))
 
-(defn bounty-row [{issue-id      :issue_id
-                   issue-number  :issue_number
-                   pr-number     :pr_number
-                   user          :user_login
-                   owner         :owner_name
-                   repo          :repo_name
-                   issue-title   :issue_title
-                   address       :payout_address
-                   issue-address :issue_address}]
+(defn bounty-row [{issue-id         :issue_id
+                   issue-number     :issue_number
+                   pr-number        :pr_number
+                   user             :user_login
+                   owner            :owner_name
+                   repo             :repo_name
+                   issue-title      :issue_title
+                   address          :payout_address
+                   contract-address :contract_address}]
   ^{:key issue-id}
   [:li.list-group-item
    [:div
@@ -37,7 +37,7 @@
     " by "
     [:a {:href (user-url user)} user]]
    [:div "Payout address: " address]
-   [:div "Amount: " (get-amount issue-address) " ETH"]])
+   [:div "Amount: " (get-amount contract-address) " ETH"]])
 
 (defn bounties-list []
   (let [bounties (rf/subscribe [:bounties])]

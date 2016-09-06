@@ -4,10 +4,10 @@
             [commiteth.db.pull-requests :as pull-requests]
             [commiteth.db.issues :as issues]
             [commiteth.db.users :as users]
+            [commiteth.eth.core :as eth]
             [ring.util.http-response :refer [ok]]
             [clojure.string :refer [join]])
-  (:import [java.util UUID]
-           [java.lang Integer]))
+  (:import [java.lang Integer]))
 
 (def label-name "bounty")
 
@@ -24,6 +24,16 @@
     (github/get-issue-events user repo issue-number)
     (find-issue-event event-type user)
     (:commit_id)))
+
+(defn handle-issue-labeled
+  [issue]
+  (let [{repo-id :id} (:repository issue)
+        {issue-id     :id
+         issue-number :number
+         issue-title  :title} (:issue issue)
+        created-issue (issues/create repo-id issue-id issue-number issue-title)]
+    (when (= 1 created-issue)
+      (issues/update-transaction-hash issue-id (eth/deploy-contract)))))
 
 (defn handle-issue-closed
   [{{{user :login} :owner repo :name}   :repository
@@ -95,24 +105,11 @@
     (= "labeled" action)
     (= label-name (get-in issue [:label :name]))))
 
-(defn gen-address []
-  (UUID/randomUUID))
-
 (defn handle-issue
   [issue]
   (when-let [action (:action issue)]
     (when (labeled-as-bounty? action issue)
-      (let [repository    (:repository issue)
-            {repo-id              :id
-             {owner-login :login} :owner
-             repo-name            :name} repository
-            issue         (:issue issue)
-            {issue-id     :id
-             issue-number :number
-             issue-title  :title} issue
-            issue-address (gen-address)]
-        (github/post-comment owner-login repo-name issue-number issue-address)
-        (issues/create repo-id issue-id issue-number issue-title issue-address)))
+      (handle-issue-labeled issue))
     (when (and
             (= "closed" action)
             (has-bounty-label? (:issue issue)))
