@@ -22,4 +22,4 @@
               balance (eth/get-balance-eth contract-address 4)]
           (github/post-comment user repo issue-number contract-address balance))))))
 
-(mount/defstate scheduler :start (every (* 5 1000) update-issue-contract-address pool))
+(mount/defstate scheduler :start (every (* 5 60 1000) update-issue-contract-address pool))
