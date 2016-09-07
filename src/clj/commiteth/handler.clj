@@ -5,6 +5,7 @@
             [commiteth.routes.redirect :refer [redirect-routes]]
             [commiteth.routes.services :refer [service-routes]]
             [commiteth.routes.webhooks :refer [webhook-routes]]
+            [commiteth.routes.qrcodes :refer [qr-routes]]
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -26,6 +27,7 @@
       (wrap-routes wrap-json-params)
       (wrap-routes wrap-keyword-params))
     #'service-routes
+    #'qr-routes
     (route/not-found
       (:body
         (error-page {:status 404

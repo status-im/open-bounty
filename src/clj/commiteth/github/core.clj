@@ -5,7 +5,8 @@
             [tentacles.issues :as issues]
             [ring.util.codec :as codec]
             [clj-http.client :as http]
-            [commiteth.config :refer [env]])
+            [commiteth.config :refer [env]]
+            [clojure.tools.logging :as log])
   (:import [java.util UUID]))
 
 (defn server-address [] (:server-address env))
@@ -92,14 +93,28 @@
   (println "removing webhook")
   (repos/delete-hook user repo hook-id (auth-params token)))
 
-(defn post-comment
-  [user repo issue-id]
-  (issues/create-comment user repo issue-id
-    (str "a comment with an image link to the web service.") (self-auth-params)))
+(defn- get-qr-url
+  [contract-address]
+  (str (server-address) "/qr.png?address=" contract-address))
 
-(defn get-commit
-  [user repo commit-id]
-  (repos/specific-commit user repo commit-id (self-auth-params)))
+(defn- md-url
+  ([text url]
+   (str "[" text "](" url ")"))
+  ([url]
+   (md-url url url)))
+
+(defn- md-image
+  [alt src]
+  (str "!" (md-url alt src)))
+
+(defn post-comment
+  [user repo issue-id contract-address balance]
+  (let [balance   (str balance " ETH")
+        image-url (md-image "QR Code" (get-qr-url contract-address))
+        site-url  (md-url (server-address) (server-address))
+        comment   (format "Current balance: %s\n%s\n%s" balance image-url site-url)]
+    (log/info "Comment to" (str user "/" repo) ":" comment)
+    (issues/create-comment user repo issue-id comment (self-auth-params))))
 
 (defn get-issue
   [user repo issue-number]

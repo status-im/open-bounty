@@ -37,6 +37,7 @@
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [luminus-immutant "0.2.2"]
                  [overtone/at-at "1.2.0"]
+                 [clj.qrgen "0.4.0"]
                  [tentacles "0.5.1"]]
 
   :min-lein-version "2.0.0"

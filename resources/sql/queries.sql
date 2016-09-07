@@ -102,11 +102,25 @@ UPDATE issues
 SET transaction_hash = :transaction_hash
 WHERE issue_id = :issue_id;
 
--- :name update-contract-address :! :n
+-- :name update-contract-address :<! :1
 -- :doc updates contract-address for a given issue
-UPDATE issues
+WITH t AS (
+    SELECT
+      i.issue_id         AS issue_id,
+      i.issue_number     AS issue_number,
+      i.title            AS title,
+      i.transaction_hash AS transaction_hash,
+      i.contract_address AS contract_address,
+      r.login            AS login,
+      r.repo             AS repo
+    FROM issues i
+      INNER JOIN repositories r ON r.repo_id = i.repo_id
+    WHERE i.issue_id = :issue_id
+)
+UPDATE issues i
 SET contract_address = :contract_address
-WHERE issue_id = :issue_id;
+FROM t
+RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.contract_address, t.login, t.repo;
 
 -- :name list-pending-deployments :? :*
 -- :doc retrieves pending transaction ids

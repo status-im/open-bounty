@@ -5,7 +5,8 @@
             [overtone.at-at :refer [every mk-pool]]
             [commiteth.config :refer [env]]
             [commiteth.db.issues :as issues]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [commiteth.github.core :as github]))
 
 (def eth-rpc-url "http://localhost:8545")
 (defn eth-account [] (:eth-account env))
@@ -23,6 +24,22 @@
     (when-let [error (:error result)]
       (log/error "Method: " method ", error: " error))
     (:result result)))
+
+(defn hex->big-integer
+  [hex]
+  (new BigInteger (subs hex 2) 16))
+
+(defn from-wei
+  [wei]
+  (/ wei 1000000000000000000))
+
+(defn get-balance-wei
+  [account]
+  (hex->big-integer (eth-rpc "eth_getBalance" [account "latest"])))
+
+(defn get-balance-eth
+  [account digits]
+  (->> (get-balance-wei account) from-wei double (format (str "%." digits "f"))))
 
 (defn send-transaction
   [from to value & [params]]
@@ -52,6 +69,11 @@
     (when-let [receipt (get-transaction-receipt transaction-hash)]
       (log/info "transaction receipt for issue #" issue-id ": " receipt)
       (when-let [contract-address (:contractAddress receipt)]
-        (issues/update-contract-address issue-id contract-address)))))
+        (let [issue   (issues/update-contract-address issue-id contract-address)
+              {user         :login
+               repo         :repo
+               issue-number :issue_number} issue
+              balance (get-balance-eth contract-address 4)]
+          (github/post-comment user repo issue-number contract-address balance))))))
 
 (every (* 5 60 1000) update-issue-contract-address pool)
