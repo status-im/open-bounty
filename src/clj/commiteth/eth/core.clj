@@ -32,9 +32,13 @@
   [wei]
   (/ wei 1000000000000000000))
 
+(defn get-balance-hex
+  [account]
+  (eth-rpc "eth_getBalance" [account "latest"]))
+
 (defn get-balance-wei
   [account]
-  (hex->big-integer (eth-rpc "eth_getBalance" [account "latest"])))
+  (hex->big-integer (get-balance-hex account)))
 
 (defn get-balance-eth
   [account digits]

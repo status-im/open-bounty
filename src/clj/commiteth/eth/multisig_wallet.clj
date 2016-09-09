@@ -12,3 +12,11 @@
 (defn add-owner
   [contract owner]
   (eth/execute (eth/eth-account) contract "0x7065cb48" owner))
+
+(defn execute
+  [contract to value]
+  (eth/execute (eth/eth-account) contract "0xb61d27f6" to value))
+
+(defn confirm
+  [contract hash]
+  (eth/execute (eth/eth-account) contract "0x797af627" hash))

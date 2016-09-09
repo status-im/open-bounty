@@ -4,4 +4,6 @@ ALTER TABLE public.issues
 ALTER TABLE public.issues
   DROP COLUMN contract_address;
 ALTER TABLE public.issues
+  DROP COLUMN confirm_hash;
+ALTER TABLE public.issues
   ADD address VARCHAR(256);
