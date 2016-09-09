@@ -35,3 +35,9 @@
   [user-id token]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-user-token! con-db {:id user-id :token token})))
+
+(defn get-repo-owner
+  "Gets repository owner by given repository id"
+  [repo-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-repo-owner {:repo_id repo-id})))

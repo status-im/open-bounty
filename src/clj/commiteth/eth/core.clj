@@ -3,6 +3,7 @@
             [org.httpkit.client :refer [post]]
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
+            [clojure.string :refer [join]]
             [clojure.tools.logging :as log]))
 
 (def eth-rpc-url "http://localhost:8545")
@@ -18,6 +19,7 @@
         options  {:body body}
         response (:body @(post eth-rpc-url options))
         result   (json/read-str response :key-fn keyword)]
+    (log/debug body "\n" result)
     (when-let [error (:error result)]
       (log/error "Method: " method ", error: " error))
     (:result result)))
@@ -55,3 +57,24 @@
     (send-transaction (eth-account) nil 1
       {:gas  1248650
        :data contract-code})))
+
+(defn- format-param
+  [param]
+  (if (number? param)
+    (format "%064x" param)
+    (clojure.string/replace (format "%64s" (subs param 2)) " " "0")))
+
+(defn- format-call-params
+  [method-id & params]
+  (let [params (join (map format-param params))]
+    (str method-id params)))
+
+(defn call
+  [contract method-id & params]
+  (let [data (apply format-call-params method-id params)]
+    (eth-rpc "eth_call" [{:to contract :data data} "latest"])))
+
+(defn execute
+  [from contract method-id & params]
+  (let [data (apply format-call-params method-id params)]
+    (send-transaction from contract 1 {:data data})))

@@ -40,6 +40,12 @@ SELECT *
 FROM users
 WHERE id = :id;
 
+-- :name get-repo-owner :? :1
+SELECT *
+FROM users u
+  INNER JOIN repositories r ON r.user_id = u.id
+WHERE r.repo_id = :repo_id;
+
 -- Repositories --------------------------------------------------------------------
 
 -- :name toggle-repository! :<! :1
@@ -111,6 +117,7 @@ WITH t AS (
       i.title            AS title,
       i.transaction_hash AS transaction_hash,
       i.contract_address AS contract_address,
+      i.repo_id          AS repo_id,
       r.login            AS login,
       r.repo             AS repo
     FROM issues i
@@ -120,7 +127,7 @@ WITH t AS (
 UPDATE issues i
 SET contract_address = :contract_address
 FROM t
-RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.contract_address, t.login, t.repo;
+RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.contract_address, t.login, t.repo, t.repo_id;
 
 -- :name list-pending-deployments :? :*
 -- :doc retrieves pending transaction ids
