@@ -23,3 +23,8 @@
   [issue-id confirm-hash]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-confirm-hash con-db {:issue_id issue-id :confirm_hash confirm-hash})))
+
+(defn get-bounty-address
+  [user repo issue-number]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-bounty-address con-db {:login user :repo repo :issue_number issue-number})))
