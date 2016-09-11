@@ -27,7 +27,7 @@
                issue-number :issue_number} issue
               balance            (eth/get-balance-eth contract-address 4)
               repo-owner-address (:address (users/get-repo-owner repo-id))]
-          (github/post-comment user repo issue-number contract-address balance)
+          (github/post-comment user repo issue-number balance)
           (wallet/add-owner contract-address (eth/eth-account))
           (wallet/add-owner contract-address repo-owner-address))))))
 

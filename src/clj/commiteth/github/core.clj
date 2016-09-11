@@ -94,8 +94,8 @@
   (repos/delete-hook user repo hook-id (auth-params token)))
 
 (defn- get-qr-url
-  [contract-address]
-  (str (server-address) "/qr.png?address=" contract-address))
+  [user repo issue-number]
+  (str (server-address) (format "/qr/%s/%s/bounty/%s/qr.png" user repo issue-number)))
 
 (defn- md-url
   ([text url]
@@ -108,13 +108,13 @@
   (str "!" (md-url alt src)))
 
 (defn post-comment
-  [user repo issue-id contract-address balance]
+  [user repo issue-number balance]
   (let [balance   (str balance " ETH")
-        image-url (md-image "QR Code" (get-qr-url contract-address))
+        image-url (md-image "QR Code" (get-qr-url user repo issue-number))
         site-url  (md-url (server-address) (server-address))
         comment   (format "Current balance: %s\n%s\n%s" balance image-url site-url)]
     (log/info "Comment to" (str user "/" repo) ":" comment)
-    (issues/create-comment user repo issue-id comment (self-auth-params))))
+    (issues/create-comment user repo issue-number comment (self-auth-params))))
 
 (defn get-issue
   [user repo issue-number]

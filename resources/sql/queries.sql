@@ -218,7 +218,11 @@ WHERE r.user_id = :owner_id
       AND i.commit_id IS NULL;
 
 -- :name get-bounty-address :? :1
-SELECT i.contract_address
+SELECT
+  i.contract_address AS contract_address,
+  i.issue_number     AS issue_number,
+  r.login            AS login,
+  r.repo             AS repo
 FROM issues i
   INNER JOIN repositories r ON r.repo_id = i.repo_id
 WHERE i.issue_number = :issue_number
