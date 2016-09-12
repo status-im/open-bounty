@@ -26,8 +26,9 @@
                repo-id      :repo_id
                issue-number :issue_number} issue
               balance            (eth/get-balance-eth contract-address 4)
-              repo-owner-address (:address (users/get-repo-owner repo-id))]
-          (github/post-comment user repo issue-number balance)
+              repo-owner-address (:address (users/get-repo-owner repo-id))
+              {comment-id :id} (github/post-comment user repo issue-number balance)]
+          (issues/update-comment-id issue-id comment-id)
           (wallet/add-owner contract-address (eth/eth-account))
           (wallet/add-owner contract-address repo-owner-address))))))
 
@@ -42,7 +43,19 @@
         (wallet/execute contract-address payout-address value)
         (bounties/update-confirm-hash issue-id)))))
 
+(defn update-balance
+  []
+  (for [{contract-address :contract_address
+         login            :login
+         repo             :repo
+         comment-id       :comment_id
+         issue-number     :issue_number} (bounties/list-wallets)]
+    (when comment-id
+      (let [balance (eth/get-balance-eth contract-address 8)]
+        (github/update-comment login repo comment-id issue-number balance)))))
+
 (mount/defstate scheduler :start
   (do
     (every (* 5 60 1000) update-issue-contract-address pool)
-    (every (* 60 1000) self-sign-bounty pool)))
+    (every (* 60 1000) self-sign-bounty pool)
+    (every (* 5 60 1000) update-balance pool)))

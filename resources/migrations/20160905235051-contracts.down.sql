@@ -7,3 +7,5 @@ ALTER TABLE public.issues
   DROP COLUMN confirm_hash;
 ALTER TABLE public.issues
   ADD address VARCHAR(256);
+ALTER TABLE public.issues
+  DROP COLUMN comment_id;

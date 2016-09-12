@@ -32,6 +32,13 @@
     (db/update-contract-address con-db {:issue_id         issue-id
                                         :contract_address contract-address})))
 
+(defn update-comment-id
+  "Updates issue with comment id"
+  [issue-id comment-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-comment-id con-db {:issue_id   issue-id
+                                  :comment_id comment-id})))
+
 (defn list-pending-deployments
   "Retrieves pending transaction ids"
   []

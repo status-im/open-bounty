@@ -6,6 +6,7 @@
             [ring.util.codec :as codec]
             [clj-http.client :as http]
             [commiteth.config :refer [env]]
+            [digest :refer [sha-256]]
             [clojure.tools.logging :as log])
   (:import [java.util UUID]))
 
@@ -93,9 +94,14 @@
   (println "removing webhook")
   (repos/delete-hook user repo hook-id (auth-params token)))
 
+(defn github-comment-hash
+  [user repo issue-number]
+  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number)))
+
 (defn- get-qr-url
   [user repo issue-number]
-  (str (server-address) (format "/qr/%s/%s/bounty/%s/qr.png" user repo issue-number)))
+  (let [hash (github-comment-hash user repo issue-number)]
+    (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" user repo issue-number hash))))
 
 (defn- md-url
   ([text url]
@@ -107,14 +113,24 @@
   [alt src]
   (str "!" (md-url alt src)))
 
+(defn generate-comment
+  [user repo issue-number balance]
+  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number))
+        balance   (str balance " ETH")
+        site-url  (md-url (server-address) (server-address))]
+    (format "Current balance: %s\n%s\n%s" balance image-url site-url)))
+
 (defn post-comment
   [user repo issue-number balance]
-  (let [balance   (str balance " ETH")
-        image-url (md-image "QR Code" (get-qr-url user repo issue-number))
-        site-url  (md-url (server-address) (server-address))
-        comment   (format "Current balance: %s\n%s\n%s" balance image-url site-url)]
+  (let [comment (generate-comment user repo issue-number balance)]
     (log/info "Comment to" (str user "/" repo) ":" comment)
     (issues/create-comment user repo issue-number comment (self-auth-params))))
+
+(defn update-comment
+  [user repo comment-id issue-number balance]
+  (let [comment (generate-comment user repo issue-number balance)]
+    (log/info (str "Updating " user "/" repo " comment #" comment-id " with contents: " comment))
+    (issues/edit-comment user repo comment-id comment (self-auth-params))))
 
 (defn get-issue
   [user repo issue-number]

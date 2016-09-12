@@ -12,7 +12,7 @@
 (defn list-not-fixed-issues
   [owner-id]
   (jdbc/with-db-connection [con-db *db*]
-    (db/issues-list con-db {:owner_id owner-id})))
+    (db/owner-issues-list con-db {:owner_id owner-id})))
 
 (defn pending-bounties-list
   []
@@ -28,3 +28,8 @@
   [user repo issue-number]
   (jdbc/with-db-connection [con-db *db*]
     (db/get-bounty-address con-db {:login user :repo repo :issue_number issue-number})))
+
+(defn list-wallets
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/wallets-list con-db)))

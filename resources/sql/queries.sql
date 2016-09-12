@@ -129,6 +129,12 @@ SET contract_address = :contract_address
 FROM t
 RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.contract_address, t.login, t.repo, t.repo_id;
 
+-- :name update-comment-id :<! :1
+-- :doc updates comment-id for a given issue
+UPDATE issues
+SET comment_id = :comment_id
+WHERE issue_id = :issue_id;
+
 -- :name list-pending-deployments :? :*
 -- :doc retrieves pending transaction ids
 SELECT
@@ -201,8 +207,8 @@ FROM issues i
     ON r.repo_id = i.repo_id
 WHERE r.user_id = :owner_id;
 
--- :name issues-list :? :*
--- :doc lists all issues
+-- :name owner-issues-list :? :*
+-- :doc lists all not yet fixed issues in a given owner's repository
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
@@ -215,7 +221,22 @@ FROM issues i
   INNER JOIN repositories r
     ON r.repo_id = i.repo_id
 WHERE r.user_id = :owner_id
-      AND i.commit_id IS NULL;
+      AND i.commit_id IS NULL
+      AND NOT exists(SELECT 1
+                     FROM pull_requests
+                     WHERE issue_number = i.issue_number);
+
+-- :name wallets-list :? :*
+-- :doc lists all contract ids
+SELECT
+  i.contract_address AS contract_address,
+  r.login            AS login,
+  r.repo             AS repo,
+  i.comment_id       AS comment_id,
+  i.issue_number     AS issue_number
+FROM issues i
+  INNER JOIN repositories r ON r.repo_id = i.repo_id
+WHERE contract_address IS NOT NULL;
 
 -- :name get-bounty-address :? :1
 SELECT

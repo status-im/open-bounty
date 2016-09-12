@@ -5,7 +5,8 @@
             [commiteth.layout :as layout]
             [commiteth.util.images :refer :all]
             [clj.qrgen :as qr]
-            [commiteth.eth.core :as eth])
+            [commiteth.eth.core :as eth]
+            [commiteth.github.core :as github])
   (:import [javax.imageio ImageIO]
            [java.io InputStream]))
 
@@ -28,13 +29,15 @@
 
 (defapi qr-routes
   (context "/qr" []
-    (GET "/:user/:repo/bounty/:issue{[0-9]{1,9}}/qr.png" [user repo issue]
-      (let [{address      :contract_address
-             login        :login
-             repo         :repo
-             issue-number :issue_number} (bounties/get-bounty-address user repo (Integer/parseInt issue))
-            balance   (eth/get-balance-eth address 8)
-            issue-url (str login "/" repo "/issues/" issue-number)]
-        (if address
-          (ok (generate-image address balance issue-url 768 256))
-          (bad-request))))))
+    (GET "/:user/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [user repo issue hash]
+      (if (= hash (github/github-comment-hash user repo issue))
+        (let [{address      :contract_address
+               login        :login
+               repo         :repo
+               issue-number :issue_number} (bounties/get-bounty-address user repo (Integer/parseInt issue))]
+          (if address
+            (let [balance   (eth/get-balance-eth address 8)
+                  issue-url (str login "/" repo "/issues/" issue-number)]
+              (ok (generate-image address balance issue-url 768 256)))
+            (bad-request)))
+        (bad-request)))))
