@@ -24,7 +24,7 @@
 (defn authorize-url []
   (let [params (codec/form-encode {:client_id    (client-id)
                                    :redirect_uri (redirect-uri)
-                                   :scope        "admin:repo_hook"
+                                   :scope        "admin:repo_hook repo"
                                    :allow_signup allow-signup
                                    :state        (str (UUID/randomUUID))})]
     (str "https://github.com/login/oauth/authorize" "?" params)))
@@ -139,3 +139,7 @@
 (defn get-issue-events
   [user repo issue-id]
   (issues/issue-events user repo issue-id (self-auth-params)))
+
+(defn create-label
+  [user repo token]
+  (issues/create-label user repo "bounty" "00ff00" (auth-params token)))

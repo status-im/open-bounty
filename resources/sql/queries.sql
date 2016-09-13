@@ -255,7 +255,7 @@ SELECT balance
 FROM issues
 WHERE contract_address = :contract_address;
 
--- :name update-banlance :! :n
+-- :name update-balance :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
 SET balance = :balance

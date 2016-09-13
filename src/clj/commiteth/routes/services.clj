@@ -71,12 +71,12 @@
                  user-id :id} user
                 result (or
                          (repositories/create (merge params {:user_id user-id}))
-                         (repositories/toggle repo-id))
-                ]
+                         (repositories/toggle repo-id))]
             (if (:enabled result)
               ;; @todo: do we really want to make this call at this moment?
               (let [created-hook (github/add-webhook token login repo)]
                 (println created-hook)
+                (github/create-label login repo token)
                 (repositories/update-hook-id repo-id (:id created-hook)))
               (github/remove-webhook token login repo (:hook_id result)))
             result)))))
