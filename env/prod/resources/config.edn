@@ -1,6 +1,6 @@
 {:production           true
  :port                 3000
- :jdbc-database-url         "jdbc:postgresql://127.0.0.1:5432/d7cku33rlq0j96?user=wehpnfptnwmvwn&password=YpJoD1AmgPN4FMyQHl1FO3bWmI"
- :server-address       "http://commiteth.herokuapp.com"
+ :jdbc-database-url    "jdbc:postgresql://127.0.0.1:5432/d7cku33rlq0j96?user=wehpnfptnwmvwn&password=YpJoD1AmgPN4FMyQHl1FO3bWmI"
+ :server-address       "http://139.162.11.12"
  :github-client-id     "eaf23cff7b5fbdf716a6"
  :github-client-secret "a31af857986c8385b95962c7a590033513ef24d9"}
