@@ -32,6 +32,10 @@
   [wei]
   (/ wei 1000000000000000000))
 
+(defn hex->eth
+  [hex digits]
+  (->> hex hex->big-integer from-wei double (format (str "%." digits "f"))))
+
 (defn get-balance-hex
   [account]
   (eth-rpc "eth_getBalance" [account "latest"]))
@@ -42,7 +46,7 @@
 
 (defn get-balance-eth
   [account digits]
-  (->> (get-balance-wei account) from-wei double (format (str "%." digits "f"))))
+  (hex->eth (get-balance-hex account) digits))
 
 (defn send-transaction
   [from to value & [params]]

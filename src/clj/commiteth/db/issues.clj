@@ -44,3 +44,14 @@
   []
   (jdbc/with-db-connection [con-db *db*]
     (db/list-pending-deployments con-db)))
+
+(defn get-balance
+  [contract-address]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-balance con-db {:contract_address contract-address})))
+
+(defn update-balance
+  [contract-address balance]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-balance con-db {:contract_address contract-address
+                               :balance          balance})))

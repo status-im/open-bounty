@@ -51,8 +51,12 @@
          comment-id       :comment_id
          issue-number     :issue_number} (bounties/list-wallets)]
     (when comment-id
-      (let [balance (eth/get-balance-eth contract-address 8)]
-        (github/update-comment login repo comment-id issue-number balance)))))
+      (let [old-balance         (issues/get-balance contract-address)
+            current-balance-hex (eth/get-balance-hex contract-address)
+            current-balance-eth (eth/hex->eth current-balance-hex 8)]
+        (when-not (= old-balance current-balance-hex)
+          (issues/update-balance contract-address current-balance-hex)
+          (github/update-comment login repo comment-id issue-number current-balance-eth))))))
 
 (mount/defstate scheduler :start
   (do

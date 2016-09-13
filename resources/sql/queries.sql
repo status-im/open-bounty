@@ -248,3 +248,15 @@ FROM issues i
   INNER JOIN repositories r ON r.repo_id = i.repo_id
 WHERE i.issue_number = :issue_number
       AND r.login = :login AND r.repo = :repo;
+
+-- :name get-balance :? :1
+-- :doc gets current balance of a wallet attached to a given issue
+SELECT balance
+FROM issues
+WHERE contract_address = :contract_address;
+
+-- :name update-banlance :! :n
+-- :doc updates balance of a wallet attached to a given issue
+UPDATE issues
+SET balance = :balance
+WHERE contract_address = :contract_address;
