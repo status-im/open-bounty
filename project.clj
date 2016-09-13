@@ -57,6 +57,14 @@
             [lein-immutant "2.1.0"]
             [lein-sassc "0.10.4"]
             [lein-auto "0.1.2"]]
+  :immutant {
+    :war {
+        :name "ROOT"
+        :destination "/opt/wildfly/standalone/deployments"
+        :context-path "/"
+    }
+  }
+
   :sassc
   [{:src         "resources/scss/screen.scss"
     :output-to   "resources/public/css/screen.css"
