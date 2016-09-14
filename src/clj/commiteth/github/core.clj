@@ -14,18 +14,15 @@
 (defn client-id [] (:github-client-id env))
 (defn client-secret [] (:github-client-secret env))
 (defn redirect-uri [] (str (server-address) "/callback"))
-(def allow-signup true)
-(def hook-secret "Mu0eiV8ooy7IogheexathocaiSeLeineiLue0au8")
-
-;; @todo: github user which will post QR codes (already banned)
-(def self "h0gL")
-(def self-password "Fahh7ithoh8Ahghe")
+(defn hook-secret [] (:github-hook-secret env))
+(defn self [] (:github-user env))
+(defn self-password [] (:github-password env))
 
 (defn authorize-url []
   (let [params (codec/form-encode {:client_id    (client-id)
                                    :redirect_uri (redirect-uri)
                                    :scope        "admin:repo_hook repo"
-                                   :allow_signup allow-signup
+                                   :allow_signup true
                                    :state        (str (UUID/randomUUID))})]
     (str "https://github.com/login/oauth/authorize" "?" params)))
 
@@ -46,7 +43,7 @@
    :client-token (client-secret)})
 
 (defn- self-auth-params []
-  {:auth (str self ":" self-password)})
+  {:auth (str (self) ":" (self-password))})
 
 (def repo-fields
   [:id

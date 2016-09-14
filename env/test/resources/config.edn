@@ -1,8 +1,6 @@
-{:test                 true
- :port                 3001
+{:test              true
+ :port              3001
  ;; when :nrepl-port is set the application starts the nREPL server on load
- :nrepl-port           7001
- :jdbc-database-url         "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
- :server-address       "http://localhost:3000"
- :github-client-id     "caf23d90246fa99ca545"
- :github-client-secret "e8e7a088e7769c77e9e2d87c47ef81df51080bf3"}
+ :nrepl-port        7001
+ :jdbc-database-url "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
+ :server-address    "http://localhost:3000"}
