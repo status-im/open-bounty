@@ -78,7 +78,7 @@
 
 (defn add-webhook
   [token user repo]
-  (println "adding webhook")
+  (log/debug "adding webhook")
   (repos/create-hook user repo "web"
     {:url          (str (server-address) "/webhook")
      :content_type "json"}
@@ -88,7 +88,7 @@
 
 (defn remove-webhook
   [token user repo hook-id]
-  (println "removing webhook")
+  (log/debug "removing webhook")
   (repos/delete-hook user repo hook-id (auth-params token)))
 
 (defn github-comment-hash

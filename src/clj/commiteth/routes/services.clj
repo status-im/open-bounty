@@ -8,7 +8,8 @@
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties]
-            [commiteth.github.core :as github]))
+            [commiteth.github.core :as github]
+            [clojure.tools.logging :as log]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -75,7 +76,7 @@
             (if (:enabled result)
               ;; @todo: do we really want to make this call at this moment?
               (let [created-hook (github/add-webhook token login repo)]
-                (println created-hook)
+                (log/debug "Created webhook:" created-hook)
                 (github/create-label login repo token)
                 (repositories/update-hook-id repo-id (:id created-hook)))
               (github/remove-webhook token login repo (:hook_id result)))
