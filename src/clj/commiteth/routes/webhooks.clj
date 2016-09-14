@@ -6,7 +6,8 @@
             [commiteth.db.users :as users]
             [commiteth.eth.core :as eth]
             [ring.util.http-response :refer [ok]]
-            [clojure.string :refer [join]])
+            [clojure.string :refer [join]]
+            [clojure.tools.logging :as log])
   (:import [java.lang Integer]))
 
 (def label-name "bounty")
@@ -27,11 +28,14 @@
 
 (defn handle-issue-labeled
   [issue]
-  (let [{repo-id :id} (:repository issue)
+  (let [{repo-id       :id
+         repo          :name
+         {user :login} :owner} (:repository issue)
         {issue-id     :id
          issue-number :number
          issue-title  :title} (:issue issue)
         created-issue (issues/create repo-id issue-id issue-number issue-title)]
+    (log/debug (format "Issue %s/%s/%s labeled as bounty" user repo issue-number))
     (when (= 1 created-issue)
       (issues/update-transaction-hash issue-id (eth/deploy-contract)))))
 
@@ -40,6 +44,7 @@
     {issue-id :id issue-number :number} :issue}]
   (future
     (when-let [commit-id (find-commit-id user repo issue-number "referenced")]
+      (log/debug (format "Issue %s/%s/%s closed with commit %s" user repo issue-number commit-id))
       (issues/close commit-id issue-id))))
 
 (def keywords
@@ -93,6 +98,10 @@
                          (validate-issue-number owner repo))
           m            {:commit_id commit-id :issue_number issue-number}]
       (when (or commit-id issue-number)
+        (log/debug (format "Pull request %s/%s/%s closed with reference to %s"
+                     login repo pr-number
+                     (if commit-id (str "commit-id " commit-id)
+                                   (str "issue-number " issue-number))))
         (pull-requests/create (merge m {:repo_id   repo-id
                                         :pr_id     id
                                         :pr_number pr-number

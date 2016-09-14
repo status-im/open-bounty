@@ -77,8 +77,8 @@
   (users/me (auth-params token)))
 
 (defn add-webhook
-  [token user repo]
-  (log/debug "adding webhook")
+  [user repo token]
+  (log/debug "adding webhook" (str user "/" repo) token)
   (repos/create-hook user repo "web"
     {:url          (str (server-address) "/webhook")
      :content_type "json"}
@@ -87,8 +87,8 @@
        :active true})))
 
 (defn remove-webhook
-  [token user repo hook-id]
-  (log/debug "removing webhook")
+  [user repo hook-id token]
+  (log/debug "removing webhook" (str user "/" repo) hook-id token)
   (repos/delete-hook user repo hook-id (auth-params token)))
 
 (defn github-comment-hash
@@ -120,13 +120,13 @@
 (defn post-comment
   [user repo issue-number balance]
   (let [comment (generate-comment user repo issue-number balance)]
-    (log/info "Comment to" (str user "/" repo) ":" comment)
+    (log/debug "Posting comment to" (str user "/" repo) ":" comment)
     (issues/create-comment user repo issue-number comment (self-auth-params))))
 
 (defn update-comment
   [user repo comment-id issue-number balance]
   (let [comment (generate-comment user repo issue-number balance)]
-    (log/info (str "Updating " user "/" repo " comment #" comment-id " with contents: " comment))
+    (log/debug (str "Updating " user "/" repo " comment #" comment-id " with contents: " comment))
     (issues/edit-comment user repo comment-id comment (self-auth-params))))
 
 (defn get-issue
@@ -139,4 +139,5 @@
 
 (defn create-label
   [user repo token]
+  (log/debug "creating bounty label" (str user "/" repo) token)
   (issues/create-label user repo "bounty" "00ff00" (auth-params token)))
