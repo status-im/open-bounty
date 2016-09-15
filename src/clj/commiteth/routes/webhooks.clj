@@ -92,7 +92,7 @@
      pr-number       :number
      pr-body         :body} :pull_request}]
   (future
-    (let [commit-id    (find-commit-id owner repo pr-number "merged")
+    (let [commit-id    (find-commit-id owner repo pr-number ["merged"])
           issue-number (->>
                          (extract-issue-number pr-body)
                          (first)
