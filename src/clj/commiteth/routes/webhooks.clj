@@ -20,11 +20,12 @@
            events)))
 
 (defn find-commit-id
-  [user repo issue-number event-type]
-  (->
-    (github/get-issue-events user repo issue-number)
-    (find-issue-event event-type user)
-    (:commit_id)))
+  [user repo issue-number event-types]
+  (some identity (map #(->
+                        (github/get-issue-events user repo issue-number)
+                        (find-issue-event % user)
+                        :commit_id)
+                   event-types)))
 
 (defn handle-issue-labeled
   [issue]
@@ -43,7 +44,7 @@
   [{{{user :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
   (future
-    (when-let [commit-id (find-commit-id user repo issue-number "referenced")]
+    (when-let [commit-id (find-commit-id user repo issue-number ["referenced" "closed"])]
       (log/debug (format "Issue %s/%s/%s closed with commit %s" user repo issue-number commit-id))
       (issues/close commit-id issue-id))))
 
