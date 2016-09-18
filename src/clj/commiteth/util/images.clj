@@ -7,8 +7,7 @@
 
 (defn ^BufferedImage create-image
   [width height]
-  (.. GraphicsEnvironment getLocalGraphicsEnvironment getDefaultScreenDevice getDefaultConfiguration
-    (createCompatibleImage width height)))
+  (new BufferedImage width height BufferedImage/TYPE_INT_ARGB))
 
 (defn html->image
   [html width height]

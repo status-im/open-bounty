@@ -120,13 +120,13 @@
 (defn post-comment
   [user repo issue-number balance]
   (let [comment (generate-comment user repo issue-number balance)]
-    (log/debug "Posting comment to" (str user "/" repo) ":" comment)
+    (log/debug "Posting comment to" (str user "/" repo "/" issue-number) ":" comment)
     (issues/create-comment user repo issue-number comment (self-auth-params))))
 
 (defn update-comment
   [user repo comment-id issue-number balance]
   (let [comment (generate-comment user repo issue-number balance)]
-    (log/debug (str "Updating " user "/" repo " comment #" comment-id " with contents: " comment))
+    (log/debug (str "Updating " user "/" repo "/" issue-number " comment #" comment-id " with contents: " comment))
     (issues/edit-comment user repo comment-id comment (self-auth-params))))
 
 (defn get-issue

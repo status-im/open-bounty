@@ -24,6 +24,12 @@
       (log/error "Method: " method ", error: " error))
     (:result result)))
 
+(defn estimate-gas
+  [from to value & [params]]
+  (eth-rpc "eth_estimateGas" [(merge params {:from  from
+                                             :to    to
+                                             :value value})]))
+
 (defn hex->big-integer
   [hex]
   (new BigInteger (subs hex 2) 16))
@@ -50,10 +56,13 @@
 
 (defn send-transaction
   [from to value & [params]]
-  (eth-rpc "personal_signAndSendTransaction" [(merge params {:from  from
-                                                             :to    to
-                                                             :value value})
-                                              (eth-password)]))
+  ;; todo: estimate gas instead of hardcoding
+  (let [gas 1248650]
+    (eth-rpc "personal_signAndSendTransaction" [(merge params {:from  from
+                                                               :to    to
+                                                               :value value
+                                                               :gas   gas})
+                                                (eth-password)])))
 
 (defn get-transaction-receipt
   [hash]
@@ -62,9 +71,7 @@
 (defn deploy-contract
   []
   (let [contract-code (-> "contracts/wallet.data" io/resource slurp)]
-    (send-transaction (eth-account) nil 1
-      {:gas  1248650
-       :data contract-code})))
+    (send-transaction (eth-account) nil 1 {:data contract-code})))
 
 (defn- format-param
   [param]

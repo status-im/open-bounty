@@ -141,7 +141,8 @@ SELECT
   issue_id,
   transaction_hash
 FROM issues
-WHERE contract_address IS NULL;
+WHERE contract_address IS NULL
+      AND issues.transaction_hash IS NOT NULL;
 
 -- Pull Requests -------------------------------------------------------------------
 
