@@ -1,0 +1,144 @@
+h1.main-title {
+  color: #333;
+  font-weight: normal;
+}
+
+.flex-table-item {
+  padding-left: 20px;
+}
+
+.auto-search-group {
+  position: relative;
+  display: inline-block;
+  svg {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    z-index: 5;
+    width: 16px;
+    height: 16px;
+
+    fill: #bbb;
+  }
+  input {
+    padding-left: 30px;
+    width: 100%;
+    background-color: $background-color;
+    &:focus {
+      background-color: #fff;
+    }
+  }
+  form {
+    margin-left: -7px;
+    width: 320px;
+  }
+}
+
+.filters-search {
+  padding-bottom: 20px;
+  border-bottom: 1px solid $border-color;
+  .select-menu-button {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    color: #555;
+    &::after {
+      display: inline-block;
+      margin-left: 5px;
+      width: 0;
+      height: 0;
+      border: 4px solid;
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+      content: "";
+      vertical-align: -2px;
+    }
+  }
+}
+.repo-item {
+  position: relative;
+  padding: 30px 0;
+  border-bottom: 1px solid #eee;
+  list-style: none;
+}
+
+.repo-item-stats {
+  float: right;
+  margin-top: 6px;
+  color: #888;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.repo-item-description {
+  margin-top: 8px;
+  margin-bottom: 0;
+  max-width: 550px;
+  color: #666;
+  font-size: 14px;
+}
+
+.repo-item-meta {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 0;
+  color: #888;
+  font-size: 13px;
+}
+
+.members-box {
+  float: right;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  padding: 15px;
+  max-width: 280px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background-color: #fff;
+}
+
+.members-stats {
+  float: right;
+  margin-top: 3px;
+  color: #767676;
+  font-size: 14px;
+  svg {
+    fill: #767676;
+  }
+}
+
+.members-link {
+  display: block;
+  padding-bottom: 15px;
+  color: #333;
+  text-decoration: none;
+  font-size: 18px;
+  &:hover {
+    color: $links;
+    text-decoration: none;
+    .members-stats {
+      color: $links;
+      text-decoration: none;
+    }
+    svg {
+      fill: $links;
+    }
+  }
+}
+
+.member-avatar-group {
+  margin: -1px;
+}
+
+.member-avatar {
+  float: left;
+  margin: 1px;
+}
+
+.avatar {
+  display: inline-block;
+  overflow: hidden;
+  border-radius: 3px;
+  vertical-align: middle;
+  line-height: 1;
+}

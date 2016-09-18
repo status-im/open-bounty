@@ -1,0 +1,30 @@
+header.main-header {
+  margin-bottom: 20px;
+  width: 100%;
+  border-bottom: 1px solid $border-color;
+  background-color: $background-color;
+  .main-link {
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+header.sub-header {
+  margin-bottom: 20px;
+  padding-top: 20px;
+  border-bottom: 1px solid $border-color;
+  background-color: $background-color;
+  h1 {
+    color: $links-gray;
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 18px;
+    line-height: 26px;
+    a {
+      color: $links;
+    }
+    svg {
+      fill: #bbb;
+    }
+  }
+}

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <title>commiteth</title>
+  <meta name="description" content="">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <!-- build:css css/main.min.css -->
+  <link rel="stylesheet" href="css/main.css">
+  <!-- endbuild -->
+
+</head>
+
+<body>
+
+  <nav class="main-navbar">
+    <div class="container">
+
+    </div>
+  </nav>
+
+  <header class="main-header">
+    <div class="container">
+      <div class="flex-table mt-4 mb-4">
+        <a href="/"><img src="img/logo.png" alt="commiteth" width="100"></a>
+        <div class="flex-table-item flex-table-item-primary">
+          <a href="/"><h1 class="main-title lh-condensed">commiteth</h1>
+          <span class="main-link">
+            earn ETH for commits
+          </span>
+          </a>
+        </div>
+      </div>
+      <div class="tabnav">
+        <div class="tabnav-actions float-right">
+          <div class="tabnav-actions logged-in">
+            <form>
+            <button class="btn tabnav-button" type="submit" aria-haspopup="true">Update</button>
+            <div class="auto-search-group">
+                <input class="form-control" name="" value="" placeholder="0x00000000" aria-label="Find a repository…" autocomplete="off" type="text">
+                <svg aria-hidden="true" class="octicon octicon-broadcast" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M9 9H8c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H7c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1H6c-.55 0-1 .45-1 1v2h1v3c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-3h1v-2c0-.55-.45-1-1-1zM7 7h1v1H7V7zm2 4H8v4H7v-4H6v-1h3v1zm2.09-3.5c0-1.98-1.61-3.59-3.59-3.59A3.593 3.593 0 0 0 4 8.31v1.98c-.61-.77-1-1.73-1-2.8 0-2.48 2.02-4.5 4.5-4.5S12 5.01 12 7.49c0 1.06-.39 2.03-1 2.8V8.31c.06-.27.09-.53.09-.81zm3.91 0c0 2.88-1.63 5.38-4 6.63v-1.05a6.553 6.553 0 0 0 3.09-5.58A6.59 6.59 0 0 0 7.5.91 6.59 6.59 0 0 0 .91 7.5c0 2.36 1.23 4.42 3.09 5.58v1.05A7.497 7.497 0 0 1 7.5 0C11.64 0 15 3.36 15 7.5z"></path></svg>
+            </div>
+          </form>
+          </div>
+          <div class="tabnav-actions logged-out hidden">
+            <button class="btn tabnav-button">Sign in</button>
+          </div>
+        </div>
+        <nav class="header-nav tabnav-tabs">
+          <a class="tabnav-tab selected" href="/">
+            <svg aria-hidden="true" class="octicon octicon-repo" height="16" version="1.1" viewbox="0 0 12 16" width="12"><path d="M4 9H3V8h1v1zm0-3H3v1h1V6zm0-2H3v1h1V4zm0-2H3v1h1V2zm8-1v12c0 .55-.45 1-1 1H6v2l-1.5-1.5L3 16v-2H1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1h10c.55 0 1 .45 1 1zm-1 10H1v2h2v-1h3v1h5v-2zm0-10H2v9h9V1z"></path></svg>            Open Bounties
+          </a>
+          <a class="tabnav-tab" href="#">
+            <svg aria-hidden="true" class="octicon octicon-organization" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 12.999c0 .439-.45 1-1 1H7.995c-.539 0-.994-.447-.995-.999H1c-.54 0-1-.561-1-1 0-2.634 3-4 3-4s.229-.409 0-1c-.841-.621-1.058-.59-1-3 .058-2.419 1.367-3 2.5-3s2.442.58 2.5 3c.058 2.41-.159 2.379-1 3-.229.59 0 1 0 1s1.549.711 2.42 2.088C9.196 9.369 10 8.999 10 8.999s.229-.409 0-1c-.841-.62-1.058-.59-1-3 .058-2.419 1.367-3 2.5-3s2.437.581 2.495 3c.059 2.41-.158 2.38-1 3-.229.59 0 1 0 1s3.005 1.366 3.005 4"></path></svg>
+            Manage Transactions
+            <span class="counter">33</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="issues-list-table">
+
+      <div class="issues-toolbar table-list-header clearfix">
+        <div class="table-list-filters">
+          <div class="float-left pl-3">
+            <a href="#" class="btn-link selected">
+              <svg aria-hidden="true" class="octicon octicon-issue-opened" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>              255 Open
+            </a>
+            <a href="#" class="btn-link ">
+              <svg aria-hidden="true" class="octicon octicon-check" height="16" version="1.1" viewbox="0 0 12 16" width="12"><path d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5z"></path></svg> 1,358 Closed
+            </a>
+          </div>
+          <div class="float-right">
+            <div class="select-menu float-left">
+              <button class="btn-link select-menu-button" type="button" aria-haspopup="true">
+                Author
+              </button>
+            </div>
+            <div class="select-menu float-left">
+              <button class="btn-link select-menu-button" type="button" aria-haspopup="true">
+                Labels
+              </button>
+            </div>
+            <div class="select-menu float-left">
+              <button class="btn-link select-menu-button" type="button" aria-haspopup="true">
+                Milestones
+              </button>
+            </div>
+            <div class="select-menu float-left">
+              <button class="btn-link select-menu-button" type="button" aria-haspopup="true">
+                Assignee
+              </button>
+            </div>
+            <div class="select-menu float-left">
+              <button class="btn-link select-menu-button" type="button" aria-haspopup="true">
+                Sort
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="issues-list">
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                  <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+                </span>
+            </div>
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                  First sync takes days too complete both on testnet and public chain
+                </a>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                    #2971
+                    opened 7 hours ago by
+                    <a href="#">kowalski</a>
+                  </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+              </div>
+            </div>
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to ">
+                </div>
+              </div>
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+                <a href="#" class="muted-link" aria-label="2 comments">
+                  <svg aria-hidden="true" class="octicon octicon-comment v-align-middle" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z"></path></svg>
+                  <span class="text-small">2</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+
+              <a href="#" class="box-row-link h4">
+                Gas estimation doesn't account for CALL stipends, nor unused gas returns
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all bug issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #fc2929; color: #fff;">bug</a>
+                <a href="#" aria-label="View all core issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #fbca04; color: #332900;">core</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2970
+                  opened a day ago by
+                  <a href="#">karalabe</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+              </div>
+            </div>
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to obscuren">
+                  <a href="#" aria-label="View everything assigned to obscuren" class="avatar">
+                    <img alt="obscuren" class="from-avatar" src="https://avatars3.githubusercontent.com/u/6264126" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+                <a href="#" class="muted-link" aria-label="1 comment">
+                  <svg aria-hidden="true" class="octicon octicon-comment v-align-middle" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z"></path></svg>
+                  <span class="text-small">1</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+
+              <a href="#" class="box-row-link h4">
+                eth_newFilter returns filter id in 'UNFORMATTED DATA' format
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all RPC issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">RPC</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2966
+                  opened a day ago by
+                  <a href="#">phleemac</a>
+                </span>
+
+                <span class="issue-meta-section css-truncate issue-milestone">
+                  <a class="milestone-link muted-link css-truncate tooltipped tooltipped-s" aria-label="View all issues in this milestone" href="#">
+                    <svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>
+                    <span class="css-truncate-target">
+                      1.5.0
+                    </span>
+                </a>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to fjl and bas-vk">
+                  <a href="#" aria-label="View everything assigned to fjl" class="avatar">
+                    <img alt="@fjl" class="from-avatar" src="https://avatars3.githubusercontent.com/u/6915" width="20" height="20">
+                  </a>
+                  <a href="#" aria-label="View everything assigned to bas-vk" class="avatar">
+                    <img alt="@bas-vk" class="from-avatar" src="https://avatars3.githubusercontent.com/u/4280775" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                swarm merge to develop
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all enhancement issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #84b6eb; color: #1c2733;">enhancement</a>
+                <a href="#" aria-label="View all feature issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #009800; color: #fff;">feature</a>
+                <a href="#" aria-label="View all swarm issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">swarm</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2961
+                  opened 2 days ago by
+                  <a href="#">zelig</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+
+                <span class="issue-meta-section task-progress">
+                  <svg aria-hidden="true" class="octicon octicon-checklist" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z"></path></svg>
+                  <span class="task-progress-counts">6 of 9</span>
+                <span class="progress-bar">
+                    <span class="progress" style="width: 67%"></span>
+                </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to zelig">
+                  <a href="#" aria-label="View everything assigned to zelig" class="avatar">
+                    <img alt="@zelig" class="from-avatar" src="https://avatars2.githubusercontent.com/u/769725" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                swarm network rewrite
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all enhancement issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #84b6eb; color: #1c2733;">enhancement</a>
+                <a href="#" aria-label="View all feature issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #009800; color: #fff;">feature</a>
+                <a href="#" aria-label="View all swarm issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">swarm</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2961
+                  opened 2 days ago by
+                  <a href="#">zelig</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+
+                <span class="issue-meta-section task-progress">
+                  <svg aria-hidden="true" class="octicon octicon-checklist" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z"></path></svg>
+                  <span class="task-progress-counts">1 of 17</span>
+                <span class="progress-bar">
+                    <span class="progress" style="width: 6%"></span>
+                </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to zelig">
+                  <a href="#" aria-label="View everything assigned to zelig" class="avatar">
+                    <img alt="@zelig" class="from-avatar" src="https://avatars2.githubusercontent.com/u/769725" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                  <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+                </span>
+            </div>
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                  First sync takes days too complete both on testnet and public chain
+                </a>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                    #2971
+                    opened 7 hours ago by
+                    <a href="#">kowalski</a>
+                  </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+              </div>
+            </div>
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to ">
+                </div>
+              </div>
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+                <a href="#" class="muted-link" aria-label="2 comments">
+                  <svg aria-hidden="true" class="octicon octicon-comment v-align-middle" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z"></path></svg>
+                  <span class="text-small">2</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+
+              <a href="#" class="box-row-link h4">
+                Gas estimation doesn't account for CALL stipends, nor unused gas returns
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all bug issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #fc2929; color: #fff;">bug</a>
+                <a href="#" aria-label="View all core issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #fbca04; color: #332900;">core</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2970
+                  opened a day ago by
+                  <a href="#">karalabe</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+              </div>
+            </div>
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to obscuren">
+                  <a href="#" aria-label="View everything assigned to obscuren" class="avatar">
+                    <img alt="obscuren" class="from-avatar" src="https://avatars3.githubusercontent.com/u/6264126" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+                <a href="#" class="muted-link" aria-label="1 comment">
+                  <svg aria-hidden="true" class="octicon octicon-comment v-align-middle" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z"></path></svg>
+                  <span class="text-small">1</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+
+              <a href="#" class="box-row-link h4">
+                eth_newFilter returns filter id in 'UNFORMATTED DATA' format
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all RPC issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">RPC</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2966
+                  opened a day ago by
+                  <a href="#">phleemac</a>
+                </span>
+
+                <span class="issue-meta-section css-truncate issue-milestone">
+                  <a class="milestone-link muted-link css-truncate tooltipped tooltipped-s" aria-label="View all issues in this milestone" href="#">
+                    <svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>
+                    <span class="css-truncate-target">
+                      1.5.0
+                    </span>
+                </a>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to fjl and bas-vk">
+                  <a href="#" aria-label="View everything assigned to fjl" class="avatar">
+                    <img alt="@fjl" class="from-avatar" src="https://avatars3.githubusercontent.com/u/6915" width="20" height="20">
+                  </a>
+                  <a href="#" aria-label="View everything assigned to bas-vk" class="avatar">
+                    <img alt="@bas-vk" class="from-avatar" src="https://avatars3.githubusercontent.com/u/4280775" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                swarm merge to develop
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all enhancement issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #84b6eb; color: #1c2733;">enhancement</a>
+                <a href="#" aria-label="View all feature issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #009800; color: #fff;">feature</a>
+                <a href="#" aria-label="View all swarm issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">swarm</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2961
+                  opened 2 days ago by
+                  <a href="#">zelig</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+
+                <span class="issue-meta-section task-progress">
+                  <svg aria-hidden="true" class="octicon octicon-checklist" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z"></path></svg>
+                  <span class="task-progress-counts">6 of 9</span>
+                <span class="progress-bar">
+                    <span class="progress" style="width: 67%"></span>
+                </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to zelig">
+                  <a href="#" aria-label="View everything assigned to zelig" class="avatar">
+                    <img alt="@zelig" class="from-avatar" src="https://avatars2.githubusercontent.com/u/769725" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                swarm network rewrite
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all enhancement issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #84b6eb; color: #1c2733;">enhancement</a>
+                <a href="#" aria-label="View all feature issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #009800; color: #fff;">feature</a>
+                <a href="#" aria-label="View all swarm issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">swarm</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2961
+                  opened 2 days ago by
+                  <a href="#">zelig</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+
+                <span class="issue-meta-section task-progress">
+                  <svg aria-hidden="true" class="octicon octicon-checklist" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z"></path></svg>
+                  <span class="task-progress-counts">1 of 17</span>
+                <span class="progress-bar">
+                    <span class="progress" style="width: 6%"></span>
+                </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to zelig">
+                  <a href="#" aria-label="View everything assigned to zelig" class="avatar">
+                    <img alt="@zelig" class="from-avatar" src="https://avatars2.githubusercontent.com/u/769725" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                  <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+                </span>
+            </div>
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                  First sync takes days too complete both on testnet and public chain
+                </a>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                    #2971
+                    opened 7 hours ago by
+                    <a href="#">kowalski</a>
+                  </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+              </div>
+            </div>
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to ">
+                </div>
+              </div>
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+                <a href="#" class="muted-link" aria-label="2 comments">
+                  <svg aria-hidden="true" class="octicon octicon-comment v-align-middle" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z"></path></svg>
+                  <span class="text-small">2</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+
+              <a href="#" class="box-row-link h4">
+                Gas estimation doesn't account for CALL stipends, nor unused gas returns
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all bug issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #fc2929; color: #fff;">bug</a>
+                <a href="#" aria-label="View all core issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #fbca04; color: #332900;">core</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2970
+                  opened a day ago by
+                  <a href="#">karalabe</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+              </div>
+            </div>
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to obscuren">
+                  <a href="#" aria-label="View everything assigned to obscuren" class="avatar">
+                    <img alt="obscuren" class="from-avatar" src="https://avatars3.githubusercontent.com/u/6264126" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+                <a href="#" class="muted-link" aria-label="1 comment">
+                  <svg aria-hidden="true" class="octicon octicon-comment v-align-middle" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M14 1H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h2v3.5L7.5 11H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 9H7l-2 2v-2H2V2h12v8z"></path></svg>
+                  <span class="text-small">1</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+
+              <a href="#" class="box-row-link h4">
+                eth_newFilter returns filter id in 'UNFORMATTED DATA' format
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all RPC issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">RPC</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2966
+                  opened a day ago by
+                  <a href="#">phleemac</a>
+                </span>
+
+                <span class="issue-meta-section css-truncate issue-milestone">
+                  <a class="milestone-link muted-link css-truncate tooltipped tooltipped-s" aria-label="View all issues in this milestone" href="#">
+                    <svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>
+                    <span class="css-truncate-target">
+                      1.5.0
+                    </span>
+                </a>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to fjl and bas-vk">
+                  <a href="#" aria-label="View everything assigned to fjl" class="avatar">
+                    <img alt="@fjl" class="from-avatar" src="https://avatars3.githubusercontent.com/u/6915" width="20" height="20">
+                  </a>
+                  <a href="#" aria-label="View everything assigned to bas-vk" class="avatar">
+                    <img alt="@bas-vk" class="from-avatar" src="https://avatars3.githubusercontent.com/u/4280775" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                swarm merge to develop
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all enhancement issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #84b6eb; color: #1c2733;">enhancement</a>
+                <a href="#" aria-label="View all feature issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #009800; color: #fff;">feature</a>
+                <a href="#" aria-label="View all swarm issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">swarm</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2961
+                  opened 2 days ago by
+                  <a href="#">zelig</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+
+                <span class="issue-meta-section task-progress">
+                  <svg aria-hidden="true" class="octicon octicon-checklist" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z"></path></svg>
+                  <span class="task-progress-counts">6 of 9</span>
+                <span class="progress-bar">
+                    <span class="progress" style="width: 67%"></span>
+                </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to zelig">
+                  <a href="#" aria-label="View everything assigned to zelig" class="avatar">
+                    <img alt="@zelig" class="from-avatar" src="https://avatars2.githubusercontent.com/u/769725" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="issue">
+          <div class="d-table table-fixed width-full">
+            <div class="float-left pt-3 pl-3">
+              <span class="tooltipped tooltipped-n" aria-label="Open issue">
+                <svg aria-hidden="true" class="octicon octicon-issue-opened open" height="16" version="1.1" viewbox="0 0 14 16" width="14"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+              </span>
+            </div>
+
+            <div class="float-left col-9 p-3 lh-condensed">
+              <a href="#" class="box-row-link h4">
+                swarm network rewrite
+              </a>
+              <span class="labels">
+                <a href="#" aria-label="View all enhancement issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #84b6eb; color: #1c2733;">enhancement</a>
+                <a href="#" aria-label="View all feature issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #009800; color: #fff;">feature</a>
+                <a href="#" aria-label="View all swarm issues" class="label v-align-text-top tooltipped tooltipped-n" style="background-color: #d4c5f9; color: #2b2833;">swarm</a>
+              </span>
+              <div class="mt-1 text-small text-gray">
+                <span class="mr-2 opened-by">
+                  #2961
+                  opened 2 days ago by
+                  <a href="#">zelig</a>
+                </span>
+                <span class="issue-meta-section css-truncate issue-milestone"></span>
+
+                <span class="issue-meta-section task-progress">
+                  <svg aria-hidden="true" class="octicon octicon-checklist" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M16 8.5l-6 6-3-3L8.5 10l1.5 1.5L14.5 7 16 8.5zM5.7 12.2l.8.8H2c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h7c.55 0 1 .45 1 1v6.5l-.8-.8c-.39-.39-1.03-.39-1.42 0L5.7 10.8a.996.996 0 0 0 0 1.41v-.01zM4 4h5V3H4v1zm0 2h5V5H4v1zm0 2h3V7H4v1zM3 9H2v1h1V9zm0-2H2v1h1V7zm0-2H2v1h1V5zm0-2H2v1h1V3z"></path></svg>
+                  <span class="task-progress-counts">1 of 17</span>
+                <span class="progress-bar">
+                    <span class="progress" style="width: 6%"></span>
+                </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="float-right col-2">
+              <div class="float-left col-7 pt-3 pr-3 text-right">
+                <div class="avatar-stack tooltipped tooltipped-multiline tooltipped-s" aria-label="Assigned to zelig">
+                  <a href="#" aria-label="View everything assigned to zelig" class="avatar">
+                    <img alt="@zelig" class="from-avatar" src="https://avatars2.githubusercontent.com/u/769725" width="20" height="20">
+                  </a>
+                </div>
+              </div>
+
+              <div class="float-right col-5 no-wrap pt-3 pr-3 text-right">
+              </div>
+            </div>
+          </div>
+        </li>
+
+      </ul>
+
+    </div>
+    <!-- End table -->
+
+    <div class="paginate-container">
+      <div class="pagination">
+        <span class="previous-page disabled">Previous</span>
+        <em class="current">1</em>
+        <a rel="next" href="#">2</a>
+        <a href="#">3</a>
+        <a href="#">4</a>
+        <a href="#">5</a>
+        <span class="gap">…</span>
+        <a href="#">10</a>
+        <a href="#">11</a>
+        <a class="next-page" rel="next" href="#">Next</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- build:js js/main.min.js -->
+  <script type="text/javascript" src="js/libs.min.js"></script>
+  <script type="text/javascript" src="js/common.js"></script>
+  <!-- endbuild -->
+
+</body>
+
+</html>

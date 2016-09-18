@@ -1,0 +1,46 @@
+header.main-header {
+  a {
+    color: $links-gray;
+    text-decoration: none;
+  }
+  a.meta-link {
+    color: $links-gray;
+    font-size: 12px;
+  }
+  svg {
+    fill: #ccc;
+  }
+  .octicon {
+    position: relative;
+    top: 1px;
+    margin-right: 2px;
+    color: #ccc;
+    vertical-align: text-bottom;
+  }
+}
+
+.repo-item-stats {
+  a {
+    margin-left: 8px;
+    color: #888;
+    text-decoration: none;
+    svg {
+      fill: #888;
+    }
+  &:hover {
+    color: $links;
+    svg {
+      fill: $links;
+    }
+  }
+  }
+}
+
+.box-row-link {
+  color: #333;
+  text-decoration: none;
+  &:hover {
+    color: $links;
+    text-decoration: none;
+  }
+}

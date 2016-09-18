@@ -1,0 +1,49 @@
+.tabnav {
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.tabnav-tab {
+  padding: 8px 15px 11px;
+  &.selected {
+    border-width: 3px 1px 1px;
+    border-color: $tab-active $lightgray transparent;
+    font-weight: bold;
+    svg {
+      fill: #000;
+    }
+  }
+  &:hover {
+    color: #000;
+  }
+}
+
+.tab-condensed {
+  padding: 7px 13px 8px;
+  color: #666;
+  svg {
+    fill: #bbb;
+  }
+  &.selected {
+    color: #111;
+    font-weight: normal;
+  }
+}
+
+.tabnav-actions {
+  &.logged-in .tabnav-button {
+    margin-right: -5px;
+    border-radius: 3px 0 0 3px;
+  }
+  .auto-search-group {
+    input {
+      border-radius: 0 3px 3px 0;
+      background-color: #fff;
+    }
+    .octicon {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+    }
+  }
+}

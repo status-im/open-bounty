@@ -1,0 +1,62 @@
+.paginate-container {
+  margin-top: 20px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.pagination {
+  display: inline-block;
+  &::before {
+    display: table;
+    content: "";
+  }
+  .disabled, .disabled:hover {
+    background-color: $background-color;
+    color: #d3d3d3;
+    cursor: default;
+  }
+  span:first-child {
+  margin-left: 0;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  }
+  a:last-child {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+  .current, .current:hover {
+    z-index: 3;
+    border-color: $pagination;
+    background-color: $pagination;
+    color: #fff;
+  }
+  a, span, em {
+    position: relative;
+    float: left;
+    margin-left: -1px;
+    padding: 7px 12px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: $pagination;
+    vertical-align: middle;
+    text-decoration: none;
+    white-space: nowrap;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 13px;
+    cursor: pointer;
+    &:hover {
+      background-color: #e7e7e7;
+    }
+  }
+  .gap {
+    background-color: #fafafa;
+    color: #d3d3d3;
+    cursor: default;
+    &:hover {
+      background-color: #fafafa;
+      color: #d3d3d3;
+      cursor: default;
+    }
+  }
+}
