@@ -17,14 +17,14 @@
     (:repos db)))
 
 (reg-sub
-  :bounties
+  :all-bounties
   (fn [db _]
-    (:bounties db)))
+    (:all-bounties db)))
 
 (reg-sub
-  :issues
+  :owner-bounties
   (fn [db _]
-    (:issues db)))
+    (:owner-bounties db)))
 
 (reg-sub
   :get-in

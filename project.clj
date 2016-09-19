@@ -8,8 +8,8 @@
                  [cljs-ajax "0.5.8"]
                  [secretary "1.2.3"]
                  [reagent-utils "0.2.0"]
-                 [reagent "0.6.0-rc"]
-                 [org.clojure/clojurescript "1.9.225" :scope "provided"]
+                 [reagent "0.6.0"]
+                 [org.clojure/clojurescript "1.9.229" :scope "provided"]
                  [org.clojure/clojure "1.8.0"]
                  [selmer "1.0.7"]
                  [markdown-clj "0.9.89"]
@@ -56,18 +56,17 @@
             [lein-cljsbuild "1.1.3"]
             [lein-immutant "2.1.0"]
             [lein-sassc "0.10.4"]
+            [lein-npm "0.6.2"]
             [lein-auto "0.1.2"]]
-  :immutant {
-    :war {
-        :name "ROOT"
-        :destination "/opt/wildfly/standalone/deployments"
-        :context-path "/"
-    }
-  }
+  :immutant {:war {:name         "ROOT"
+                   :destination  "/opt/wildfly/standalone/deployments"
+                   :context-path "/"}}
+
+  ;:npm {:dependencies ["primer-css" "latest"]}
 
   :sassc
-  [{:src         "resources/scss/screen.scss"
-    :output-to   "resources/public/css/screen.css"
+  [{:src         "resources/scss/main.scss"
+    :output-to   "resources/public/css/main.css"
     :style       "nested"
     :import-path "resources/scss"}]
 
@@ -113,11 +112,11 @@
                                     [pjstadig/humane-test-output "0.8.1"]
                                     [doo "0.1.7"]
                                     [binaryage/devtools "0.8.1"]
-                                    [figwheel-sidecar "0.5.4-7"]
+                                    [figwheel-sidecar "0.5.7"]
                                     [com.cemerick/piggieback "0.2.2-SNAPSHOT"]]
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
                                     [lein-doo "0.1.7"]
-                                    [lein-figwheel "0.5.4-7"]
+                                    [lein-figwheel "0.5.7"]
                                     [org.clojure/clojurescript "1.9.225"]]
                    :cljsbuild
                                    {:builds

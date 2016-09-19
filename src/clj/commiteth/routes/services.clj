@@ -55,13 +55,11 @@
       :current-user user
       (ok (repositories/get-enabled (:id user))))
     (GET "/bounties" []
-      :auth-rules authenticated?
-      :current-user user
-      (ok (bounties/list-fixed-issues (:id user))))
+      (ok (bounties/list-all-bounties)))
     (GET "/issues" []
       :auth-rules authenticated?
       :current-user user
-      (ok (bounties/list-not-fixed-issues (:id user))))
+      (ok (bounties/list-owner-bounties (:id user))))
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?
       :current-user user

@@ -182,7 +182,22 @@ UPDATE issues
 SET confirm_hash = :confirm_hash
 WHERE issue_id = :issue_id;
 
--- :name bounties-list :? :*
+-- :name all-bounties-list :? :*
+-- :doc lists all issues labeled as 'bounty'
+SELECT
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.issue_number     AS issue_number,
+  i.title            AS issue_title,
+  i.repo_id          AS repo_id,
+  i.balance          AS issue_balance,
+  r.login            AS owner_name,
+  r.repo             AS repo_name
+FROM issues i
+  INNER JOIN repositories r
+    ON r.repo_id = i.repo_id;
+
+-- :name owner-bounties-list :? :*
 -- :doc lists fixed issues
 SELECT
   i.contract_address AS contract_address,
@@ -190,6 +205,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
+  i.balance          AS balance,
   p.pr_id            AS pr_id,
   p.user_id          AS user_id,
   p.pr_number        AS pr_number,

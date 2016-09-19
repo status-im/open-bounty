@@ -4,10 +4,15 @@
             [clojure.set :refer [rename-keys]]))
 
 
-(defn list-fixed-issues
-  [owner-id]
+(defn list-all-bounties
+  []
   (jdbc/with-db-connection [con-db *db*]
-    (db/bounties-list con-db {:owner_id owner-id})))
+    (db/all-bounties-list con-db)))
+
+(defn list-owner-bounties
+  [owner]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/owner-bounties-list con-db {:owner_id owner})))
 
 (defn list-not-fixed-issues
   [owner-id]
