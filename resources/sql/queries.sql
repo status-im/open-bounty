@@ -127,7 +127,8 @@ WITH t AS (
 UPDATE issues i
 SET contract_address = :contract_address
 FROM t
-RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.contract_address, t.login, t.repo, t.repo_id;
+WHERE i.issue_id = :issue_id
+RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, i.contract_address, t.login, t.repo, t.repo_id;
 
 -- :name update-comment-id :! :n
 -- :doc updates comment-id for a given issue
