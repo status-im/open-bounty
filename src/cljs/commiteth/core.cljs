@@ -45,7 +45,7 @@
          "Update"]
         [:div.auto-search-group
          [(input {:placeholder  "0x0000000000000000000000000000000000000000",
-                  :autocomplete "off",
+                  :autoComplete "off",
                   :size         55
                   :type         "text"
                   :value-path   user-address-path})]
@@ -53,7 +53,7 @@
           {:aria-hidden "true",
            :height      "16",
            :version     "1.1",
-           :viewbox     "0 0 16 16",
+           :viewBox     "0 0 16 16",
            :width       "16"}
           [:path
            {:d "M9 9H8c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H7c-.55
@@ -93,7 +93,7 @@
             {:aria-hidden "true",
              :height      "16",
              :version     "1.1",
-             :viewbox     "0 0 12 16",
+             :viewBox     "0 0 12 16",
              :width       "12"}
             [:path
              {:d
@@ -106,7 +106,7 @@
                         {:aria-hidden "true",
                          :height      "16",
                          :version     "1.1",
-                         :viewbox     "0 0 16 16",
+                         :viewBox     "0 0 16 16",
                          :width       "16"}
                         [:path
                          {:d

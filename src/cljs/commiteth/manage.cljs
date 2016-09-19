@@ -43,7 +43,7 @@
        {:aria-hidden "true",
         :height      "16",
         :version     "1.1",
-        :viewbox     "0 0 14 16",
+        :viewBox     "0 0 14 16",
         :width       "14"}
        [:path
         {:d

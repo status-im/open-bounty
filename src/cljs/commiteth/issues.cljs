@@ -27,7 +27,7 @@
         {:aria-hidden "true",
          :height      "16",
          :version     "1.1",
-         :viewbox     "0 0 14 16",
+         :viewBox     "0 0 14 16",
          :width       "14"}
         [:path
          {:d
@@ -39,7 +39,7 @@
         {:aria-hidden "true",
          :height      "16",
          :version     "1.1",
-         :viewbox     "0 0 12 16",
+         :viewBox     "0 0 12 16",
          :width       "12"}
         [:path {:d "M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5z"}]]
        " 1,358 Closed  "]]
@@ -96,7 +96,7 @@
        {:aria-hidden "true",
         :height      "16",
         :version     "1.1",
-        :viewbox     "0 0 14 16",
+        :viewBox     "0 0 14 16",
         :width       "14"}
        [:path
         {:d
@@ -127,7 +127,7 @@
         {:aria-hidden "true",
          :height      "16",
          :version     "1.1",
-         :viewbox     "0 0 16 16",
+         :viewBox     "0 0 16 16",
          :width       "16"}
         [:path
          {:d
