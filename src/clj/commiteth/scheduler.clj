@@ -67,3 +67,7 @@
   :stop (do
           (log/info "Stopping scheduler pool")
           (stop-and-reset-pool! pool)))
+
+(defn stop []
+  (log/info "Stopping scheduler pool")
+  (stop-and-reset-pool! pool))

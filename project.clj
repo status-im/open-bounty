@@ -61,6 +61,7 @@
   :immutant {:war {:name         "ROOT"
                    :destination  "/opt/wildfly/standalone/deployments"
                    :context-path "/"}}
+  :ring {:destroy commiteth.scheduler/stop}
 
   ;:npm {:dependencies ["primer-css" "latest"]}
 

@@ -9,7 +9,8 @@
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties]
             [commiteth.github.core :as github]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [commiteth.eth.core :as eth]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -59,7 +60,8 @@
     (GET "/issues" []
       :auth-rules authenticated?
       :current-user user
-      (ok (bounties/list-owner-bounties (:id user))))
+      (ok (map #(conj % {:balance-eth (eth/hex->eth (:balance %) 6)})
+            (bounties/list-owner-bounties (:id user)))))
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?
       :current-user user
