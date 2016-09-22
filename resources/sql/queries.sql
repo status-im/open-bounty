@@ -207,6 +207,7 @@ SELECT
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
   i.balance          AS balance,
+  i.confirm_hash     AS confirm_hash,
   p.pr_id            AS pr_id,
   p.user_id          AS user_id,
   p.pr_number        AS pr_number,
@@ -214,7 +215,8 @@ SELECT
   u.login            AS user_login,
   u.name             AS user_name,
   r.login            AS owner_name,
-  r.repo             AS repo_name
+  r.repo             AS repo_name,
+  o.address          AS owner_address
 FROM issues i
   INNER JOIN pull_requests p
     ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
@@ -223,6 +225,8 @@ FROM issues i
     ON u.id = p.user_id
   INNER JOIN repositories r
     ON r.repo_id = i.repo_id
+  INNER JOIN users o
+    ON r.user_id = o.id
 WHERE r.user_id = :owner_id;
 
 -- :name owner-issues-list :? :*

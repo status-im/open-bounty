@@ -33,7 +33,7 @@
      :dispatch-n [[:load-user-profile]
                   [:load-user-repos]
                   [:load-enabled-repos]
-                  [:load-issues]]}))
+                  [:load-owner-bounties]]}))
 
 (reg-event-fx
   :load-bounties
@@ -49,11 +49,11 @@
     (assoc db :all-bounties bounties)))
 
 (reg-event-fx
-  :load-issues
+  :load-owner-bounties
   (fn [{:keys [db]} [_]]
     {:db   db
      :http {:method     GET
-            :url        "/api/issues"
+            :url        "/api/user/bounties"
             :on-success #(dispatch [:set-owner-bounties %])}}))
 
 (reg-event-db

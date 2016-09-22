@@ -57,10 +57,12 @@
       (ok (repositories/get-enabled (:id user))))
     (GET "/bounties" []
       (ok (bounties/list-all-bounties)))
-    (GET "/issues" []
+    (GET "/user/bounties" []
       :auth-rules authenticated?
       :current-user user
-      (ok (map #(conj % {:balance-eth (eth/hex->eth (:balance %) 6)})
+      (ok (map #(conj % (let [balance (:balance %)]
+                          {:balance-eth (eth/hex->eth balance 6)
+                           :balance-wei (eth/hex->big-integer balance)}))
             (bounties/list-owner-bounties (:id user)))))
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?

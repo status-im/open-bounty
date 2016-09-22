@@ -27,12 +27,28 @@
       [:div
        (map repository-row @repos)])))
 
+(defn send-transaction
+  [issue]
+  (fn []
+    (let [{owner-address    :owner_address
+           contract-address :contract_address
+           confirm-hash     :confirm_hash} issue
+          eth     (.-eth js/web3)
+          payload {:from  owner-address
+                   :to    contract-address
+                   :value 1
+                   :data  (str "0x797af627" confirm-hash)}]
+      (println "sending transaction" payload)
+      (.sendTransaction eth (clj->js payload)
+        #(println "send-transaction callback" %)))))
+
 (defn issue-row [{title        :issue_title
                   issue-id     :issue_id
                   issue-number :issue_number
                   owner        :owner_name
                   repo         :repo_name
-                  balance      :balance-eth}]
+                  balance      :balance-eth
+                  :as          issue}]
   ^{:key issue-id}
   [:li.issue
    [:div.d-table.table-fixed.width-full
@@ -52,7 +68,8 @@
      {:type     "submit"
       :style    {:margin-top   "7px"
                  :margin-right "7px"}
-      :on-click #(println %)}
+      :disabled (not (exists? js/web3))
+      :on-click (send-transaction issue)}
      (str "Sign and send " balance " ETH")]
     [:div.float-left.col-9.p-3.lh-condensed
      [:span.mr-2.float-right.text-gray.text-small
