@@ -84,8 +84,6 @@
   (fn []
     [:div.container
      [:h3 "Bounties"]
-     [(issues-list-table {:issues-path  [:owner-bounties]
-                          :issue-row-fn issue-row
-                          :show-header? false})]
+     [(issues-list-table [:owner-bounties] issue-row)]
      [:h3 "Repositories"]
      [repos-list]]))
