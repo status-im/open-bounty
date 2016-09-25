@@ -227,7 +227,8 @@ FROM issues i
     ON r.repo_id = i.repo_id
   INNER JOIN users o
     ON r.user_id = o.id
-WHERE r.user_id = :owner_id;
+WHERE r.user_id = :owner_id
+      AND i.confirm_hash IS NOT NULL;
 
 -- :name owner-issues-list :? :*
 -- :doc lists all not yet fixed issues in a given owner's repository

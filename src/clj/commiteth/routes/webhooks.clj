@@ -35,10 +35,11 @@
         {issue-id     :id
          issue-number :number
          issue-title  :title} (:issue issue)
-        created-issue (issues/create repo-id issue-id issue-number issue-title)]
+        created-issue (issues/create repo-id issue-id issue-number issue-title)
+        repo-owner    (:address (users/get-repo-owner repo-id))]
     (log/debug (format "Issue %s/%s/%s labeled as bounty" user repo issue-number))
     (when (= 1 created-issue)
-      (issues/update-transaction-hash issue-id (eth/deploy-contract)))))
+      (issues/update-transaction-hash issue-id (eth/deploy-contract repo-owner)))))
 
 (defn handle-issue-closed
   [{{{user :login} :owner repo :name}   :repository

@@ -27,20 +27,23 @@
       [:div
        (map repository-row @repos)])))
 
+(defn- send-transaction-callback
+  [e]
+  (println e))
+
 (defn send-transaction
   [issue]
   (fn []
     (let [{owner-address    :owner_address
            contract-address :contract_address
            confirm-hash     :confirm_hash} issue
-          eth     (.-eth js/web3)
-          payload {:from  owner-address
-                   :to    contract-address
-                   :value 1
-                   :data  (str "0x797af627" confirm-hash)}]
+          send-transaction-fn (aget js/web3 "eth" "sendTransaction")
+          payload             {:from  owner-address
+                               :to    contract-address
+                               :value 1
+                               :data  (str "0x797af627" confirm-hash)}]
       (println "sending transaction" payload)
-      (.sendTransaction eth (clj->js payload)
-        #(println "send-transaction callback" %)))))
+      (apply send-transaction-fn [(clj->js payload) send-transaction-callback]))))
 
 (defn issue-row [{title        :issue_title
                   issue-id     :issue_id

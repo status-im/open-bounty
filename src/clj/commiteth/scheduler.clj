@@ -13,7 +13,7 @@
 
 (defn update-issue-contract-address
   "For each pending deployment:
-      gets transasction receipt, updates db state, posts github comment and adds owners to the wallet"
+      gets transasction receipt, updates db state and posts github comment"
   []
   (doseq [{issue-id         :issue_id
            transaction-hash :transaction_hash} (issues/list-pending-deployments)]
@@ -21,17 +21,13 @@
     (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
       (log/info "transaction receipt for issue #" issue-id ": " receipt)
       (when-let [contract-address (:contractAddress receipt)]
-        (let [issue              (issues/update-contract-address issue-id contract-address)
+        (let [issue   (issues/update-contract-address issue-id contract-address)
               {user         :login
                repo         :repo
-               repo-id      :repo_id
                issue-number :issue_number} issue
-              balance            (eth/get-balance-eth contract-address 4)
-              repo-owner-address (:address (users/get-repo-owner repo-id))
+              balance (eth/get-balance-eth contract-address 4)
               {comment-id :id} (github/post-comment user repo issue-number balance)]
-          (issues/update-comment-id issue-id comment-id)
-          (wallet/add-owner contract-address (eth/eth-account))
-          (wallet/add-owner contract-address repo-owner-address))))))
+          (issues/update-comment-id issue-id comment-id))))))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
