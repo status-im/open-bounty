@@ -27,6 +27,11 @@
     (:owner-bounties db)))
 
 (reg-sub
+  :pagination
+  (fn [db [_ table]]
+    (get-in db [:pagination table])))
+
+(reg-sub
   :get-in
   (fn [db [_ path]]
     (get-in db path)))

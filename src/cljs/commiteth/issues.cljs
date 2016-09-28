@@ -2,20 +2,43 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]))
 
-(defn pagination []
+(defn- page-btn
+  [table selected-page current-page]
+  ^{:key current-page}
+  [:a {:class    (when (= selected-page current-page) "current")
+       :on-click #(rf/dispatch [:set-page table current-page])}
+   (str (inc current-page))])
+
+(defn pagination [table]
   (fn []
-    [:div.paginate-container
-     [:div.pagination
-      [:span.previous-page.disabled "Previous"]
-      [:em.current "1"]
-      [:a {:rel "next", :href "#"} "2"]
-      [:a {:href "#"} "3"]
-      [:a {:href "#"} "4"]
-      [:a {:href "#"} "5"]
-      [:span.gap "…"]
-      [:a {:href "#"} "10"]
-      [:a {:href "#"} "11"]
-      [:a.next-page {:rel "next", :href "#"} "Next"]]]))
+    (let [{page  :page
+           pages :pages} @(rf/subscribe [:pagination table])
+          {pages-max :pages-max} @(rf/subscribe [:get-in [:pagination-props]])]
+      (when (> pages 1)
+        (let [last-page  (dec pages)
+              start-page (max 1 (min (- pages pages-max) (max 1 (- page (quot pages-max 2)))))
+              end-page   (min (dec pages) (+ pages-max start-page))
+              gap-left   (> start-page 1)
+              gap-right  (< end-page last-page)]
+          [:div.paginate-container
+           [:div.pagination
+            [:span.previous-page
+             (let [disabled (= page 0)]
+               {:class    (when disabled "disabled")
+                :on-click (when-not disabled
+                            #(rf/dispatch [:set-page table (dec page)]))})
+             "Previous"]
+            (page-btn table page 0)
+            (when gap-left [:span.gap "…"])
+            (map #(page-btn table page %) (range start-page end-page))
+            (when gap-right [:span.gap "…"])
+            (page-btn table page last-page)
+            [:span.next-page
+             (let [disabled (= page last-page)]
+               {:class    (when disabled "disabled")
+                :on-click (when-not disabled
+                            #(rf/dispatch [:set-page table (inc page)]))})
+             "Next"]]])))))
 
 (defn repo-link
   [owner repo]
@@ -63,14 +86,19 @@
 
 (defn issues-list-table
   [issues-path issue-row-fn]
-  (let [issues (rf/subscribe issues-path)]
-    (fn []
+  (fn []
+    (let [{page :page} @(rf/subscribe (into [:pagination] issues-path))
+          {page-size :page-size} @(rf/subscribe [:get-in [:pagination-props]])
+          issues      (rf/subscribe issues-path)
+          issues-page (->> @issues
+                        (drop (* page page-size))
+                        (take page-size))]
       [:div.issues-list-table
        [:ul.issues-list
-        (map issue-row-fn @issues)]])))
+        (map issue-row-fn issues-page)]])))
 
 (defn issues-page []
   (fn []
     [:div.container
      [(issues-list-table [:all-bounties] issue-row)]
-     [pagination]]))
+     [(pagination :all-bounties)]]))

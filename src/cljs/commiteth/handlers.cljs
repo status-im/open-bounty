@@ -26,6 +26,19 @@
   (fn [db [_ page]]
     (assoc db :page page)))
 
+(reg-event-db
+  :set-page
+  (fn [db [_ table page]]
+    (assoc-in db [:pagination table :page] page)))
+
+(reg-event-db
+  :init-pagination
+  (fn [db [_ bounties]]
+    (let [{page-size :page-size} (:pagination-props db)]
+      (assoc-in db [:pagination :all-bounties]
+        {:page  0
+         :pages (Math/ceil (/ (count bounties) page-size))}))))
+
 (reg-event-fx
   :set-active-user
   (fn [{:keys [db]} [_ user]]
@@ -43,10 +56,11 @@
             :url        "/api/bounties"
             :on-success #(dispatch [:set-bounties %])}}))
 
-(reg-event-db
+(reg-event-fx
   :set-bounties
-  (fn [db [_ bounties]]
-    (assoc db :all-bounties bounties)))
+  (fn [{:keys [db]} [_ bounties]]
+    {:db       (assoc db :all-bounties bounties)
+     :dispatch [:init-pagination bounties]}))
 
 (reg-event-fx
   :load-owner-bounties
