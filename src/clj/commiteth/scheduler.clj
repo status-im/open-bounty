@@ -3,13 +3,11 @@
             [commiteth.eth.multisig-wallet :as wallet]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
-            [commiteth.db.users :as users]
             [commiteth.db.bounties :as bounties]
-            [overtone.at-at :refer [every mk-pool stop-and-reset-pool!]]
             [clojure.tools.logging :as log]
-            [mount.core :as mount]))
-
-(def pool (mk-pool))
+            [mount.core :as mount])
+  (:import [sun.misc ThreadGroupUtils]
+           [java.lang.management ManagementFactory]))
 
 (defn update-issue-contract-address
   "For each pending deployment:
@@ -55,15 +53,43 @@
           (issues/update-balance contract-address current-balance-hex)
           (github/update-comment login repo comment-id issue-number current-balance-eth))))))
 
-(mount/defstate scheduler
-  :start (do
-           (every (* 1 60 1000) update-issue-contract-address pool)
-           (every (* 1 60 1000) self-sign-bounty pool)
-           (every (* 1 60 1000) update-balance pool))
-  :stop (do
-          (log/info "Stopping scheduler pool")
-          (stop-and-reset-pool! pool)))
+(def scheduler-thread-name "SCHEDULER_THREAD")
 
-(defn stop []
-  (log/info "Stopping scheduler pool")
-  (stop-and-reset-pool! pool))
+(defn get-thread-by-name
+  [name]
+  (let [root          (ThreadGroupUtils/getRootThreadGroup)
+        threads-count (.getThreadCount (ManagementFactory/getThreadMXBean))
+        threads       ^"[Ljava.lang.Thread;" (make-array Thread threads-count)]
+    (.enumerate root threads true)
+    (first (filter #(= name (.getName %)) threads))))
+
+(defn every
+  [ms do-fn]
+  (.start (new Thread
+            (fn []
+              (while (not (.isInterrupted (Thread/currentThread)))
+                (do (try
+                      (Thread/sleep ms)
+                      (catch InterruptedException _
+                        (.interrupt (Thread/currentThread))))
+                    (do-fn))))
+            scheduler-thread-name)))
+
+(defn stop-scheduler []
+  (when-let [scheduler (get-thread-by-name scheduler-thread-name)]
+    (log/debug "Stopping scheduler thread")
+    (.interrupt scheduler)))
+
+(defn restart-scheduler [ms task]
+  (stop-scheduler)
+  (log/debug "Starting scheduler thread")
+  (while (get-thread-by-name scheduler-thread-name)
+    (Thread/sleep 1))
+  (every ms task))
+
+(mount/defstate scheduler
+  :start (restart-scheduler 60000 (fn []
+                                    (update-issue-contract-address)
+                                    (self-sign-bounty)
+                                    (update-balance)))
+  :stop (stop-scheduler))

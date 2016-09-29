@@ -37,7 +37,6 @@
                  [org.postgresql/postgresql "9.4.1209"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [luminus-immutant "0.2.2"]
-                 [overtone/at-at "1.2.0"]
                  [clj.qrgen "0.4.0"]
                  [digest "1.4.4"]
                  [tentacles "0.5.1"]]
@@ -61,7 +60,7 @@
   :immutant {:war {:name         "ROOT"
                    :destination  "/opt/wildfly/standalone/deployments"
                    :context-path "/"}}
-  :ring {:destroy commiteth.scheduler/stop}
+  :ring {:destroy commiteth.scheduler/stop-scheduler}
 
   ;:npm {:dependencies ["primer-css" "latest"]}
 
