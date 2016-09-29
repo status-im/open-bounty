@@ -196,7 +196,11 @@ SELECT
   r.repo             AS repo_name
 FROM issues i
   INNER JOIN repositories r
-    ON r.repo_id = i.repo_id;
+    ON r.repo_id = i.repo_id
+WHERE i.commit_id IS NULL
+      AND NOT EXISTS(SELECT 1
+                     FROM pull_requests
+                     WHERE issue_number = i.issue_number);
 
 -- :name owner-bounties-list :? :*
 -- :doc lists fixed issues
