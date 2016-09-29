@@ -26,10 +26,9 @@
     (let [resp         (github/post-for-token code state)
           body         (keywordize-keys (codec/form-decode (:body resp)))
           access-token (:access_token body)]
-      (if-let [error (:error body)]
-        (:body
-          (error-page {:status 401
-                       :title  error}))
+      (if (:error body)
+        ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
+        (response/redirect "/")
         (let [user (get-or-create-user access-token)]
           (-> (response/redirect "/")
             (assoc :session {:identity user})))))))
