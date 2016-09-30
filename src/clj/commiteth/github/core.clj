@@ -3,12 +3,16 @@
             [tentacles.users :as users]
             [tentacles.repos :as repos]
             [tentacles.issues :as issues]
+            [tentacles.core :as tentacles]
             [ring.util.codec :as codec]
             [clj-http.client :as http]
             [commiteth.config :refer [env]]
             [digest :refer [sha-256]]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [cheshire.core :as json])
   (:import [java.util UUID]))
+
+(def ^:dynamic url "https://api.github.com/")
 
 (defn server-address [] (:server-address env))
 (defn client-id [] (:github-client-id env))
@@ -68,7 +72,8 @@
     (map #(merge
            {:login (get-in % login-field)}
            (select-keys % repo-fields))
-      (repos/repos (merge (auth-params token) {:type "all"})))
+      (repos/repos (merge (auth-params token) {:type      "all"
+                                               :all-pages true})))
     (filter #(not (:fork %)))
     (filter #(-> % :permissions :admin))))
 
@@ -123,11 +128,26 @@
     (log/debug "Posting comment to" (str user "/" repo "/" issue-number) ":" comment)
     (issues/create-comment user repo issue-number comment (self-auth-params))))
 
+(defn make-patch-request [end-point positional query]
+  (let [{:keys [auth oauth-token]
+         :as   query} query
+        req          (merge-with merge
+                       {:url        (tentacles/format-url end-point positional)
+                        :basic-auth auth
+                        :method     :patch}
+                       (when oauth-token
+                         {:headers {"Authorization" (str "token " oauth-token)}}))
+        raw-query    (:raw query)
+        proper-query (tentacles/query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent :otp))]
+    (assoc req :body (json/generate-string (or raw-query proper-query)))))
+
 (defn update-comment
   [user repo comment-id issue-number balance]
   (let [comment (generate-comment user repo issue-number balance)]
     (log/debug (str "Updating " user "/" repo "/" issue-number " comment #" comment-id " with contents: " comment))
-    (issues/edit-comment user repo comment-id comment (self-auth-params))))
+    (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
+                [user repo comment-id] (assoc (self-auth-params) :body comment))]
+      (tentacles/safe-parse (http/request req)))))
 
 (defn get-issue
   [user repo issue-number]
