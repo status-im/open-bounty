@@ -24,10 +24,20 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/pending-bounties-list con-db)))
 
+(defn pending-payouts-list
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/pending-payouts-list con-db)))
+
 (defn update-confirm-hash
   [issue-id confirm-hash]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-confirm-hash con-db {:issue_id issue-id :confirm_hash confirm-hash})))
+
+(defn update-execute-hash
+  [issue-id execute-hash]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-execute-hash con-db {:issue_id issue-id :execute_hash execute-hash})))
 
 (defn get-bounty-address
   [user repo issue-number]

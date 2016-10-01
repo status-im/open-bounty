@@ -9,3 +9,5 @@ ALTER TABLE public.issues
   ADD address VARCHAR(256);
 ALTER TABLE public.issues
   DROP COLUMN comment_id;
+ALTER TABLE public.issues
+  DROP COLUMN execute_hash;

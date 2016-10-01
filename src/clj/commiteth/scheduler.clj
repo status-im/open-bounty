@@ -36,7 +36,18 @@
           :let [value (eth/get-balance-hex contract-address)]]
     (->>
       (wallet/execute contract-address payout-address value)
-      (bounties/update-confirm-hash issue-id))))
+      (bounties/update-execute-hash issue-id))))
+
+(defn update-confirm-hash
+  "Gets transaction receipt for each pending payout and updates confirm_hash"
+  []
+  (doseq [{issue-id     :issue_id
+           execute-hash :execute_hash} (bounties/pending-payouts-list)]
+    (log/debug "pending payout:" execute-hash)
+    (when-let [receipt (eth/get-transaction-receipt execute-hash)]
+      (log/info "execution receipt for issue #" issue-id ": " receipt)
+      (when-let [confirm-hash (wallet/find-confirmation-hash receipt)]
+        (bounties/update-confirm-hash issue-id confirm-hash)))))
 
 (defn update-balance
   []
@@ -64,7 +75,7 @@
     (first (filter #(= name (.getName %)) threads))))
 
 (defn every
-  [ms do-fn]
+  [ms tasks]
   (.start (new Thread
             (fn []
               (while (not (.isInterrupted (Thread/currentThread)))
@@ -72,7 +83,9 @@
                       (Thread/sleep ms)
                       (catch InterruptedException _
                         (.interrupt (Thread/currentThread))))
-                    (do-fn))))
+                    (doseq [task tasks]
+                      (try (task)
+                           (catch Exception e (log/error e)))))))
             scheduler-thread-name)))
 
 (defn stop-scheduler []
@@ -80,16 +93,17 @@
     (log/debug "Stopping scheduler thread")
     (.interrupt scheduler)))
 
-(defn restart-scheduler [ms task]
+(defn restart-scheduler [ms tasks]
   (stop-scheduler)
   (log/debug "Starting scheduler thread")
   (while (get-thread-by-name scheduler-thread-name)
     (Thread/sleep 1))
-  (every ms task))
+  (every ms tasks))
 
 (mount/defstate scheduler
-  :start (restart-scheduler 60000 (fn []
-                                    (update-issue-contract-address)
-                                    (self-sign-bounty)
-                                    (update-balance)))
+  :start (restart-scheduler 60000
+           [update-issue-contract-address
+            update-confirm-hash
+            self-sign-bounty
+            update-balance])
   :stop (stop-scheduler))
