@@ -156,10 +156,15 @@
 (defn load-issues []
   (rf/dispatch [:load-bounties]))
 
+(defn load-data []
+  (load-issues)
+  (load-user))
+
+(js/setInterval load-data 60000)
+
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
   (hook-browser-navigation!)
-  (load-issues)
-  (load-user)
+  (load-data)
   (mount-components))
