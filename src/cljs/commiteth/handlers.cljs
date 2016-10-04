@@ -1,7 +1,8 @@
 (ns commiteth.handlers
   (:require [commiteth.db :as db]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
-            [ajax.core :refer [GET POST]]))
+            [ajax.core :refer [GET POST]]
+            [cuerdas.core :as str]))
 
 (reg-fx
   :http
@@ -20,6 +21,16 @@
   :assoc-in
   (fn [db [_ path value]]
     (assoc-in db path value)))
+
+(reg-event-db
+  :set-error
+  (fn [db [_ text]]
+    (assoc db :error text)))
+
+(reg-event-db
+  :clear-error
+  (fn [db _]
+    (dissoc db :error)))
 
 (reg-event-db
   :set-active-page
@@ -55,6 +66,15 @@
      :http {:method     GET
             :url        "/api/bounties"
             :on-success #(dispatch [:set-bounties %])}}))
+
+(reg-event-fx
+  :save-payout-hash
+  (fn [{:keys [db]} [_ issue-id payout-hash]]
+    {:db   db
+     :http {:method     POST
+            :url        (str/format "/api/bounty/%s/payout" issue-id)
+            :on-success #(println %)
+            :params     {:payout-hash payout-hash}}}))
 
 (reg-event-fx
   :set-bounties

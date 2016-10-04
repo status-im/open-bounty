@@ -27,6 +27,18 @@
         [:div.tabnav-actions.logged-out
          [:a.btn.tabnav-button {:href js/authorizeUrl} "Sign in"]]))))
 
+(defn error-pane
+  []
+  (let [error (rf/subscribe [:error])]
+    (fn []
+      (when @error
+        [:div.container
+         {:style    {:background-color "#faeaea"
+                     :padding          "10px"
+                     :color            "red"}
+          :on-click #(rf/dispatch [:clear-error])}
+         (str @error)]))))
+
 (defn save-address
   [user-id address]
   (fn [_]
@@ -122,6 +134,7 @@
     [:div.app
      [:nav.main-navbar [:div.container]]
      [header]
+     [error-pane]
      [(pages @(rf/subscribe [:page]))]]))
 
 ;; -------------------------

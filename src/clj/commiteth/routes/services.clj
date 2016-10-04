@@ -57,6 +57,15 @@
       (ok (repositories/get-enabled (:id user))))
     (GET "/bounties" []
       (ok (bounties/list-all-bounties)))
+    (POST "/bounty/:issue{[0-9]{1,9}}/payout" {:keys [params]}
+      :auth-rules authenticated?
+      :current-user user
+      (let [{issue       :issue
+             payout-hash :payout-hash} params
+            result (bounties/update-payout-hash (Integer/parseInt issue) payout-hash)]
+        (if (= 1 result)
+          (ok)
+          (internal-server-error))))
     (GET "/user/bounties" []
       :auth-rules authenticated?
       :current-user user

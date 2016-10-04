@@ -49,6 +49,16 @@
       (when-let [confirm-hash (wallet/find-confirmation-hash receipt)]
         (bounties/update-confirm-hash issue-id confirm-hash)))))
 
+(defn update-payout-hash
+  "Gets transaction receipt for each confirmed payout and updates payout_hash"
+  []
+  (doseq [{issue-id    :issue_id
+           payout-hash :payout_hash} (bounties/confirmed-payouts-list)]
+    (log/debug "confirmed payout:" payout-hash)
+    (when-let [receipt (eth/get-transaction-receipt payout-hash)]
+      (log/info "payout receipt for issue #" issue-id ": " receipt)
+      (bounties/update-payout-receipt issue-id receipt))))
+
 (defn update-balance
   []
   (doseq [{contract-address :contract_address
@@ -104,6 +114,7 @@
   :start (restart-scheduler 60000
            [update-issue-contract-address
             update-confirm-hash
+            update-payout-hash
             self-sign-bounty
             update-balance])
   :stop (stop-scheduler))

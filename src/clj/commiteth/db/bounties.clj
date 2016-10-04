@@ -29,6 +29,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/pending-payouts-list con-db)))
 
+(defn confirmed-payouts-list
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/confirmed-payouts-list con-db)))
+
 (defn update-confirm-hash
   [issue-id confirm-hash]
   (jdbc/with-db-connection [con-db *db*]
@@ -38,6 +43,16 @@
   [issue-id execute-hash]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-execute-hash con-db {:issue_id issue-id :execute_hash execute-hash})))
+
+(defn update-payout-hash
+  [issue-id payout-hash]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-payout-hash con-db {:issue_id issue-id :payout_hash payout-hash})))
+
+(defn update-payout-receipt
+  [issue-id payout-receipt]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-payout-receipt con-db {:issue_id issue-id :payout_receipt payout-receipt})))
 
 (defn get-bounty-address
   [user repo issue-number]

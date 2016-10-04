@@ -192,6 +192,21 @@ FROM issues i
 WHERE i.confirm_hash IS NULL
       AND i.execute_hash IS NOT NULL;
 
+-- :name confirmed-payouts-list :? :*
+-- :doc lists all recently confirmed bounty payouts
+SELECT
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.payout_hash      AS payout_hash
+FROM issues i
+  INNER JOIN pull_requests p
+    ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+       AND p.repo_id = i.repo_id
+  INNER JOIN users u
+    ON u.id = p.user_id
+WHERE i.payout_receipt IS NULL
+      AND i.payout_hash IS NOT NULL;
+
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash
 UPDATE issues
@@ -202,6 +217,18 @@ WHERE issue_id = :issue_id;
 -- :doc updates issue with execute transaction hash
 UPDATE issues
 SET execute_hash = :execute_hash
+WHERE issue_id = :issue_id;
+
+-- :name update-payout-hash :! :n
+-- :doc updates issue with payout transaction hash
+UPDATE issues
+SET payout_hash = :payout_hash
+WHERE issue_id = :issue_id;
+
+-- :name update-payout-receipt :! :n
+-- :doc updates issue with payout transaction receipt
+UPDATE issues
+SET payout_receipt = :payout_receipt
 WHERE issue_id = :issue_id;
 
 -- :name all-bounties-list :? :*
@@ -233,6 +260,8 @@ SELECT
   i.repo_id          AS repo_id,
   i.balance          AS balance,
   i.confirm_hash     AS confirm_hash,
+  i.payout_hash      AS payout_hash,
+  i.payout_receipt   AS payout_receipt,
   p.pr_id            AS pr_id,
   p.user_id          AS user_id,
   p.pr_number        AS pr_number,

@@ -11,3 +11,7 @@ ALTER TABLE public.issues
   DROP COLUMN comment_id;
 ALTER TABLE public.issues
   DROP COLUMN execute_hash;
+ALTER TABLE public.issues
+  DROP COLUMN payout_hash;
+ALTER TABLE public.issues
+  DROP COLUMN payout_receipt;

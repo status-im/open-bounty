@@ -17,6 +17,11 @@
     (:repos db)))
 
 (reg-sub
+  :error
+  (fn [db _]
+    (:error db)))
+
+(reg-sub
   :all-bounties
   (fn [db _]
     (:all-bounties db)))
