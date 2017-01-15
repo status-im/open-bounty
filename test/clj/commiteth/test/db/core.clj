@@ -12,26 +12,28 @@
     (mount/start
       #'commiteth.config/env
       #'commiteth.db.core/*db*)
-    (migrations/migrate ["migrate"] (select-keys env [:jdbc-database-url]))
+    (println (env :jdbc-database-url))
+    (migrations/migrate ["migrate"]
+                        {:database-url (env :jdbc-database-url)})
     (f)))
 
 (deftest test-users
   (jdbc/with-db-transaction [t-conn *db*]
     (jdbc/db-set-rollback-only! t-conn)
-    (is (= 1 (db/create-user!
-               t-conn
-               {:id      "1"
-                :login   "torvalds"
-                :name    "Linus Torvalds"
-                :email   nil
-                :token   "not null"
-                :address "address"
-                :created nil})))
-    (is (= {:id      "1"
+    (is (not (nil? (db/create-user!
+                    t-conn
+                    {:id      1
+                     :login   "torvalds"
+                     :name    "Linus Torvalds"
+                     :email   nil
+                     :token   "not null"
+                     :address "address"
+                     :created nil}))))
+    (is (= {:id      1
             :login   "torvalds"
             :name    "Linus Torvalds"
             :email   nil
             :token   "not null"
             :address "address"
             :created nil}
-          (db/get-user t-conn {:login "torvalds"})))))
+          (db/get-user t-conn {:id 1})))))
