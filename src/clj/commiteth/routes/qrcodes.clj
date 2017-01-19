@@ -24,20 +24,28 @@
 (defn generate-image
   [address balance issue-url width height]
   (let [qr-code-image (ImageIO/read (generate-qr-code address))
-        comment-image (html->image (generate-html address balance issue-url) width height)]
+        comment-image (html->image
+                       (generate-html address balance issue-url) width height)]
     (combine-images qr-code-image comment-image)))
 
 (defapi qr-routes
   (context "/qr" []
-    (GET "/:user/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [user repo issue hash]
-      (if (= hash (github/github-comment-hash user repo issue))
-        (let [{address      :contract_address
-               login        :login
-               repo         :repo
-               issue-number :issue_number} (bounties/get-bounty-address user repo (Integer/parseInt issue))]
-          (if address
-            (let [balance   (eth/get-balance-eth address 8)
-                  issue-url (str login "/" repo "/issues/" issue-number)]
-              (ok (generate-image address balance issue-url 768 256)))
-            (bad-request)))
-        (bad-request)))))
+           ;; user may be an organization here
+           (GET "/:user/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [user repo issue hash]
+                (log/debug "qr PNG GET")
+                (let [{address      :contract_address
+                       login        :login
+                       repo         :repo
+                       issue-number :issue_number}
+                      (bounties/get-bounty-address user
+                                                   repo
+                                                   (Integer/parseInt issue))
+                      balance (eth/get-balance-eth address 8)]
+                  (log/debug "address:" address "balance:" balance)
+
+                  (if (and address
+                           (= hash (github/github-comment-hash user repo issue balance)))
+                    (let [issue-url (str login "/" repo "/issues/" issue-number)]
+                      (log/debug "balance:" address)
+                      (ok (generate-image address balance issue-url 768 256)))
+                    (bad-request))))))
