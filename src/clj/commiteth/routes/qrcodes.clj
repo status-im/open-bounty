@@ -6,14 +6,15 @@
             [commiteth.util.images :refer :all]
             [clj.qrgen :as qr]
             [commiteth.eth.core :as eth]
-            [commiteth.github.core :as github])
+            [commiteth.github.core :as github]
+            [clojure.tools.logging :as log])
   (:import [javax.imageio ImageIO]
            [java.io InputStream]))
 
 (defn ^InputStream generate-qr-code
   [address]
   (qr/as-input-stream
-    (qr/from (str "ethereum:" address) :size [256 256])))
+   (qr/from (str "ethereum:" address) :size [256 256])))
 
 (defn generate-html
   [address balance issue-url]

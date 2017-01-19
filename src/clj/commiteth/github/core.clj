@@ -108,12 +108,12 @@
     (repos/delete-hook user repo hook-id (auth-params token))))
 
 (defn github-comment-hash
-  [user repo issue-number]
-  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number)))
+  [user repo issue-number balance]
+  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number balance)))
 
 (defn- get-qr-url
-  [user repo issue-number]
-  (let [hash (github-comment-hash user repo issue-number)]
+  [user repo issue-number balance]
+  (let [hash (github-comment-hash user repo issue-number balance)]
     (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" user repo issue-number hash))))
 
 (defn- md-url
@@ -128,7 +128,7 @@
 
 (defn generate-comment
   [user repo issue-number balance]
-  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number))
+  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number balance))
         balance   (str balance " ETH")
         site-url  (md-url (server-address) (server-address))]
     (format "Current balance: %s\n%s\n%s" balance image-url site-url)))
