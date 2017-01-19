@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
             [clojure.string :refer [join]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.string :as str]))
 
 (def eth-rpc-url "http://localhost:8545")
 (defn eth-account [] (:eth-account env))
@@ -57,12 +58,16 @@
 (defn send-transaction
   [from to value & [params]]
   ;; todo: estimate gas instead of hardcoding
-  (let [gas 2100000]
-    (eth-rpc "personal_signAndSendTransaction" [(merge params {:from  from
-                                                               :to    to
-                                                               :value value
-                                                               :gas   gas})
-                                                (eth-password)])))
+  (let [gas (format "0x%x" 2600000)
+        args (merge params {:from  from
+                            :value value
+                            :gas   gas})]
+    (eth-rpc
+     "personal_sendTransaction"
+     [(if (not (nil? to))
+                                           (merge args {:to to})
+                                           args)
+                                         (eth-password)])))
 
 (defn get-transaction-receipt
   [hash]
@@ -74,14 +79,16 @@
     (format "%064x" param)
     (clojure.string/replace (format "%64s" (subs param 2)) " " "0")))
 
+
 (defn deploy-contract
   [owner]
   (let [contract-code (-> "contracts/wallet.data" io/resource slurp)
         owner1        (format-param (eth-account))
         owner2        (format-param owner)
-        data          (str contract-code owner1 owner2)]
+        data          (str contract-code owner1 owner2)
+        value         (format "0x%x" 1)]
     (println data)
-    (send-transaction (eth-account) nil 1 {:data data})))
+    (send-transaction (eth-account) nil value {:data data})))
 
 (defn- format-call-params
   [method-id & params]
@@ -95,5 +102,6 @@
 
 (defn execute
   [from contract method-id & params]
-  (let [data (apply format-call-params method-id params)]
-    (send-transaction from contract 1 {:data data})))
+  (let [data (apply format-call-params method-id params)
+        value (format "0x%x" 1)]
+    (send-transaction from contract value {:data data})))
