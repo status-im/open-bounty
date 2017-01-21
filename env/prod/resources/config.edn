@@ -1,3 +1,6 @@
-{:production     true
- :port           3000
- :server-address "http://commiteth.com"}
+{
+ :production        true
+ :port              3000
+ :nrepl-port        7000
+ :server-address    "https://commiteth.com"
+}
