@@ -12,7 +12,6 @@
     (mount/start
       #'commiteth.config/env
       #'commiteth.db.core/*db*)
-    (println (env :jdbc-database-url))
     (migrations/migrate ["migrate"]
                         {:database-url (env :jdbc-database-url)})
     (f)))

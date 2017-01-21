@@ -137,11 +137,12 @@
 (reg-event-fx
   :toggle-repo
   (fn [{:keys [db]} [_ repo]]
+    (println "toggle-repo" repo)
     {:db   db
      :http {:method     POST
             :url        "/api/repository/toggle"
             :on-success #(println %)
-            :params     (select-keys repo [:id :login :name])}}))
+            :params     (select-keys repo [:id :login :full_name :name])}}))
 
 (reg-event-fx
   :save-user-address

@@ -9,7 +9,8 @@
             [commiteth.config :refer [env]]
             [digest :refer [sha-256]]
             [clojure.tools.logging :as log]
-            [cheshire.core :as json])
+            [cheshire.core :as json]
+            [clojure.string :as str])
   (:import [java.util UUID]))
 
 (def ^:dynamic url "https://api.github.com/")
@@ -25,7 +26,7 @@
 (defn authorize-url []
   (let [params (codec/form-encode {:client_id    (client-id)
                                    :redirect_uri (redirect-uri)
-                                   :scope        "admin:repo_hook repo"
+                                   :scope        "admin:repo_hook user:email repo admin:org_hook"
                                    :allow_signup true
                                    :state        (str (UUID/randomUUID))})]
     (str "https://github.com/login/oauth/authorize" "?" params)))
@@ -33,12 +34,12 @@
 (defn post-for-token
   [code state]
   (http/post "https://github.com/login/oauth/access_token"
-    {:content-type :json
-     :form-params  {:client_id     (client-id)
-                    :client_secret (client-secret)
-                    :code          code
-                    :redirect_uri  (redirect-uri)
-                    :state         state}}))
+             {:content-type :json
+              :form-params  {:client_id     (client-id)
+                             :client_secret (client-secret)
+                             :code          code
+                             :redirect_uri  (redirect-uri)
+                             :state         state}}))
 
 (defn- auth-params
   [token]
@@ -69,40 +70,50 @@
   "List all repos managed by the given user."
   [token]
   (->>
-    (map #(merge
-           {:login (get-in % login-field)}
-           (select-keys % repo-fields))
-      (repos/repos (merge (auth-params token) {:type      "all"
-                                               :all-pages true})))
-    (filter #(not (:fork %)))
-    (filter #(-> % :permissions :admin))))
+   (map #(merge
+          {:login (get-in % login-field)}
+          (select-keys % repo-fields))
+        (repos/repos (merge (auth-params token) {:type      "all"
+                                                 :all-pages true})))
+   (filter #(not (:fork %)))
+   (filter #(-> % :permissions :admin))))
 
 (defn get-user
   [token]
   (users/me (auth-params token)))
 
+(defn get-user-email
+  [token]
+  (let [emails (users/emails (auth-params token))]
+    (->
+     (filter :primary emails)
+     first
+     :email)))
+
 (defn add-webhook
-  [user repo token]
-  (log/debug "adding webhook" (str user "/" repo) token)
-  (repos/create-hook user repo "web"
-    {:url          (str (server-address) "/webhook")
-     :content_type "json"}
-    (merge (auth-params token)
-      {:events ["issues", "issue_comment", "pull_request"]
-       :active true})))
+  [full-repo token]
+  (log/debug "adding webhook" full-repo token)
+  (let [[user repo] (str/split full-repo #"/")]
+    (repos/create-hook user repo "web"
+                       {:url          (str (server-address) "/webhook")
+                        :content_type "json"}
+                       (merge (auth-params token)
+                              {:events ["issues", "issue_comment", "pull_request"]
+                               :active true}))))
 
 (defn remove-webhook
-  [user repo hook-id token]
-  (log/debug "removing webhook" (str user "/" repo) hook-id token)
-  (repos/delete-hook user repo hook-id (auth-params token)))
+  [full-repo hook-id token]
+  (let [[user repo] (str/split full-repo #"/")]
+    (log/debug "removing webhook" (str user "/" repo) hook-id token)
+    (repos/delete-hook user repo hook-id (auth-params token))))
 
 (defn github-comment-hash
-  [user repo issue-number]
-  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number)))
+  [user repo issue-number balance]
+  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number balance)))
 
 (defn- get-qr-url
-  [user repo issue-number]
-  (let [hash (github-comment-hash user repo issue-number)]
+  [user repo issue-number balance]
+  (let [hash (github-comment-hash user repo issue-number balance)]
     (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" user repo issue-number hash))))
 
 (defn- md-url
@@ -117,7 +128,7 @@
 
 (defn generate-comment
   [user repo issue-number balance]
-  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number))
+  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number balance))
         balance   (str balance " ETH")
         site-url  (md-url (server-address) (server-address))]
     (format "Current balance: %s\n%s\n%s" balance image-url site-url)))
@@ -132,13 +143,18 @@
   (let [{:keys [auth oauth-token]
          :as   query} query
         req          (merge-with merge
-                       {:url        (tentacles/format-url end-point positional)
-                        :basic-auth auth
-                        :method     :patch}
-                       (when oauth-token
-                         {:headers {"Authorization" (str "token " oauth-token)}}))
+                                 {:url        (tentacles/format-url end-point positional)
+                                  :basic-auth auth
+                                  :method     :patch}
+                                 (when oauth-token
+                                   {:headers {"Authorization" (str "token " oauth-token)}}))
         raw-query    (:raw query)
-        proper-query (tentacles/query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent :otp))]
+        proper-query (tentacles/query-map (dissoc query :auth
+                                                  :oauth-token
+                                                  :all-pages
+                                                  :accept
+                                                  :user-agent
+                                                  :otp))]
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
 (defn update-comment
@@ -146,7 +162,8 @@
   (let [comment (generate-comment user repo issue-number balance)]
     (log/debug (str "Updating " user "/" repo "/" issue-number " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
-                [user repo comment-id] (assoc (self-auth-params) :body comment))]
+                                  [user repo comment-id]
+                                  (assoc (self-auth-params) :body comment))]
       (tentacles/safe-parse (http/request req)))))
 
 (defn get-issue
@@ -158,6 +175,7 @@
   (issues/issue-events user repo issue-id (self-auth-params)))
 
 (defn create-label
-  [user repo token]
-  (log/debug "creating bounty label" (str user "/" repo) token)
-  (issues/create-label user repo "bounty" "00ff00" (auth-params token)))
+  [full-repo token]
+  (let [[user repo] (str/split full-repo #"/")]
+    (log/debug "creating bounty label" (str user "/" repo) token)
+    (issues/create-label user repo "bounty" "00ff00" (auth-params token))))

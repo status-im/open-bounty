@@ -8,7 +8,7 @@
 (defn repository-row [repo]
   (let [{repo-id     :id
          url         :html_url
-         name        :name
+         name        :full_name
          description :description} repo]
     ^{:key repo-id}
     [:div.d-table.width-full

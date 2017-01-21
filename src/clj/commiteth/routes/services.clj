@@ -77,7 +77,7 @@
       :auth-rules authenticated?
       :current-user user
       (ok (let [{repo-id :id
-                 repo    :name} params
+                 repo    :full_name} params
                 {token   :token
                  login   :login
                  user-id :id} user
@@ -86,9 +86,9 @@
                          (repositories/toggle repo-id))]
             (if (:enabled result)
               ;; @todo: do we really want to make this call at this moment?
-              (let [created-hook (github/add-webhook login repo token)]
+              (let [created-hook (github/add-webhook repo token)]
                 (log/debug "Created webhook:" created-hook)
-                (github/create-label login repo token)
+                (github/create-label repo token)
                 (repositories/update-hook-id repo-id (:id created-hook)))
-              (github/remove-webhook login repo (:hook_id result) token))
+              (github/remove-webhook repo (:hook_id result) token))
             result)))))

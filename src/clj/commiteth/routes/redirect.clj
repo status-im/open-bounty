@@ -8,18 +8,27 @@
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.response :as response]
             [commiteth.layout :refer [render]]
-            [cheshire.core :refer [generate-string]]))
+            [cheshire.core :refer [generate-string]]
+            [clojure.tools.logging :as log]))
+
+
+
+(defn- create-user [token user]
+  (let [{name    :name
+         login   :login
+         user-id :id} user
+        email (github/get-user-email token)]
+    (users/create-user user-id login name email token)))
 
 (defn- get-or-create-user
   [token]
   (let [user (github/get-user token)
         {email   :email
-         name    :name
-         login   :login
          user-id :id} user]
+    (log/debug "get-or-create-user" user)
     (or
       (users/update-user-token user-id token)
-      (users/create-user user-id login name email token))))
+      (create-user token user))))
 
 (defroutes redirect-routes
   (GET "/callback" [code state]
