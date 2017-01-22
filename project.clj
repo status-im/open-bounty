@@ -48,7 +48,7 @@
   :target-path "target/%s/"
   :main commiteth.core
   :migratus {:store :database
-             :migration-dir "resources/migrations"
+             :migration-dir "migrations"
              :db ~(get (System/getenv) "DATABASE_URL")}
 
   :plugins [[lein-cprop "1.0.1"]

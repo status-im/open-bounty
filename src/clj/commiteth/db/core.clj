@@ -4,7 +4,8 @@
     [clojure.java.jdbc :as jdbc]
     [conman.core :as conman]
     [commiteth.config :refer [env]]
-    [mount.core :refer [defstate]])
+    [mount.core :refer [defstate]]
+    [migratus.core :as migratus])
   (:import org.postgresql.util.PGobject
            java.sql.Array
            clojure.lang.IPersistentMap
@@ -15,8 +16,18 @@
             Timestamp
             PreparedStatement]))
 
+
+(defn start []
+  (let [db (env :jdbc-database-url)
+        migratus-config {:store :database
+                         :migration-dir "migrations/"
+                         :migration-table-name "schema_migrations"
+                         :db db}]
+    (migratus/migrate migratus-config)
+    (conman/connect! {:jdbc-url db})))
+
 (defstate ^:dynamic *db*
-  :start (conman/connect! {:jdbc-url (env :jdbc-database-url)})
+  :start (start)
   :stop (conman/disconnect! *db*))
 
 (conman/bind-connection *db* "sql/queries.sql")

@@ -33,7 +33,7 @@
   (context "/qr" []
            ;; user may be an organization here
            (GET "/:user/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [user repo issue hash]
-                (log/debug "qr PNG GET")
+                (log/debug "qr PNG GET" user repo issue hash)
                 (let [{address      :contract_address
                        login        :login
                        repo         :repo
@@ -45,8 +45,11 @@
                   (log/debug "address:" address "balance:" balance)
 
                   (if (and address
-                           (= hash (github/github-comment-hash user repo issue balance)))
-                    (let [issue-url (str login "/" repo "/issues/" issue-number)]
-                      (log/debug "balance:" address)
-                      (ok (generate-image address balance issue-url 768 256)))
+                           (= hash (github/github-comment-hash user repo issue)))
+                    (let [issue-url (str login "/" repo "/issues/" issue-number)
+                          image-url (generate-image address balance issue-url 768 256)
+                          response  (assoc-in (ok image-url)
+                                              [:headers "cache-control"] "no-cache")]
+                      (log/debug "balance:" address "response" response)
+                      response)
                     (bad-request))))))

@@ -7,7 +7,8 @@
             [buddy.auth :refer [authenticated?]]
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repositories]
-            [commiteth.db.bounties :as bounties]
+            [commiteth.db.bounties :as bounties-db]
+            [commiteth.bounties :as bounties]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]))
@@ -56,13 +57,15 @@
       :current-user user
       (ok (repositories/get-enabled (:id user))))
     (GET "/bounties" []
-      (ok (bounties/list-all-bounties)))
+      (ok (bounties-db/list-all-bounties)))
     (POST "/bounty/:issue{[0-9]{1,9}}/payout" {:keys [params]}
       :auth-rules authenticated?
       :current-user user
       (let [{issue       :issue
              payout-hash :payout-hash} params
-            result (bounties/update-payout-hash (Integer/parseInt issue) payout-hash)]
+            result (bounties-db/update-payout-hash
+                    (Integer/parseInt issue)
+                    payout-hash)]
         (if (= 1 result)
           (ok)
           (internal-server-error))))
@@ -72,7 +75,7 @@
       (ok (map #(conj % (let [balance (:balance %)]
                           {:balance-eth (eth/hex->eth balance 6)
                            :balance-wei (eth/hex->big-integer balance)}))
-            (bounties/list-owner-bounties (:id user)))))
+            (bounties-db/list-owner-bounties (:id user)))))
     (POST "/repository/toggle" {:keys [params]}
       :auth-rules authenticated?
       :current-user user
@@ -85,10 +88,11 @@
                          (repositories/create (merge params {:user_id user-id}))
                          (repositories/toggle repo-id))]
             (if (:enabled result)
-              ;; @todo: do we really want to make this call at this moment?
               (let [created-hook (github/add-webhook repo token)]
                 (log/debug "Created webhook:" created-hook)
-                (github/create-label repo token)
-                (repositories/update-hook-id repo-id (:id created-hook)))
+                (future
+                  (github/create-label repo token)
+                  (repositories/update-hook-id repo-id (:id created-hook))
+                  (bounties/add-bounties-for-existing-issues result)))
               (github/remove-webhook repo (:hook_id result) token))
             result)))))

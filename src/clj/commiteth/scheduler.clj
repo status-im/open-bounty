@@ -24,7 +24,11 @@
                repo         :repo
                issue-number :issue_number} issue
               balance (eth/get-balance-eth contract-address 4)
-              {comment-id :id} (github/post-comment user repo issue-number balance)]
+              {comment-id :id} (github/post-comment user
+                                                    repo
+                                                    issue-number
+                                                    contract-address
+                                                    balance)]
           (issues/update-comment-id issue-id comment-id))))))
 
 (defn self-sign-bounty
@@ -72,7 +76,12 @@
             current-balance-eth (eth/hex->eth current-balance-hex 8)]
         (when-not (= old-balance current-balance-hex)
           (issues/update-balance contract-address current-balance-hex)
-          (github/update-comment login repo comment-id issue-number current-balance-eth))))))
+          (github/update-comment login
+                                 repo
+                                 comment-id
+                                 issue-number
+                                 contract-address
+                                 current-balance-eth))))))
 
 (def scheduler-thread-name "SCHEDULER_THREAD")
 
