@@ -178,4 +178,4 @@
   [full-repo token]
   (let [[user repo] (str/split full-repo #"/")]
     (log/debug "creating bounty label" (str user "/" repo) token)
-    (issues/create-label user repo "bounty" "00ff00" (auth-params token))))
+    (issues/create-label user repo "bounty" "fafad2" (auth-params token))))
