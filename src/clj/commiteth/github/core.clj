@@ -108,12 +108,12 @@
     (repos/delete-hook user repo hook-id (auth-params token))))
 
 (defn github-comment-hash
-  [user repo issue-number balance]
-  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number balance)))
+  [user repo issue-number]
+  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number)))
 
 (defn- get-qr-url
-  [user repo issue-number balance]
-  (let [hash (github-comment-hash user repo issue-number balance)]
+  [user repo issue-number]
+  (let [hash (github-comment-hash user repo issue-number)]
     (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" user repo issue-number hash))))
 
 (defn- md-url
@@ -127,15 +127,16 @@
   (str "!" (md-url alt src)))
 
 (defn generate-comment
-  [user repo issue-number balance]
-  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number balance))
+  [user repo issue-number contract-address balance]
+  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number))
         balance   (str balance " ETH")
         site-url  (md-url (server-address) (server-address))]
-    (format "Current balance: %s\n%s\n%s" balance image-url site-url)))
+    (format "Current balance: %s\nContract address: %s\n%s\n%s"
+            balance contract-address image-url site-url)))
 
 (defn post-comment
-  [user repo issue-number balance]
-  (let [comment (generate-comment user repo issue-number balance)]
+  [user repo issue-number contract-address balance]
+  (let [comment (generate-comment user repo issue-number contract-address balance)]
     (log/debug "Posting comment to" (str user "/" repo "/" issue-number) ":" comment)
     (issues/create-comment user repo issue-number comment (self-auth-params))))
 
@@ -158,8 +159,8 @@
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
 (defn update-comment
-  [user repo comment-id issue-number balance]
-  (let [comment (generate-comment user repo issue-number balance)]
+  [user repo comment-id issue-number contract-address balance]
+  (let [comment (generate-comment user repo issue-number contract-address balance)]
     (log/debug (str "Updating " user "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
