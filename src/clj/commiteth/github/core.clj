@@ -160,7 +160,8 @@
 (defn update-comment
   [user repo comment-id issue-number balance]
   (let [comment (generate-comment user repo issue-number balance)]
-    (log/debug (str "Updating " user "/" repo "/" issue-number " comment #" comment-id " with contents: " comment))
+    (log/debug (str "Updating " user "/" repo "/" issue-number
+                    " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
                                   [user repo comment-id]
                                   (assoc (self-auth-params) :body comment))]
@@ -169,6 +170,11 @@
 (defn get-issue
   [user repo issue-number]
   (issues/specific-issue user repo issue-number (self-auth-params)))
+
+(defn get-issues
+  [user repo]
+  (issues/issues user repo))
+
 
 (defn get-issue-events
   [user repo issue-id]

@@ -10,7 +10,7 @@
             [mount.core :as mount])
   (:gen-class))
 
-(def cli-options
+(def ^:const cli-options
   [["-p" "--port PORT" "Port number"
     :parse-fn #(Integer/parseInt %)]])
 
@@ -58,4 +58,3 @@ repl-server
       (System/exit 0))
     :else
     (start-app args)))
-
