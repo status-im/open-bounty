@@ -1,8 +1,13 @@
 # commiteth
 
-generated using Luminus version "2.9.10.94"
+Allows you to set bounties for Github issues, paid out in Ether.
 
-FIXME
+More information:
+http://wiki.status.im/proposals/commiteth/
+
+Live alpha version (uses Ropsten testnet):
+https://commiteth.com
+
 
 ## Prerequisites
 
@@ -21,4 +26,4 @@ FIXME
 
 ## License
 
-Copyright © 2016 FIXME
+Licensed under the [Mozilla Public License v2.0](https://github.com/status-im/status-react/blob/develop/LICENSE.md)
