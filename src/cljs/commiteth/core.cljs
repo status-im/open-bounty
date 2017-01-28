@@ -13,7 +13,9 @@
             [commiteth.issues :refer [issues-page]]
             [commiteth.common :refer [input checkbox]]
             [commiteth.subscriptions :refer [user-address-path]]
-            [clojure.set :refer [rename-keys]])
+            [commiteth.config :as config]
+            [clojure.set :refer [rename-keys]]
+            [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
 
 (defn login-link []
@@ -177,6 +179,8 @@
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
+  (when config/debug?
+    (enable-re-frisk!))
   (load-interceptors!)
   (hook-browser-navigation!)
   (load-data)

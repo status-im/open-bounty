@@ -40,7 +40,8 @@
                  [luminus-immutant "0.2.3"]
                  [clj.qrgen "0.4.0"]
                  [digest "1.4.5"]
-                 [tentacles "0.5.1"]]
+                 [tentacles "0.5.1"]
+                 [re-frisk "0.3.2"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
