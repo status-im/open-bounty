@@ -51,7 +51,9 @@
     (GET "/user/repositories" []
       :auth-rules authenticated?
       :current-user user
-      (ok {:repositories (github/list-repos (:token user))}))
+      (ok {:repositories (->> (github/list-repos (:token user))
+                              (map #(select-keys %
+                                    [:id :html_url :name :full_name :description])))}))
     (GET "/repositories" []
       :auth-rules authenticated?
       :current-user user
