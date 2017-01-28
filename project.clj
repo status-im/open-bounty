@@ -41,7 +41,8 @@
                  [clj.qrgen "0.4.0"]
                  [digest "1.4.5"]
                  [tentacles "0.5.1"]
-                 [re-frisk "0.3.2"]]
+                 [re-frisk "0.3.2"]
+                 [bk/ring-gzip "0.2.1"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
