@@ -111,12 +111,14 @@
 (reg-event-db
   :set-user-repos
   (fn [db [_ repos]]
-    (assoc db :repos repos)))
+    (-> db
+        (assoc :repos repos)
+        (assoc :repos-loading? false))))
 
 (reg-event-fx
   :load-user-repos
   (fn [{:keys [db]} [_]]
-    {:db   db
+    {:db   (assoc db :repos-loading? true)
      :http {:method     GET
             :url        "/api/user/repositories"
             :on-success #(dispatch [:set-user-repos (:repositories %)])}}))

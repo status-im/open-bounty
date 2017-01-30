@@ -12,6 +12,11 @@
     (:user db)))
 
 (reg-sub
+  :repos-loading?
+  (fn [db _]
+    (:repos-loading? db)))
+
+(reg-sub
   :repos
   (fn [db _]
     (:repos db)))

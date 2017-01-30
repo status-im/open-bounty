@@ -22,10 +22,13 @@
        [:p.text-gray.mt-1 description]]]]))
 
 (defn repos-list []
-  (let [repos (rf/subscribe [:repos])]
+  (let [repos-loading? (rf/subscribe [:repos-loading?])
+        repos (rf/subscribe [:repos])]
     (fn []
       [:div
-       (map repository-row @repos)])))
+       (if @repos-loading?
+         [:i.fa.fa-spinner.fa-spin]
+         (map repository-row @repos))])))
 
 (defn enable-disable-button
   [button-id disable]

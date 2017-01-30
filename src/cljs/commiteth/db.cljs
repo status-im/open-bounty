@@ -4,6 +4,7 @@
   {:page             :issues
    :user             nil
    :user-profile     nil
+   :repos-loading?   false
    :repos            []
    :enabled-repos    {}
    :all-bounties     []
