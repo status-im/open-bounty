@@ -9,6 +9,7 @@
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+            [ring.middleware.gzip :refer [wrap-gzip]]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [buddy.auth.backends.session :refer [session-backend]]
             [buddy.auth.accessrules :refer [restrict]]
@@ -91,4 +92,5 @@
         (assoc-in [:security :anti-forgery] false)
         (dissoc :session)))
     wrap-context
+    wrap-gzip
     wrap-internal-error))

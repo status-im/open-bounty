@@ -9,7 +9,6 @@
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [ring.middleware.gzip :refer [wrap-gzip]]
             [commiteth.env :refer [defaults]]
             [mount.core :as mount]
             [commiteth.middleware :as middleware]))
@@ -35,5 +34,5 @@
                      :title  "page not found"})))))
 
 
-(defn app [] (-> (middleware/wrap-base #'app-routes)
-                 wrap-gzip))
+(defn app []
+  (middleware/wrap-base #'app-routes))
