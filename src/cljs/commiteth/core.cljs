@@ -145,8 +145,11 @@
 
 (secretary/defroute "/" []
   (rf/dispatch [:set-active-page :issues]))
+
 (secretary/defroute "/manage" []
-  (rf/dispatch [:set-active-page :manage]))
+  (if js/user
+    (rf/dispatch [:set-active-page :manage])
+    (secretary/dispatch! "/")))
 
 ;; -------------------------
 ;; History
