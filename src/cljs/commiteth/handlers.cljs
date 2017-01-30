@@ -64,7 +64,7 @@
   (fn [{:keys [db]} [_]]
     {:db   db
      :http {:method     GET
-            :url        "/api/bounties"
+            :url        "/api/bounties/all"
             :on-success #(dispatch [:set-bounties %])}}))
 
 (reg-event-fx
@@ -72,7 +72,7 @@
   (fn [{:keys [db]} [_ issue-id payout-hash]]
     {:db   db
      :http {:method     POST
-            :url        (str/format "/api/bounty/%s/payout" issue-id)
+            :url        (str/format "/api/user/bounty/%s/payout" issue-id)
             :on-success #(println %)
             :params     {:payout-hash payout-hash}}}))
 
@@ -133,7 +133,7 @@
   (fn [{:keys [db]} [_]]
     {:db   db
      :http {:method     GET
-            :url        "/api/repositories"
+            :url        "/api/user/enabled-repositories"
             :on-success #(dispatch [:set-enabled-repos %])}}))
 
 (reg-event-fx
@@ -142,7 +142,7 @@
     (println "toggle-repo" repo)
     {:db   db
      :http {:method     POST
-            :url        "/api/repository/toggle"
+            :url        "/api/user/repository/toggle"
             :on-success #(println %)
             :params     (select-keys repo [:id :login :full_name :name])}}))
 

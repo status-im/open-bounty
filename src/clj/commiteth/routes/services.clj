@@ -36,65 +36,69 @@
                            :description "commitETH API"}}}}
 
   (context "/api" []
-    (POST "/user/address" []
-      :auth-rules authenticated?
-      :body-params [user-id :- String, address :- String]
-      :summary "Update user address"
-      (let [result (users/update-user-address (Integer/parseInt user-id) address)]
-        (if (= 1 result)
-          (ok)
-          (internal-server-error))))
-    (GET "/user" []
-      :auth-rules authenticated?
-      :current-user user
-      (ok {:user (users/get-user (:id user))}))
-    (GET "/user/repositories" []
-      :auth-rules authenticated?
-      :current-user user
-      (ok {:repositories (->> (github/list-repos (:token user))
-                              (map #(select-keys %
-                                    [:id :html_url :name :full_name :description])))}))
-    (GET "/repositories" []
-      :auth-rules authenticated?
-      :current-user user
-      (ok (repositories/get-enabled (:id user))))
-    (GET "/bounties" []
-      (ok (bounties-db/list-all-bounties)))
-    (POST "/bounty/:issue{[0-9]{1,9}}/payout" {:keys [params]}
-      :auth-rules authenticated?
-      :current-user user
-      (let [{issue       :issue
-             payout-hash :payout-hash} params
-            result (bounties-db/update-payout-hash
-                    (Integer/parseInt issue)
-                    payout-hash)]
-        (if (= 1 result)
-          (ok)
-          (internal-server-error))))
-    (GET "/user/bounties" []
-      :auth-rules authenticated?
-      :current-user user
-      (ok (map #(conj % (let [balance (:balance %)]
-                          {:balance-eth (eth/hex->eth balance 6)
-                           :balance-wei (eth/hex->big-integer balance)}))
-            (bounties-db/list-owner-bounties (:id user)))))
-    (POST "/repository/toggle" {:keys [params]}
-      :auth-rules authenticated?
-      :current-user user
-      (ok (let [{repo-id :id
-                 repo    :full_name} params
-                {token   :token
-                 login   :login
-                 user-id :id} user
-                result (or
-                         (repositories/create (merge params {:user_id user-id}))
-                         (repositories/toggle repo-id))]
-            (if (:enabled result)
-              (let [created-hook (github/add-webhook repo token)]
-                (log/debug "Created webhook:" created-hook)
-                (future
-                  (github/create-label repo token)
-                  (repositories/update-hook-id repo-id (:id created-hook))
-                  (bounties/add-bounties-for-existing-issues result)))
-              (github/remove-webhook repo (:hook_id result) token))
-            result)))))
+
+           (context "/bounties" []
+                    (GET "/all" []
+                         (ok (bounties-db/list-all-bounties))))
+
+           (context "/user" []
+                    (GET "/" []
+                         :auth-rules authenticated?
+                         :current-user user
+                         (ok {:user (users/get-user (:id user))}))
+                    (POST "/address" []
+                          :auth-rules authenticated?
+                          :body-params [user-id :- String, address :- String]
+                          :summary "Update user address"
+                          (let [result (users/update-user-address (Integer/parseInt user-id) address)]
+                            (if (= 1 result)
+                              (ok)
+                              (internal-server-error))))
+                    (GET "/repositories" []
+                         :auth-rules authenticated?
+                         :current-user user
+                         (ok {:repositories (->> (github/list-repos (:token user))
+                                                 (map #(select-keys %
+                                                                    [:id :html_url :name :full_name :description])))}))
+                    (GET "/enabled-repositories" []
+                         :auth-rules authenticated?
+                         :current-user user
+                         (ok (repositories/get-enabled (:id user))))
+                    (POST "/bounty/:issue{[0-9]{1,9}}/payout" {:keys [params]}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (let [{issue       :issue
+                                 payout-hash :payout-hash} params
+                                result (bounties-db/update-payout-hash
+                                        (Integer/parseInt issue)
+                                        payout-hash)]
+                            (if (= 1 result)
+                              (ok)
+                              (internal-server-error))))
+                    (GET "/bounties" []
+                         :auth-rules authenticated?
+                         :current-user user
+                         (ok (map #(conj % (let [balance (:balance %)]
+                                             {:balance-eth (eth/hex->eth balance 6)
+                                              :balance-wei (eth/hex->big-integer balance)}))
+                                  (bounties-db/list-owner-bounties (:id user)))))
+                    (POST "/repository/toggle" {:keys [params]}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (ok (let [{repo-id :id
+                                     repo    :full_name} params
+                                    {token   :token
+                                     login   :login
+                                     user-id :id} user
+                                    result (or
+                                            (repositories/create (merge params {:user_id user-id}))
+                                            (repositories/toggle repo-id))]
+                                (if (:enabled result)
+                                  (let [created-hook (github/add-webhook repo token)]
+                                    (log/debug "Created webhook:" created-hook)
+                                    (future
+                                      (github/create-label repo token)
+                                      (repositories/update-hook-id repo-id (:id created-hook))
+                                      (bounties/add-bounties-for-existing-issues result)))
+                                  (github/remove-webhook repo (:hook_id result) token))
+                                result))))))
