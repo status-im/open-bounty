@@ -13,17 +13,32 @@ https://commiteth.com
 
 * You will need [Leiningen][1] 2.0 or above installed.
 
-* [SassC][2] libsass command-line compiler is required
-
 [1]: https://github.com/technomancy/leiningen
-[2]: http://github.com/sass/sassc
 
 ## Running
 
     lein run
     lein figwheel
-    lein auto sassc once
+    lein less auto
+
+## Testing
+
+### Clojure tests
+
+    lein test
+
+### ClojureScript tests
+
+
+    lein with-profile test phantom test
+
+### Reagent component devcards
+
+    lein with-profile test figwheel devcards
+
+Open http://localhost:3449/cards.html
+
 
 ## License
 
-Licensed under the [Mozilla Public License v2.0](https://github.com/status-im/status-react/blob/develop/LICENSE.md)
+Licensed under the [Mozilla Public License v2.0](https://github.com/status-im/commiteth/blob/master/LICENSE.md)
