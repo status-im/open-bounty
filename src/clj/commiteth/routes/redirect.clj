@@ -16,9 +16,10 @@
 (defn- create-user [token user]
   (let [{name    :name
          login   :login
-         user-id :id} user
+         user-id :id
+         avatar-url :avatar_url} user
         email (github/get-user-email token)]
-    (users/create-user user-id login name email token)))
+    (users/create-user user-id login name email avatar-url token)))
 
 (defn- get-or-create-user
   [token]

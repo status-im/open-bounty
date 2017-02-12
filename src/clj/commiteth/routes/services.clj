@@ -59,7 +59,8 @@
                          :current-user user
                          (ok {:repositories (->> (github/list-repos (:token user))
                                                  (map #(select-keys %
-                                                                    [:id :html_url :name :full_name :description])))}))
+                                                                    [:id :html_url
+                                                                     :name :full_name :description])))}))
                     (GET "/enabled-repositories" []
                          :auth-rules authenticated?
                          :current-user user

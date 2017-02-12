@@ -3,19 +3,20 @@
 -- :name create-user! :<! :1
 -- :doc creates a new user record
 INSERT INTO users
-(id, login, name, email, token, address, created)
+(id, login, name, email, avatar_url, token, address, created)
 SELECT
   :id,
   :login,
   :name,
   :email,
+  :avatar_url,
   :token,
   :address,
   :created
 WHERE NOT exists(SELECT 1
                  FROM users
                  WHERE id = :id)
-RETURNING id, login, name, email, token, address, created;
+RETURNING id, login, name, email, avatar_url, token, address, created;
 
 -- :name update-user! :! :n
 -- :doc updates an existing user record

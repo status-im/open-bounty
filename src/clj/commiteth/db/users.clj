@@ -4,7 +4,7 @@
   (:import [java.util Date]))
 
 (defn create-user
-  [user-id login name email token]
+  [user-id login name email avatar-url token]
   (jdbc/with-db-connection [con-db *db*]
     (db/create-user! con-db
       {:id      user-id
@@ -12,6 +12,7 @@
        :name    name
        :email   email
        :token   token
+       :avatar_url avatar-url
        :address nil
        :created (new Date)})))
 

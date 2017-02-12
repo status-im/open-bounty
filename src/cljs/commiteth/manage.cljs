@@ -1,7 +1,6 @@
 (ns commiteth.manage
   (:require [re-frame.core :as rf]
             [commiteth.common :refer [input checkbox]]
-            [commiteth.subscriptions :refer [user-address-path]]
             [commiteth.issues :refer [issues-list-table issue-url]]
             [clojure.set :refer [rename-keys]]))
 

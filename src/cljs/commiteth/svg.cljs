@@ -1,4 +1,4 @@
-(ns .commiteth.svg)
+(ns commiteth.svg)
 
 (defn octicon-broadcast []
   [:svg.octicon.octicon-broadcast

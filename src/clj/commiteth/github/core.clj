@@ -93,6 +93,7 @@
 (defn add-webhook
   [full-repo token]
   (log/debug "adding webhook" full-repo token)
+  ; TODO: use secret key in config param
   (let [[user repo] (str/split full-repo #"/")]
     (repos/create-hook user repo "web"
                        {:url          (str (server-address) "/webhook")

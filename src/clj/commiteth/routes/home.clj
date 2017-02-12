@@ -10,9 +10,9 @@
 
 (defroutes home-routes
   (GET "/" {{identity :identity} :session}
-    (home-page identity))
+       (home-page identity))
   (GET "/logout" {session :session}
-    (-> (redirect "/")
-        (assoc :session (dissoc session :identity))))
+       (-> (redirect "/")
+           (assoc :session (dissoc session :identity))))
   (GET "/docs" [] (-> (ok (-> "docs/docs.md" io/resource slurp))
-                    (header "Content-Type" "text/plain; charset=utf-8"))))
+                      (header "Content-Type" "text/plain; charset=utf-8"))))

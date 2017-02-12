@@ -9,26 +9,15 @@
             [commiteth.ajax :refer [load-interceptors!]]
             [commiteth.handlers]
             [commiteth.subscriptions]
+            [commiteth.activity :refer [activity-page]]
             [commiteth.manage :refer [manage-page]]
             [commiteth.issues :refer [issues-page]]
             [commiteth.common :refer [input checkbox]]
-            [commiteth.subscriptions :refer [user-address-path]]
             [commiteth.config :as config]
             [commiteth.svg :as svg]
             [clojure.set :refer [rename-keys]]
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
-
-(defn login-link []
-  (let [user (rf/subscribe [:user])]
-    (fn []
-      (if-let [login (:login @user)]
-        [:div.tabnav-actions
-         [:span.profile-link "Signed in as "
-          [:a {:href (str "https://github.com/" login)} login] " "]
-         [:a.btn.tabnav-button {:href "/logout"} "Sign out"]]
-        [:div.tabnav-actions.logged-out
-         [:a.btn.tabnav-button {:href js/authorizeUrl} "Sign in"]]))))
 
 (defn error-pane
   []
@@ -50,7 +39,7 @@
 (defn address-settings []
   (let [user    (rf/subscribe [:user])
         user-id (:id @user)
-        address (rf/subscribe [:get-in user-address-path])]
+        address (rf/subscribe [:get-in [:user :address]])]
     (fn []
       [:div.tabnav-actions.float-right
        [:div.tabnav-actions.logged-in
@@ -63,59 +52,91 @@
                   :autoComplete "off",
                   :size         55
                   :type         "text"
-                  :value-path   user-address-path})]
+                  :value-path   [:user :address]})]
          [svg/octicon-broadcast]]]])))
 
-(defn header []
-  (let [page (rf/subscribe [:page])
-        user (rf/subscribe [:user])]
-    (fn []
-      [:header.main-header
-       [:div.container
-        [:div.flex-table.mt-4.mb-4
-         [:header.logo]
-         [:a {:href "/"}
-          [:img {:src "/img/logo.svg"}
 
-           ;;[:img {:src "img/logo.png", :alt "commiteth", :width "100"}]
-           ]]
-         [:div.flex-table-item.flex-table-item-primary
-          [:a {:href "/"}]
-          [:h1.main-title.lh-condensed "commiteth"]
-          [:span.main-link
-           "Earn ETH by committing to open source projects"]]
-         [:div.flex-table-item.flex-table-item-primary
-          [login-link]]]
-        [:div.tabnav
-         (when @user [(address-settings)])
-         [:nav.header-nav.tabnav-tabs
-          [:a.tabnav-tab
-           {:href  "#"
-            :class (when (= :issues @page) "selected")}
-           [svg/octicon-repo]
-           "Open Bounties"]
-          (when @user [:a.tabnav-tab
-                       {:href  "#/manage"
-                        :class (when (= :manage @page) "selected")}
-                       [svg/octicon-organization]
-                       "Manage Transactions"])]]]])))
+(defn user-dropdown [user items]
+  (let [dropdown-open? (r/atom false)]
+    (fn []
+      (let [menu (if @dropdown-open?
+                   [:div.ui.menu.transition.visible]
+                   [:div.ui.menu])]
+        [:div.ui.browse.item.dropdown
+         {:on-click #(swap! dropdown-open? not)}
+         (:login user)
+         [:span.dropdown.icon]
+         (into menu
+               (for [[target caption] items]
+                 ^{:key target} [:div.item
+                                    [:a
+                                     (if (keyword? target)
+                                       {:on-click #(rf/dispatch [target])}
+                                       {:href target})
+                                     caption]]))]))))
+
+
+(defn user-component [user]
+  (if user
+    (let [login (:login user)]
+      [:div.ui.text.menu.user-component
+       [:div.item
+        [:img.ui.mini.circular.image {:src (:avatar_url user)}]]
+       [user-dropdown user [[:update-address "Update address"]
+                            ["/logout" "Sign out"]]]])
+    [:a.ui.button.small {:href js/authorizeUrl} "Sign in"]))
+
+(defn tabs []
+  (let [user (rf/subscribe [:user])
+        current-page (rf/subscribe [:page])]
+    (fn []
+      (let [tabs (apply conj [[:activity "Activity"]]
+                        (when @user
+                          [[:issues "Bounties"]
+                           [:manage "Repositories"]]))]
+        (into [:div.ui.attached.tabular.menu.tiny]
+              (for [[page caption] tabs]
+                (let [props {:class (str "ui item"
+                                         (when (= @current-page page) " active"))
+                             :on-click #(rf/dispatch [:set-active-page page])}]
+                  ^{:key page} [:div props caption])))))))
+
+
+(defn page-header []
+  (let [user (rf/subscribe [:user])]
+    (fn []
+      [:div.vertical.segment.commiteth-header
+       [:div.ui.grid.container
+        [:div.twelve.wide.column
+         [:div.ui.image
+          [:img.left.aligned {:src "/img/logo.svg"}]]]
+        [:div.four.wide.column
+         [user-component @user]]
+        (when-not @user
+          [:div.ui.text.content
+           [:div.ui.divider.hidden]
+           [:h2.ui.header "Commit ETH"]
+           [:h2.ui.subheader "Earn ETH by committing to open source projects"]
+           [:div.ui.divider.hidden]])
+        [tabs]]])))
 
 (def pages
-  {:issues #'issues-page
+  {:activity #'activity-page
+   :issues #'issues-page
    :manage #'manage-page})
 
 (defn page []
   (fn []
-    [:div.app
-     [:nav.main-navbar [:div.container]]
-     [header]
+    [:div.ui.pusher
+     [page-header]
      [error-pane]
-     [(pages @(rf/subscribe [:page]))]]))
+     [:div.ui.vertical.segment
+      [(pages @(rf/subscribe [:page]))]]]))
 
 (secretary/set-config! :prefix "#")
 
 (secretary/defroute "/" []
-  (rf/dispatch [:set-active-page :issues]))
+  (rf/dispatch [:set-active-page :activity]))
 
 (secretary/defroute "/manage" []
   (if js/user
@@ -125,9 +146,9 @@
 (defn hook-browser-navigation! []
   (doto (History.)
     (events/listen
-      HistoryEventType/NAVIGATE
-      (fn [event]
-        (secretary/dispatch! (.-token event))))
+     HistoryEventType/NAVIGATE
+     (fn [event]
+       (secretary/dispatch! (.-token event))))
     (.setEnabled true)))
 
 (defn mount-components []
@@ -135,7 +156,10 @@
 
 (defn load-user []
   (when-let [login js/user]
-    (rf/dispatch [:set-active-user {:login login :id js/userId :token js/token}])))
+    (rf/dispatch [:set-active-user
+                  {:login login
+                   :id (js/parseInt js/userId)
+                   :token js/token}])))
 
 (defn load-issues []
   (rf/dispatch [:load-bounties]))

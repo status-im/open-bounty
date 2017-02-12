@@ -60,6 +60,13 @@
                   [:load-owner-bounties]]}))
 
 (reg-event-fx
+  :sign-out
+  (fn [{:keys [db]} [_]]
+    {:db (assoc db :user nil)
+     :http {:method GET
+            :url "/logout"}}))
+
+(reg-event-fx
   :load-bounties
   (fn [{:keys [db]} [_]]
     {:db   db
@@ -106,7 +113,7 @@
 (reg-event-db
   :set-user-profile
   (fn [db [_ user-profile]]
-    (assoc db :user-profile user-profile)))
+    (assoc db :user (:user user-profile))))
 
 (reg-event-db
   :set-user-repos

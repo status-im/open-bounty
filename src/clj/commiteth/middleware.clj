@@ -3,7 +3,6 @@
             [clojure.tools.logging :as log]
             [commiteth.layout :refer [*app-context* error-page]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-            [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [commiteth.config :refer [env]]
             [ring.middleware.flash :refer [wrap-flash]]
@@ -83,7 +82,6 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
     wrap-auth
-    wrap-webjars
     wrap-flash
     (wrap-session {:timeout      (* 60 60 6)
                    :cookie-attrs {:http-only true}})

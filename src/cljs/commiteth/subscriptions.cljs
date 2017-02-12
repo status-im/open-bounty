@@ -45,5 +45,3 @@
   :get-in
   (fn [db [_ path]]
     (get-in db path)))
-
-(def user-address-path [:user-profile :user :address])
