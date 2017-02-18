@@ -3,4 +3,5 @@
 
 (defn bounties-page []
   (fn []
-    [:div "Bounties view not implemented"]))
+    [:div.ui.container
+     [:div.ui.text "Bounties view coming soon"]]))

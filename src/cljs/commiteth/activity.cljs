@@ -3,4 +3,5 @@
 
 (defn activity-page []
   (fn []
-    [:div "This will be the activity view"]))
+    [:div.ui.container
+     [:div.ui.text "This will be the activity view"]]))

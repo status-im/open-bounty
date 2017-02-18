@@ -21,7 +21,7 @@
 (defn repo-card [repo]
   [:div.ui.card
    [:div.content
-    [:div.repo-label (:full_name repo)]
+    [:div.repo-label [:a {:href (:html_url repo)} (:full_name repo)]]
     [:div.repo-description (:description repo)]]
    [:div.repo-button-container
     [repo-toggle-button

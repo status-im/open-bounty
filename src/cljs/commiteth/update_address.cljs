@@ -18,7 +18,7 @@
       [:div.ui.container.grid
        [:div.ui.form.eight.wide.column
         [:h3 "Update address"]
-        [:p "Placeholder text for explaining what an Etheum address is."]
+        [:p "Placeholder text for explaining what an Ethereum address is."]
         [:div.field
          (if-not (empty? web3-accounts)
            [dropdown "Select address"

@@ -46,7 +46,7 @@
          repo-name :name
          {login :login} :owner} (:repository webhook-payload)
         repo-map {:repo repo-name :login login :repo_id repo-id}]
-    (bounties/add-bounty-for-issue repo-map issue)))
+    (bounties/add-bounty-for-issue repo-name repo-id issue)))
 
 (defn handle-issue-closed
   ;; TODO: does not work in case the issue is closed on github web ui

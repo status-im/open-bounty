@@ -30,27 +30,27 @@
   (update-in acc [:letks] into [binding `(:identity ~'+compojure-api-request+)]))
 
 
-(defn enable-repo [repo-id repo login token]
+(defn enable-repo [repo-id repo full-repo login token]
   (log/debug "enable-repo" repo-id repo)
   (let [hook-secret (random/base64 32)]
     (try
       (repositories/update-repo repo-id {:state 1
                                          :hook_secret hook-secret})
-      (let [created-hook (github/add-webhook repo token hook-secret)]
+      (let [created-hook (github/add-webhook full-repo token hook-secret)]
         (log/debug "Created webhook:" created-hook)
-        (github/create-label repo token)
+        (github/create-label full-repo token)
         (repositories/update-repo repo-id {:state 2
                                            :hook_id (:id created-hook)})
         (bounties/add-bounties-for-existing-issues repo repo-id login))
       (catch Exception e
-        (log/info "exception when creating webhook" (.getMessage e))
+        (log/info "exception when creating webhook" (.getMessage e) e)
         (repositories/update-repo repo-id {:state -1})))))
 
 
-(defn disable-repo [repo-id repo hook-id token]
-  (log/debug "disable-repo" repo-id repo)
+(defn disable-repo [repo-id full-repo hook-id token]
+  (log/debug "disable-repo" repo-id full-repo)
   (do
-    (github/remove-webhook repo hook-id token)
+    (github/remove-webhook full-repo hook-id token)
     (repositories/update-repo repo-id {:hook_secret ""
                                        :state 0
                                        :hook_id nil})))
@@ -62,13 +62,14 @@
          login   :login
          user-id :id} user
         {repo-id :id
-         repo    :full_name} params
+         full-repo :full_name
+         repo    :name} params
         db-item (repositories/create (merge params {:user_id user-id
                                                     :login login}))
         is-enabled (= 2 (:state db-item))]
     (if is-enabled
-      (disable-repo repo-id repo (:hook_id db-item) token)
-      (enable-repo repo-id repo login token))
+      (disable-repo repo-id full-repo (:hook_id db-item) token)
+      (enable-repo repo-id repo full-repo login token))
     (merge
      {:enabled (not is-enabled)}
      (select-keys params [:id :full_name]))))
@@ -108,9 +109,9 @@
                          (ok {:user (users/get-user (:id user))}))
                     (POST "/address" []
                           :auth-rules authenticated?
-                          :body-params [user-id :- String, address :- String]
+                          :body-params [user-id :- Long, address :- String]
                           :summary "Update user address"
-                          (let [result (users/update-user-address (Integer/parseInt user-id) address)]
+                          (let [result (users/update-user-address user-id address)]
                             (if (= 1 result)
                               (ok)
                               (internal-server-error))))

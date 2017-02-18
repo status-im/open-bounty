@@ -1,6 +1,6 @@
 (ns commiteth.manage
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [input checkbox]]
+            [commiteth.common :refer [input]]
             [commiteth.issues :refer [issues-list-table issue-url]]
             [clojure.set :refer [rename-keys]]))
 
@@ -16,7 +16,7 @@
     ^{:key repo-id}
     [:div.d-table.width-full
      [:div.d-table.col-12.width-full.py-4.border-bottom.issue
-      [checkbox {:value-path [:enabled-repos repo-id]
+      #_[checkbox {:value-path [:enabled-repos repo-id]
                  :style      {:width 32 :margin-left 10}
                  :on-change  #(rf/dispatch [:toggle-repo repo])}]
       [:div.d-table-cell.col-11.pr-3.v-align-top

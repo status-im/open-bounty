@@ -1,6 +1,7 @@
 (ns commiteth.db.users
   (:require [commiteth.db.core :refer [*db*] :as db]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as log])
   (:import [java.util Date]))
 
 (defn create-user
@@ -28,6 +29,7 @@
 
 (defn update-user-address
   [user-id address]
+  (log/debug "update-user-address" user-id address)
   (jdbc/with-db-connection [con-db *db*]
     (db/update-user-address! con-db {:id user-id :address address})))
 
