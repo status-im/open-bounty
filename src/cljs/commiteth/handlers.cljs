@@ -171,10 +171,19 @@
 
 
 (reg-event-fx
+ :update-address
+ (fn [{:keys [db]} [_]]
+   {:db db
+    :dispatch [:set-active-page :update-address]}))
+
+
+(reg-event-fx
  :save-user-address
  (fn [{:keys [db]} [_ user-id address]]
+   (prn "save-user-address" user-id address)
    {:db   db
     :http {:method     POST
            :url        "/api/user/address"
-           :on-success #(println %)
+           :on-success #(println "on-success" %)
+           :on-error   #(println "on-error" %)
            :params     {:user-id user-id :address address}}}))

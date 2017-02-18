@@ -1,31 +1,21 @@
 (ns commiteth.common
-  (:require [reagent.core :as reagent]
+  (:require [reagent.core :as r]
             [re-frame.core :as rf]))
 
-(defn input [{:keys [value-path] :as props}]
-  (let [init-val @(rf/subscribe [:get-in value-path])
-        props-clean (dissoc props :value-path)
-        val      (reagent/atom init-val)
-        save     #(let [v (-> @val str clojure.string/trim)]
-                    (when (seq v)
-                      (rf/dispatch [:assoc-in value-path v])))]
-    (fn []
-      [:input.form-control
-       (merge props-clean {:type      "text"
-                           :value     @val
-                           :on-blur   save
-                           :on-change #(reset! val (-> % .-target .-value))})])))
+(defn input [val-ratom props]
+  (fn []
+    [:input
+     (merge props {:type      "text"
+                   :value     @val-ratom
+                   :on-change #(reset! val-ratom (-> % .-target .-value))})]))
 
-(defn checkbox [{:keys [value-path on-change]}]
-  (let [init-val @(rf/subscribe [:get-in value-path])
-        val      (reagent/atom init-val)]
-    (fn [props]
-      (let [props-clean (dissoc props :value-path)]
-        [:input.form-control
-         (merge {:type     "checkbox"
-                 :checked  @val
-                 :on-change #(let [new-val (not @val)]
-                               (on-change)
-                               (rf/dispatch [:assoc-in value-path
-                                             (reset! val new-val)]))}
-                props-clean)]))))
+(defn dropdown [title val-ratom items]
+  (fn []
+    (if (= 1 (count items))
+      (reset! val-ratom (first items)))
+    [:select.ui.basic.selection.dropdown
+     {:on-change #(reset! val-ratom (-> % .-target .-value))}
+     (doall (for [item items]
+              ^{:key item} [:option
+                            {:value item}
+                            item]))]))

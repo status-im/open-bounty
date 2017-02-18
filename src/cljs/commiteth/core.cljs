@@ -12,9 +12,10 @@
             [commiteth.activity :refer [activity-page]]
             [commiteth.repos :refer [repos-page]]
             [commiteth.bounties :refer [bounties-page]]
+            [commiteth.update-address :refer [update-address-page]]
             [commiteth.manage :refer [manage-page]]
             [commiteth.issues :refer [issues-page]]
-            [commiteth.common :refer [input checkbox]]
+            [commiteth.common :refer [input]]
             [commiteth.config :as config]
             [commiteth.svg :as svg]
             [clojure.set :refer [rename-keys]]
@@ -125,14 +126,15 @@
 (def pages
   {:activity #'activity-page
    :repos #'repos-page
-   :bounties #'bounties-page})
+   :bounties #'bounties-page
+   :update-address #'update-address-page})
 
 (defn page []
   (fn []
     [:div.ui.pusher
      [page-header]
 ;;     [error-pane]
-     [:div.ui.vertical.segment.foo
+     [:div.ui.vertical.segment
       [:div.page-content
        [(pages @(rf/subscribe [:page]))]]]]))
 
