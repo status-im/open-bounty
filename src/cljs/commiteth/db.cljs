@@ -1,11 +1,10 @@
 (ns commiteth.db)
 
 (def default-db
-  {:page             :issues
+  {:page             :activity
    :user             nil
    :repos-loading?   false
-   :repos            []
-   :enabled-repos    {}
+   :repos            {}
    :all-bounties     []
    :owner-bounties   []
    :error            nil

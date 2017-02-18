@@ -11,7 +11,8 @@
             [commiteth.bounties :as bounties]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
-            [commiteth.eth.core :as eth]))
+            [commiteth.eth.core :as eth]
+            [crypto.random :as random]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -27,6 +28,65 @@
 (defmethod restructure-param :current-user
   [_ binding acc]
   (update-in acc [:letks] into [binding `(:identity ~'+compojure-api-request+)]))
+
+
+(defn enable-repo [repo-id repo login token]
+  (log/debug "enable-repo" repo-id repo)
+  (let [hook-secret (random/base64 32)]
+    (try
+      (repositories/update-repo repo-id {:state 1
+                                         :hook_secret hook-secret})
+      (let [created-hook (github/add-webhook repo token hook-secret)]
+        (log/debug "Created webhook:" created-hook)
+        (github/create-label repo token)
+        (repositories/update-repo repo-id {:state 2
+                                           :hook_id (:id created-hook)})
+        (bounties/add-bounties-for-existing-issues repo repo-id login))
+      (catch Exception e
+        (log/info "exception when creating webhook" (.getMessage e))
+        (repositories/update-repo repo-id {:state -1})))))
+
+
+(defn disable-repo [repo-id repo hook-id token]
+  (log/debug "disable-repo" repo-id repo)
+  (do
+    (github/remove-webhook repo hook-id token)
+    (repositories/update-repo repo-id {:hook_secret ""
+                                       :state 0
+                                       :hook_id nil})))
+
+
+(defn handle-toggle-repo [user params]
+  (log/debug "handle-toggle-repo" user params)
+  (let [{token   :token
+         login   :login
+         user-id :id} user
+        {repo-id :id
+         repo    :full_name} params
+        db-item (repositories/create (merge params {:user_id user-id
+                                                    :login login}))
+        is-enabled (= 2 (:state db-item))]
+    (if is-enabled
+      (disable-repo repo-id repo (:hook_id db-item) token)
+      (enable-repo repo-id repo login token))
+    (merge
+     {:enabled (not is-enabled)}
+     (select-keys params [:id :full_name]))))
+
+(defn in? [coll elem]
+  (some #(= elem %) coll))
+
+(defn handle-get-user-repos [user]
+  (log/debug "handle-get-user-repos")
+  (let [github-repos (github/get-user-repos (:token user))
+        enabled-repos (vec (repositories/get-enabled (:id user)))
+        repo-enabled? (fn [repo] (in? enabled-repos (:id repo)))
+        update-enabled (fn [repo] (assoc repo :enabled (repo-enabled? repo)))]
+    (into {}
+          (map (fn [[group repos]] {group
+                                   (map update-enabled repos)})
+               github-repos))))
+
 
 (defapi service-routes
   {:swagger {:ui   "/swagger-ui"
@@ -57,10 +117,7 @@
                     (GET "/repositories" []
                          :auth-rules authenticated?
                          :current-user user
-                         (ok {:repositories (->> (github/list-repos (:token user))
-                                                 (map #(select-keys %
-                                                                    [:id :html_url
-                                                                     :name :full_name :description])))}))
+                         (ok {:repositories (handle-get-user-repos user)}))
                     (GET "/enabled-repositories" []
                          :auth-rules authenticated?
                          :current-user user
@@ -86,20 +143,4 @@
                     (POST "/repository/toggle" {:keys [params]}
                           :auth-rules authenticated?
                           :current-user user
-                          (ok (let [{repo-id :id
-                                     repo    :full_name} params
-                                    {token   :token
-                                     login   :login
-                                     user-id :id} user
-                                    result (or
-                                            (repositories/create (merge params {:user_id user-id}))
-                                            (repositories/toggle repo-id))]
-                                (if (:enabled result)
-                                  (let [created-hook (github/add-webhook repo token)]
-                                    (log/debug "Created webhook:" created-hook)
-                                    (future
-                                      (github/create-label repo token)
-                                      (repositories/update-hook-id repo-id (:id created-hook))
-                                      (bounties/add-bounties-for-existing-issues result)))
-                                  (github/remove-webhook repo (:hook_id result) token))
-                                result))))))
+                          (ok (handle-toggle-repo user params))))))

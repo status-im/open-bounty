@@ -23,9 +23,7 @@
       (wrap-routes middleware/wrap-csrf)
       (wrap-routes middleware/wrap-formats))
     #'redirect-routes
-    (-> #'webhook-routes
-      (wrap-routes wrap-json-params)
-      (wrap-routes wrap-keyword-params))
+    #'webhook-routes
     #'service-routes
     #'qr-routes
     (route/not-found

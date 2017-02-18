@@ -10,6 +10,8 @@
             [commiteth.handlers]
             [commiteth.subscriptions]
             [commiteth.activity :refer [activity-page]]
+            [commiteth.repos :refer [repos-page]]
+            [commiteth.bounties :refer [bounties-page]]
             [commiteth.manage :refer [manage-page]]
             [commiteth.issues :refer [issues-page]]
             [commiteth.common :refer [input checkbox]]
@@ -19,7 +21,7 @@
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
 
-(defn error-pane
+#_(defn error-pane
   []
   (let [error (rf/subscribe [:error])]
     (fn []
@@ -31,12 +33,12 @@
           :on-click #(rf/dispatch [:clear-error])}
          (str @error)]))))
 
-(defn save-address
+#_(defn save-address
   [user-id address]
   (fn [_]
     (rf/dispatch [:save-user-address user-id address])))
 
-(defn address-settings []
+#_(defn address-settings []
   (let [user    (rf/subscribe [:user])
         user-id (:id @user)
         address (rf/subscribe [:get-in [:user :address]])]
@@ -92,8 +94,8 @@
     (fn []
       (let [tabs (apply conj [[:activity "Activity"]]
                         (when @user
-                          [[:issues "Bounties"]
-                           [:manage "Repositories"]]))]
+                          [[:repos "Repositories"]
+                           [:bounties "Bounties"]]))]
         (into [:div.ui.attached.tabular.menu.tiny]
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
@@ -118,20 +120,21 @@
            [:h2.ui.header "Commit ETH"]
            [:h2.ui.subheader "Earn ETH by committing to open source projects"]
            [:div.ui.divider.hidden]])
-        [tabs]]])))
+         [tabs]]])))
 
 (def pages
   {:activity #'activity-page
-   :issues #'issues-page
-   :manage #'manage-page})
+   :repos #'repos-page
+   :bounties #'bounties-page})
 
 (defn page []
   (fn []
     [:div.ui.pusher
      [page-header]
-     [error-pane]
-     [:div.ui.vertical.segment
-      [(pages @(rf/subscribe [:page]))]]]))
+;;     [error-pane]
+     [:div.ui.vertical.segment.foo
+      [:div.page-content
+       [(pages @(rf/subscribe [:page]))]]]]))
 
 (secretary/set-config! :prefix "#")
 
@@ -140,7 +143,7 @@
 
 (secretary/defroute "/manage" []
   (if js/user
-    (rf/dispatch [:set-active-page :manage])
+    (rf/dispatch [:set-active-page :repos])
     (secretary/dispatch! "/")))
 
 (defn hook-browser-navigation! []
@@ -154,12 +157,18 @@
 (defn mount-components []
   (r/render [#'page] (.getElementById js/document "app")))
 
+(defonce active-user (r/atom nil))
+
 (defn load-user []
-  (when-let [login js/user]
-    (rf/dispatch [:set-active-user
-                  {:login login
-                   :id (js/parseInt js/userId)
-                   :token js/token}])))
+  (if-let [login js/user]
+    (when-not (= login @active-user)
+      (println "active user changed, loading user data")
+      (reset! active-user login)
+      (rf/dispatch [:set-active-user
+                    {:login login
+                     :id (js/parseInt js/userId)
+                     :token js/token}]))
+    (reset! active-user nil)))
 
 (defn load-issues []
   (rf/dispatch [:load-bounties]))
@@ -168,7 +177,13 @@
   (load-issues)
   (load-user))
 
-(js/setInterval load-data 60000)
+(defonce timer-id (r/atom nil))
+
+(defn on-js-load []
+  (when-not (nil? @timer-id)
+    (js/clearInterval @timer-id))
+  (reset! timer-id (js/setInterval load-data 60000))
+  (mount-components))
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
@@ -177,4 +192,4 @@
   (load-interceptors!)
   (hook-browser-navigation!)
   (load-data)
-  (mount-components))
+  (on-js-load))

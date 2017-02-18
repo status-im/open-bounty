@@ -87,7 +87,6 @@
         owner2        (format-param owner)
         data          (str contract-code owner1 owner2)
         value         (format "0x%x" 1)]
-    (println data)
     (send-transaction (eth-account) nil value {:data data})))
 
 (defn- format-call-params

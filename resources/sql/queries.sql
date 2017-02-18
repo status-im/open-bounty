@@ -50,38 +50,58 @@ WHERE r.repo_id = :repo_id;
 
 -- Repositories --------------------------------------------------------------------
 
--- :name toggle-repository! :<! :1
--- :doc toggles 'enabled' flag of a given repository
+-- :name set-repo-state! :<! :1
+-- :doc sets repository to given state
 UPDATE repositories
-SET enabled = NOT enabled
+SET state = :state
 WHERE repo_id = :repo_id
-RETURNING repo_id, login, repo, enabled, hook_id;
+RETURNING repo_id, login, repo, state, hook_id;
+
+
+-- :name get-repo :? :1
+-- :doc retrieve a repository given login and repo-name
+SELECT *
+FROM repositories
+WHERE login = :login
+AND repo = :repo;
+
 
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
-INSERT INTO repositories (repo_id, user_id, login, repo, enabled)
+INSERT INTO repositories (repo_id, user_id, login, repo, state)
   SELECT
     :repo_id,
     :user_id,
     :login,
     :repo,
-    :enabled
+    :state
   WHERE NOT exists(SELECT 1
                    FROM repositories
                    WHERE repo_id = :repo_id)
-RETURNING repo_id, user_id, login, repo, enabled;
+RETURNING repo_id, user_id, login, repo, state;
 
 -- :name get-enabled-repositories :? :*
 -- :doc returns enabled repositories for a given login
 SELECT repo_id
 FROM repositories
-WHERE user_id = :user_id AND enabled = TRUE;
+WHERE user_id = :user_id
+AND state = 2;
 
--- :name update-hook-id :! :n
--- :doc updates hook_id of a specified repository
+
+-- :name update-repo-generic :! :n
+/* :require [clojure.string :as string]
+            [hugsql.parameters :refer [identifier-param-quote]] */
 UPDATE repositories
-SET hook_id = :hook_id
-WHERE repo_id = :repo_id;
+SET
+/*~
+(string/join ","
+  (for [[field _] (:updates params)]
+    (str (identifier-param-quote (name field) options)
+      " = :v:updates." (name field))))
+~*/
+where repo_id = :repo_id;
+
+
 
 -- Issues --------------------------------------------------------------------------
 

@@ -41,7 +41,7 @@
                              :redirect_uri  (redirect-uri)
                              :state         state}}))
 
-(defn- auth-params
+(defn auth-params
   [token]
   {:oauth-token  token
    :client-id    (client-id)
@@ -64,19 +64,22 @@
    :permissions
    :private])
 
-(def login-field [:owner :login])
-
-(defn list-repos
-  "List all repos managed by the given user."
+(defn get-user-repos
+  "List all repos managed by the given user. Returns map of repository
+  maps grouped by owner. Owner is an organization name or the user's
+  own login."
   [token]
-  (->>
-   (map #(merge
-          {:login (get-in % login-field)}
-          (select-keys % repo-fields))
-        (repos/repos (merge (auth-params token) {:type      "all"
-                                                 :all-pages true})))
-   (filter #(not (:fork %)))
-   (filter #(-> % :permissions :admin))))
+  (let [all-repos-with-admin-access
+        (->>
+         (map #(merge
+                {:owner-login (get-in % [:owner :login])}
+                {:owner-type (get-in % [:owner :type])}
+                (select-keys % repo-fields))
+              (repos/repos (merge (auth-params token) {:type      "all"
+                                                       :all-pages true})))
+         (filter #(not (:fork %)))
+         (filter #(-> % :permissions :admin)))]
+    (group-by :owner-login all-repos-with-admin-access)))
 
 (defn get-user
   [token]
@@ -91,12 +94,13 @@
      :email)))
 
 (defn add-webhook
-  [full-repo token]
+  [full-repo token secret]
   (log/debug "adding webhook" full-repo token)
   ; TODO: use secret key in config param
   (let [[user repo] (str/split full-repo #"/")]
     (repos/create-hook user repo "web"
                        {:url          (str (server-address) "/webhook")
+                        :secret secret
                         :content_type "json"}
                        (merge (auth-params token)
                               {:events ["issues", "issue_comment", "pull_request"]

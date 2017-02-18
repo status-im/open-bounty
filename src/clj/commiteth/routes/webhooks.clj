@@ -1,15 +1,19 @@
 (ns commiteth.routes.webhooks
-  (:require [compojure.core :refer [defroutes POST]]
-            [commiteth.github.core :as github]
-            [commiteth.db.pull-requests :as pull-requests]
-            [commiteth.db.issues :as issues]
-            [commiteth.db.users :as users]
+  (:require [cheshire.core :as json]
+            [clojure.string :as str :refer [join]]
+            [clojure.tools.logging :as log]
             [commiteth.bounties :as bounties]
-            [ring.util.http-response :refer [ok]]
-            [clojure.string :refer [join]]
-            [clojure.tools.logging :as log])
-  (:import [java.lang Integer]))
-
+            [commiteth.db
+             [issues :as issues]
+             [pull-requests :as pull-requests]
+             [repositories :as repos]
+             [users :as users]]
+            [commiteth.github.core :as github]
+            [commiteth.util.digest :refer [hex-hmac-sha1]]
+            [compojure.core :refer [defroutes POST]]
+            [crypto.equality :as crypto]
+            [ring.util.http-response :refer [ok]])
+  (:import java.lang.Integer))
 
 (defn find-issue-event
   [events type owner]
@@ -125,15 +129,28 @@
       (handle-issue-closed webhook-payload)))
   (ok (str webhook-payload)))
 
+
 (defn handle-pull-request
   [pull-request]
   (when (= "closed" (:action pull-request))
     (handle-pull-request-closed pull-request))
   (ok (str pull-request)))
 
+
+(defn validate-secret [webhook-payload raw-payload github-signature]
+  (let [full-name (get-in webhook-payload [:repository :full_name])
+        repo (repos/get-repo full-name)
+        secret (:hook_secret repo)
+        signature (str "sha1=" (hex-hmac-sha1 secret raw-payload))]
+    (crypto/eq? signature github-signature)))
+
+
 (defroutes webhook-routes
-  (POST "/webhook" {:keys [params headers]}
-        (case (get headers "x-github-event")
-          "issues" (handle-issue params)
-          "pull_request" (handle-pull-request params)
-          (ok))))
+  (POST "/webhook" {:keys [headers body]}
+        (let [raw-payload (slurp body)
+              payload (json/parse-string raw-payload true)]
+          (if (validate-secret payload raw-payload (get headers "x-hub-signature"))
+            (case (get headers "x-github-event")
+              "issues" (handle-issue payload)
+              "pull_request" (handle-pull-request payload)
+              (ok))))))

@@ -1,21 +1,20 @@
 (ns commiteth.db.repositories
   (:require [commiteth.db.core :refer [*db*] :as db]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :refer [rename-keys]]))
-
-(defn toggle
-  "Toggles specified repository"
-  [repo-id]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/toggle-repository! con-db {:repo_id repo-id})))
+            [clojure.set :refer [rename-keys]]
+            [clojure.string :as str]))
 
 (defn create
-  "Creates repository"
+  "Creates repository or returns existing one."
   [repo]
   (jdbc/with-db-connection [con-db *db*]
-    (db/create-repository! con-db (-> repo
-                                    (rename-keys {:id :repo_id :name :repo})
-                                    (merge {:enabled true})))))
+    (or
+     (db/create-repository! con-db (-> repo
+                                       (rename-keys {:id :repo_id
+                                                     :name :repo})
+                                       (merge {:state 0})))
+     (db/get-repo {:repo (:name repo)
+                   :login (:login repo)}))))
 
 (defn get-enabled
   "Lists enabled repositories ids for a given login"
@@ -25,8 +24,16 @@
       (db/get-enabled-repositories con-db {:user_id user-id}))
     (mapcat vals)))
 
-(defn update-hook-id
-  "Updates github webhook id for a given repository"
-  [repo-id hook-id]
+(defn update-repo
+  [repo-id updates]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-hook-id con-db {:repo_id repo-id :hook_id hook-id})))
+    (db/update-repo-generic con-db {:repo_id repo-id
+                                    :updates updates})))
+
+
+(defn get-repo
+  "Get a repo from DB given it's full name (owner/repo-name)"
+  [full-name]
+  (let [[login repo-name] (str/split full-name #"/")]
+    (jdbc/with-db-connection [con-db *db*]
+      (db/get-repo {:login login :repo repo-name}))))

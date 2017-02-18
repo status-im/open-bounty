@@ -5,11 +5,22 @@
     font-weight: normal;
 }
 
+@font-face {
+    font-family: 'postgrotesk-medium';
+    src: url('/fonts/PostGrotesk-Medium.woff') format('woff');
+    font-weight: normal;
+}
+
 
 .ui.button {
     background-color: #b0f1ee;
     white-space: nowrap;
+    padding: 1em 1.2em 1em;
 }
+.ui.small.button {
+    font-size: 15px!important;
+}
+
 
 .commiteth-header {
     background-color: #2f3f44!important;
@@ -27,7 +38,6 @@
 }
 
 .ui.header {
-    //font-weight: normal;
     color: #fff;
 }
 
@@ -62,13 +72,17 @@ span.dropdown.icon {
     font-family: 'postgrotesk';
 }
 
-.ui.tabular {
+.ui.attached.tabular {
     background-color: #2f3f44;
+    border-bottom: none;
     .ui.item {
-        padding: 1.5em;
+        padding: 1em;
         color: #fff;
         opacity: 0.98;
         cursor: pointer;
+        font-family: 'postgrotesk';
+        font-size: 16px;
+        font-weight: normal;
     }
     .ui.item.active {
         border-radius: .8rem .8rem 0 0!important;
@@ -79,24 +93,52 @@ span.dropdown.icon {
     }
 }
 
-
 .repo-label {
     color: #1bb5c1;
-    font-weight: bold;
+    font-family: 'postgrotesk-medium';
+    font-size: 16px;
 }
 
 .repo-description {
     color: #474951;
+    font-size: 15px;
+    font-weight: normal;
+    line-height: 24px;
+    margin-top: 16px;
+    margin-bottom: 16px;
 }
+
+.repo-button-container {
+    display: inline-block;
+    vertical-align: bottom;
+    padding: 0em 1em 0em;
+    font-family: 'postgrotesk-medium';
+    font-size: 15px;
+    a {
+        padding: 1em;
+        font-size: 15px;
+    }
+}
+
+.page-content {
+    margin-top: 2em;
+}
+
 
 .ui.button.repo-added-button {
     color: white;
     background-color: #61deb0;
     cursor: default;
 }
+
+.ui.cards>.card {
+    border: #e7e7e7 solid 0.1em;
+    box-shadow: none;
+    border-radius: 0.3em;
+    padding: 0.8em 1em 1.1em;
+
+}
 .ui.segment {
-    // margin: 2.5em;
-    // line-height: 3em;
     border: #e7e7e7 solid 0.1em;
     box-shadow: none;
     border-radius: 0.3em;
