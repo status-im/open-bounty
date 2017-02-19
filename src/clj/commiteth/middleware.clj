@@ -82,13 +82,13 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
     wrap-auth
-    wrap-flash
+;;    wrap-flash
     (wrap-session {:timeout      (* 60 60 6)
                    :cookie-attrs {:http-only true}})
     (wrap-defaults
       (-> site-defaults
         (assoc-in [:security :anti-forgery] false)
         (dissoc :session)))
-    wrap-context
+  ;;  wrap-context
     wrap-gzip
     wrap-internal-error))

@@ -10,8 +10,8 @@
            [java.lang.management ManagementFactory]))
 
 (defn update-issue-contract-address
-  "For each pending deployment:
-      gets transasction receipt, updates db state and posts github comment"
+  "For each pending deployment: gets transaction receipt, updates db
+  state (contract-address, comment-id) and posts github comment"
   []
   (doseq [{issue-id         :issue_id
            transaction-hash :transaction_hash} (issues/list-pending-deployments)]

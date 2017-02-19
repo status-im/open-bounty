@@ -22,11 +22,13 @@
          issue-title  :title} issue
         created-issue (issues/create repo-id issue-id issue-number issue-title)
         repo-owner-address    (:address (users/get-repo-owner repo-id))]
-    (log/info (format "Issue %s/%s/%s labeled as bounty" login repo issue-number))
+    (log/debug "Adding bounty for issue " repo issue-number "owner address: " repo-owner-address)
     (if (= 1 created-issue)
-      (let [transaction-hash (eth/deploy-contract repo-owner-address)]
-        (log/info "Contract deployed, transaction-hash:" transaction-hash )
-        (issues/update-transaction-hash issue-id transaction-hash))
+      (do
+        (log/debug "deploying contract to " repo-owner-address)
+        (let [transaction-hash (eth/deploy-contract repo-owner-address)]
+          (log/info "Contract deployed, transaction-hash:" transaction-hash )
+          (issues/update-transaction-hash issue-id transaction-hash)))
       (log/debug "Issue already exists in DB, ignoring"))))
 
 

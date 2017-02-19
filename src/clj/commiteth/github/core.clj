@@ -108,6 +108,7 @@
 
 (defn remove-webhook
   [full-repo hook-id token]
+  ;; TODO: possible error ignored
   (let [[user repo] (str/split full-repo #"/")]
     (log/debug "removing webhook" (str user "/" repo) hook-id token)
     (repos/delete-hook user repo hook-id (auth-params token))))

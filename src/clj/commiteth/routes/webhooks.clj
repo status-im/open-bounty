@@ -41,17 +41,19 @@
 
 (defn handle-issue-labeled
   [webhook-payload]
+  (log/debug "handle-issue-labeled")
   (let [{issue :issue} webhook-payload
         {repo-id :id
          repo-name :name
          {login :login} :owner} (:repository webhook-payload)
         repo-map {:repo repo-name :login login :repo_id repo-id}]
-    (bounties/add-bounty-for-issue repo-name repo-id issue)))
+    (bounties/add-bounty-for-issue repo-name repo-id login issue)))
 
 (defn handle-issue-closed
   ;; TODO: does not work in case the issue is closed on github web ui
   [{{{user :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
+  (log/debug "handle-issue-closed")
   (future
     (when-let [commit-id (find-commit-id user repo issue-number ["referenced" "closed"])]
       (log/debug (format "Issue %s/%s/%s closed with commit %s" user repo issue-number commit-id))
@@ -120,21 +122,21 @@
 (defn handle-issue
   [webhook-payload]
   (when-let [action (:action webhook-payload)]
-    (log/debug "handle-issue")
+    (log/debug "handle-issue" action)
     (when (labeled-as-bounty? action webhook-payload)
       (handle-issue-labeled webhook-payload))
     (when (and
            (= "closed" action)
            (bounties/has-bounty-label? (:issue webhook-payload)))
       (handle-issue-closed webhook-payload)))
-  (ok (str webhook-payload)))
+  (ok))
 
 
 (defn handle-pull-request
   [pull-request]
   (when (= "closed" (:action pull-request))
     (handle-pull-request-closed pull-request))
-  (ok (str pull-request)))
+  (ok))
 
 
 (defn validate-secret [webhook-payload raw-payload github-signature]
@@ -150,7 +152,9 @@
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
           (if (validate-secret payload raw-payload (get headers "x-hub-signature"))
-            (case (get headers "x-github-event")
-              "issues" (handle-issue payload)
-              "pull_request" (handle-pull-request payload)
-              (ok))))))
+            (do (log/debug "Github secret validation OK")
+                (log/debug "x-github-event" (get headers "x-github-event"))
+                (case (get headers "x-github-event")
+                  "issues" (handle-issue payload)
+                  "pull_request" (handle-pull-request payload)
+                  (ok)))))))
