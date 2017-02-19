@@ -42,6 +42,11 @@
     (get-in db [:pagination table])))
 
 (reg-sub
+  :top-hunters
+  (fn [db _]
+    (:top-hunters db)))
+
+(reg-sub
   :get-in
   (fn [db [_ path]]
     (get-in db path)))

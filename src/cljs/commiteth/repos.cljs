@@ -41,7 +41,7 @@
         user (rf/subscribe [:user])
         repo-groups (keys @repos)]
     (fn []
-      (into [:div.ui.container]
+      (into [:div]
             (for [[group group-repos]
                   (map (fn [group] [group (get @repos group)]) repo-groups)]
               [:div [repo-group-title group (:login @user)]
@@ -53,8 +53,7 @@
   (let [repos-loading? (rf/subscribe [:repos-loading?])]
     (fn []
       (if @repos-loading?
-        [:div.ui.container
-         [:p]
+        [:div
          [:div.ui.active.dimmer
           [:div.ui.loader]]]
         [repos-list]))))

@@ -23,40 +23,40 @@
   (:import goog.History))
 
 #_(defn error-pane
-  []
-  (let [error (rf/subscribe [:error])]
-    (fn []
-      (when @error
-        [:div.container
-         {:style    {:background-color "#faeaea"
-                     :padding          "10px"
-                     :color            "red"}
-          :on-click #(rf/dispatch [:clear-error])}
-         (str @error)]))))
+    []
+    (let [error (rf/subscribe [:error])]
+      (fn []
+        (when @error
+          [:div.container
+           {:style    {:background-color "#faeaea"
+                       :padding          "10px"
+                       :color            "red"}
+            :on-click #(rf/dispatch [:clear-error])}
+           (str @error)]))))
 
 #_(defn save-address
-  [user-id address]
-  (fn [_]
-    (rf/dispatch [:save-user-address user-id address])))
+    [user-id address]
+    (fn [_]
+      (rf/dispatch [:save-user-address user-id address])))
 
 #_(defn address-settings []
-  (let [user    (rf/subscribe [:user])
-        user-id (:id @user)
-        address (rf/subscribe [:get-in [:user :address]])]
-    (fn []
-      [:div.tabnav-actions.float-right
-       [:div.tabnav-actions.logged-in
-        [:button.btn.tabnav-button
-         {:type     "submit", :aria-haspopup "true"
-          :on-click (save-address user-id @address)}
-         "Update"]
-        [:div.auto-search-group
-         [(input {:placeholder  "0x0000000000000000000000000000000000000000",
-                  :autoComplete "off",
-                  :size         55
-                  :type         "text"
-                  :value-path   [:user :address]})]
-         [svg/octicon-broadcast]]]])))
+    (let [user    (rf/subscribe [:user])
+          user-id (:id @user)
+          address (rf/subscribe [:get-in [:user :address]])]
+      (fn []
+        [:div.tabnav-actions.float-right
+         [:div.tabnav-actions.logged-in
+          [:button.btn.tabnav-button
+           {:type     "submit", :aria-haspopup "true"
+            :on-click (save-address user-id @address)}
+           "Update"]
+          [:div.auto-search-group
+           [(input {:placeholder  "0x0000000000000000000000000000000000000000",
+                    :autoComplete "off",
+                    :size         55
+                    :type         "text"
+                    :value-path   [:user :address]})]
+           [svg/octicon-broadcast]]]])))
 
 
 (defn user-dropdown [user items]
@@ -72,11 +72,11 @@
          (into menu
                (for [[target caption] items]
                  ^{:key target} [:div.item
-                                    [:a
-                                     (if (keyword? target)
-                                       {:on-click #(rf/dispatch [target])}
-                                       {:href target})
-                                     caption]]))]))))
+                                 [:a
+                                  (if (keyword? target)
+                                    {:on-click #(rf/dispatch [target])}
+                                    {:href target})
+                                  caption]]))]))))
 
 
 (defn user-component [user]
@@ -121,7 +121,7 @@
            [:h2.ui.header "Commit ETH"]
            [:h2.ui.subheader "Earn ETH by committing to open source projects"]
            [:div.ui.divider.hidden]])
-         [tabs]]])))
+        [tabs]]])))
 
 (def pages
   {:activity #'activity-page
@@ -129,14 +129,37 @@
    :bounties #'bounties-page
    :update-address #'update-address-page})
 
+
+
+(defn top-hunters []
+  (let [top-hunters (rf/subscribe [:top-hunters])]
+    (fn []
+      (into [:div.ui.items.top-hunters]
+            (map-indexed (fn [idx hunter]
+                           [:div.item
+                            [:div.leader-ordinal (str (+ 1 idx))]
+                            [:div.ui..mini.circular.image
+                             [:img {:src (:profile-image-url hunter)}]]
+                            [:div.content
+                             [:div.header (:display-name hunter)]
+                             [:div.description (str "ETH " (:eth-earned hunter))]]])
+                         @top-hunters)))))
+
 (defn page []
   (fn []
     [:div.ui.pusher
      [page-header]
-;;     [error-pane]
+     ;;     [error-pane]
      [:div.ui.vertical.segment
-      [:div.page-content
-       [(pages @(rf/subscribe [:page]))]]]]))
+      [:div.ui.container
+       [:div.ui.grid.stackable
+        [:div.twelve.wide.column
+         [:div.ui.container.page-content
+          [(pages @(rf/subscribe [:page]))]]]
+        [:div.four.wide.column.computer.only
+         [:div.ui.container.page-content
+          [:h3 "Top hunters"]
+          [top-hunters]]]]]]]))
 
 (secretary/set-config! :prefix "#")
 
