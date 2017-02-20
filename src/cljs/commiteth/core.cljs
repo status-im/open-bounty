@@ -22,72 +22,40 @@
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
 
-#_(defn error-pane
-    []
-    (let [error (rf/subscribe [:error])]
-      (fn []
-        (when @error
-          [:div.container
-           {:style    {:background-color "#faeaea"
-                       :padding          "10px"
-                       :color            "red"}
-            :on-click #(rf/dispatch [:clear-error])}
-           (str @error)]))))
-
-#_(defn save-address
-    [user-id address]
-    (fn [_]
-      (rf/dispatch [:save-user-address user-id address])))
-
-#_(defn address-settings []
-    (let [user    (rf/subscribe [:user])
-          user-id (:id @user)
-          address (rf/subscribe [:get-in [:user :address]])]
-      (fn []
-        [:div.tabnav-actions.float-right
-         [:div.tabnav-actions.logged-in
-          [:button.btn.tabnav-button
-           {:type     "submit", :aria-haspopup "true"
-            :on-click (save-address user-id @address)}
-           "Update"]
-          [:div.auto-search-group
-           [(input {:placeholder  "0x0000000000000000000000000000000000000000",
-                    :autoComplete "off",
-                    :size         55
-                    :type         "text"
-                    :value-path   [:user :address]})]
-           [svg/octicon-broadcast]]]])))
-
+(def user-dropdown-open? (r/atom false))
 
 (defn user-dropdown [user items]
-  (let [dropdown-open? (r/atom false)]
-    (fn []
-      (let [menu (if @dropdown-open?
-                   [:div.ui.menu.transition.visible]
-                   [:div.ui.menu])]
-        [:div.ui.browse.item.dropdown
-         {:on-click #(swap! dropdown-open? not)}
-         (:login user)
-         [:span.dropdown.icon]
-         (into menu
-               (for [[target caption] items]
-                 ^{:key target} [:div.item
-                                 [:a
-                                  (if (keyword? target)
-                                    {:on-click #(rf/dispatch [target])}
-                                    {:href target})
-                                  caption]]))]))))
+  (let [menu (if @user-dropdown-open?
+                  [:div.ui.menu.transition.visible]
+                  [:div.ui.menu])
+        avatar-url (:avatar_url user)]
+    [:div.ui.left.item.dropdown
+     {:on-click #(swap! user-dropdown-open? not)}
+     [:div.item
+      [:img.ui.mini.circular.image {:src avatar-url}]]
+     [:div.item
+      (:login user)]
+     [:div.item
+      [:span.dropdown.icon]]
+     (into menu
+           (for [[target caption] items]
+             ^{:key target} [:div.item
+                             [:a
+                              (if (keyword? target)
+                                {:on-click #(rf/dispatch [target])}
+                                {:href target})
+                              caption]]))]))
 
 
 (defn user-component [user]
-  (if user
-    (let [login (:login user)]
-      [:div.ui.text.menu.user-component
-       [:div.item
-        [:img.ui.mini.circular.image {:src (:avatar_url user)}]]
-       [user-dropdown user [[:update-address "Update address"]
-                            ["/logout" "Sign out"]]]])
-    [:a.ui.button.small {:href js/authorizeUrl} "Sign in"]))
+  (let [user (rf/subscribe [:user])]
+    (fn []
+      (if @user
+        [:div.ui.text.menu.user-component
+         [:div.item
+          [user-dropdown @user [[:update-address "Update address"]
+                                ["/logout" "Sign out"]]]]]
+        [:a.ui.button.small {:href js/authorizeUrl} "Sign in"]))))
 
 (defn tabs []
   (let [user (rf/subscribe [:user])
@@ -97,7 +65,7 @@
                         (when @user
                           [[:repos "Repositories"]
                            [:bounties "Bounties"]]))]
-        (into [:div.ui.attached.tabular.menu.tiny]
+        (into [:div.ui.attached.tabular.menu.tiny.commiteth-tabs]
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
                                          (when (= @current-page page) " active"))
@@ -153,13 +121,14 @@
      [:div.ui.vertical.segment
       [:div.ui.container
        [:div.ui.grid.stackable
-        [:div.twelve.wide.column
+        [:div.ten.wide.column
          [:div.ui.container.page-content
           [(pages @(rf/subscribe [:page]))]]]
-        [:div.four.wide.column.computer.only
+        [:div.six.wide.column.computer.only
          [:div.ui.container.page-content
           [:h3 "Top hunters"]
-          [top-hunters]]]]]]]))
+          [top-hunters]]]]
+       [:div.ui.divider]]]]))
 
 (secretary/set-config! :prefix "#")
 

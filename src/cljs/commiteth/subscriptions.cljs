@@ -47,6 +47,11 @@
     (:top-hunters db)))
 
 (reg-sub
+  :activity-feed
+  (fn [db _]
+    (:activity-feed db)))
+
+(reg-sub
   :get-in
   (fn [db [_ path]]
     (get-in db path)))

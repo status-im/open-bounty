@@ -25,12 +25,11 @@
 .commiteth-header {
     background-color: #2f3f44!important;
     border-radius: 0em;
-    padding-top: 3em;
+    padding-top: 1.5em;
 }
 
-.ui.text.menu .item {
-    color: #fff;
-    opacity: 0.98;
+.commiteth-tabs {
+    padding-top: 1.8em;
 }
 
 .top-hunters {
@@ -54,6 +53,7 @@
 
 .ui.mini.circular.image {
     height: 35px;
+    width: 35px!important;
 }
 
 .ui.header {
@@ -76,6 +76,7 @@ span.dropdown.icon {
 .user-component {
     margin-top: 0px!important;
 }
+
 .ui.text.menu {
     .item:hover {
         color: #fff;
@@ -83,12 +84,39 @@ span.dropdown.icon {
     }
 }
 
-.ui.menu .ui.dropdown .menu>.item a {
-    color: #474951!important;
+.ui.dropdown .item {
+    color: #fff!important;
+    opacity: 0.98;
+
 }
 
-.ui {
+.ui.menu .ui.dropdown .menu>.item:hover, .ui.menu .ui.dropdown .menu>.selected.item {
+    background-color: #fff!important;
+}
+
+.ui.input.address-input {
+    font-size: .8em;
+    width: 360px!important;
+}
+
+
+.ui.menu.transition.visible {
     font-family: 'postgrotesk';
+    font-size: 1em;
+    border-radius: 8px;
+    border: none;
+    padding: .5em;
+    .item  {
+        :hover {
+            color: #e96868;
+        }
+        a {
+            &:hover {
+                color: #e96868;
+            }
+            color: #474951;
+        }
+    }
 }
 
 .ui.attached.tabular {
@@ -154,12 +182,23 @@ span.dropdown.icon {
     cursor: default;
 }
 
-.ui.cards>.card {
+.activity-item {
+    border: #e7e7e7 solid 0.1em!important;
+    box-shadow: none!important;
+    border-radius: 0.3em!important;
+    padding: 0.8em 1em 1.1em!important;
+
+    flex-direction: row!important;
+    // .ui.mini.circular.image {
+    //     margin: 0;
+    // }
+}
+
+.ui.cards>.card  {
     border: #e7e7e7 solid 0.1em;
     box-shadow: none;
     border-radius: 0.3em;
     padding: 0.8em 1em 1.1em;
-
 }
 .ui.segment {
     border: #e7e7e7 solid 0.1em;
@@ -182,7 +221,14 @@ span.dropdown.icon {
     }
 }
 
+.ui.divider.hidden {
+    padding: 1em;
+}
 
 .time {
     color: #a8aab1;
+}
+
+.ui {
+    font-family: 'postgrotesk'!important;
 }

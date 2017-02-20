@@ -16,7 +16,7 @@
     (fn []
       (println "web3-accounts" web3-accounts)
       [:div.ui.container.grid
-       [:div.ui.form.eight.wide.column
+       [:div.ui.form.sixteen.wide.column
         [:h3 "Update address"]
         [:p "Placeholder text for explaining what an Ethereum address is."]
         [:div.field
@@ -26,7 +26,7 @@
             (into []
                   (for [acc web3-accounts]
                     acc))]
-           [:div.ui.input
+           [:div.ui.input.address-input
             [input address {:placeholder  "0x0000000000000000000000000000000000000000"
                             :auto-complete "off"
                             :max-length 42}]])]
