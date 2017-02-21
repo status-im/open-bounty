@@ -152,9 +152,10 @@
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
           (if (validate-secret payload raw-payload (get headers "x-hub-signature"))
-            (do (log/debug "Github secret validation OK")
-                (log/debug "x-github-event" (get headers "x-github-event"))
-                (case (get headers "x-github-event")
-                  "issues" (handle-issue payload)
-                  "pull_request" (handle-pull-request payload)
-                  (ok)))))))
+            (do
+              (log/debug "Github secret validation OK")
+              (log/debug "x-github-event" (get headers "x-github-event"))
+              (case (get headers "x-github-event")
+                "issues" (handle-issue payload)
+                "pull_request" (handle-pull-request payload)
+                (ok)))))))

@@ -4,8 +4,7 @@
             [commiteth.db.bounties :as bounties]
             [commiteth.db.comment-images :as comment-images]
             [commiteth.github.core :as github]
-            [clojure.tools.logging :as log]
-            [clojure.java.io :as io])
+            [clojure.tools.logging :as log])
   (:import [java.io ByteArrayInputStream]))
 
 

@@ -1,7 +1,7 @@
 (ns commiteth.middleware
   (:require [commiteth.env :refer [defaults]]
             [clojure.tools.logging :as log]
-            [commiteth.layout :refer [*app-context* error-page]]
+            [commiteth.layout :refer [error-page]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [commiteth.config :refer [env]]
@@ -12,24 +12,9 @@
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [buddy.auth.backends.session :refer [session-backend]]
             [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
-            [commiteth.layout :refer [*identity*]])
-  (:import [javax.servlet ServletContext]))
+            [buddy.auth :refer [authenticated?]]))
 
-(defn wrap-context [handler]
-  (fn [request]
-    (binding [*app-context*
-              (if-let [context (:servlet-context request)]
-                ;; If we're not inside a servlet environment
-                ;; (for example when using mock requests), then
-                ;; .getContextPath might not exist
-                (try (.getContextPath ^ServletContext context)
-                     (catch IllegalArgumentException _ context))
-                ;; if the context is not specified in the request
-                ;; we check if one has been specified in the environment
-                ;; instead
-                (:app-context env))]
-      (handler request))))
+(declare ^:dynamic *identity*)
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -89,6 +74,5 @@
        (-> site-defaults
            (assoc-in [:security :anti-forgery] false)
            (dissoc :session)))
-      wrap-context
       wrap-gzip
       wrap-internal-error))

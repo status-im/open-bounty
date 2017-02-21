@@ -19,18 +19,20 @@
 
 (def app-routes
   (routes
-    (-> #'home-routes
-      (wrap-routes middleware/wrap-csrf)
-      (wrap-routes middleware/wrap-formats))
-    #'redirect-routes
     #'webhook-routes
-    #'service-routes
-    #'qr-routes
-    (route/not-found
+    (middleware/wrap-base
+     (routes
+      (-> #'home-routes
+          (wrap-routes middleware/wrap-csrf)
+          (wrap-routes middleware/wrap-formats))
+      #'redirect-routes
+      #'service-routes
+      #'qr-routes
+     (route/not-found
       (:body
-        (error-page {:status 404
-                     :title  "page not found"})))))
+       (error-page {:status 404
+                    :title  "page not found"})))))))
 
 
 (defn app []
-  (middleware/wrap-base #'app-routes))
+  #'app-routes)
