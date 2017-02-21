@@ -25,14 +25,14 @@
    (assoc-in db path value)))
 
 (reg-event-db
- :set-error
- (fn [db [_ text]]
-   (assoc db :error text)))
+ :set-flash-message
+ (fn [db [_ type text]]
+   (assoc db :flash-message [type text])))
 
 (reg-event-db
- :clear-error
+ :clear-flash-message
  (fn [db _]
-   (dissoc db :error)))
+   (dissoc db :flash-message)))
 
 (reg-event-db
  :set-active-page
@@ -181,9 +181,21 @@
  :save-user-address
  (fn [{:keys [db]} [_ user-id address]]
    (prn "save-user-address" user-id address)
-   {:db   db
+   {:db   (assoc db :updating-address true)
     :http {:method     POST
            :url        "/api/user/address"
-           :on-success #(println "on-success" %)
-           :on-error   #(println "on-error" %)
+           :on-success #(do
+                          (dispatch [:assoc-in [:user [:address] address]])
+                          (dispatch [:set-flash-message
+                                     :success
+                                     "Address saved"]))
+           :on-error   #(dispatch [:set-flash-message
+                                   :error
+                                   (:response %)])
+           :finally    #(dispatch [:clear-updating-address])
            :params     {:user-id user-id :address address}}}))
+
+(reg-event-db
+ :clear-updating-address
+ (fn [db _]
+   (dissoc db :updating-address)))

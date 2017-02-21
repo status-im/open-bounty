@@ -13,9 +13,16 @@
 
 
 .ui.button {
+    color: #2f3f44;
     background-color: #b0f1ee;
     white-space: nowrap;
     padding: 0.9em 1.2em 0.9em;
+    &:hover {
+        background-color: #bdf8f5;
+    }
+    &:active,&:focus {
+        background-color: #97ebe7;
+    }
 }
 .ui.small.button {
     font-size: 15px!important;
@@ -87,7 +94,6 @@ span.dropdown.icon {
 .ui.dropdown .item {
     color: #fff!important;
     opacity: 0.98;
-
 }
 
 .ui.menu .ui.dropdown .menu>.item:hover, .ui.menu .ui.dropdown .menu>.selected.item {
@@ -95,28 +101,31 @@ span.dropdown.icon {
 }
 
 .ui.input.address-input {
+    color: #e7e7e7!important;
     font-size: .8em;
     width: 360px!important;
 }
 
-
+.ui.selection.dropdown.address-input option {
+    color: #e7e7e7;
+    background-color: yellow!important;
+}
 .ui.menu.transition.visible {
     font-family: 'postgrotesk';
     font-size: 1em;
     border-radius: 8px;
     border: none;
     padding: .5em;
-    .item  {
-        :hover {
-            color: #e96868;
+    .item>a {
+        &:hover {
+            color:#1bb5c1;
         }
-        a {
-            &:hover {
-                color: #e96868;
-            }
-            color: #474951;
-        }
+        color: #474951;
     }
+}
+
+.logout-link {
+    color: #e96868!important;
 }
 
 .ui.attached.tabular {
@@ -189,9 +198,6 @@ span.dropdown.icon {
     padding: 0.8em 1em 1.1em!important;
 
     flex-direction: row!important;
-    // .ui.mini.circular.image {
-    //     margin: 0;
-    // }
 }
 
 .ui.cards>.card  {
@@ -228,6 +234,28 @@ span.dropdown.icon {
 .time {
     color: #a8aab1;
 }
+
+.flash-message {
+    &.success {
+        background-color: #61deb0;
+    }
+    &.error {
+        background-color: #e96868;
+    }
+
+    color: #fff;
+    border-radius: 8px;
+    z-index: 100;
+    padding: 1.4em 1em 1.4em;
+    i {
+        position: absolute;
+        margin: 0;
+        right: 1.5em;
+        top: 1.5em;
+        cursor: pointer;
+    }
+}
+
 
 .ui {
     font-family: 'postgrotesk'!important;

@@ -22,6 +22,16 @@
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
 
+
+(defn flash-message-pane []
+  (let [flash-message (rf/subscribe [:flash-message])]
+    (fn []
+      (when-let [[type message] @flash-message]
+          [:div.flash-message {:class (name type)}
+           [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
+           [:p message]]))
+    ))
+
 (def user-dropdown-open? (r/atom false))
 
 (defn user-dropdown [user items]
@@ -38,12 +48,13 @@
      [:div.item
       [:span.dropdown.icon]]
      (into menu
-           (for [[target caption] items]
+           (for [[target caption props] items]
              ^{:key target} [:div.item
                              [:a
-                              (if (keyword? target)
-                                {:on-click #(rf/dispatch [target])}
-                                {:href target})
+                              (merge props
+                                     (if (keyword? target)
+                                       {:on-click #(rf/dispatch [target])}
+                                       {:href target}))
                               caption]]))]))
 
 
@@ -53,8 +64,8 @@
       (if @user
         [:div.ui.text.menu.user-component
          [:div.item
-          [user-dropdown @user [[:update-address "Update address"]
-                                ["/logout" "Sign out"]]]]]
+          [user-dropdown @user [[:update-address "Update address" {}]
+                                ["/logout" "Sign out" {:class "logout-link"}]]]]]
         [:a.ui.button.small {:href js/authorizeUrl} "Sign in"]))))
 
 (defn tabs []
@@ -74,7 +85,8 @@
 
 
 (defn page-header []
-  (let [user (rf/subscribe [:user])]
+  (let [user (rf/subscribe [:user])
+        flash-message (rf/subscribe [:flash-message])]
     (fn []
       [:div.vertical.segment.commiteth-header
        [:div.ui.grid.container
@@ -82,7 +94,9 @@
          [:div.ui.image
           [:img.left.aligned {:src "/img/logo.svg"}]]]
         [:div.four.wide.column
-         [user-component @user]]
+         (if @flash-message
+           [flash-message-pane]
+           [user-component @user])]
         (when-not @user
           [:div.ui.text.content
            [:div.ui.divider.hidden]
@@ -117,7 +131,6 @@
   (fn []
     [:div.ui.pusher
      [page-header]
-     ;;     [error-pane]
      [:div.ui.vertical.segment
       [:div.ui.container
        [:div.ui.grid.stackable

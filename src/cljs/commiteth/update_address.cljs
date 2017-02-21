@@ -7,6 +7,7 @@
 
 (defn update-address-page []
   (let [user (rf/subscribe [:user])
+        updating-address (rf/subscribe [:get-in [:updating-address]])
         web3 (.-web3 js/window)
         web3-accounts (into [] (when-not (nil? web3) (-> web3
                                                          .-eth
@@ -21,7 +22,7 @@
         [:p "Placeholder text for explaining what an Ethereum address is."]
         [:div.field
          (if-not (empty? web3-accounts)
-           [dropdown "Select address"
+           [dropdown {:class "address-input"} "Select address"
             address
             (into []
                   (for [acc web3-accounts]
@@ -29,9 +30,13 @@
            [:div.ui.input.address-input
             [input address {:placeholder  "0x0000000000000000000000000000000000000000"
                             :auto-complete "off"
+                            :auto-correct "off"
+                            :spell-check "false"
                             :max-length 42}]])]
-        [:button.ui.button {:on-click
-                            #(rf/dispatch [:save-user-address
-                                           (:id @user)
-                                           @address])}
+        [:button.ui.button (merge {:on-click
+                                   #(rf/dispatch [:save-user-address
+                                                  (:id @user)
+                                                  @address])}
+                                  (when @updating-address
+                                    {:class "busy loading"}))
          "Update"]]])))

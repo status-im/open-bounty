@@ -24,6 +24,7 @@
                     {:id      1
                      :login   "torvalds"
                      :name    "Linus Torvalds"
+                     :avatar_url ""
                      :email   nil
                      :token   "not null"
                      :address "address"
@@ -32,6 +33,7 @@
             :login   "torvalds"
             :name    "Linus Torvalds"
             :email   nil
+            :avatar_url ""
             :token   "not null"
             :address "address"
             :created nil}

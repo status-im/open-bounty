@@ -1,4 +1,4 @@
 {
  :test              true
- :jdbc-database-url "jdbc:postgresql://localhost/commiteth_test?user=commiteth&password=commiteth"
+ :jdbc-database-url "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
 }

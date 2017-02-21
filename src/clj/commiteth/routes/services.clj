@@ -9,6 +9,7 @@
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties-db]
             [commiteth.bounties :as bounties]
+            [commiteth.eth.core :as eth]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]
@@ -97,11 +98,9 @@
                            :description "commitETH API"}}}}
 
   (context "/api" []
-
            (context "/bounties" []
                     (GET "/all" []
                          (ok (bounties-db/list-all-bounties))))
-
            (context "/user" []
                     (GET "/" []
                          :auth-rules authenticated?
@@ -111,10 +110,15 @@
                           :auth-rules authenticated?
                           :body-params [user-id :- Long, address :- String]
                           :summary "Update user address"
-                          (let [result (users/update-user-address user-id address)]
-                            (if (= 1 result)
-                              (ok)
-                              (internal-server-error))))
+                          (if-not (eth/valid-address? address)
+                            {:status 400
+                             :body "Invalid Ethereum address"}
+                            (let [result (users/update-user-address
+                                          user-id
+                                          address)]
+                              (if (= 1 result)
+                                (ok)
+                                (internal-server-error)))))
                     (GET "/repositories" []
                          :auth-rules authenticated?
                          :current-user user
@@ -138,8 +142,7 @@
                          :auth-rules authenticated?
                          :current-user user
                          (ok (map #(conj % (let [balance (:balance %)]
-                                             {:balance-eth (eth/hex->eth balance 6)
-                                              :balance-wei (eth/hex->big-integer balance)}))
+                                             {:balance-eth (eth/hex->eth balance 6)}))
                                   (bounties-db/list-owner-bounties (:id user)))))
                     (POST "/repository/toggle" {:keys [params]}
                           :auth-rules authenticated?

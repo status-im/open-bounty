@@ -22,9 +22,9 @@
     (:repos db)))
 
 (reg-sub
-  :error
+  :flash-message
   (fn [db _]
-    (:error db)))
+    (:flash-message db)))
 
 (reg-sub
   :all-bounties
