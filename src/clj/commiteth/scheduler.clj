@@ -3,7 +3,8 @@
             [commiteth.eth.multisig-wallet :as wallet]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
-            [commiteth.db.bounties :as bounties]
+            [commiteth.db.bounties :as db-bounties]
+            [commiteth.bounties :as bounties]
             [clojure.tools.logging :as log]
             [mount.core :as mount])
   (:import [sun.misc ThreadGroupUtils]
@@ -20,63 +21,75 @@
       (log/info "transaction receipt for issue #" issue-id ": " receipt)
       (when-let [contract-address (:contractAddress receipt)]
         (let [issue   (issues/update-contract-address issue-id contract-address)
-              {user         :login
+              {owner        :login
                repo         :repo
                issue-number :issue_number} issue
               balance (eth/get-balance-eth contract-address 4)
-              {comment-id :id} (github/post-comment user
-                                                    repo
-                                                    issue-number
-                                                    contract-address
-                                                    balance)]
-          (issues/update-comment-id issue-id comment-id))))))
+              issue-url (str owner "/" repo "/issues/" (str issue-number))]
+          (bounties/update-bounty-comment-image issue-id
+                                                issue-url
+                                                contract-address
+                                                balance)
+          (->> (github/post-comment owner
+                                    repo
+                                    issue-number
+                                    contract-address
+                                    balance)
+               :id
+               (issues/update-comment-id issue-id)))))))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
   []
   (doseq [{contract-address :contract_address
            issue-id         :issue_id
-           payout-address   :payout_address} (bounties/pending-bounties-list)
+           payout-address   :payout_address} (db-bounties/pending-bounties-list)
           :let [value (eth/get-balance-hex contract-address)]]
     (->>
       (wallet/execute contract-address payout-address value)
-      (bounties/update-execute-hash issue-id))))
+      (db-bounties/update-execute-hash issue-id))))
 
 (defn update-confirm-hash
   "Gets transaction receipt for each pending payout and updates confirm_hash"
   []
   (doseq [{issue-id     :issue_id
-           execute-hash :execute_hash} (bounties/pending-payouts-list)]
+           execute-hash :execute_hash} (db-bounties/pending-payouts-list)]
     (log/debug "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
       (when-let [confirm-hash (wallet/find-confirmation-hash receipt)]
-        (bounties/update-confirm-hash issue-id confirm-hash)))))
+        (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
 (defn update-payout-hash
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash} (bounties/confirmed-payouts-list)]
+           payout-hash :payout_hash} (db-bounties/confirmed-payouts-list)]
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
       (log/info "payout receipt for issue #" issue-id ": " receipt)
-      (bounties/update-payout-receipt issue-id receipt))))
+      (db-bounties/update-payout-receipt issue-id receipt))))
 
 (defn update-balance
   []
   (doseq [{contract-address :contract_address
-           login            :login
+           owner            :login
            repo             :repo
            comment-id       :comment_id
-           issue-number     :issue_number} (bounties/list-wallets)]
+           issue-id         :issue_id
+           old-balance      :balance
+           issue-number     :issue_number} (db-bounties/list-wallets)]
     (when comment-id
-      (let [{old-balance :balance} (issues/get-balance contract-address)
-            current-balance-hex (eth/get-balance-hex contract-address)
-            current-balance-eth (eth/hex->eth current-balance-hex 8)]
+      (let [current-balance-hex (eth/get-balance-hex contract-address)
+            current-balance-eth (eth/hex->eth current-balance-hex 8)
+            issue-url (str owner "/" repo "/issues/" (str issue-number))]
         (when-not (= old-balance current-balance-hex)
           (issues/update-balance contract-address current-balance-hex)
-          (github/update-comment login
+          (bounties/update-bounty-comment-image issue-id
+                                                issue-url
+                                                contract-address
+                                                current-balance-eth)
+          (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number

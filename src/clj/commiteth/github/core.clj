@@ -137,7 +137,9 @@
   (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number))
         balance   (str balance " ETH")
         site-url  (md-url (server-address) (server-address))]
-    (format "Current balance: %s\nContract address: %s\n%s\n%s"
+    (format (str "Current balance: %s\n"
+                 "Contract address: %s\n"
+                 "%s\n%s")
             balance contract-address image-url site-url)))
 
 (defn post-comment

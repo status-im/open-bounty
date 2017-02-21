@@ -43,16 +43,16 @@
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
-    handler
-    {:error-response
-     (error-page
-       {:status 403
-        :title  "Invalid anti-forgery token"})}))
+   handler
+   {:error-response
+    (error-page
+     {:status 403
+      :title  "Invalid anti-forgery token"})}))
 
 (defn wrap-formats [handler]
   (let [wrapped (wrap-restful-format
-                  handler
-                  {:formats [:json-kw :transit-json :transit-msgpack]})]
+                 handler
+                 {:formats [:json-kw :transit-json :transit-msgpack]})]
     (fn [request]
       ;; disable wrap-formats for websockets
       ;; since they're not compatible with this middleware
@@ -60,8 +60,8 @@
 
 (defn on-error [request response]
   (error-page
-    {:status 403
-     :title  (str "Access to " (:uri request) " is not authorized")}))
+   {:status 403
+    :title  (str "Access to " (:uri request) " is not authorized")}))
 
 (defn wrap-restricted [handler]
   (restrict handler {:handler  authenticated?
@@ -75,20 +75,20 @@
 (defn wrap-auth [handler]
   (let [backend (session-backend)]
     (-> handler
-      wrap-identity
-      (wrap-authentication backend)
-      (wrap-authorization backend))))
+        wrap-identity
+        (wrap-authentication backend)
+        (wrap-authorization backend))))
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
-    wrap-auth
-;;    wrap-flash
-    (wrap-session {:timeout      (* 60 60 6)
-                   :cookie-attrs {:http-only true}})
-    (wrap-defaults
-      (-> site-defaults
-        (assoc-in [:security :anti-forgery] false)
-        (dissoc :session)))
-  ;;  wrap-context
-    wrap-gzip
-    wrap-internal-error))
+      wrap-auth
+      wrap-flash
+      (wrap-session {:timeout      (* 60 60 6)
+                     :cookie-attrs {:http-only true}})
+      (wrap-defaults
+       (-> site-defaults
+           (assoc-in [:security :anti-forgery] false)
+           (dissoc :session)))
+      wrap-context
+      wrap-gzip
+      wrap-internal-error))

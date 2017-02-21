@@ -5,7 +5,8 @@
     [conman.core :as conman]
     [commiteth.config :refer [env]]
     [mount.core :refer [defstate]]
-    [migratus.core :as migratus])
+    [migratus.core :as migratus]
+    [mpg.core :as mpg])
   (:import org.postgresql.util.PGobject
            java.sql.Array
            clojure.lang.IPersistentMap
@@ -16,6 +17,7 @@
             Timestamp
             PreparedStatement]))
 
+(mpg/patch)
 
 (defn start []
   (let [db (env :jdbc-database-url)

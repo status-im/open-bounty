@@ -54,10 +54,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/update-payout-receipt con-db {:issue_id issue-id :payout_receipt payout-receipt})))
 
-(defn get-bounty-address
+(defn get-bounty
   [user repo issue-number]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-bounty-address con-db {:login user :repo repo :issue_number issue-number})))
+    (db/get-bounty con-db {:login user :repo repo :issue_number issue-number})))
+
 
 (defn list-wallets
   []

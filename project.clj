@@ -39,7 +39,8 @@
                  [bk/ring-gzip "0.2.1"]
                  [crypto-random "1.2.0"]
                  [crypto-equality "1.0.0"]
-                 [cheshire "5.7.0"]]
+                 [cheshire "5.7.0"]
+                 [mpg "1.3.0"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]

@@ -2,9 +2,11 @@
   (:require [commiteth.db.issues :as issues]
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repos]
+            [commiteth.db.comment-images :as comment-images]
             [commiteth.eth.core :as eth]
             [commiteth.github.core :as github]
             [commiteth.eth.core :as eth]
+            [commiteth.util.png-rendering :as png-rendering]
             [clojure.tools.logging :as log]))
 
 
@@ -39,3 +41,11 @@
                (count bounty-issues) " existing issues")
     (doall
      (map (partial add-bounty-for-issue repo repo-id login) bounty-issues))))
+
+(defn update-bounty-comment-image [issue-id issue-url contract-address balance]
+  (let [png-data (png-rendering/gen-comment-image
+                  contract-address
+                  balance
+                  issue-url)]
+    (when png-data
+      (comment-images/save-image! issue-id png-data))))

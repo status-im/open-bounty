@@ -325,6 +325,8 @@ WHERE r.user_id = :owner_id
                      FROM pull_requests
                      WHERE issue_number = i.issue_number);
 
+-- TODO: misleading name. this is used when updating bounty balances. maybe we should exclude at least bounties that have been paid?
+
 -- :name wallets-list :? :*
 -- :doc lists all contract ids
 SELECT
@@ -332,15 +334,19 @@ SELECT
   r.login            AS login,
   r.repo             AS repo,
   i.comment_id       AS comment_id,
-  i.issue_number     AS issue_number
+  i.issue_number     AS issue_number,
+  i.issue_id         AS issue_id,
+  i.balance          AS balance
 FROM issues i
   INNER JOIN repositories r ON r.repo_id = i.repo_id
 WHERE contract_address IS NOT NULL;
 
--- :name get-bounty-address :? :1
+-- :name get-bounty :? :1
 SELECT
   i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
+  i.balance          AS balance,
   r.login            AS login,
   r.repo             AS repo
 FROM issues i
@@ -359,3 +365,18 @@ WHERE contract_address = :contract_address;
 UPDATE issues
 SET balance = :balance
 WHERE contract_address = :contract_address;
+
+
+
+-- :name save-issue-comment-image! :<! :1
+INSERT INTO issue_comment (issue_id, png_data)
+VALUES (:issue_id, :png_data)
+ON CONFLICT (issue_id) DO UPDATE
+SET png_data = :png_data
+RETURNING id;
+
+
+-- :name get-issue-comment-image :? :1
+SELECT png_data
+FROM issue_comment
+WHERE issue_id = :issue_id;
