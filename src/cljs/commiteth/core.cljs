@@ -121,7 +121,7 @@
      [:div.ui.vertical.segment
       [:div.ui.container
        [:div.ui.grid.stackable
-        [:div.ten.wide.column
+        [:div.ten.wide.computer.sixteen.wide.tablet.column
          [:div.ui.container.page-content
           [(pages @(rf/subscribe [:page]))]]]
         [:div.six.wide.column.computer.only
