@@ -13,6 +13,12 @@
             :error-handler on-error
             :finally finally
             :params  params})))
+(reg-fx
+ :delayed-dispatch
+ (fn [{:keys [args timeout]}]
+   (js/setTimeout #(dispatch args)
+                  timeout)))
+
 
 (reg-event-db
  :initialize-db
@@ -24,10 +30,13 @@
  (fn [db [_ path value]]
    (assoc-in db path value)))
 
-(reg-event-db
+(reg-event-fx
  :set-flash-message
- (fn [db [_ type text]]
-   (assoc db :flash-message [type text])))
+ (fn [{:keys [db]} [_ type text]]
+   (merge  {:db (assoc db :flash-message [type text])}
+            (when (= type :success)
+              {:delayed-dispatch {:args [:clear-flash-message]
+                                  :timeout 2000}}))))
 
 (reg-event-db
  :clear-flash-message
