@@ -100,12 +100,15 @@
   (context "/api" []
            (context "/bounties" []
                     (GET "/all" []
+                         (log/debug "/bounties/all")
                          (ok (bounties-db/list-all-bounties))))
            (context "/user" []
                     (GET "/" []
                          :auth-rules authenticated?
                          :current-user user
-                         (ok {:user (users/get-user (:id user))}))
+                         (ok {:user (dissoc
+                                     (users/get-user (:id user))
+                                     :token)}))
                     (POST "/address" []
                           :auth-rules authenticated?
                           :body-params [user-id :- Long, address :- String]
@@ -141,6 +144,7 @@
                     (GET "/bounties" []
                          :auth-rules authenticated?
                          :current-user user
+                         (log/debug "/user/bounties")
                          (ok (map #(conj % (let [balance (:balance %)]
                                              {:balance-eth (eth/hex->eth balance 6)}))
                                   (bounties-db/list-owner-bounties (:id user)))))
