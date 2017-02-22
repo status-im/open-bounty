@@ -179,7 +179,6 @@
   (rf/dispatch [:load-bounties]))
 
 (defn load-data []
-  (println "load-data")
   (load-issues)
   (load-user))
 

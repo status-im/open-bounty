@@ -108,7 +108,8 @@
                          :current-user user
                          (ok {:user (dissoc
                                      (users/get-user (:id user))
-                                     :token)}))
+                                     :token
+                                     :email)}))
                     (POST "/address" []
                           :auth-rules authenticated?
                           :body-params [user-id :- Long, address :- String]

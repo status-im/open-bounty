@@ -129,6 +129,7 @@
   (stop-scheduler)
   (log/debug "Starting scheduler thread")
   (while (get-thread-by-name scheduler-thread-name)
+    (log/debug "Waiting")
     (Thread/sleep 1))
   (every ms tasks))
 

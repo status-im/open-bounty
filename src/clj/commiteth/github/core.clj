@@ -186,8 +186,8 @@
 
 
 (defn get-issue-events
-  [user repo issue-id]
-  (issues/issue-events user repo issue-id (self-auth-params)))
+  [user repo issue-number]
+  (issues/issue-events user repo issue-number (self-auth-params)))
 
 (defn create-label
   [full-repo token]
