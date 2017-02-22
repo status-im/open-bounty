@@ -29,8 +29,7 @@
       (when-let [[type message] @flash-message]
           [:div.flash-message {:class (name type)}
            [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
-           [:p message]]))
-    ))
+           [:p message]]))))
 
 (def user-dropdown-open? (r/atom false))
 
@@ -112,7 +111,6 @@
    :update-address #'update-address-page})
 
 
-
 (defn top-hunters []
   (let [top-hunters (rf/subscribe [:top-hunters])]
     (fn []
@@ -181,6 +179,7 @@
   (rf/dispatch [:load-bounties]))
 
 (defn load-data []
+  (println "load-data")
   (load-issues)
   (load-user))
 

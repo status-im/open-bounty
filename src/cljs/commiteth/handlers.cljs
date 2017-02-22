@@ -19,11 +19,17 @@
    (js/setTimeout #(dispatch args)
                   timeout)))
 
+(reg-fx
+ :redirect
+ (fn [{:keys [path]}]
+   (println "redirecting to" path)
+   (set! (.-pathname js/location) path))
 
-(reg-event-db
- :initialize-db
- (fn [_ _]
-   db/default-db))
+
+ (reg-event-db
+  :initialize-db
+  (fn [_ _]
+    db/default-db)))
 
 (reg-event-db
  :assoc-in
@@ -34,9 +40,9 @@
  :set-flash-message
  (fn [{:keys [db]} [_ type text]]
    (merge  {:db (assoc db :flash-message [type text])}
-            (when (= type :success)
-              {:delayed-dispatch {:args [:clear-flash-message]
-                                  :timeout 2000}}))))
+           (when (= type :success)
+             {:delayed-dispatch {:args [:clear-flash-message]
+                                 :timeout 2000}}))))
 
 (reg-event-db
  :clear-flash-message
@@ -65,16 +71,13 @@
  :set-active-user
  (fn [{:keys [db]} [_ user]]
    {:db         (assoc db :user user)
-    :dispatch-n [[:load-user-profile]
-                 [:load-user-repos]
-                 [:load-owner-bounties]]}))
+    :dispatch [:load-user-profile]}))
 
 (reg-event-fx
  :sign-out
  (fn [{:keys [db]} [_]]
    {:db (assoc db :user nil)
-    :http {:method GET
-           :url "/logout"}}))
+    :redirect {:path "/logout"}}))
 
 (reg-event-fx
  :load-bounties
@@ -118,12 +121,16 @@
    {:db   db
     :http {:method     GET
            :url        "/api/user"
-           :on-success #(dispatch [:set-user-profile %])}}))
+           :on-success #(dispatch [:set-user-profile %])
+           :on-error #(dispatch [:sign-out])}}))
 
-(reg-event-db
+(reg-event-fx
  :set-user-profile
- (fn [db [_ user-profile]]
-   (assoc db :user (:user user-profile))))
+ (fn [{:keys [db]} [_ user-profile]]
+   {:db
+    (assoc db :user (:user user-profile))
+    :dispatch-n [[:load-user-repos]
+                 [:load-owner-bounties]]}))
 
 (reg-event-db
  :set-user-repos
@@ -162,7 +169,7 @@
     :http {:method     POST
            :url        "/api/user/repository/toggle"
            :on-success #(dispatch [:repo-toggle-success %])
-;; TODO           :on-error #(dispatch [:repo-toggle-error %])
+           ;; TODO           :on-error #(dispatch [:repo-toggle-error %])
            :finally #(println "finally" %)
            :params     (select-keys repo [:id :login :full_name :name])}}))
 
