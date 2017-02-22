@@ -38,15 +38,18 @@
 
 (defn repos-list []
   (let [repos (rf/subscribe [:repos])
-        user (rf/subscribe [:user])
-        repo-groups (keys @repos)]
+        user (rf/subscribe [:user])]
     (fn []
-      (into [:div]
-            (for [[group group-repos]
-                  (map (fn [group] [group (get @repos group)]) repo-groups)]
-              [:div [repo-group-title group (:login @user)]
-               (into [:div.ui.cards]
-                     (map repo-card group-repos))])))))
+      (let [repo-groups (sort-by identity (fn [a _] (= a (:login @user)))
+                                 (keys @repos))]
+        (println repo-groups)
+        (into [:div]
+              (for [[group group-repos]
+                    (map (fn [group] [group (get @repos group)])
+                         repo-groups)]
+                [:div.repo-group-title [repo-group-title group (:login @user)]
+                 (into [:div.ui.cards]
+                       (map repo-card group-repos))]))))))
 
 
 (defn repos-page []
