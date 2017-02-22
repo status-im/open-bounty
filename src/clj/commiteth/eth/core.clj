@@ -124,25 +124,29 @@
 (defn valid-address?
   "Validate given ethereum address. Checksum validation is performed
   and input is case-sensitive"
-  [address]
-  (log/debug "valid-address?" address)
-  ;; logic based on
-  ;;  https://github.com/cilphex/ethereum-address/blob/master/index.js
-  (and (boolean (re-matches #"(?i)^(0x)?[0-9a-f]{40}$" address))
-       (let [addr (strip-0x address)
-             hash (pandect/keccak-256 (str/lower-case addr))]
-         (log/debug "address hash" hash "addr" addr)
-         (->>
-          (map-indexed (fn [idx _]
-                         (let [hash-ch-int (-> (nth hash idx)
-                                               (hex-ch->num))
-                               ch (nth addr idx)
-                               ch-lower (lower-ch ch)
-                               ch-upper (upper-ch ch)]
-                           (or (and (> hash-ch-int 7)
-                                    (not= ch-upper ch))
-                               (and (<= hash-ch-int 7)
-                                    (not= ch-lower ch)))))
-                       addr)
-          (filter true?)
-          (empty?)))))
+  ([address]
+   (valid-address? address false))
+  ([address checksum-validate?]
+   (log/debug "valid-address?" address)
+   ;; logic based on
+   ;;  https://github.com/cilphex/ethereum-address/blob/master/index.js
+   (and (boolean (re-matches #"(?i)^(0x)?[0-9a-f]{40}$" address))
+        (if checksum-validate?
+          (let [addr (strip-0x address)
+               hash (pandect/keccak-256 (str/lower-case addr))]
+           (log/debug "address hash" hash "addr" addr)
+           (->>
+            (map-indexed (fn [idx _]
+                           (let [hash-ch-int (-> (nth hash idx)
+                                                 (hex-ch->num))
+                                 ch (nth addr idx)
+                                 ch-lower (lower-ch ch)
+                                 ch-upper (upper-ch ch)]
+                             (or (and (> hash-ch-int 7)
+                                      (not= ch-upper ch))
+                                 (and (<= hash-ch-int 7)
+                                      (not= ch-lower ch)))))
+                         addr)
+            (filter true?)
+            (empty?)))
+          true))))

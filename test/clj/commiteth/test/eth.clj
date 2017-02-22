@@ -9,6 +9,9 @@
   (testing "Valid address is valid"
     (let [addr "0xA1cab91b36bea34487c5670Bbd00a1Aa8196aeD8"]
       (is (true? (eth/valid-address? addr)))))
-  (testing "Case sensitivity matters"
+  (testing "Checksum validation works when used"
     (let [addr "0xa1cab91b36bea34487c5670bbd00a1aa8196aed8"]
-      (is (false? (eth/valid-address? addr))))))
+      (is (false? (eth/valid-address? addr true)))))
+    (testing "Checksum validation not used by default"
+    (let [addr "0xa1cab91b36bea34487c5670bbd00a1aa8196aed8"]
+      (is (true? (eth/valid-address? addr))))))
