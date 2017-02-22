@@ -42,7 +42,6 @@
     (fn []
       (let [repo-groups (sort-by identity (fn [a _] (= a (:login @user)))
                                  (keys @repos))]
-        (println repo-groups)
         (into [:div]
               (for [[group group-repos]
                     (map (fn [group] [group (get @repos group)])
@@ -57,6 +56,6 @@
     (fn []
       (if @repos-loading?
         [:div
-         [:div.ui.active.dimmer
-          [:div.ui.loader]]]
+         [:div.ui.active.inverted.dimmer
+          [:div.ui.text.loader "Loading"]]]
         [repos-list]))))

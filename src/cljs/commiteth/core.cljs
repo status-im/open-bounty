@@ -133,10 +133,10 @@
       [:div.ui.container
        [:div.ui.grid.stackable
         [:div.ten.wide.computer.sixteen.wide.tablet.column
-         [:div.ui.container.page-content
+         [:div.ui.container
           [(pages @(rf/subscribe [:page]))]]]
         [:div.six.wide.column.computer.only
-         [:div.ui.container.page-content
+         [:div.ui.container
           [:h3 "Top hunters"]
           [top-hunters]]]]
        [:div.ui.divider]]]]))

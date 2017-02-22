@@ -133,11 +133,14 @@
                  [:load-owner-bounties]]}))
 
 (reg-event-db
+ :clear-repos-loading
+ (fn [db [_]]
+   (assoc db :repos-loading? false)))
+
+(reg-event-db
  :set-user-repos
  (fn [db [_ repos]]
-   (-> db
-       (assoc :repos repos)
-       (assoc :repos-loading? false))))
+   (assoc db :repos repos)))
 
 (reg-event-fx
  :load-user-repos
@@ -145,7 +148,10 @@
    {:db   (assoc db :repos-loading? true)
     :http {:method     GET
            :url        "/api/user/repositories"
-           :on-success #(dispatch [:set-user-repos (:repositories %)])}}))
+           :on-success #(dispatch [:set-user-repos (:repositories %)])
+           :on-error   #(dispatch [:set-flash-message
+                                   :error "Failed to load repositories"])
+           :finally    #(dispatch [:clear-repos-loading])}}))
 
 
 (defn update-repo-state [all-repos full-name data]
