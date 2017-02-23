@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [devcards.core]
             [commiteth.core-test]
+            [commiteth.svg :as svg]
             [cljs.test :refer-macros [is testing]]
             [devcards.core :refer-macros [defcard-rg
                                           deftest
@@ -197,5 +198,11 @@
            :items ["foo" "bar"]})
   {:inspect-data true})
 
-(deftest tests-can-also-be-done-here
+
+(defcard-rg svg-test
+  (fn []
+    [svg/app-logo]))
+
+
+#_(deftest tests-can-also-be-done-here
   (is (= 0 0)))

@@ -90,8 +90,8 @@
       [:div.vertical.segment.commiteth-header
        [:div.ui.grid.container
         [:div.twelve.wide.column
-         [:div.ui.image
-          [:img.left.aligned {:src "/img/logo.svg"}]]]
+         [:div.ui.image.lef.aligned
+          [svg/app-logo]]]
         [:div.four.wide.column
          (if @flash-message
            [flash-message-pane]
