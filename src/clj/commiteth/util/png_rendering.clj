@@ -36,8 +36,10 @@
         (sh command "-f" "png" "--quality" "80" "--width" "1336" "-" "-"
             :out-enc :bytes :in html)]
     (if (= 0 exit)
-      out
-      (do (log/error "Failed to generate PNG file" err exit out)
+      (do
+        (log/debug "PNG generated succesfully" out err exit html)
+        out)
+      (do (log/error "Failed to generate PNG file" err exit out html)
           nil))))
 
 
