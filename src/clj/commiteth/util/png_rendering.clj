@@ -37,7 +37,7 @@
             :out-enc :bytes :in html)]
     (if (= 0 exit)
       out
-      (do (log/error "Failed to generate PNG file" err)
+      (do (log/error "Failed to generate PNG file" err exit out)
           nil))))
 
 

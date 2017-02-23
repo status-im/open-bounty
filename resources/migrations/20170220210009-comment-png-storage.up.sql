@@ -8,5 +8,5 @@ ALTER TABLE "issues" ADD UNIQUE ("issue_id");
 -- table for github PNG comment images
 CREATE TABLE issue_comment (
 id SERIAL PRIMARY KEY,
-issue_id INTEGER REFERENCES issues (issue_id),
+issue_id INTEGER REFERENCES issues (issue_id) UNIQUE,
 png_data bytea);
