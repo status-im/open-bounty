@@ -9,7 +9,7 @@
                  [secretary "1.2.3"]
                  [reagent-utils "0.2.0"]
                  [reagent "0.6.0"]
-                 [org.clojure/clojurescript "1.9.456" :scope "provided"]
+                 [org.clojure/clojurescript "1.9.473"]
                  [org.clojure/clojure "1.8.0"]
                  [selmer "1.10.5"]
                  [markdown-clj "0.9.93"]
@@ -84,12 +84,13 @@
                      {:source-paths ["src/cljc" "src/cljs" "env/prod/cljs"]
                       :compiler
                       {:output-to     "target/cljsbuild/public/js/app.js"
-                       :externs       ["react/externs/react.js"]
+                       :externs       ["externs/web3-externs.js"]
                        :optimizations :advanced
                        :pretty-print  false
                        :closure-defines {goog.DEBUG false}
                        :closure-warnings
-                       {:externs-validation :off :non-standard-jsdoc :off}}}}}
+                       {:externs-validation :off
+                        :non-standard-jsdoc :off}}}}}
 
 
                    :aot            :all
