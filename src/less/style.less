@@ -23,6 +23,11 @@
     &:active,&:focus {
         background-color: #97ebe7;
     }
+    &:disabled,&:disabled:active {
+        background-color: #fff;
+        color: #2f3f44;
+        border: #e7e7e7 solid 0.1em!important;
+    }
 }
 .ui.small.button {
     font-size: 15px!important;
@@ -59,8 +64,8 @@
 }
 
 .ui.mini.circular.image {
-    height: 35px;
-    width: 35px!important;
+    height: 32px;
+    width: 32px!important;
 }
 
 .ui.header {
@@ -193,14 +198,49 @@ span.dropdown.icon {
     cursor: default;
 }
 
+
+.activity-item-container {
+    padding: 1em;
+}
+
 .activity-item {
+    .left-column {
+        margin: 0;
+        padding-left: 12px;
+        padding-top: 12px;
+        width: 100px!important;
+        .ui.image {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            margin: 0;
+            padding: 0;
+            top: 0;
+            left: 0;
+        }
+    }
+
     border: #e7e7e7 solid 0.1em!important;
     box-shadow: none!important;
     border-radius: 0.3em!important;
     padding: 0.8em 1em 1.1em!important;
-
     flex-direction: row!important;
+    margin: 1em;
+
+    .content {
+        padding: .7em 0 1em;
+        font-family: 'postgrotesk';
+        line-height: 2em;
+        min-width: 300px!important;
+        .header {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #474951;
+        }
+    }
+
 }
+
 
 .ui.cards>.card  {
     border: #e7e7e7 solid 0.1em;

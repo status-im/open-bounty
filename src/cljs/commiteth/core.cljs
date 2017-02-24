@@ -175,11 +175,7 @@
                      :token js/token}]))
     (reset! active-user nil)))
 
-(defn load-issues []
-  (rf/dispatch [:load-bounties]))
-
 (defn load-data []
-  (load-issues)
   (load-user))
 
 (defonce timer-id (r/atom nil))

@@ -14,6 +14,12 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/owner-bounties-list con-db {:owner_id owner})))
 
+(defn bounty-claims
+  [issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/bounty-claims con-db {
+                              :issue_id issue-id})))
+
 (defn list-not-fixed-issues
   [owner-id]
   (jdbc/with-db-connection [con-db *db*]

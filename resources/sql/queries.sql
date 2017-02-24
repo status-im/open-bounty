@@ -121,8 +121,8 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title)
                    FROM issues
                    WHERE repo_id = :repo_id AND issue_id = :issue_id);
 
--- :name close-issue! :<! :1
--- :doc updates issue with commit id
+-- :name update-commit-id :<! :1
+-- :doc updates issue with commit_id
 UPDATE issues
 SET commit_id = :commit_id
 WHERE issue_id = :issue_id
@@ -171,7 +171,7 @@ SELECT
   transaction_hash
 FROM issues
 WHERE contract_address IS NULL
-      AND issues.transaction_hash IS NOT NULL;
+AND issues.transaction_hash IS NOT NULL;
 
 -- Pull Requests -------------------------------------------------------------------
 
@@ -181,6 +181,7 @@ INSERT INTO pull_requests (pr_id,
   repo_id,
   pr_number,
   issue_number,
+  issue_id,
   commit_id,
   user_id,
   state)
@@ -188,12 +189,14 @@ VALUES(:pr_id,
   :repo_id,
   :pr_number,
   :issue_number,
+  :issue_id,
   :commit_id,
   :user_id,
   :state)
 ON CONFLICT (pr_id) DO UPDATE
 SET
   state = :state,
+  updated = timezone('utc'::text, now()),
   commit_id = :commit_id;
 
 -- Bounties ------------------------------------------------------------------------
@@ -206,7 +209,7 @@ SELECT
   u.address          AS payout_address
 FROM issues i, pull_requests p, users u
 WHERE
-(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.execute_hash IS NULL;
@@ -216,10 +219,11 @@ AND i.execute_hash IS NULL;
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
-  u.address          AS payout_address
+  u.address          AS payout_address,
+  i.execute_hash     AS execute_hash
 FROM issues i, pull_requests p, users u
 WHERE
-(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.confirm_hash IS NULL
@@ -230,10 +234,11 @@ AND i.execute_hash IS NOT NULL;
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
-  u.address          AS payout_address
+  u.address          AS payout_address,
+  i.payout_hash     AS payout_hash
 FROM issues i, pull_requests p, users u
 WHERE
-(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.payout_receipt IS NULL
@@ -280,7 +285,7 @@ r.repo_id = i.repo_id
 AND i.commit_id IS NULL;
 
 -- :name owner-bounties-list :? :*
--- :doc lists fixed issues (bounties awaiting maintainer confirmation)
+-- :doc all bounty issues for given owner
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
@@ -291,24 +296,50 @@ SELECT
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
+  r.repo             AS repo_name,
+  o.address          AS owner_address
+FROM issues i, users o, repositories r
+WHERE
+r.repo_id = i.repo_id
+AND r.user_id = o.id
+AND r.user_id = :owner_id;
+-- AND i.confirm_hash IS NOT NULL;
+
+
+-- :name bounty-claims :? :*
+-- :doc open, merged and closed PRs referencing given bounty issue
+SELECT
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.issue_number     AS issue_number,
+  i.title            AS issue_title,
+  i.repo_id          AS repo_id,
+  i.balance          AS balance,
+  i.confirm_hash     AS confirm_hash,
+  i.payout_hash      AS payout_hash,
+  i.payout_receipt   AS payout_receipt,
+  p.state            AS pr_state,
   p.pr_id            AS pr_id,
   p.user_id          AS user_id,
   p.pr_number        AS pr_number,
   u.address          AS payout_address,
   u.login            AS user_login,
   u.name             AS user_name,
-  r.login            AS owner_name,
+  u.avatar_url       AS user_avatar_url,
+  r.login            AS owner_login,
   r.repo             AS repo_name,
   o.address          AS owner_address
 FROM issues i, pull_requests p, users u, users o, repositories r
 WHERE
-(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
 AND u.id = p.user_id
 AND r.repo_id = i.repo_id
 AND r.user_id = o.id
-AND r.user_id = :owner_id
-AND i.confirm_hash IS NOT NULL;
+AND i.issue_id = :issue_id;
+--AND i.confirm_hash IS NOT NULL;
+
+
 
 -- :name owner-issues-list :? :*
 -- :doc owner's bounty issues with no merged PR
@@ -353,8 +384,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.balance          AS balance,
   r.login            AS login,
-  r.repo             AS repo,
-  i.state            AS state
+  r.repo             AS repo
 FROM issues i, repositories r
 WHERE i.issue_number = :issue_number
 AND r.repo_id = i.repo_id

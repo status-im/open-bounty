@@ -41,7 +41,8 @@
                  [crypto-equality "1.0.0"]
                  [cheshire "5.7.0"]
                  [mpg "1.3.0"]
-                 [pandect "0.6.1"]]
+                 [pandect "0.6.1"]
+                 [prismatic/plumbing "0.5.3"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]

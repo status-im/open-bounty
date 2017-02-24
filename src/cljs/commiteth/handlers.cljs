@@ -2,7 +2,8 @@
   (:require [commiteth.db :as db]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
             [ajax.core :refer [GET POST]]
-            [cuerdas.core :as str]))
+            [cuerdas.core :as str]
+            [plumbing.core :refer [dissoc-in]]))
 
 (reg-fx
  :http
@@ -59,14 +60,6 @@
  (fn [db [_ table page]]
    (assoc-in db [:pagination table :page] page)))
 
-(reg-event-db
- :init-pagination
- (fn [db [_ bounties]]
-   (let [{page-size :page-size} (:pagination-props db)]
-     (assoc-in db [:pagination :all-bounties]
-               {:page  0
-                :pages (Math/ceil (/ (count bounties) page-size))}))))
-
 (reg-event-fx
  :set-active-user
  (fn [{:keys [db]} [_ user]]
@@ -79,13 +72,6 @@
    {:db (assoc db :user nil)
     :redirect {:path "/logout"}}))
 
-(reg-event-fx
- :load-bounties
- (fn [{:keys [db]} [_]]
-   {:db   db
-    :http {:method     GET
-           :url        "/api/bounties/all"
-           :on-success #(dispatch [:set-bounties %])}}))
 
 (reg-event-fx
  :save-payout-hash
@@ -93,14 +79,10 @@
    {:db   db
     :http {:method     POST
            :url        (str/format "/api/user/bounty/%s/payout" issue-id)
-           :on-success #(println %)
+           :on-success #(dispatch [:payout-confirmed issue-id])
+           :on-error   #(dispatch [:payout-confirm-failed issue-id])
            :params     {:payout-hash payout-hash}}}))
 
-(reg-event-fx
- :set-bounties
- (fn [{:keys [db]} [_ bounties]]
-   {:db       (assoc db :all-bounties bounties)
-    :dispatch [:init-pagination bounties]}))
 
 (reg-event-fx
  :load-owner-bounties
@@ -221,3 +203,54 @@
  :clear-updating-address
  (fn [db _]
    (dissoc db :updating-address)))
+
+
+
+(defn send-transaction-callback
+  [issue-id]
+  (println "send-transaction-callback")
+  (fn [error payout-hash]
+    (println "send-transaction-callback fn")
+    (when error
+      (dispatch [:set-flash-message
+                 :error
+                 (str "Error sending transaction: " error)]))
+    (when payout-hash
+      (dispatch [:save-payout-hash issue-id payout-hash]))))
+
+
+(reg-event-fx
+ :confirm-payout
+ (fn [{:keys [db]} [_ {issue-id         :issue_id
+                      owner-address    :owner_address
+                      contract-address :contract_address
+                      confirm-hash     :confirm_hash} issue]]
+   (let [send-transaction-fn (aget js/web3 "eth" "sendTransaction")
+         payload {:from  owner-address
+                  :to    contract-address
+                  :value 1
+                  :data  (str "0x797af627" confirm-hash)}]
+     (println "confirm-payout" owner-address to)
+     (try
+       (apply send-transaction-fn [(clj->js payload)
+                                   (send-transaction-callback issue-id)])
+       {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
+       (catch js/Error e
+         {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
+          :dispatch [:set-flash-message
+                     :error
+                     (str "Failed to send transaction" e)]})))))
+
+(reg-event-db
+ :payout-confirmed
+ (fn [db [_ issue-id]]
+   (-> db
+       (dissoc-in [:owner-bounties (:issue_id issue) :confirming?] false)
+       (assoc-in [:owner-bounties (:issue_id issue) :confirmed?] true))))
+
+(reg-event-db
+ :payout-confirm-failed
+ (fn [db [_ issue-id]]
+   (-> db
+       (dissoc-in [:owner-bounties (:issue_id issue) :confirming?] false)
+       (assoc-in [:owner-bounties (:issue_id issue) :confirm-failed?] true))))

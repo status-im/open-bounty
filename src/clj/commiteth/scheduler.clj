@@ -60,7 +60,7 @@
       (when-let [confirm-hash (wallet/find-confirmation-hash receipt)]
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
-(defn update-payout-hash
+(defn update-payout-receipt
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (doseq [{issue-id    :issue_id
@@ -68,7 +68,9 @@
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
       (log/info "payout receipt for issue #" issue-id ": " receipt)
-      (db-bounties/update-payout-receipt issue-id receipt))))
+      ;;TODO: not sure if saving the transaction-receipt clojure map as
+      ;; a string is a good idea
+      (db-bounties/update-payout-receipt issue-id (str receipt)))))
 
 (defn update-balance
   []
@@ -137,7 +139,7 @@
   :start (restart-scheduler 60000
            [update-issue-contract-address
             update-confirm-hash
-            update-payout-hash
+            update-payout-receipt
             self-sign-bounty
             update-balance])
   :stop (stop-scheduler))

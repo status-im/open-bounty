@@ -90,6 +90,19 @@
                github-repos))))
 
 
+(defn user-bounties [user]
+  (let [owner-bounties (bounties-db/list-owner-bounties (:id user))]
+    owner-bounties
+    (into {}
+          (for [b owner-bounties]
+            [(:issue_id b)
+             (conj b
+                    (let [claims (bounties-db/bounty-claims (:issue_id b))
+                          balance (:balance b)]
+                      {:balance-eth (eth/hex->eth balance 6)
+                       :claims claims}))]))))
+
+
 (defapi service-routes
   {:swagger {:ui   "/swagger-ui"
              :spec "/swagger.json"
@@ -134,21 +147,22 @@
                     (POST "/bounty/:issue{[0-9]{1,9}}/payout" {:keys [params]}
                           :auth-rules authenticated?
                           :current-user user
-                          (let [{issue       :issue
-                                 payout-hash :payout-hash} params
-                                result (bounties-db/update-payout-hash
-                                        (Integer/parseInt issue)
-                                        payout-hash)]
-                            (if (= 1 result)
-                              (ok)
-                              (internal-server-error))))
+                          (do
+                            (log/debug "/bounty/X/payout" params)
+                            (let [{issue       :issue
+                                   payout-hash :payout-hash} params
+                                  result (bounties-db/update-payout-hash
+                                          (Integer/parseInt issue)
+                                          payout-hash)]
+                              (log/debug "result" result)
+                              (if (= 1 result)
+                                (ok)
+                                (internal-server-error)))))
                     (GET "/bounties" []
                          :auth-rules authenticated?
                          :current-user user
                          (log/debug "/user/bounties")
-                         (ok (map #(conj % (let [balance (:balance %)]
-                                             {:balance-eth (eth/hex->eth balance 6)}))
-                                  (bounties-db/list-owner-bounties (:id user)))))
+                         (ok (user-bounties user)))
                     (POST "/repository/toggle" {:keys [params]}
                           :auth-rules authenticated?
                           :current-user user

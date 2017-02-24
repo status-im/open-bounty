@@ -12,7 +12,8 @@
             [commiteth.util.digest :refer [hex-hmac-sha1]]
             [compojure.core :refer [defroutes POST]]
             [crypto.equality :as crypto]
-            [ring.util.http-response :refer [ok]])
+            [ring.util.http-response :refer [ok]]
+            [commiteth.db.bounties :as bounties-db])
   (:import java.lang.Integer))
 
 (defn find-issue-event
@@ -51,13 +52,20 @@
 
 (defn handle-issue-closed
   ;; TODO: does not work in case the issue is closed on github web ui
-  [{{{user :login} :owner repo :name}   :repository
+  [{{{owner :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
-  (log/debug "handle-issue-closed")
-  (future
-    (when-let [commit-id (find-commit-id user repo issue-number ["referenced" "closed"])]
-      (log/debug (format "Issue %s/%s/%s closed with commit %s" user repo issue-number commit-id))
-      (issues/close commit-id issue-id))))
+  (log/debug "handle-issue-closed" owner repo issue-number issue-id)
+  (when-let [commit-id (find-commit-id owner repo issue-number ["referenced" "closed"])]
+    (log/debug (format "Issue %s/%s/%s closed with commit %s" owner repo issue-number commit-id))
+    (log/info "NOT considering event as bounty winner")
+    ;; TODO: disabled for now since the system is meant to be used
+    ;;  exclusively via pull requests. issue closed event without a PR
+    ;;  closed via merge first means that the referencing commit was
+    ;;  pushed directly to master and thus never accepted by the
+    ;;  maintainer (could be that the bounty hunter had write access
+    ;;  to master, but that scenario should be very rare and better
+    ;;  not to support it)
+    #_(issues/close commit-id issue-id)))
 
 (def ^:const keywords
   [#"(?i)close:?\s+#(\d+)"
@@ -109,6 +117,8 @@
       avatar_url :avatar_url
       name       :name} :user
      id              :id
+     merged?         :merged
+     {head-sha :sha} :head
      pr-number       :number
      pr-body         :body
      pr-title        :title} :pull_request}]
@@ -118,34 +128,39 @@
                                   (extract-issue-number pr-body pr-title)
                                   (first)
                                   (ensure-bounty-issue owner repo))]
-    (log/debug "Referenced bounty issue found" bounty-issue-number)
+    (log/debug "Referenced bounty issue found" repo bounty-issue-number)
     (users/create-user user-id login name nil avatar_url nil)
-    (let [pr-data {:repo_id   repo-id
+    (let [issue (github/get-issue owner repo bounty-issue-number)
+          pr-data {:repo_id   repo-id
                    :pr_id     id
                    :pr_number pr-number
                    :user_id   user-id
                    :issue_number bounty-issue-number
+                   :issue_id (:id issue)
                    :state event-type}]
+
+      ;; TODO: in the opened case if the submitting user has no
+      ;; Ethereum address stored, we could post a comment to the
+      ;; Github PR explaining that payout is not possible if the PR is
+      ;; merged
       (case event-type
         :opened (do
                   (log/info "PR with reference to bounty issue"
                             bounty-issue-number "opened")
                   (pull-requests/save (merge pr-data {:state :opened
-                                                      :commit_id nil})))
-        :closed (if-let [commit-id (find-commit-id owner
-                                                   repo
-                                                   pr-number
-                                                   ["merged"])]
+                                                      :commit_id head-sha})))
+        :closed (if merged?
                   (do (log/info "PR with reference to bounty issue"
                                 bounty-issue-number "merged")
                       (pull-requests/save
                        (merge pr-data {:state :merged
-                                       :commit_id commit-id})))
+                                       :commit_id head-sha}))
+                      (issues/update-commit-id head-sha (:id issue)))
                   (do (log/info "PR with reference to bounty issue"
                                 bounty-issue-number "closed with no merge")
                       (pull-requests/save
                        (merge pr-data {:state :closed
-                                       :commit_id nil}))))))))
+                                       :commit_id head-sha}))))))))
 
 
 (defn handle-issue

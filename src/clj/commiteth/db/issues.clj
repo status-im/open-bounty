@@ -12,11 +12,12 @@
                               :issue_number issue-number
                               :title        issue-title})))
 
-(defn close
+(defn update-commit-id
   "Updates issue with commit_id"
   [commit-id issue-id]
   (jdbc/with-db-connection [con-db *db*]
-    (db/close-issue! con-db {:issue_id issue-id :commit_id commit-id})))
+    (db/update-commit-id con-db {:issue_id issue-id
+                                 :commit_id commit-id})))
 
 (defn update-transaction-hash
   "Updates issue with transaction-hash"

@@ -11,7 +11,8 @@
                 :opened 0
                 :merged 1
                 :closed 2)]
-    (log/debug (assoc pull-request :state state))
+
+    (log/debug "save pr" (assoc pull-request :state state))
     (jdbc/with-db-connection [con-db *db*]
       (db/save-pull-request! con-db
                              (assoc pull-request :state state)))))
