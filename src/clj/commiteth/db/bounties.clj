@@ -60,7 +60,7 @@
     (db/get-bounty con-db {:login user :repo repo :issue_number issue-number})))
 
 
-(defn list-wallets
+(defn open-bounty-contracts
   []
   (jdbc/with-db-connection [con-db *db*]
-    (db/wallets-list con-db)))
+    (db/open-bounty-contracts con-db)))

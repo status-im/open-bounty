@@ -21,7 +21,11 @@ RETURNING id, login, name, email, avatar_url, token, address, created;
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users
-SET login = :login, name = :name, email = :email, token = :token, address = :address
+SET login = :login,
+name = :name,
+email = :email,
+token = :token,
+address = :address
 WHERE id = :id;
 
 -- :name update-user-token! :<! :1
@@ -44,9 +48,9 @@ WHERE id = :id;
 
 -- :name get-repo-owner :? :1
 SELECT *
-FROM users u
-  INNER JOIN repositories r ON r.user_id = u.id
-WHERE r.repo_id = :repo_id;
+FROM users u, repositories r
+WHERE r.repo_id = :repo_id
+AND r.user_id = u.id;
 
 -- Repositories --------------------------------------------------------------------
 
@@ -130,6 +134,8 @@ UPDATE issues
 SET transaction_hash = :transaction_hash
 WHERE issue_id = :issue_id;
 
+
+-- TODO: this is terrible
 -- :name update-contract-address :<! :1
 -- :doc updates contract-address for a given issue
 WITH t AS (
@@ -142,9 +148,9 @@ WITH t AS (
       i.repo_id          AS repo_id,
       r.login            AS login,
       r.repo             AS repo
-    FROM issues i
-      INNER JOIN repositories r ON r.repo_id = i.repo_id
-    WHERE i.issue_id = :issue_id
+    FROM issues i, repositories r
+    WHERE r.repo_id = i.repo_id
+    AND i.issue_id = :issue_id
 )
 UPDATE issues i
 SET contract_address = :contract_address
@@ -169,19 +175,26 @@ WHERE contract_address IS NULL
 
 -- Pull Requests -------------------------------------------------------------------
 
--- :name create-pull-request! :! :n
--- :doc creates pull request
-INSERT INTO pull_requests (repo_id, pr_id, pr_number, issue_number, commit_id, user_id)
-  SELECT
-    :repo_id,
-    :pr_id,
-    :pr_number,
-    :issue_number,
-    :commit_id,
-    :user_id
-  WHERE NOT exists(SELECT 1
-                   FROM pull_requests
-                   WHERE repo_id = :repo_id AND pr_id = :pr_id);
+-- :name save-pull-request! :! :n
+-- :doc inserts or updates a pull request record
+INSERT INTO pull_requests (pr_id,
+  repo_id,
+  pr_number,
+  issue_number,
+  commit_id,
+  user_id,
+  state)
+VALUES(:pr_id,
+  :repo_id,
+  :pr_number,
+  :issue_number,
+  :commit_id,
+  :user_id,
+  :state)
+ON CONFLICT (pr_id) DO UPDATE
+SET
+  state = :state,
+  commit_id = :commit_id;
 
 -- Bounties ------------------------------------------------------------------------
 
@@ -191,43 +204,40 @@ SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
   u.address          AS payout_address
-FROM issues i
-  INNER JOIN pull_requests p
-    ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
-       AND p.repo_id = i.repo_id
-  INNER JOIN users u
-    ON u.id = p.user_id
-WHERE i.execute_hash IS NULL;
+FROM issues i, pull_requests p, users u
+WHERE
+(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+AND p.repo_id = i.repo_id
+AND u.id = p.user_id
+AND i.execute_hash IS NULL;
 
 -- :name pending-payouts-list :? :*
 -- :doc lists all recently closed issues awaiting to be confirmed
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
-  i.execute_hash     AS execute_hash
-FROM issues i
-  INNER JOIN pull_requests p
-    ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
-       AND p.repo_id = i.repo_id
-  INNER JOIN users u
-    ON u.id = p.user_id
-WHERE i.confirm_hash IS NULL
-      AND i.execute_hash IS NOT NULL;
+  u.address          AS payout_address
+FROM issues i, pull_requests p, users u
+WHERE
+(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+AND p.repo_id = i.repo_id
+AND u.id = p.user_id
+AND i.confirm_hash IS NULL
+AND i.execute_hash IS NOT NULL;
 
 -- :name confirmed-payouts-list :? :*
 -- :doc lists all recently confirmed bounty payouts
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
-  i.payout_hash      AS payout_hash
-FROM issues i
-  INNER JOIN pull_requests p
-    ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
-       AND p.repo_id = i.repo_id
-  INNER JOIN users u
-    ON u.id = p.user_id
-WHERE i.payout_receipt IS NULL
-      AND i.payout_hash IS NOT NULL;
+  u.address          AS payout_address
+FROM issues i, pull_requests p, users u
+WHERE
+(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+AND p.repo_id = i.repo_id
+AND u.id = p.user_id
+AND i.payout_receipt IS NULL
+AND i.payout_hash IS NOT NULL;
 
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash
@@ -254,7 +264,7 @@ SET payout_receipt = :payout_receipt
 WHERE issue_id = :issue_id;
 
 -- :name all-bounties-list :? :*
--- :doc lists all issues labeled as 'bounty'
+-- :doc open (not merged) bounty issues
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
@@ -264,16 +274,13 @@ SELECT
   i.balance          AS issue_balance,
   r.login            AS owner_name,
   r.repo             AS repo_name
-FROM issues i
-  INNER JOIN repositories r
-    ON r.repo_id = i.repo_id
-WHERE i.commit_id IS NULL
-      AND NOT EXISTS(SELECT 1
-                     FROM pull_requests
-                     WHERE issue_number = i.issue_number);
+FROM issues i, repositories r
+WHERE
+r.repo_id = i.repo_id
+AND i.commit_id IS NULL;
 
 -- :name owner-bounties-list :? :*
--- :doc lists fixed issues
+-- :doc lists fixed issues (bounties awaiting maintainer confirmation)
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
@@ -293,21 +300,18 @@ SELECT
   r.login            AS owner_name,
   r.repo             AS repo_name,
   o.address          AS owner_address
-FROM issues i
-  INNER JOIN pull_requests p
-    ON (p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
-       AND p.repo_id = i.repo_id
-  INNER JOIN users u
-    ON u.id = p.user_id
-  INNER JOIN repositories r
-    ON r.repo_id = i.repo_id
-  INNER JOIN users o
-    ON r.user_id = o.id
-WHERE r.user_id = :owner_id
-      AND i.confirm_hash IS NOT NULL;
+FROM issues i, pull_requests p, users u, users o, repositories r
+WHERE
+(p.commit_id = i.commit_id OR coalesce(p.issue_number, -1) = i.issue_number)
+AND p.repo_id = i.repo_id
+AND u.id = p.user_id
+AND r.repo_id = i.repo_id
+AND r.user_id = o.id
+AND r.user_id = :owner_id
+AND i.confirm_hash IS NOT NULL;
 
 -- :name owner-issues-list :? :*
--- :doc lists all not yet fixed issues in a given owner's repository
+-- :doc owner's bounty issues with no merged PR
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
@@ -316,19 +320,18 @@ SELECT
   i.repo_id          AS repo_id,
   r.login            AS owner_name,
   r.repo             AS repo_name
-FROM issues i
-  INNER JOIN repositories r
-    ON r.repo_id = i.repo_id
-WHERE r.user_id = :owner_id
-      AND i.commit_id IS NULL
-      AND NOT exists(SELECT 1
-                     FROM pull_requests
-                     WHERE issue_number = i.issue_number);
+FROM issues i, repositories r
+WHERE r.repo_id = i.repo_id
+AND r.user_id = :owner_id
+AND i.commit_id IS NULL
+AND NOT exists(SELECT 1
+               FROM pull_requests
+               WHERE issue_number = i.issue_number
+               AND state = 1);
 
--- TODO: misleading name. this is used when updating bounty balances. maybe we should exclude at least bounties that have been paid?
 
--- :name wallets-list :? :*
--- :doc lists all contract ids
+-- :name open-bounty-contracts :? :*
+-- :doc bounty issues with mined bounty contracts
 SELECT
   i.contract_address AS contract_address,
   r.login            AS login,
@@ -337,22 +340,26 @@ SELECT
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
   i.balance          AS balance
-FROM issues i
-  INNER JOIN repositories r ON r.repo_id = i.repo_id
-WHERE contract_address IS NOT NULL;
+FROM issues i, repositories r
+WHERE r.repo_id = i.repo_id
+AND contract_address IS NOT NULL
+AND i.payout_hash IS NULL;
 
 -- :name get-bounty :? :1
+-- :doc details for a bounty issue given owner, repo and issue nunber
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
   i.balance          AS balance,
   r.login            AS login,
-  r.repo             AS repo
-FROM issues i
-  INNER JOIN repositories r ON r.repo_id = i.repo_id
+  r.repo             AS repo,
+  i.state            AS state
+FROM issues i, repositories r
 WHERE i.issue_number = :issue_number
-      AND r.login = :login AND r.repo = :repo;
+AND r.repo_id = i.repo_id
+AND r.login = :login
+AND r.repo = :repo;
 
 -- :name get-balance :? :1
 -- :doc gets current balance of a wallet attached to a given issue
@@ -367,8 +374,8 @@ SET balance = :balance
 WHERE contract_address = :contract_address;
 
 
-
 -- :name save-issue-comment-image! :<! :1
+-- :doc insert or update image data for a given issue's github comment
 INSERT INTO issue_comment (issue_id, png_data)
 VALUES (:issue_id, :png_data)
 ON CONFLICT (issue_id) DO UPDATE
@@ -377,6 +384,7 @@ RETURNING id;
 
 
 -- :name get-issue-comment-image :? :1
+-- :doc retrieve image data for given issue's github comment
 SELECT png_data
 FROM issue_comment
 WHERE issue_id = :issue_id;

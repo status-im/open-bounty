@@ -60,63 +60,92 @@
       (issues/close commit-id issue-id))))
 
 (def ^:const keywords
-  [#"(?i)close\s+#(\d+)"
-   #"(?i)closes\s+#(\d+)"
-   #"(?i)closed\s+#(\d+)"
-   #"(?i)fix\s+#(\d+)"
-   #"(?i)fixes\s+#(\d+)"
-   #"(?i)fixed\s+#(\d+)"
-   #"(?i)resolve\s+#(\d+)"
-   #"(?i)resolves\s+#(\d+)"
-   #"(?i)resolved\s+#(\d+)"])
+  [#"(?i)close:?\s+#(\d+)"
+   #"(?i)closes:?\s+#(\d+)"
+   #"(?i)closed:?\s+#(\d+)"
+   #"(?i)fix:?\s+#(\d+)"
+   #"(?i)fixes:?\s+#(\d+)"
+   #"(?i)fixed:?\s+#(\d+)"
+   #"(?i)resolve:?\s?#(\d+)"
+   #"(?i)resolves:?\s+#(\d+)"
+   #"(?i)resolved:?\s+#(\d+)"])
 
 (defn extract-issue-number
-  [pr-body]
-  (mapcat #(keep
-            (fn [s]
-              (try (let [issue-number (Integer/parseInt (second s))]
-                     (when (pos? issue-number)
-                       issue-number))
-                   (catch NumberFormatException _)))
-            (re-seq % pr-body)) keywords))
+  [pr-body pr-title]
+  (let [extract (fn [source]
+                  (mapcat #(keep
+                            (fn [s]
+                              (try (let [issue-number (Integer/parseInt (second s))]
+                                     (when (pos? issue-number)
+                                       issue-number))
+                                   (catch NumberFormatException _)))
+                            (re-seq % source)) keywords))]
+    (concat (extract pr-body)
+            (extract pr-title))))
 
 
-(defn validate-issue-number
+(defn ensure-bounty-issue
   "Checks if an issue has a bounty label attached and returns its number"
   [user repo issue-number]
   (when-let [issue (github/get-issue user repo issue-number)]
     (when (bounties/has-bounty-label? issue)
       issue-number)))
 
-(defn handle-pull-request-closed
-  [{{{owner :login} :owner
+
+(defn handle-pull-request-event
+  ;; when a PR is opened, only consider it as a claim if:
+  ;; * PR references an existing bounty-issue
+  ;;
+  ;; when a PR is merged via close event, only consider it a bounty
+  ;; claim being accepted if:
+  ;; * PR exists in DB
+  ;; * PR references an existing bounty-issue
+  [event-type
+   {{{owner :login} :owner
      repo           :name
      repo-id        :id}    :repository
-    {{user-id :id
-      login   :login
-      name    :name} :user
+    {{user-id    :id
+      login      :login
+      avatar_url :avatar_url
+      name       :name} :user
      id              :id
      pr-number       :number
-     pr-body         :body} :pull_request}]
-  (log/debug "handle-pull-request-closed" owner repo repo-id login pr-body)
-  (future
-    (let [commit-id    (find-commit-id owner repo pr-number ["merged"])
-          issue-number (->>
-                        (extract-issue-number pr-body)
-                        (first)
-                        (validate-issue-number owner repo))
-          m            {:commit_id commit-id :issue_number issue-number}]
-      (log/debug "handle-pull-request-closed" commit-id issue-number)
-      (when (or commit-id issue-number)
-        (log/debug (format "Pull request %s/%s/%s closed with reference to %s"
-                           login repo pr-number
-                           (if commit-id (str "commit-id " commit-id)
-                               (str "issue-number " issue-number))))
-        (pull-requests/create (merge m {:repo_id   repo-id
-                                        :pr_id     id
-                                        :pr_number pr-number
-                                        :user_id   user-id}))
-        (users/create-user user-id login name nil nil)))))
+     pr-body         :body
+     pr-title        :title} :pull_request}]
+  (log/debug "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
+  (log/debug (extract-issue-number pr-body pr-title))
+  (when-let [bounty-issue-number (->>
+                                  (extract-issue-number pr-body pr-title)
+                                  (first)
+                                  (ensure-bounty-issue owner repo))]
+    (log/debug "Referenced bounty issue found" bounty-issue-number)
+    (users/create-user user-id login name nil avatar_url nil)
+    (let [pr-data {:repo_id   repo-id
+                   :pr_id     id
+                   :pr_number pr-number
+                   :user_id   user-id
+                   :issue_number bounty-issue-number
+                   :state event-type}]
+      (case event-type
+        :opened (do
+                  (log/info "PR with reference to bounty issue"
+                            bounty-issue-number "opened")
+                  (pull-requests/save (merge pr-data {:state :opened
+                                                      :commit_id nil})))
+        :closed (if-let [commit-id (find-commit-id owner
+                                                   repo
+                                                   pr-number
+                                                   ["merged"])]
+                  (do (log/info "PR with reference to bounty issue"
+                                bounty-issue-number "merged")
+                      (pull-requests/save
+                       (merge pr-data {:state :merged
+                                       :commit_id commit-id})))
+                  (do (log/info "PR with reference to bounty issue"
+                                bounty-issue-number "closed with no merge")
+                      (pull-requests/save
+                       (merge pr-data {:state :closed
+                                       :commit_id nil}))))))))
 
 
 (defn handle-issue
@@ -134,8 +163,10 @@
 
 (defn handle-pull-request
   [pull-request]
-  (when (= "closed" (:action pull-request))
-    (handle-pull-request-closed pull-request))
+  (case (:action pull-request)
+    "opened" (handle-pull-request-event :opened pull-request)
+    "closed" (handle-pull-request-event :closed pull-request)
+    nil)
   (ok))
 
 

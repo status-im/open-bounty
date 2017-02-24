@@ -78,7 +78,7 @@
            comment-id       :comment_id
            issue-id         :issue_id
            old-balance      :balance
-           issue-number     :issue_number} (db-bounties/list-wallets)]
+           issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
       (let [current-balance-hex (eth/get-balance-hex contract-address)
             current-balance-eth (eth/hex->eth current-balance-hex 8)
