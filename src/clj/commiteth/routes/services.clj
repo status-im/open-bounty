@@ -98,8 +98,8 @@
             [(:issue_id b)
              (conj b
                     (let [claims (bounties-db/bounty-claims (:issue_id b))
-                          balance (:balance b)]
-                      {:balance-eth (eth/hex->eth balance 6)
+                          balance-eth (:balance b)]
+                      {:balance-eth balance-eth ;; TODO: string expected?
                        :claims claims}))]))))
 
 

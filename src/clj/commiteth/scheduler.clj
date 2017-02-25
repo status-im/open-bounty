@@ -72,7 +72,7 @@
       ;; a string is a good idea
       (db-bounties/update-payout-receipt issue-id (str receipt)))))
 
-(defn update-balance
+(defn update-balances
   []
   (doseq [{contract-address :contract_address
            owner            :login
@@ -82,11 +82,11 @@
            old-balance      :balance
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
-      (let [current-balance-hex (eth/get-balance-hex contract-address)
-            current-balance-eth (eth/hex->eth current-balance-hex 8)
+      (let [current-balance-eth (-> (eth/get-balance-eth contract-address 8)
+                                    (read-string))
             issue-url (str owner "/" repo "/issues/" (str issue-number))]
-        (when-not (= old-balance current-balance-hex)
-          (issues/update-balance contract-address current-balance-hex)
+        (when-not (= old-balance (read-string current-balance-eth))
+          (issues/update-balance contract-address (read-string current-balance-eth))
           (bounties/update-bounty-comment-image issue-id
                                                 issue-url
                                                 contract-address
@@ -141,5 +141,5 @@
             update-confirm-hash
             update-payout-receipt
             self-sign-bounty
-            update-balance])
+            update-balances])
   :stop (stop-scheduler))
