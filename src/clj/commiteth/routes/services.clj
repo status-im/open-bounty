@@ -13,7 +13,8 @@
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]
-            [crypto.random :as random]))
+            [crypto.random :as random]
+            [clojure.set :refer [rename-keys]]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -90,17 +91,29 @@
                github-repos))))
 
 
+(defn decimal->str [n]
+  (format "%.4f" n))
+
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/list-owner-bounties (:id user))]
-    owner-bounties
     (into {}
-          (for [b owner-bounties]
+          (for [ob owner-bounties
+                :let [b (update ob :balance decimal->str)]]
             [(:issue_id b)
              (conj b
-                    (let [claims (bounties-db/bounty-claims (:issue_id b))
-                          balance-eth (:balance b)]
-                      {:balance-eth balance-eth ;; TODO: string expected?
-                       :claims claims}))]))))
+                   (let [claims (->> (bounties-db/bounty-claims (:issue_id b))
+                                     (map #(update % :balance decimal->str)))]
+                     {:claims claims}))]))))
+
+
+(defn top-hunters []
+  (let [renames {:user_name :display-name
+                 :avatar_url :avatar-url
+                 :total_eth :total-eth}]
+    (map #(-> %
+              (rename-keys renames)
+              (update :total-eth decimal->str))
+         (bounties-db/top-hunters))))
 
 
 (defapi service-routes
@@ -111,6 +124,9 @@
                            :description "commitETH API"}}}}
 
   (context "/api" []
+           (GET "/top-hunters" []
+                (log/debug "/top-hunters")
+                (ok (top-hunters)))
            (context "/bounties" []
                     (GET "/all" []
                          (log/debug "/bounties/all")

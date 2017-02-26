@@ -70,3 +70,8 @@
   []
   (jdbc/with-db-connection [con-db *db*]
     (db/open-bounty-contracts con-db)))
+
+(defn top-hunters
+  []
+    (jdbc/with-db-connection [con-db *db*]
+      (db/top-hunters con-db)))

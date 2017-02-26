@@ -46,8 +46,8 @@
            payout-address   :payout_address} (db-bounties/pending-bounties-list)
           :let [value (eth/get-balance-hex contract-address)]]
     (->>
-      (wallet/execute contract-address payout-address value)
-      (db-bounties/update-execute-hash issue-id))))
+     (wallet/execute contract-address payout-address value)
+     (db-bounties/update-execute-hash issue-id))))
 
 (defn update-confirm-hash
   "Gets transaction receipt for each pending payout and updates confirm_hash"
@@ -72,6 +72,23 @@
       ;; a string is a good idea
       (db-bounties/update-payout-receipt issue-id (str receipt)))))
 
+
+(defn abs
+  "(abs n) is the absolute value of n"
+  [n]
+  (cond
+    (not (number? n)) (throw (IllegalArgumentException.
+                              "abs requires a number"))
+    (neg? n) (- n)
+    :else n))
+
+(defn float=
+  ([x y] (float= x y 0.0000001))
+  ([x y epsilon]
+   (log/debug x y epsilon)
+   (let [scale (if (or (zero? x) (zero? y)) 1 (abs x))]
+     (<= (abs (- x y)) (* scale epsilon)))))
+
 (defn update-balances
   []
   (doseq [{contract-address :contract_address
@@ -82,21 +99,24 @@
            old-balance      :balance
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
-      (let [current-balance-eth (-> (eth/get-balance-eth contract-address 8)
-                                    (read-string))
+      (let [current-balance-eth-str (eth/get-balance-eth contract-address 8)
+            current-balance-eth (read-string current-balance-eth-str)
             issue-url (str owner "/" repo "/issues/" (str issue-number))]
-        (when-not (= old-balance (read-string current-balance-eth))
-          (issues/update-balance contract-address (read-string current-balance-eth))
+        (log/debug "update-balances" current-balance-eth current-balance-eth-str issue-url)
+        (log/debug (type old-balance) (type current-balance-eth))
+        (when-not (float= old-balance current-balance-eth)
+          (log/debug "balances differ")
+          (issues/update-balance contract-address current-balance-eth)
           (bounties/update-bounty-comment-image issue-id
                                                 issue-url
                                                 contract-address
-                                                current-balance-eth)
+                                                current-balance-eth-str)
           (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number
                                  contract-address
-                                 current-balance-eth))))))
+                                 current-balance-eth-str))))))
 
 (def scheduler-thread-name "SCHEDULER_THREAD")
 
@@ -111,16 +131,16 @@
 (defn every
   [ms tasks]
   (.start (new Thread
-            (fn []
-              (while (not (.isInterrupted (Thread/currentThread)))
-                (do (try
-                      (Thread/sleep ms)
-                      (catch InterruptedException _
-                        (.interrupt (Thread/currentThread))))
-                    (doseq [task tasks]
-                      (try (task)
-                           (catch Exception e (log/error e)))))))
-            scheduler-thread-name)))
+               (fn []
+                 (while (not (.isInterrupted (Thread/currentThread)))
+                   (do (try
+                         (Thread/sleep ms)
+                         (catch InterruptedException _
+                           (.interrupt (Thread/currentThread))))
+                       (doseq [task tasks]
+                         (try (task)
+                              (catch Exception e (log/error e)))))))
+               scheduler-thread-name)))
 
 (defn stop-scheduler []
   (when-let [scheduler (get-thread-by-name scheduler-thread-name)]
@@ -137,9 +157,9 @@
 
 (mount/defstate scheduler
   :start (restart-scheduler 60000
-           [update-issue-contract-address
-            update-confirm-hash
-            update-payout-receipt
-            self-sign-bounty
-            update-balances])
+                            [update-issue-contract-address
+                             update-confirm-hash
+                             update-payout-receipt
+                             self-sign-bounty
+                             update-balances])
   :stop (stop-scheduler))

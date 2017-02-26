@@ -3,7 +3,7 @@
 
 
 
-(defn activity-item [{{image-url :profile-image-url
+(defn activity-item [{{image-url :avatar-url
                        display-name :display-name} :user
                       timestamp :timestamp
                       description :description} item]

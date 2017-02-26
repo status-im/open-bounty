@@ -13,8 +13,6 @@
             [commiteth.repos :refer [repos-page]]
             [commiteth.bounties :refer [bounties-page]]
             [commiteth.update-address :refer [update-address-page]]
-            [commiteth.manage :refer [manage-page]]
-            [commiteth.issues :refer [issues-page]]
             [commiteth.common :refer [input]]
             [commiteth.config :as config]
             [commiteth.svg :as svg]
@@ -119,10 +117,10 @@
                            [:div.item
                             [:div.leader-ordinal (str (+ 1 idx))]
                             [:div.ui..mini.circular.image
-                             [:img {:src (:profile-image-url hunter)}]]
+                             [:img {:src (:avatar-url hunter)}]]
                             [:div.content
                              [:div.header (:display-name hunter)]
-                             [:div.description (str "ETH " (:eth-earned hunter))]]])
+                             [:div.description (str "ETH " (:total-eth hunter))]]])
                          @top-hunters)))))
 
 (defn page []
@@ -146,7 +144,7 @@
 (secretary/defroute "/" []
   (rf/dispatch [:set-active-page :activity]))
 
-(secretary/defroute "/manage" []
+(secretary/defroute "/repos" []
   (if js/user
     (rf/dispatch [:set-active-page :repos])
     (secretary/dispatch! "/")))
@@ -176,6 +174,7 @@
     (reset! active-user nil)))
 
 (defn load-data []
+  (rf/dispatch [:load-top-hunters])
   (load-user))
 
 (defonce timer-id (r/atom nil))

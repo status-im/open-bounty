@@ -37,6 +37,12 @@
  (fn [db [_ path value]]
    (assoc-in db path value)))
 
+
+(reg-event-db
+ :set-active-page
+ (fn [db [_ page]]
+   (assoc db :page page)))
+
 (reg-event-fx
  :set-flash-message
  (fn [{:keys [db]} [_ type text]]
@@ -49,16 +55,6 @@
  :clear-flash-message
  (fn [db _]
    (dissoc db :flash-message)))
-
-(reg-event-db
- :set-active-page
- (fn [db [_ page]]
-   (assoc db :page page)))
-
-(reg-event-db
- :set-page
- (fn [db [_ table page]]
-   (assoc-in db [:pagination table :page] page)))
 
 (reg-event-fx
  :set-active-user
@@ -82,6 +78,21 @@
            :on-success #(dispatch [:payout-confirmed issue-id])
            :on-error   #(dispatch [:payout-confirm-failed issue-id])
            :params     {:payout-hash payout-hash}}}))
+
+
+(reg-event-fx
+ :load-top-hunters
+ (fn [{:keys [db]} [_]]
+   {:db   db
+    :http {:method     GET
+           :url        "/api/top-hunters"
+           :on-success #(dispatch [:set-top-hunters %])}}))
+
+
+(reg-event-db
+ :set-top-hunters
+ (fn [db [_ top-hunters]]
+   (assoc db :top-hunters top-hunters)))
 
 
 (reg-event-fx
@@ -230,7 +241,7 @@
                   :to    contract-address
                   :value 1
                   :data  (str "0x797af627" confirm-hash)}]
-     (println "confirm-payout" owner-address to)
+     (println "confirm-payout" owner-address contract-address)
      (try
        (apply send-transaction-fn [(clj->js payload)
                                    (send-transaction-callback issue-id)])

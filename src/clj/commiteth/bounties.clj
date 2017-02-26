@@ -29,7 +29,10 @@
       (do
         (log/debug "deploying contract to " repo-owner-address)
         (let [transaction-hash (eth/deploy-contract repo-owner-address)]
-          (log/info "Contract deployed, transaction-hash:" transaction-hash )
+          (if (nil? transaction-hash)
+            (log/error "Failed to deploy contract to" repo-owner-address)
+            (log/info "Contract deployed, transaction-hash:"
+                      transaction-hash ))
           (issues/update-transaction-hash issue-id transaction-hash)))
       (log/debug "Issue already exists in DB, ignoring"))))
 

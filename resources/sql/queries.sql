@@ -303,7 +303,6 @@ WHERE
 r.repo_id = i.repo_id
 AND r.user_id = o.id
 AND r.user_id = :owner_id;
--- AND i.confirm_hash IS NOT NULL;
 
 
 -- :name bounty-claims :? :*
@@ -337,7 +336,6 @@ AND u.id = p.user_id
 AND r.repo_id = i.repo_id
 AND r.user_id = o.id
 AND i.issue_id = :issue_id;
---AND i.confirm_hash IS NOT NULL;
 
 
 
@@ -418,3 +416,19 @@ RETURNING id;
 SELECT png_data
 FROM issue_comment
 WHERE issue_id = :issue_id;
+
+
+-- :name top-hunters :? :*
+SELECT
+u.id AS user_id,
+u.login AS login,
+u.name AS user_name,
+u.avatar_url AS avatar_url,
+SUM(i.balance) AS total_eth
+FROM issues i, users u, pull_requests pr
+WHERE
+pr.commit_id = i.commit_id
+AND u.id = pr.user_id
+AND i.payout_receipt IS NOT NULL
+GROUP BY u.id
+ORDER BY total_eth DESC;
