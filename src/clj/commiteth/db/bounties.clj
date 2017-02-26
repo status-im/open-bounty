@@ -4,10 +4,6 @@
             [clojure.set :refer [rename-keys]]))
 
 
-(defn list-all-bounties
-  []
-  (jdbc/with-db-connection [con-db *db*]
-    (db/all-bounties-list con-db)))
 
 (defn list-owner-bounties
   [owner]
@@ -75,3 +71,8 @@
   []
     (jdbc/with-db-connection [con-db *db*]
       (db/top-hunters con-db)))
+
+(defn bounty-activity
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/bounties-activity con-db)))

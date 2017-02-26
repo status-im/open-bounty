@@ -116,6 +116,11 @@
          (bounties-db/top-hunters))))
 
 
+(defn activity-feed []
+  (let [activity-items (bounties-db/bounty-activity)]
+    (map #(update % :balance decimal->str) activity-items)))
+
+
 (defapi service-routes
   {:swagger {:ui   "/swagger-ui"
              :spec "/swagger.json"
@@ -127,10 +132,9 @@
            (GET "/top-hunters" []
                 (log/debug "/top-hunters")
                 (ok (top-hunters)))
-           (context "/bounties" []
-                    (GET "/all" []
-                         (log/debug "/bounties/all")
-                         (ok (bounties-db/list-all-bounties))))
+           (GET "/activity-feed" []
+                (log/debug "/activity-feed")
+                (ok (activity-feed)))
            (context "/user" []
                     (GET "/" []
                          :auth-rules authenticated?

@@ -94,6 +94,20 @@
  (fn [db [_ top-hunters]]
    (assoc db :top-hunters top-hunters)))
 
+(reg-event-fx
+ :load-activity-feed
+ (fn [{:keys [db]} [_]]
+   {:db   db
+    :http {:method     GET
+           :url        "/api/activity-feed"
+           :on-success #(dispatch [:set-activity-feed %])}}))
+
+
+(reg-event-db
+ :set-activity-feed
+ (fn [db [_ activity-feed]]
+   (assoc db :activity-feed activity-feed)))
+
 
 (reg-event-fx
  :load-owner-bounties

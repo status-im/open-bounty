@@ -112,16 +112,18 @@
 (defn top-hunters []
   (let [top-hunters (rf/subscribe [:top-hunters])]
     (fn []
-      (into [:div.ui.items.top-hunters]
-            (map-indexed (fn [idx hunter]
-                           [:div.item
-                            [:div.leader-ordinal (str (+ 1 idx))]
-                            [:div.ui..mini.circular.image
-                             [:img {:src (:avatar-url hunter)}]]
-                            [:div.content
-                             [:div.header (:display-name hunter)]
-                             [:div.description (str "ETH " (:total-eth hunter))]]])
-                         @top-hunters)))))
+      (if (empty? @top-hunters)
+        [:div.ui.text "No data"]
+        (into [:div.ui.items.top-hunters]
+              (map-indexed (fn [idx hunter]
+                             [:div.item
+                              [:div.leader-ordinal (str (+ 1 idx))]
+                              [:div.ui..mini.circular.image
+                               [:img {:src (:avatar-url hunter)}]]
+                              [:div.content
+                               [:div.header (:display-name hunter)]
+                               [:div.description (str "ETH " (:total-eth hunter))]]])
+                           @top-hunters))))))
 
 (defn page []
   (fn []
@@ -174,6 +176,7 @@
     (reset! active-user nil)))
 
 (defn load-data []
+  (rf/dispatch [:load-activity-feed])
   (rf/dispatch [:load-top-hunters])
   (load-user))
 

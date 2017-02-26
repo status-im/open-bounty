@@ -1,12 +1,15 @@
 (ns commiteth.activity
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [reagent.core :as r]))
 
 
 
-(defn activity-item [{{image-url :avatar-url
-                       display-name :display-name} :user
-                      timestamp :timestamp
-                      description :description} item]
+(defn activity-item [{image-url :user_avatar_url
+                      display-name :user_name
+                      timestamp :updated
+                      balance :balance
+                      issue-title :issue_title
+                      item-type :type} item]
 
   [:div.item.activity-item
    [:div.ui.mini.circular.image
@@ -14,13 +17,16 @@
    [:div.content
     [:div.header display-name]
     [:div.description
-     [:p description]]
-    [:div.time timestamp]]])
+     [:p item-type]
+     [:p issue-title]]
+    #_[:div.time timestamp]]])
 
 (defn activity-page []
   (let [activity-items (rf/subscribe [:activity-feed])]
     (fn []
       [:div.ui.container
-       (into [:div.ui.items]
-             (for [item @activity-items]
-               [activity-item item]))])))
+       (if (empty? @activity-items)
+         [:div.ui.text "No data"]
+         (into [:div.ui.items]
+               (for [item @activity-items]
+                 [activity-item item])))])))

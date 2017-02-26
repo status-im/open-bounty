@@ -121,17 +121,19 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title)
                    FROM issues
                    WHERE repo_id = :repo_id AND issue_id = :issue_id);
 
--- :name update-commit-id :<! :1
--- :doc updates issue with commit_id
+-- :name update-commit-sha :<! :1
+-- :doc updates issue with commit_sha
 UPDATE issues
-SET commit_id = :commit_id
+SET commit_sha = :commit_sha,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id
-RETURNING repo_id, issue_id, issue_number, title, commit_id, contract_address;
+RETURNING repo_id, issue_id, issue_number, title, commit_sha, contract_address;
 
 -- :name update-transaction-hash :! :n
 -- :doc updates transaction-hash for a given issue
 UPDATE issues
-SET transaction_hash = :transaction_hash
+SET transaction_hash = :transaction_hash,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 
@@ -153,7 +155,8 @@ WITH t AS (
     AND i.issue_id = :issue_id
 )
 UPDATE issues i
-SET contract_address = :contract_address
+SET contract_address = :contract_address,
+updated = timezone('utc'::text, now())
 FROM t
 WHERE i.issue_id = :issue_id
 RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, i.contract_address, t.login, t.repo, t.repo_id;
@@ -161,7 +164,8 @@ RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, i.contract_ad
 -- :name update-comment-id :! :n
 -- :doc updates comment-id for a given issue
 UPDATE issues
-SET comment_id = :comment_id
+SET comment_id = :comment_id,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 -- :name list-pending-deployments :? :*
@@ -182,7 +186,7 @@ INSERT INTO pull_requests (pr_id,
   pr_number,
   issue_number,
   issue_id,
-  commit_id,
+  commit_sha,
   user_id,
   state)
 VALUES(:pr_id,
@@ -190,14 +194,14 @@ VALUES(:pr_id,
   :pr_number,
   :issue_number,
   :issue_id,
-  :commit_id,
+  :commit_sha,
   :user_id,
   :state)
 ON CONFLICT (pr_id) DO UPDATE
 SET
   state = :state,
   updated = timezone('utc'::text, now()),
-  commit_id = :commit_id;
+  commit_sha = :commit_sha;
 
 -- Bounties ------------------------------------------------------------------------
 
@@ -247,42 +251,31 @@ AND i.payout_hash IS NOT NULL;
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash
 UPDATE issues
-SET confirm_hash = :confirm_hash
+SET confirm_hash = :confirm_hash,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 -- :name update-execute-hash :! :n
 -- :doc updates issue with execute transaction hash
 UPDATE issues
-SET execute_hash = :execute_hash
+SET execute_hash = :execute_hash,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 -- :name update-payout-hash :! :n
 -- :doc updates issue with payout transaction hash
 UPDATE issues
-SET payout_hash = :payout_hash
+SET payout_hash = :payout_hash,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 -- :name update-payout-receipt :! :n
 -- :doc updates issue with payout transaction receipt
 UPDATE issues
-SET payout_receipt = :payout_receipt
+SET payout_receipt = :payout_receipt,
+updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
--- :name all-bounties-list :? :*
--- :doc open (not merged) bounty issues
-SELECT
-  i.contract_address AS contract_address,
-  i.issue_id         AS issue_id,
-  i.issue_number     AS issue_number,
-  i.title            AS issue_title,
-  i.repo_id          AS repo_id,
-  i.balance          AS issue_balance,
-  r.login            AS owner_name,
-  r.repo             AS repo_name
-FROM issues i, repositories r
-WHERE
-r.repo_id = i.repo_id
-AND i.commit_id IS NULL;
 
 -- :name owner-bounties-list :? :*
 -- :doc all bounty issues for given owner
@@ -352,7 +345,7 @@ SELECT
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
 AND r.user_id = :owner_id
-AND i.commit_id IS NULL
+AND i.commit_sha IS NULL
 AND NOT exists(SELECT 1
                FROM pull_requests
                WHERE issue_number = i.issue_number
@@ -398,7 +391,8 @@ WHERE contract_address = :contract_address;
 -- :name update-balance :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
-SET balance = :balance
+SET balance = :balance,
+updated = timezone('utc'::text, now())
 WHERE contract_address = :contract_address;
 
 
@@ -419,6 +413,8 @@ WHERE issue_id = :issue_id;
 
 
 -- :name top-hunters :? :*
+-- :doc list of user that have reveived bounty payouts with sum of
+-- earnings
 SELECT
 u.id AS user_id,
 u.login AS login,
@@ -427,8 +423,24 @@ u.avatar_url AS avatar_url,
 SUM(i.balance) AS total_eth
 FROM issues i, users u, pull_requests pr
 WHERE
-pr.commit_id = i.commit_id
+pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
 GROUP BY u.id
 ORDER BY total_eth DESC;
+
+
+-- :name bounties-activity :? :*
+-- :doc data for bounty activity feed
+SELECT
+  type,
+  issue_title,
+  repo_name,
+  issue_number,
+  user_name,
+  user_avatar_url,
+  balance,
+  updated
+FROM activity_feed_view
+ORDER BY updated DESC
+LIMIT 100;

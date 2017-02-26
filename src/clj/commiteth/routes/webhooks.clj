@@ -30,9 +30,9 @@
    (= "labeled" action)
    (= bounties/label-name (get-in issue [:label :name]))))
 
-(defn find-commit-id
+(defn find-commit-sha
   [user repo issue-number event-types]
-  (log/debug "find-commit-id" user repo issue-number event-types)
+  (log/debug "find-commit-sha" user repo issue-number event-types)
   (some identity (map #(->
                         (github/get-issue-events user repo issue-number)
                         (find-issue-event % user)
@@ -55,8 +55,8 @@
   [{{{owner :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
   (log/debug "handle-issue-closed" owner repo issue-number issue-id)
-  (when-let [commit-id (find-commit-id owner repo issue-number ["referenced" "closed"])]
-    (log/debug (format "Issue %s/%s/%s closed with commit %s" owner repo issue-number commit-id))
+  (when-let [commit-sha (find-commit-sha owner repo issue-number ["referenced" "closed"])]
+    (log/debug (format "Issue %s/%s/%s closed with commit %s" owner repo issue-number commit-sha))
     (log/info "NOT considering event as bounty winner")
     ;; TODO: disabled for now since the system is meant to be used
     ;;  exclusively via pull requests. issue closed event without a PR
@@ -65,7 +65,7 @@
     ;;  maintainer (could be that the bounty hunter had write access
     ;;  to master, but that scenario should be very rare and better
     ;;  not to support it)
-    #_(issues/close commit-id issue-id)))
+    #_(issues/close commit-sha issue-id)))
 
 (def ^:const keywords
   [#"(?i)close:?\s+#(\d+)"
@@ -148,19 +148,19 @@
                   (log/info "PR with reference to bounty issue"
                             bounty-issue-number "opened")
                   (pull-requests/save (merge pr-data {:state :opened
-                                                      :commit_id head-sha})))
+                                                      :commit-sha head-sha})))
         :closed (if merged?
                   (do (log/info "PR with reference to bounty issue"
                                 bounty-issue-number "merged")
                       (pull-requests/save
                        (merge pr-data {:state :merged
-                                       :commit_id head-sha}))
-                      (issues/update-commit-id head-sha (:id issue)))
+                                       :commit-sha head-sha}))
+                      (issues/update-commit-sha (:id issue) head-sha))
                   (do (log/info "PR with reference to bounty issue"
                                 bounty-issue-number "closed with no merge")
                       (pull-requests/save
                        (merge pr-data {:state :closed
-                                       :commit_id head-sha}))))))))
+                                       :commit-sha head-sha}))))))))
 
 
 (defn handle-issue
