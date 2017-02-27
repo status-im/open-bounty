@@ -117,8 +117,18 @@
 
 
 (defn activity-feed []
-  (let [activity-items (bounties-db/bounty-activity)]
-    (map #(update % :balance decimal->str) activity-items)))
+  (let [renames {:user_name :display-name
+                 :user_avatar_url :avatar-url
+                 :issue_title :issue-title
+                 :type :item-type
+                 :repo_name :repo-name
+                 :repo_owner :repo-owner
+                 :issue_number :issue-number}
+        activity-items (bounties-db/bounty-activity)]
+    (map #(-> %
+              (rename-keys renames)
+              (update :balance decimal->str))
+         activity-items)))
 
 
 (defapi service-routes

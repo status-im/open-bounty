@@ -1,6 +1,7 @@
 (ns commiteth.common
   (:require [reagent.core :as r]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [cljsjs.moment]))
 
 (defn input [val-ratom props]
   (fn []
@@ -20,3 +21,12 @@
               ^{:key item} [:option
                             {:value item}
                             item]))]))
+
+(defn moment-timestamp [time]
+  (let [now (.now js/Date.)
+        js-time (clj->js time)]
+    (-> (js/moment.utc)
+        (.to js-time))))
+
+(defn issue-url [repo number]
+  (str "https://github.com/" repo "/issues/" number))

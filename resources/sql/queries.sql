@@ -289,6 +289,7 @@ SELECT
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
+  i.updated          AS updated,
   r.repo             AS repo_name,
   o.address          AS owner_address
 FROM issues i, users o, repositories r
@@ -436,6 +437,7 @@ SELECT
   type,
   issue_title,
   repo_name,
+  repo_owner,
   issue_number,
   user_name,
   user_avatar_url,

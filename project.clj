@@ -42,7 +42,8 @@
                  [cheshire "5.7.0"]
                  [mpg "1.3.0"]
                  [pandect "0.6.1"]
-                 [prismatic/plumbing "0.5.3"]]
+                 [prismatic/plumbing "0.5.3"]
+                 [cljsjs/moment "2.17.1-0"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]

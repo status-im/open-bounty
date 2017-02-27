@@ -1,5 +1,6 @@
 (ns commiteth.bounties
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [commiteth.common :refer [moment-timestamp]]))
 
 
 
@@ -16,7 +17,8 @@
          issue-title :issue_title} claim
         merged? (= 1 (:pr_state claim))
         paid? (not-empty (:payout_hash claim))
-        confirming? (:confirming? bounty)]
+        confirming? (:confirming? bounty)
+        updated (:updated bounty)]
     (println "paid?" paid? "merged?" merged? (and merged? ((comp not) paid?)))
     [:div.activity-item
      [:div.ui.grid.container
@@ -30,7 +32,7 @@
        [:div.description (if paid?
                            "(paid)"
                            (str "(" (if merged? "merged" "open") ")"))]
-       [:div.time "1 day ago"]   ;; TODO: claim timestamp
+       [:div.time (moment-timestamp updated)]
        [:button.ui.button
         (merge (if (and merged? (not paid?))
                  {}
