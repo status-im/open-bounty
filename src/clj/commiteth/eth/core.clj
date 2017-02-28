@@ -18,7 +18,8 @@
                                   :method  method
                                   :params  params
                                   :id      1})
-        options  {:body body}
+        options  {:headers {"content-type" "application/json"}
+                  :body body}
         response (:body @(post eth-rpc-url options))
         result   (json/read-str response :key-fn keyword)]
     (log/debug body "\n" result)
