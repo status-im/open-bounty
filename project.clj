@@ -60,7 +60,6 @@
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]]
 
-  :user {:plugins  [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]}
 
   :less {:source-paths ["src/less"]
          :target-path "resources/public/css"}
@@ -78,7 +77,9 @@
 
 
   :profiles
-  {:uberjar       {:omit-source    true
+  {:uberjar       {:dependencies [[org.clojure/tools.nrepl "0.2.12"]]
+                   :plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]
+                   :omit-source    true
                    :prep-tasks     ["compile" ["cljsbuild" "once" "min"]]
                    :cljsbuild
                    {:builds
