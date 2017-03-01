@@ -14,7 +14,8 @@
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]
             [crypto.random :as random]
-            [clojure.set :refer [rename-keys]]))
+            [clojure.set :refer [rename-keys]]
+            [clojure.string :as str]))
 
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
@@ -66,8 +67,9 @@
         {repo-id :id
          full-repo :full_name
          repo    :name} params
+        [owner _] (str/split full-repo #"/")
         db-item (repositories/create (merge params {:user_id user-id
-                                                    :login login}))
+                                                    :login owner}))
         is-enabled (= 2 (:state db-item))]
     (if is-enabled
       (disable-repo repo-id full-repo (:hook_id db-item) token)
