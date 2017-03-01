@@ -162,6 +162,7 @@
 
 
 (defn update-repo-state [all-repos full-name data]
+  (println full-name)
   (let [[owner repo-name] (js->clj (.split full-name "/"))]
     (println "update-repo-busy-state" owner repo-name)
     (update all-repos
@@ -177,16 +178,16 @@
  :toggle-repo
  (fn [{:keys [db]} [_ repo]]
    (println repo)
-   {:db   (assoc db :repos (update-repo-state (:repos db) (:full_name repo) {:busy? true
-                                                                             :enabled (:enabled repo)}))
+   {:db   (assoc db :repos (update-repo-state
+                            (:repos db)
+                            (:full_name repo)
+                            {:busy? true
+                             :enabled (:enabled repo)}))
     :http {:method     POST
            :url        "/api/user/repository/toggle"
            :on-success #(dispatch [:repo-toggle-success %])
-           ;; TODO           :on-error #(dispatch [:repo-toggle-error %])
-           :finally #(println "finally" %)
-           :params     (select-keys repo [:id :login :full_name :name])}}))
-
-
+           :on-error #(dispatch [:repo-toggle-error repo %])
+           :params     (select-keys repo [:id :owner :full_name :name])}}))
 
 
 (reg-event-db
@@ -197,6 +198,16 @@
                                        (:full_name repo)
                                        {:busy? false
                                         :enabled (:enabled repo)} ))))
+
+(reg-event-fx
+ :repo-toggle-error
+ (fn [{:keys [db]} [_ repo response]]
+   (println "repo-toggle-error" response)
+   {:db (assoc db :repos (update-repo-state (:repos db)
+                                            (:full_name repo)
+                                            {:busy? false}))
+    :dispatch [:set-flash-message
+               :error (str "Failed to toggle repo: " (:status-text response))]}))
 
 
 (reg-event-fx

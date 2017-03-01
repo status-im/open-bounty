@@ -41,7 +41,7 @@ SET address = :address
 WHERE id = :id;
 
 -- :name get-user :? :1
--- :doc retrieve a user given the login.
+-- :doc retrieve a user given the user-id.
 SELECT *
 FROM users
 WHERE id = :id;
@@ -59,33 +59,33 @@ AND r.user_id = u.id;
 UPDATE repositories
 SET state = :state
 WHERE repo_id = :repo_id
-RETURNING repo_id, login, repo, state, hook_id;
+RETURNING repo_id, owner, repo, state, hook_id;
 
 
 -- :name get-repo :? :1
--- :doc retrieve a repository given login and repo-name
+-- :doc retrieve a repository given owner and repo-name
 SELECT *
 FROM repositories
-WHERE login = :login
+WHERE owner = :owner
 AND repo = :repo;
 
 
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
-INSERT INTO repositories (repo_id, user_id, login, repo, state)
+INSERT INTO repositories (repo_id, user_id, owner, repo, state)
   SELECT
     :repo_id,
     :user_id,
-    :login,
+    :owner,
     :repo,
     :state
   WHERE NOT exists(SELECT 1
                    FROM repositories
                    WHERE repo_id = :repo_id)
-RETURNING repo_id, user_id, login, repo, state;
+RETURNING repo_id, user_id, owner, repo, state;
 
 -- :name get-enabled-repositories :? :*
--- :doc returns enabled repositories for a given login
+-- :doc returns enabled repositories for a given user-id
 SELECT repo_id
 FROM repositories
 WHERE user_id = :user_id
@@ -148,7 +148,7 @@ WITH t AS (
       i.transaction_hash AS transaction_hash,
       i.contract_address AS contract_address,
       i.repo_id          AS repo_id,
-      r.login            AS login,
+      r.owner            AS owner,
       r.repo             AS repo
     FROM issues i, repositories r
     WHERE r.repo_id = i.repo_id
@@ -159,7 +159,7 @@ SET contract_address = :contract_address,
 updated = timezone('utc'::text, now())
 FROM t
 WHERE i.issue_id = :issue_id
-RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, i.contract_address, t.login, t.repo, t.repo_id;
+RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, i.contract_address, t.owner, t.repo, t.repo_id;
 
 -- :name update-comment-id :! :n
 -- :doc updates comment-id for a given issue
@@ -319,7 +319,7 @@ SELECT
   u.login            AS user_login,
   u.name             AS user_name,
   u.avatar_url       AS user_avatar_url,
-  r.login            AS owner_login,
+  r.owner            AS repo_owner,
   r.repo             AS repo_name,
   o.address          AS owner_address
 FROM issues i, pull_requests p, users u, users o, repositories r
@@ -341,7 +341,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
-  r.login            AS owner_name,
+  r.owner            AS repo_owner,
   r.repo             AS repo_name
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
@@ -357,7 +357,7 @@ AND NOT exists(SELECT 1
 -- :doc bounty issues with mined bounty contracts
 SELECT
   i.contract_address AS contract_address,
-  r.login            AS login,
+  r.owner            AS owner,
   r.repo             AS repo,
   i.comment_id       AS comment_id,
   i.issue_number     AS issue_number,
@@ -375,12 +375,12 @@ SELECT
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
   i.balance          AS balance,
-  r.login            AS login,
+  r.owner            AS owner,
   r.repo             AS repo
 FROM issues i, repositories r
 WHERE i.issue_number = :issue_number
 AND r.repo_id = i.repo_id
-AND r.login = :login
+AND r.owner = :owner
 AND r.repo = :repo;
 
 -- :name get-balance :? :1
@@ -399,9 +399,9 @@ WHERE contract_address = :contract_address;
 
 -- :name save-issue-comment-image! :<! :1
 -- :doc insert or update image data for a given issue's github comment
-INSERT INTO issue_comment (issue_id, png_data)
-VALUES (:issue_id, :png_data)
-ON CONFLICT (issue_id) DO UPDATE
+INSERT INTO issue_comment (issue_id, comment_hash, png_data)
+VALUES (:issue_id, :hash, :png_data)
+ON CONFLICT (issue_id, comment_hash) DO UPDATE
 SET png_data = :png_data
 RETURNING id;
 
@@ -410,7 +410,8 @@ RETURNING id;
 -- :doc retrieve image data for given issue's github comment
 SELECT png_data
 FROM issue_comment
-WHERE issue_id = :issue_id;
+WHERE issue_id = :issue_id
+AND comment_hash = :hash;
 
 
 -- :name top-hunters :? :*

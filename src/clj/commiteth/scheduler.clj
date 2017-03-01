@@ -21,20 +21,24 @@
       (log/info "transaction receipt for issue #" issue-id ": " receipt)
       (when-let [contract-address (:contractAddress receipt)]
         (let [issue   (issues/update-contract-address issue-id contract-address)
-              {owner        :login
+              {owner        :owner
                repo         :repo
                issue-number :issue_number} issue
-              balance (eth/get-balance-eth contract-address 4)
-              issue-url (str owner "/" repo "/issues/" (str issue-number))]
+              balance-str (eth/get-balance-eth contract-address 8)
+              balance (read-string balance-str)]
           (bounties/update-bounty-comment-image issue-id
-                                                issue-url
+                                                owner
+                                                repo
+                                                issue-number
                                                 contract-address
-                                                balance)
+                                                balance
+                                                balance-str)
           (->> (github/post-comment owner
                                     repo
                                     issue-number
                                     contract-address
-                                    balance)
+                                    balance
+                                    balance-str)
                :id
                (issues/update-comment-id issue-id)))))))
 
@@ -92,7 +96,7 @@
 (defn update-balances
   []
   (doseq [{contract-address :contract_address
-           owner            :login
+           owner            :owner
            repo             :repo
            comment-id       :comment_id
            issue-id         :issue_id
@@ -100,22 +104,25 @@
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
       (let [current-balance-eth-str (eth/get-balance-eth contract-address 8)
-            current-balance-eth (read-string current-balance-eth-str)
-            issue-url (str owner "/" repo "/issues/" (str issue-number))]
-        (log/debug "update-balances" current-balance-eth current-balance-eth-str issue-url)
-        (log/debug (type old-balance) (type current-balance-eth))
+            current-balance-eth (read-string current-balance-eth-str)]
+        (log/debug "update-balances" current-balance-eth
+                   current-balance-eth-str owner repo issue-number)
         (when-not (float= old-balance current-balance-eth)
           (log/debug "balances differ")
           (issues/update-balance contract-address current-balance-eth)
           (bounties/update-bounty-comment-image issue-id
-                                                issue-url
+                                                owner
+                                                repo
+                                                issue-number
                                                 contract-address
+                                                current-balance-eth
                                                 current-balance-eth-str)
           (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number
                                  contract-address
+                                 current-balance-eth
                                  current-balance-eth-str))))))
 
 (def scheduler-thread-name "SCHEDULER_THREAD")

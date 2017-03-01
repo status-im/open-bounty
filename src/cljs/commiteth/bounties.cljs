@@ -4,7 +4,7 @@
 
 
 
-(defn pr-url [{owner :owner_login
+(defn pr-url [{owner :owner
                pr-number :pr_number
                repo :repo_name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
@@ -49,7 +49,6 @@
   (if (empty? bounties)
     [:div.ui.text "No items"]
     (into [:div.activity-item-container]
-
           (for [bounty bounties
                 claim (:claims bounty)]
             ;; TODO: for paid bounties, only show the winning claim

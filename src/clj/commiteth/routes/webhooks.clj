@@ -45,10 +45,8 @@
   (log/debug "handle-issue-labeled")
   (let [{issue :issue} webhook-payload
         {repo-id :id
-         repo-name :name
-         {login :login} :owner} (:repository webhook-payload)
-        repo-map {:repo repo-name :login login :repo_id repo-id}]
-    (bounties/add-bounty-for-issue repo-name repo-id login issue)))
+         repo-name :name} (:repository webhook-payload)]
+    (bounties/add-bounty-for-issue repo-name repo-id issue)))
 
 (defn handle-issue-closed
   ;; TODO: does not work in case the issue is closed on github web ui
@@ -56,7 +54,8 @@
     {issue-id :id issue-number :number} :issue}]
   (log/debug "handle-issue-closed" owner repo issue-number issue-id)
   (when-let [commit-sha (find-commit-sha owner repo issue-number ["referenced" "closed"])]
-    (log/debug (format "Issue %s/%s/%s closed with commit %s" owner repo issue-number commit-sha))
+    (log/debug (format "Issue %s/%s/%s closed with commit %s"
+                       owner repo issue-number commit-sha))
     (log/info "NOT considering event as bounty winner")
     ;; TODO: disabled for now since the system is meant to be used
     ;;  exclusively via pull requests. issue closed event without a PR

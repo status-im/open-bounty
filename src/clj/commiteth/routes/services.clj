@@ -33,50 +33,53 @@
   (update-in acc [:letks] into [binding `(:identity ~'+compojure-api-request+)]))
 
 
-(defn enable-repo [repo-id repo full-repo login token]
+(defn enable-repo [repo-id repo full-repo token]
   (log/debug "enable-repo" repo-id repo)
+  (when (github/webhook-exists? full-repo token)
+    (github/remove-our-webhooks full-repo token))
+
   (let [hook-secret (random/base64 32)]
-    (try
-      (repositories/update-repo repo-id {:state 1
-                                         :hook_secret hook-secret})
-      (let [created-hook (github/add-webhook full-repo token hook-secret)]
-        (log/debug "Created webhook:" created-hook)
-        (github/create-label full-repo token)
-        (repositories/update-repo repo-id {:state 2
-                                           :hook_id (:id created-hook)})
-        (bounties/add-bounties-for-existing-issues repo repo-id login))
-      (catch Exception e
-        (log/info "exception when creating webhook" (.getMessage e) e)
-        (repositories/update-repo repo-id {:state -1})))))
+    (repositories/update-repo repo-id {:state 1
+                                       :hook_secret hook-secret})
+    (let [created-hook (github/add-webhook full-repo token hook-secret)]
+      (log/debug "Created webhook:" created-hook)
+      (repositories/update-repo repo-id {:hook_id (:id created-hook)})))
+  (github/create-label full-repo token)
+  (repositories/update-repo repo-id {:state 2})
+  (bounties/add-bounties-for-existing-issues full-repo))
 
 
 (defn disable-repo [repo-id full-repo hook-id token]
   (log/debug "disable-repo" repo-id full-repo)
-  (do
-    (github/remove-webhook full-repo hook-id token)
-    (repositories/update-repo repo-id {:hook_secret ""
-                                       :state 0
-                                       :hook_id nil})))
+  (github/remove-webhook full-repo hook-id token)
+  (repositories/update-repo repo-id {:hook_secret ""
+                                     :state 0
+                                     :hook_id nil}))
 
 
 (defn handle-toggle-repo [user params]
   (log/debug "handle-toggle-repo" user params)
   (let [{token   :token
-         login   :login
-         user-id :id} user
-        {repo-id :id
-         full-repo :full_name
-         repo    :name} params
-        [owner _] (str/split full-repo #"/")
-        db-item (repositories/create (merge params {:user_id user-id
-                                                    :login owner}))
-        is-enabled (= 2 (:state db-item))]
-    (if is-enabled
-      (disable-repo repo-id full-repo (:hook_id db-item) token)
-      (enable-repo repo-id repo full-repo login token))
-    (merge
-     {:enabled (not is-enabled)}
-     (select-keys params [:id :full_name]))))
+           user-id :id} user
+          {repo-id :id
+           full-repo :full_name
+           repo    :name} params
+          [owner _] (str/split full-repo #"/")]
+    (try
+      (let [db-item (repositories/create (merge params {:user_id user-id
+                                                        :owner owner}))
+            is-enabled (= 2 (:state db-item))]
+        (if is-enabled
+          (disable-repo repo-id full-repo (:hook_id db-item) token)
+          (enable-repo repo-id repo full-repo token))
+        (ok (merge
+             {:enabled (not is-enabled)}
+             (select-keys params [:id :full_name]))))
+      (catch Exception e
+        (log/info "exception when enabling repo "
+                    (.getMessage e))
+        (repositories/update-repo repo-id {:state -1})
+        (internal-server-error)))))
 
 (defn in? [coll elem]
   (some #(= elem %) coll))
@@ -198,4 +201,4 @@
                     (POST "/repository/toggle" {:keys [params]}
                           :auth-rules authenticated?
                           :current-user user
-                          (ok (handle-toggle-repo user params))))))
+                          (handle-toggle-repo user params)))))

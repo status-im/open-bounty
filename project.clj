@@ -43,7 +43,8 @@
                  [mpg "1.3.0"]
                  [pandect "0.6.1"]
                  [prismatic/plumbing "0.5.3"]
-                 [cljsjs/moment "2.17.1-0"]]
+                 [cljsjs/moment "2.17.1-0"]
+                 [org.clojure/tools.nrepl "0.2.12"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
@@ -58,7 +59,8 @@
             [migratus-lein "0.4.1"]
             [lein-cljsbuild "1.1.3"]
             [lein-auto "0.1.2"]
-            [lein-less "1.7.5"]]
+            [lein-less "1.7.5"]
+            [cider/cider-nrepl "0.15.0-SNAPSHOT"]]
 
 
   :less {:source-paths ["src/less"]
@@ -77,9 +79,7 @@
 
 
   :profiles
-  {:uberjar       {:dependencies [[org.clojure/tools.nrepl "0.2.12"]]
-                   :plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT"]]
-                   :omit-source    true
+  {:uberjar       {:omit-source    true
                    :prep-tasks     ["compile" ["cljsbuild" "once" "min"]]
                    :cljsbuild
                    {:builds

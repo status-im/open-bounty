@@ -4,13 +4,15 @@
             [clojure.tools.logging :as log]))
 
 (defn save-image!
-  [issue-id png-data]
+  [issue-id hash png-data]
   (jdbc/with-db-connection [con-db *db*]
     (db/save-issue-comment-image! con-db
                                   {:issue_id issue-id
+                                   :hash hash
                                    :png_data png-data})))
 
 (defn get-image-data
-  [issue-id]
+  [issue-id hash]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-issue-comment-image con-db {:issue_id issue-id})))
+    (db/get-issue-comment-image con-db {:issue_id issue-id
+                                        :hash hash})))

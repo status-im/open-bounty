@@ -14,10 +14,10 @@
                                                      :name :repo})
                                        (merge {:state 0})))
      (db/get-repo {:repo (:name repo)
-                   :login (:login repo)}))))
+                   :owner (:owner repo)}))))
 
 (defn get-enabled
-  "Lists enabled repositories ids for a given login"
+  "Lists enabled repository id's for a given user-id"
   [user-id]
   (->>
     (jdbc/with-db-connection [con-db *db*]
@@ -34,6 +34,7 @@
 (defn get-repo
   "Get a repo from DB given it's full name (owner/repo-name)"
   [full-name]
-  (let [[login repo-name] (str/split full-name #"/")]
+  (let [[owner repo-name] (str/split full-name #"/")]
     (jdbc/with-db-connection [con-db *db*]
-      (db/get-repo {:login login :repo repo-name}))))
+      (db/get-repo {:owner owner
+                    :repo repo-name}))))

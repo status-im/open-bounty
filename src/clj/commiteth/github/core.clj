@@ -5,6 +5,7 @@
             [tentacles.issues :as issues]
             [tentacles.core :as tentacles]
             [ring.util.codec :as codec]
+            [commiteth.config :refer [env]]
             [clj-http.client :as http]
             [commiteth.config :refer [env]]
             [digest :refer [sha-256]]
@@ -93,11 +94,47 @@
      first
      :email)))
 
+(defn our-webhooks
+  [owner repo token]
+  (let [hooks (repos/hooks owner repo (auth-params token))
+        url-base (:server-address env)]
+    (log/debug "url-base" url-base)
+    (filter (fn [{{url :url} :config}] (str/starts-with? url url-base))
+         hooks)))
+
+
+(defn webhook-exists?
+  "Returns true if a webhook starting with our server url exists"
+  [full-repo token]
+  (let [[owner repo] (str/split full-repo #"/")
+        hooks (our-webhooks owner repo token)]
+    (not-empty hooks)))
+
+
+(defn remove-webhook
+  [full-repo hook-id token]
+  ;; TODO: possible error ignored
+  (let [[owner repo] (str/split full-repo #"/")]
+    (log/debug "removing webhook" (str owner "/" repo) hook-id token)
+    (repos/delete-hook owner repo hook-id (auth-params token))))
+
+
+(defn remove-our-webhooks
+  "Removes webhooks created by us for given repo"
+  [full-repo token]
+  (let [[owner repo] (str/split full-repo #"/")
+        hooks (our-webhooks owner repo token)]
+    (doall
+     (map (fn [{hook-id :id}]
+            (remove-webhook full-repo hook-id token))
+          hooks))))
+
+
 (defn add-webhook
   [full-repo token secret]
   (log/debug "adding webhook" full-repo token)
-  (let [[user repo] (str/split full-repo #"/")]
-    (repos/create-hook user repo "web"
+  (let [[owner repo] (str/split full-repo #"/")]
+    (repos/create-hook owner repo "web"
                        {:url          (str (server-address) "/webhook")
                         :secret secret
                         :content_type "json"}
@@ -105,21 +142,15 @@
                               {:events ["issues", "issue_comment", "pull_request"]
                                :active true}))))
 
-(defn remove-webhook
-  [full-repo hook-id token]
-  ;; TODO: possible error ignored
-  (let [[user repo] (str/split full-repo #"/")]
-    (log/debug "removing webhook" (str user "/" repo) hook-id token)
-    (repos/delete-hook user repo hook-id (auth-params token))))
 
 (defn github-comment-hash
-  [user repo issue-number]
-  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" user repo issue-number)))
+  [owner repo issue-number balance]
+  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" owner repo issue-number balance)))
 
 (defn- get-qr-url
-  [user repo issue-number]
-  (let [hash (github-comment-hash user repo issue-number)]
-    (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" user repo issue-number hash))))
+  [owner repo issue-number balance]
+  (let [hash (github-comment-hash owner repo issue-number balance)]
+    (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" owner repo issue-number hash))))
 
 (defn- md-url
   ([text url]
@@ -132,20 +163,20 @@
   (str "!" (md-url alt src)))
 
 (defn generate-comment
-  [user repo issue-number contract-address balance]
-  (let [image-url (md-image "QR Code" (get-qr-url user repo issue-number))
-        balance   (str balance " ETH")
+  [owner repo issue-number contract-address balance balance-str]
+  (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number balance))
+        balance   (str balance-str " ETH")
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s\n"
                  "Contract address: %s\n"
                  "%s\n%s")
-            balance contract-address image-url site-url)))
+            balance-str contract-address image-url site-url)))
 
 (defn post-comment
-  [user repo issue-number contract-address balance]
-  (let [comment (generate-comment user repo issue-number contract-address balance)]
-    (log/debug "Posting comment to" (str user "/" repo "/" issue-number) ":" comment)
-    (issues/create-comment user repo issue-number comment (self-auth-params))))
+  [owner repo issue-number contract-address balance balance-str]
+  (let [comment (generate-comment owner repo issue-number contract-address balance balance-str)]
+    (log/debug "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
+    (issues/create-comment owner repo issue-number comment (self-auth-params))))
 
 (defn make-patch-request [end-point positional query]
   (let [{:keys [auth oauth-token]
@@ -166,30 +197,30 @@
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
 (defn update-comment
-  [user repo comment-id issue-number contract-address balance]
-  (let [comment (generate-comment user repo issue-number contract-address balance)]
-    (log/debug (str "Updating " user "/" repo "/" issue-number
+  [owner repo comment-id issue-number contract-address balance]
+  (let [comment (generate-comment owner repo issue-number contract-address balance)]
+    (log/debug (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
-                                  [user repo comment-id]
+                                  [owner repo comment-id]
                                   (assoc (self-auth-params) :body comment))]
       (tentacles/safe-parse (http/request req)))))
 
 (defn get-issue
-  [user repo issue-number]
-  (issues/specific-issue user repo issue-number (self-auth-params)))
+  [owner repo issue-number]
+  (issues/specific-issue owner repo issue-number (self-auth-params)))
 
 (defn get-issues
-  [user repo]
-  (issues/issues user repo))
+  [owner repo]
+  (issues/issues owner repo))
 
 
 (defn get-issue-events
-  [user repo issue-number]
-  (issues/issue-events user repo issue-number (self-auth-params)))
+  [owner repo issue-number]
+  (issues/issue-events owner repo issue-number (self-auth-params)))
 
 (defn create-label
   [full-repo token]
-  (let [[user repo] (str/split full-repo #"/")]
-    (log/debug "creating bounty label" (str user "/" repo) token)
-    (issues/create-label user repo "bounty" "fafad2" (auth-params token))))
+  (let [[owner repo] (str/split full-repo #"/")]
+    (log/debug "creating bounty label" (str owner "/" repo) token)
+    (issues/create-label owner repo "bounty" "fafad2" (auth-params token))))
