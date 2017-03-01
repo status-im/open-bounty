@@ -28,5 +28,5 @@
     (-> (js/moment.utc)
         (.to js-time))))
 
-(defn issue-url [repo number]
-  (str "https://github.com/" repo "/issues/" number))
+(defn issue-url [owner repo number]
+  (str "https://github.com/" owner "/" repo "/issues/" number))

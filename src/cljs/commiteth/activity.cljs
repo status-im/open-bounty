@@ -9,12 +9,12 @@
                                 balance
                                 issue-title
                                 item-type
+                                repo-owner
                                 repo-name
                                 issue-number] :as item}]
   (let [issue-link [:a
-                    {:href (issue-url repo-name issue-number)}
+                    {:href (issue-url repo-owner repo-name issue-number)}
                     issue-title]]
-    (println item)
     (case item-type
       "new-bounty" [:p "Opened a bounty for " issue-link]
       "claim-payout" [:p "Received " [:span.balance "ETH " balance]
