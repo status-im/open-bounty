@@ -12,25 +12,26 @@
   (context "/qr" []
            (GET "/:owner/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [owner repo issue hash]
                 (log/debug "qr PNG GET" owner repo issue hash)
-                (when-let [{address      :contract_address
+                (if-let [{address      :contract_address
                             repo         :repo
                             issue-id     :issue_id
                             balance      :balance}
                            (bounties/get-bounty owner
                                                 repo
                                                 (Integer/parseInt issue))]
-                  (log/debug "address:" address)
-                  (log/debug owner repo issue balance)
-                  (log/debug hash (github/github-comment-hash owner repo issue balance))
-                  (if (and address
-                           ;; TODO: temporarily disabled, for some reason hash is sometimes different (perhaps balance data type)
-                           #_(= hash (github/github-comment-hash owner repo issue balance)))
-                    (let [{png-data :png_data} (comment-images/get-image-data issue-id hash)
-                          image-byte-stream  (ByteArrayInputStream. png-data)
-                          response  {:status 200
-                                     :content-type "image/png"
-                                     :headers {"cache-control" "no-cache"}
-                                     :body image-byte-stream}]
-                      (log/debug "response" response)
-                      response)
-                    (bad-request))))))
+                  (do
+                    (log/debug "address:" address)
+                    (log/debug owner repo issue balance)
+                    (log/debug hash (github/github-comment-hash owner repo issue balance))
+                    (if (and address
+                            (= hash (github/github-comment-hash owner repo issue balance)))
+                      (if-let [{png-data :png_data}
+                               (comment-images/get-image-data
+                                issue-id hash)]
+                        (do (log/debug "PNG found")
+                            {:status 200
+                             :content-type "image/png"
+                             :headers {"cache-control" "no-cache"}
+                             :body (ByteArrayInputStream. png-data)})
+                        (log/debug "PNG not found"))))
+                  (bad-request)))))

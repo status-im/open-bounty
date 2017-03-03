@@ -197,8 +197,8 @@
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
 (defn update-comment
-  [owner repo comment-id issue-number contract-address balance]
-  (let [comment (generate-comment owner repo issue-number contract-address balance)]
+  [owner repo comment-id issue-number contract-address balance balance-str]
+  (let [comment (generate-comment owner repo issue-number contract-address balance balance-str)]
     (log/debug (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
