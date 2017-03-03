@@ -44,7 +44,8 @@
                  [pandect "0.6.1"]
                  [prismatic/plumbing "0.5.3"]
                  [cljsjs/moment "2.17.1-0"]
-                 [org.clojure/tools.nrepl "0.2.12"]]
+                 [org.clojure/tools.nrepl "0.2.12"]
+                 [com.cemerick/piggieback "0.2.2-SNAPSHOT"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
@@ -131,7 +132,8 @@
            :doo            {:build "test"}
            :source-paths   ["env/dev/clj" "test/clj"]
            :resource-paths ["env/dev/resources"]
-           :repl-options   {:init-ns user}
+           :repl-options   {:init-ns user
+                            :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
    :test  {:resource-paths ["env/dev/resources" "env/test/resources"]

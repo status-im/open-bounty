@@ -187,6 +187,7 @@
            :url        "/api/user/repository/toggle"
            :on-success #(dispatch [:repo-toggle-success %])
            :on-error #(dispatch [:repo-toggle-error repo %])
+           :finally  #(println "finally" %)
            :params     (select-keys repo [:id :owner :full_name :name])}}))
 
 
@@ -207,7 +208,10 @@
                                             (:full_name repo)
                                             {:busy? false}))
     :dispatch [:set-flash-message
-               :error (str "Failed to toggle repo: " (:status-text response))]}))
+               :error (if (= 400 (:status response))
+                             (:response response)
+                             (str "Failed to toggle repo: "
+                                  (:status-text response)))]}))
 
 
 (reg-event-fx
@@ -281,12 +285,12 @@
  :payout-confirmed
  (fn [db [_ issue-id]]
    (-> db
-       (dissoc-in [:owner-bounties (:issue_id issue) :confirming?] false)
-       (assoc-in [:owner-bounties (:issue_id issue) :confirmed?] true))))
+       (dissoc-in [:owner-bounties (:issue_id issue-id) :confirming?])
+       (assoc-in [:owner-bounties (:issue_id issue-id) :confirmed?] true))))
 
 (reg-event-db
  :payout-confirm-failed
  (fn [db [_ issue-id]]
    (-> db
-       (dissoc-in [:owner-bounties (:issue_id issue) :confirming?] false)
-       (assoc-in [:owner-bounties (:issue_id issue) :confirm-failed?] true))))
+       (dissoc-in [:owner-bounties (:issue_id issue-id) :confirming?])
+       (assoc-in [:owner-bounties (:issue_id issue-id) :confirm-failed?] true))))

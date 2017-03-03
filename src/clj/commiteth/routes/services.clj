@@ -64,22 +64,26 @@
           {repo-id :id
            full-repo :full_name
            repo    :name} params
-          [owner _] (str/split full-repo #"/")]
-    (try
-      (let [db-item (repositories/create (merge params {:user_id user-id
-                                                        :owner owner}))
-            is-enabled (= 2 (:state db-item))]
-        (if is-enabled
-          (disable-repo repo-id full-repo (:hook_id db-item) token)
-          (enable-repo repo-id repo full-repo token))
-        (ok (merge
-             {:enabled (not is-enabled)}
-             (select-keys params [:id :full_name]))))
-      (catch Exception e
-        (log/info "exception when enabling repo "
+        [owner _] (str/split full-repo #"/")
+        db-user (users/get-user (:id user))]
+    (if (empty? (:address db-user))
+      {:status 400
+       :body "Please add your ethereum address to your profile first"}
+      (try
+        (let [db-item (repositories/create (merge params {:user_id user-id
+                                                          :owner owner}))
+              is-enabled (= 2 (:state db-item))]
+          (if is-enabled
+            (disable-repo repo-id full-repo (:hook_id db-item) token)
+            (enable-repo repo-id repo full-repo token))
+          (ok (merge
+               {:enabled (not is-enabled)}
+               (select-keys params [:id :full_name]))))
+        (catch Exception e
+          (log/info "exception when enabling repo "
                     (.getMessage e))
-        (repositories/update-repo repo-id {:state -1})
-        (internal-server-error)))))
+          (repositories/update-repo repo-id {:state -1})
+          (internal-server-error))))))
 
 (defn in? [coll elem]
   (some #(= elem %) coll))

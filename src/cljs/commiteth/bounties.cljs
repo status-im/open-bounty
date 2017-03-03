@@ -46,6 +46,7 @@
 
 
 (defn claim-list [bounties]
+  ;; TODO: exclude bounties with no claims
   (if (empty? bounties)
     [:div.ui.text "No items"]
     (into [:div.activity-item-container]

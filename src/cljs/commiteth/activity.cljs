@@ -16,11 +16,11 @@
                     {:href (issue-url repo-owner repo-name issue-number)}
                     issue-title]]
     (case item-type
-      "new-bounty" [:p "Opened a bounty for " issue-link]
-      "claim-payout" [:p "Received " [:span.balance "ETH " balance]
+      "new-bounty" [:div "Opened a bounty for " issue-link]
+      "claim-payout" [:div "Received " [:span.balance "ETH " balance]
                       " for " issue-link]
-      "open-claim" [:p "Submitted a claim for " issue-link]
-      "balance-update" [:p issue-link " bounty increased to "
+      "open-claim" [:div "Submitted a claim for " issue-link]
+      "balance-update" [:div issue-link " bounty increased to "
                         [:div.balance balance]]
       "")))
 
