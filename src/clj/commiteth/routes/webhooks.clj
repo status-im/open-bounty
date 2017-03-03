@@ -147,19 +147,19 @@
                   (log/info "PR with reference to bounty issue"
                             bounty-issue-number "opened")
                   (pull-requests/save (merge pr-data {:state :opened
-                                                      :commit-sha head-sha})))
+                                                      :commit_sha head-sha})))
         :closed (if merged?
                   (do (log/info "PR with reference to bounty issue"
                                 bounty-issue-number "merged")
                       (pull-requests/save
                        (merge pr-data {:state :merged
-                                       :commit-sha head-sha}))
+                                       :commit_sha head-sha}))
                       (issues/update-commit-sha (:id issue) head-sha))
                   (do (log/info "PR with reference to bounty issue"
                                 bounty-issue-number "closed with no merge")
                       (pull-requests/save
                        (merge pr-data {:state :closed
-                                       :commit-sha head-sha}))))))))
+                                       :commit_sha head-sha}))))))))
 
 
 (defn handle-issue
