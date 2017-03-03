@@ -6,9 +6,10 @@
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
             [clojure.tools.logging :as log]
-            [mount.core :as mount])
-  (:import [sun.misc ThreadGroupUtils]
-           [java.lang.management ManagementFactory]))
+            [mount.core :as mount]
+            [clj-time.core :as t]
+            [clj-time.periodic :refer [periodic-seq]]
+            [chime :refer [chime-at]]))
 
 (defn update-issue-contract-address
   "For each pending deployment: gets transaction receipt, updates db
@@ -125,48 +126,24 @@
                                  current-balance-eth
                                  current-balance-eth-str))))))
 
-(def scheduler-thread-name "SCHEDULER_THREAD")
 
-(defn get-thread-by-name
-  [name]
-  (let [root          (ThreadGroupUtils/getRootThreadGroup)
-        threads-count (.getThreadCount (ManagementFactory/getThreadMXBean))
-        threads       ^"[Ljava.lang.Thread;" (make-array Thread threads-count)]
-    (.enumerate root threads true)
-    (first (filter #(= name (.getName %)) threads))))
+(defn run-periodic-tasks [time]
+  (do
+    (log/debug "run-periodic-tasks" time)
+    (update-issue-contract-address)
+    (update-confirm-hash)
+    (update-payout-receipt)
+    (self-sign-bounty)
+    (update-balances)))
 
-(defn every
-  [ms tasks]
-  (.start (new Thread
-               (fn []
-                 (while (not (.isInterrupted (Thread/currentThread)))
-                   (do (try
-                         (Thread/sleep ms)
-                         (catch InterruptedException _
-                           (.interrupt (Thread/currentThread))))
-                       (doseq [task tasks]
-                         (try (task)
-                              (catch Exception e (log/error e)))))))
-               scheduler-thread-name)))
-
-(defn stop-scheduler []
-  (when-let [scheduler (get-thread-by-name scheduler-thread-name)]
-    (log/debug "Stopping scheduler thread")
-    (.interrupt scheduler)))
-
-(defn restart-scheduler [ms tasks]
-  (stop-scheduler)
-  (log/debug "Starting scheduler thread")
-  (while (get-thread-by-name scheduler-thread-name)
-    (log/debug "Waiting")
-    (Thread/sleep 1))
-  (every ms tasks))
 
 (mount/defstate scheduler
-  :start (restart-scheduler 60000
-                            [update-issue-contract-address
-                             update-confirm-hash
-                             update-payout-receipt
-                             self-sign-bounty
-                             update-balances])
-  :stop (stop-scheduler))
+  :start (let [every-minute (rest
+                             (periodic-seq (t/now)
+                                           (-> 1 t/minutes)))
+               stop-fn (chime-at every-minute run-periodic-tasks)]
+           (log/info "started scheduler")
+           stop-fn)
+  :stop (do
+          (log/info "stopping scheduler")
+          (scheduler)))

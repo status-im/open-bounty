@@ -45,7 +45,8 @@
                  [prismatic/plumbing "0.5.3"]
                  [cljsjs/moment "2.17.1-0"]
                  [org.clojure/tools.nrepl "0.2.12"]
-                 [com.cemerick/piggieback "0.2.2-SNAPSHOT"]]
+                 [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
+                 [jarohen/chime "0.2.0"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
