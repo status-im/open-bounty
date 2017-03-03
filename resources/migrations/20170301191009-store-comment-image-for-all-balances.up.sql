@@ -1,6 +1,8 @@
 
 ALTER TABLE "public"."issue_comment"
-ADD COLUMN "comment_hash" varchar(64)
+ADD COLUMN "comment_hash" varchar(64);
+
+ALTER TABLE "public"."issue_comment"
 ADD UNIQUE ("comment_hash");
 
 ALTER TABLE "public"."issue_comment"
