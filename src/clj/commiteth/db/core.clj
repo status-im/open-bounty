@@ -26,7 +26,9 @@
                          :migration-table-name "schema_migrations"
                          :db db}]
     (migratus/migrate migratus-config)
-    (conman/connect! {:jdbc-url db})))
+    (conman/bind-connection db "sql/queries.sql")
+    (conman/connect! {:jdbc-url db})
+    db))
 
 (defstate ^:dynamic *db*
   :start (start)
