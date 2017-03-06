@@ -50,9 +50,11 @@
            issue-id         :issue_id
            payout-address   :payout_address} (db-bounties/pending-bounties-list)
           :let [value (eth/get-balance-hex contract-address)]]
-    (->>
-     (wallet/execute contract-address payout-address value)
-     (db-bounties/update-execute-hash issue-id))))
+    (if (empty? payout-address)
+      (log/error "Cannot sign pending bounty - winner has no payout address")
+      (->>
+       (wallet/execute contract-address payout-address value)
+       (db-bounties/update-execute-hash issue-id)))))
 
 (defn update-confirm-hash
   "Gets transaction receipt for each pending payout and updates confirm_hash"
