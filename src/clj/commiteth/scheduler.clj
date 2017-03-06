@@ -134,14 +134,19 @@
     (update-confirm-hash)
     (update-payout-receipt)
     (self-sign-bounty)
-    (update-balances)))
+    (update-balances)
+    (log/debug "run-periodic-tasks done")))
 
 
 (mount/defstate scheduler
   :start (let [every-minute (rest
                              (periodic-seq (t/now)
                                            (-> 1 t/minutes)))
-               stop-fn (chime-at every-minute run-periodic-tasks)]
+               stop-fn (chime-at every-minute
+                                 run-periodic-tasks
+                                 {:error-handler (fn [e]
+                                                   (log/error "Scheduled task failed" e)
+                                                   (throw e))})]
            (log/info "started scheduler")
            stop-fn)
   :stop (do

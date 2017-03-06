@@ -12,7 +12,7 @@
             [commiteth.util.digest :refer [hex-hmac-sha1]]
             [compojure.core :refer [defroutes POST]]
             [crypto.equality :as crypto]
-            [ring.util.http-response :refer [ok]]
+            [ring.util.http-response :refer [ok forbidden]]
             [commiteth.db.bounties :as bounties-db])
   (:import java.lang.Integer))
 
@@ -194,8 +194,10 @@
 
 (defroutes webhook-routes
   (POST "/webhook" {:keys [headers body]}
+        (log/debug "webhook POST, headers" headers)
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
+          (log/debug "webhook POST, payload" payload)
           (if (validate-secret payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK")
@@ -203,4 +205,5 @@
               (case (get headers "x-github-event")
                 "issues" (handle-issue payload)
                 "pull_request" (handle-pull-request payload)
-                (ok)))))))
+                (ok)))
+            (forbidden)))))
