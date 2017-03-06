@@ -99,7 +99,7 @@
   (let [hooks (repos/hooks owner repo (auth-params token))
         url-base (:server-address env)]
     (log/debug "url-base" url-base)
-    (filter (fn [{{url :url} :config}] (str/starts-with? url url-base))
+    (filter (fn [{{url :url} :config}] (and url (str/starts-with? url url-base)))
          hooks)))
 
 
