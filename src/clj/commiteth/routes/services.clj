@@ -13,6 +13,7 @@
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]
+            [commiteth.config :refer [env]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]))
@@ -141,11 +142,12 @@
 
 
 (defapi service-routes
-  {:swagger {:ui   "/swagger-ui"
-             :spec "/swagger.json"
-             :data {:info {:version     "0.1"
-                           :title       "commitETH API"
-                           :description "commitETH API"}}}}
+  (when (:dev env)
+    {:swagger {:ui   "/swagger-ui"
+               :spec "/swagger.json"
+               :data {:info {:version     "0.1"
+                             :title       "commitETH API"
+                             :description "commitETH API"}}}})
 
   (context "/api" []
            (GET "/top-hunters" []

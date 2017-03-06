@@ -15,7 +15,7 @@
   [["-p" "--port PORT" "Port number"
     :parse-fn #(Integer/parseInt %)]])
 
-(mount/defstate ^{:on-reload :noop}
+(mount/defstate
 http-server
   :start
   (http/start
