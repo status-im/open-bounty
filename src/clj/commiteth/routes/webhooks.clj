@@ -13,7 +13,8 @@
             [compojure.core :refer [defroutes POST]]
             [crypto.equality :as crypto]
             [ring.util.http-response :refer [ok forbidden]]
-            [commiteth.db.bounties :as bounties-db])
+            [commiteth.db.bounties :as bounties-db]
+            [clojure.string :as string])
   (:import java.lang.Integer))
 
 (defn find-issue-event
@@ -187,9 +188,10 @@
 (defn validate-secret [webhook-payload raw-payload github-signature]
   (let [full-name (get-in webhook-payload [:repository :full_name])
         repo (repos/get-repo full-name)
-        secret (:hook_secret repo)
-        signature (str "sha1=" (hex-hmac-sha1 secret raw-payload))]
-    (crypto/eq? signature github-signature)))
+        secret (:hook_secret repo)]
+    (and (not (string/blank? secret))
+         (crypto/eq? github-signature
+                     (str "sha1=" (hex-hmac-sha1 secret raw-payload))))))
 
 
 (defroutes webhook-routes
