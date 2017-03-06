@@ -23,17 +23,24 @@
          issue-number :number
          issue-title  :title} issue
         created-issue (issues/create repo-id issue-id issue-number issue-title)
-        repo-owner-address    (:address (users/get-repo-owner repo-id))]
-    (log/debug "Adding bounty for issue " repo issue-number "owner address: " repo-owner-address)
+        {owner-address :address
+         owner :owner} (users/get-repo-owner repo-id)]
+    (log/debug "Adding bounty for issue " repo issue-number "owner address: " owner-address)
     (if (= 1 created-issue)
-      (if (empty? repo-owner-address)
+      (if (empty? owner-address)
         (log/error "Unable to deploy bounty contract because"
                    "repo owner has no Ethereum addres")
         (do
-          (log/debug "deploying contract to " repo-owner-address)
-          (let [transaction-hash (eth/deploy-contract repo-owner-address)]
+          (->> (github/post-deploying-comment owner
+                                              repo
+                                              issue-number)
+               :id
+               (issues/update-comment-id issue-id))
+          (log/debug "Posting dep")
+          (log/debug "deploying contract to " owner-address)
+          (let [transaction-hash (eth/deploy-contract owner-address)]
             (if (nil? transaction-hash)
-              (log/error "Failed to deploy contract to" repo-owner-address)
+              (log/error "Failed to deploy contract to" owner-address)
               (log/info "Contract deployed, transaction-hash:"
                         transaction-hash ))
             (issues/update-transaction-hash issue-id transaction-hash))))

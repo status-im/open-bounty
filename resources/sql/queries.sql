@@ -147,6 +147,7 @@ WITH t AS (
       i.title            AS title,
       i.transaction_hash AS transaction_hash,
       i.contract_address AS contract_address,
+      i.comment_id       AS comment_id,
       i.repo_id          AS repo_id,
       r.owner            AS owner,
       r.repo             AS repo
@@ -159,7 +160,7 @@ SET contract_address = :contract_address,
 updated = timezone('utc'::text, now())
 FROM t
 WHERE i.issue_id = :issue_id
-RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, i.contract_address, t.owner, t.repo, t.repo_id;
+RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.comment_id, i.contract_address, t.owner, t.repo, t.repo_id;
 
 -- :name update-comment-id :! :n
 -- :doc updates comment-id for a given issue

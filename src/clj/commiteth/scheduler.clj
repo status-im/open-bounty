@@ -24,6 +24,7 @@
         (let [issue   (issues/update-contract-address issue-id contract-address)
               {owner        :owner
                repo         :repo
+               comment-id   :comment_id
                issue-number :issue_number} issue
               balance-str (eth/get-balance-eth contract-address 8)
               balance (read-string balance-str)]
@@ -34,14 +35,13 @@
                                                 contract-address
                                                 balance
                                                 balance-str)
-          (->> (github/post-comment owner
-                                    repo
-                                    issue-number
-                                    contract-address
-                                    balance
-                                    balance-str)
-               :id
-               (issues/update-comment-id issue-id)))))))
+          (github/update-comment owner
+                                 repo
+                                 comment-id
+                                 issue-number
+                                 contract-address
+                                 balance
+                                 balance-str))))))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"

@@ -162,6 +162,11 @@
   [alt src]
   (str "!" (md-url alt src)))
 
+
+(defn generate-deploying-comment
+  [owner repo issue-number]
+  (md-image "Contract deploying" (str (server-address) "/img/deploying_contract.png")))
+
 (defn generate-comment
   [owner repo issue-number contract-address balance balance-str]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number balance))
@@ -174,9 +179,9 @@
                  "%s")
             balance-str contract-address image-url site-url)))
 
-(defn post-comment
-  [owner repo issue-number contract-address balance balance-str]
-  (let [comment (generate-comment owner repo issue-number contract-address balance balance-str)]
+(defn post-deploying-comment
+  [owner repo issue-number]
+  (let [comment (generate-deploying-comment owner repo issue-number)]
     (log/debug "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
     (issues/create-comment owner repo issue-number comment (self-auth-params))))
 
