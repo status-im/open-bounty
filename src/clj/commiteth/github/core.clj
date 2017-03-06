@@ -169,7 +169,9 @@
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s\n"
                  "Contract address: %s\n"
-                 "%s\n%s")
+                 "%s\n"
+                 "Network: Testnet\n"
+                 "%s")
             balance-str contract-address image-url site-url)))
 
 (defn post-comment
