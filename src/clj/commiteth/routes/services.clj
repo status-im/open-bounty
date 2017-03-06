@@ -81,8 +81,7 @@
                {:enabled (not is-enabled)}
                (select-keys params [:id :full_name]))))
         (catch Exception e
-          (log/info "exception when enabling repo "
-                    (.getMessage e))
+          (log/error "exception when enabling repo" e)
           (repositories/update-repo repo-id {:state -1})
           (internal-server-error))))))
 
