@@ -176,7 +176,7 @@
                  "Contract address: %s\n"
                  "%s\n"
                  "Network: Testnet\n"
-                 "%s")
+                 "To claim this bounty sign up at %s")
             balance-str contract-address image-url site-url)))
 
 (defn post-deploying-comment
