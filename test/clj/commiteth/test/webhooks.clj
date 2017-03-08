@@ -18,5 +18,4 @@
 fixes #123
 [comment]: # (To auto-close issue on merge, please insert the related issue number after # i.e fixes #566)
 "]
-      (is (= '(123) (webhooks/extract-issue-number body title))))
-    ))
+      (is (= '(123) (webhooks/extract-issue-number body title))))))
