@@ -59,12 +59,17 @@
 (defn bounties-page []
   (let [owner-bounties (rf/subscribe [:owner-bounties])]
     (fn []
-      (let [bounties (vals @owner-bounties)
+      (let [web3 (.-web3 js/window)
+            bounties (vals @owner-bounties)
             unpaid? #(empty? (:payout_hash %))
             paid? #(not-empty (:payout_hash %))
             unpaid-bounties (filter unpaid? bounties)
             paid-bounties (filter paid? bounties)]
         [:div.ui.container
+         (when (nil? web3)
+           [:div.ui.warning.message
+            [:i.warning.icon]
+            "To sign off claims, please view Commiteth in Status, Mist or Metamask"])
          [:h3 "New claims"]
          [claim-list unpaid-bounties]
          [:h3 "Old claims"]
