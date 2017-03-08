@@ -4,7 +4,7 @@
 
 
 
-(defn pr-url [{owner :owner
+(defn pr-url [{owner :repo_owner
                pr-number :pr_number
                repo :repo_name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
