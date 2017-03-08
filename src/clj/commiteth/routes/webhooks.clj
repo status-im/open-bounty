@@ -80,7 +80,8 @@
 
 (defn extract-issue-number
   [pr-body pr-title]
-  (let [extract (fn [source]
+  (let [cleaned-body (str/replace pr-body #"(?m)^\[comment.*$" "")
+        extract (fn [source]
                   (mapcat #(keep
                             (fn [s]
                               (try (let [issue-number (Integer/parseInt (second s))]
@@ -88,7 +89,8 @@
                                        issue-number))
                                    (catch NumberFormatException _)))
                             (re-seq % source)) keywords))]
-    (concat (extract pr-body)
+    (log/debug cleaned-body)
+    (concat (extract cleaned-body)
             (extract pr-title))))
 
 
