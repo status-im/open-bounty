@@ -1,4 +1,4 @@
-# commiteth
+# Commiteth
 
 Allows you to set bounties for Github issues, paid out in Ether.
 
@@ -41,4 +41,4 @@ Open http://localhost:3449/cards.html
 
 ## License
 
-Licensed under the [Mozilla Public License v2.0](https://github.com/status-im/commiteth/blob/master/LICENSE.md)
+Licensed under the [Affero General Public License v3.0](https://github.com/status-im/commiteth/blob/master/LICENSE.md)
