@@ -75,9 +75,7 @@
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
       (log/info "payout receipt for issue #" issue-id ": " receipt)
-      ;;TODO: not sure if saving the transaction-receipt clojure map as
-      ;; a string is a good idea
-      (db-bounties/update-payout-receipt issue-id (str receipt)))))
+      (db-bounties/update-payout-receipt issue-id receipt))))
 
 
 (defn abs

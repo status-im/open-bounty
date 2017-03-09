@@ -273,7 +273,7 @@ WHERE issue_id = :issue_id;
 -- :name update-payout-receipt :! :n
 -- :doc updates issue with payout transaction receipt
 UPDATE issues
-SET payout_receipt = :payout_receipt,
+SET payout_receipt = :payout_receipt::jsonb,
 updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 

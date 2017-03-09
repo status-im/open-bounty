@@ -54,7 +54,8 @@
 (defn update-payout-receipt
   [issue-id payout-receipt]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-payout-receipt con-db {:issue_id issue-id :payout_receipt payout-receipt})))
+    (db/update-payout-receipt con-db {:issue_id issue-id
+                                      :payout_receipt payout-receipt})))
 
 (defn get-bounty
   [owner repo issue-number]
