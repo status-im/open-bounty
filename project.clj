@@ -1,8 +1,6 @@
 (defproject commiteth "0.1.0-SNAPSHOT"
-
   :description "Ethereum bounty bot for Github"
   :url "https://commiteth.com"
-
   :dependencies [[metosin/compojure-api "1.1.10"]
                  [re-frame "0.9.1"]
                  [cljs-ajax "0.5.8"]
@@ -46,8 +44,7 @@
                  [cljsjs/moment "2.17.1-0"]
                  [org.clojure/tools.nrepl "0.2.12"]
                  [com.cemerick/piggieback "0.2.1"]
-                 [jarohen/chime "0.2.0"]
-                 [lein-sha-version "0.1.1"]]
+                 [jarohen/chime "0.2.0"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
@@ -63,7 +60,8 @@
             [lein-cljsbuild "1.1.3"]
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
-            [cider/cider-nrepl "0.14.0"]]
+            [cider/cider-nrepl "0.14.0"]
+            [lein-sha-version "0.1.1"]]
 
 
   :less {:source-paths ["src/less"]
@@ -93,8 +91,7 @@
                        :externs       ["externs/web3-externs.js"]
                        :optimizations :advanced
                        :pretty-print  false
-                       :closure-defines {goog.DEBUG false
-                                         commiteth.core/version ~(System/getProperty "commiteth.version")}
+                       :closure-defines {goog.DEBUG false}
                        :closure-warnings
                        {:externs-validation :off
                         :non-standard-jsdoc :off}}}}}
@@ -118,8 +115,7 @@
                             [sablono "0.7.7"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
                             [lein-doo "0.1.7"]
-                            [lein-figwheel "0.5.9"]
-                            [lein-sha-version "0.1.1"]]
+                            [lein-figwheel "0.5.9"]]
            :cljsbuild
            {:builds
             [{:id "app"
@@ -131,7 +127,6 @@
                :output-dir    "target/cljsbuild/public/js/out"
                :source-map    true
                :optimizations :none
-               :closure-defines {commiteth.core/version ~(System/getProperty "commiteth.version")}
                :pretty-print  true}}]}
 
            :doo            {:build "test"}

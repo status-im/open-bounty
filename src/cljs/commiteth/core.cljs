@@ -20,7 +20,7 @@
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
 
-(goog-define version "unknown")
+(defonce version js/commitethVersion)
 
 (defn flash-message-pane []
   (let [flash-message (rf/subscribe [:flash-message])]
