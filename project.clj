@@ -45,8 +45,9 @@
                  [prismatic/plumbing "0.5.3"]
                  [cljsjs/moment "2.17.1-0"]
                  [org.clojure/tools.nrepl "0.2.12"]
-                 [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
-                 [jarohen/chime "0.2.0"]]
+                 [com.cemerick/piggieback "0.2.1"]
+                 [jarohen/chime "0.2.0"]
+                 [lein-sha-version "0.1.1"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
@@ -62,7 +63,7 @@
             [lein-cljsbuild "1.1.3"]
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
-            [cider/cider-nrepl "0.15.0-SNAPSHOT"]]
+            [cider/cider-nrepl "0.14.0"]]
 
 
   :less {:source-paths ["src/less"]
@@ -92,7 +93,8 @@
                        :externs       ["externs/web3-externs.js"]
                        :optimizations :advanced
                        :pretty-print  false
-                       :closure-defines {goog.DEBUG false}
+                       :closure-defines {goog.DEBUG false
+                                         commiteth.core/version ~(System/getProperty "commiteth.version")}
                        :closure-warnings
                        {:externs-validation :off
                         :non-standard-jsdoc :off}}}}}
@@ -112,11 +114,12 @@
                             [binaryage/devtools "0.9.0"]
                             [figwheel-sidecar "0.5.9"]
                             [org.clojure/tools.nrepl "0.2.12"]
-                            [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
+                            [com.cemerick/piggieback "0.2.1"]
                             [sablono "0.7.7"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
                             [lein-doo "0.1.7"]
-                            [lein-figwheel "0.5.9"]]
+                            [lein-figwheel "0.5.9"]
+                            [lein-sha-version "0.1.1"]]
            :cljsbuild
            {:builds
             [{:id "app"
@@ -128,6 +131,7 @@
                :output-dir    "target/cljsbuild/public/js/out"
                :source-map    true
                :optimizations :none
+               :closure-defines {commiteth.core/version ~(System/getProperty "commiteth.version")}
                :pretty-print  true}}]}
 
            :doo            {:build "test"}

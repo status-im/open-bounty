@@ -20,6 +20,7 @@
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
 
+(goog-define version "unknown")
 
 (defn flash-message-pane []
   (let [flash-message (rf/subscribe [:flash-message])]
@@ -139,7 +140,9 @@
          [:div.ui.container
           [:h3 "Top hunters"]
           [top-hunters]]]]
-       [:div.ui.divider]]]]))
+       [:div.ui.divider]
+       (when-not (= "unknown" version)
+         [:div.version-footer "Commit ETH version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]]]))
 
 (secretary/set-config! :prefix "#")
 
