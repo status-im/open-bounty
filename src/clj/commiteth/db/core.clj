@@ -84,13 +84,3 @@
   (sql-value [value] (to-pg-json value))
   IPersistentVector
   (sql-value [value] (to-pg-json value)))
-
-
-
-(defn jsonb-insert-test [m]
-  (jdbc/with-db-connection [con-db *db*]
-    (jsonb-insert {:data m})))
-
-(defn jsonb-select-test []
-  (jdbc/with-db-connection [con-db *db*]
-    (jsonb-query)))
