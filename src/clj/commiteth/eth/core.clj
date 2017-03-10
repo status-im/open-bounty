@@ -14,18 +14,23 @@
 
 (defn eth-rpc
   [method params]
-  (let [body     (json/write-str {:jsonrpc "2.0"
+  (let [request-id (rand-int 4096)
+        body     (json/write-str {:jsonrpc "2.0"
                                   :method  method
                                   :params  params
-                                  :id      1})
+                                  :id      request-id})
         options  {:headers {"content-type" "application/json"}
                   :body body}
         response (:body @(post eth-rpc-url options))
         result   (json/read-str response :key-fn keyword)]
     (log/debug body "\n" result)
-    (when-let [error (:error result)]
-      (log/error "Method: " method ", error: " error))
-    (:result result)))
+    (if (= (:id result) request-id)
+      (:result result)
+      (do
+        (log/error "Geth returned an invalid json-rpc request ID,"
+                   "ignoring response")
+        (when-let [error (:error result)]
+          (log/error "Method: " method ", error: " error))))))
 
 (defn estimate-gas
   [from to value & [params]]
