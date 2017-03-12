@@ -43,6 +43,20 @@
                                  balance
                                  balance-str))))))
 
+
+(defn deploy-pending-contracts
+  "Under high-concurrency circumstances or in case geth is in defunct state, a bounty contract may not deploy successfully when the bounty label is addded to an issue. This function deploys such contracts."
+  []
+  (doseq [{issue-id :issue_id
+           owner-address :owner_address} (db-bounties/pending-contracts)]
+    (log/debug "Trying to re-deploy failed bounty contract deployment, issue-id:" issue-id)
+    (let [transaction-hash (eth/deploy-contract owner-address)]
+      (if (nil? transaction-hash)
+        (log/error "Failed to deploy contract to" owner-address)
+        (log/info "Contract deployed, transaction-hash:"
+                  transaction-hash ))
+      (issues/update-transaction-hash issue-id transaction-hash))))
+
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
   []
@@ -130,6 +144,7 @@
 (defn run-periodic-tasks [time]
   (do
     (log/debug "run-periodic-tasks" time)
+    (deploy-pending-contracts)
     (update-issue-contract-address)
     (update-confirm-hash)
     (update-payout-receipt)

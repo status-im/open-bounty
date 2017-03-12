@@ -206,6 +206,20 @@ SET
 
 -- Bounties ------------------------------------------------------------------------
 
+
+-- :name pending-contracts :? :*
+-- :doc bounty issues where deploy contract has failed
+SELECT
+  i.issue_id         AS issue_id,
+  u.address          AS owner_address
+FROM issues i, users u, repositories r
+WHERE
+r.user_id = u.id
+AND i.repo_id = r.repo_id
+AND i.transaction_hash IS NULL
+AND i.contract_address IS NULL;
+
+
 -- :name pending-bounties-list :? :*
 -- :doc lists all recently closed issues awaiting to be signed
 SELECT

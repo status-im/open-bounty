@@ -5,6 +5,11 @@
 
 
 
+(defn pending-contracts
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/pending-contracts con-db)))
+
 (defn list-owner-bounties
   [owner]
   (jdbc/with-db-connection [con-db *db*]
