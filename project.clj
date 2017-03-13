@@ -33,7 +33,7 @@
                  [clj.qrgen "0.4.0"]
                  [digest "1.4.5"]
                  [tentacles "0.5.1"]
-                 [re-frisk "0.3.2"]
+                 [re-frisk "0.4.4"]
                  [bk/ring-gzip "0.2.1"]
                  [crypto-random "1.2.0"]
                  [crypto-equality "1.0.0"]
