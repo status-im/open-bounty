@@ -141,8 +141,9 @@
           [:h3 "Top hunters"]
           [top-hunters]]]]
        [:div.ui.divider]
-       (when-not (= "unknown" version)
-         [:div.version-footer "Commit ETH version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]]]))
+       [:div.commiteth-footer "Built by " [:a {:href "https://status.im"} "Status"]
+        (when-not (= "unknown" version)
+          [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]]]]))
 
 (secretary/set-config! :prefix "#")
 

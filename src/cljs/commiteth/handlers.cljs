@@ -70,17 +70,6 @@
 
 
 (reg-event-fx
- :save-payout-hash
- (fn [{:keys [db]} [_ issue-id payout-hash]]
-   {:db   db
-    :http {:method     POST
-           :url        (str/format "/api/user/bounty/%s/payout" issue-id)
-           :on-success #(dispatch [:payout-confirmed issue-id])
-           :on-error   #(dispatch [:payout-confirm-failed issue-id])
-           :params     {:payout-hash payout-hash}}}))
-
-
-(reg-event-fx
  :load-top-hunters
  (fn [{:keys [db]} [_]]
    {:db   db
@@ -162,9 +151,7 @@
 
 
 (defn update-repo-state [all-repos full-name data]
-  (println full-name)
   (let [[owner repo-name] (js->clj (.split full-name "/"))]
-    (println "update-repo-busy-state" owner repo-name)
     (update all-repos
             owner
             (fn [repos] (map (fn [repo] (if (= (:name repo) repo-name)
@@ -177,7 +164,6 @@
 (reg-event-fx
  :toggle-repo
  (fn [{:keys [db]} [_ repo]]
-   (println repo)
    {:db   (assoc db :repos (update-repo-state
                             (:repos db)
                             (:full_name repo)
@@ -194,7 +180,6 @@
 (reg-event-db
  :repo-toggle-success
  (fn [db [_ repo]]
-   (println "repo-toggle-success" repo)
    (assoc db :repos (update-repo-state (:repos db)
                                        (:full_name repo)
                                        {:busy? false
@@ -203,15 +188,14 @@
 (reg-event-fx
  :repo-toggle-error
  (fn [{:keys [db]} [_ repo response]]
-   (println "repo-toggle-error" response)
    {:db (assoc db :repos (update-repo-state (:repos db)
                                             (:full_name repo)
                                             {:busy? false}))
     :dispatch [:set-flash-message
                :error (if (= 400 (:status response))
-                             (:response response)
-                             (str "Failed to toggle repo: "
-                                  (:status-text response)))]}))
+                        (:response response)
+                        (str "Failed to toggle repo: "
+                             (:status-text response)))]}))
 
 
 (reg-event-fx
@@ -245,18 +229,29 @@
    (dissoc db :updating-address)))
 
 
+(reg-event-fx
+ :save-payout-hash
+ (fn [{:keys [db]} [_ issue-id payout-hash]]
+   {:db   db
+    :http {:method     POST
+           :url        (str/format "/api/user/bounty/%s/payout" issue-id)
+           :on-success #(dispatch [:payout-confirmed issue-id])
+           :on-error   #(dispatch [:payout-confirm-failed issue-id])
+           :params     {:payout-hash payout-hash}}}))
+
 
 (defn send-transaction-callback
   [issue-id]
-  (println "send-transaction-callback")
   (fn [error payout-hash]
-    (println "send-transaction-callback fn")
     (when error
-      (dispatch [:set-flash-message
-                 :error
-                 (str "Error sending transaction: " error)]))
+      (do
+        (dispatch [:set-flash-message
+                   :error
+                   (str "Error sending transaction: " error)])
+        (dispatch [:payout-confirm-failed issue-id])))
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
+
 
 
 (reg-event-fx
@@ -270,27 +265,29 @@
                   :to    contract-address
                   :value 1
                   :data  (str "0x797af627" confirm-hash)}]
-     (println "confirm-payout" owner-address contract-address)
      (try
        (apply send-transaction-fn [(clj->js payload)
                                    (send-transaction-callback issue-id)])
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
-          :dispatch [:set-flash-message
-                     :error
-                     (str "Failed to send transaction" e)]})))))
+          :dispatch-n [[:payout-confirm-failed issue-id]
+                       [:set-flash-message
+                        :error
+                        (str "Failed to send transaction" e)]]})))))
 
-(reg-event-db
+(reg-event-fx
  :payout-confirmed
- (fn [db [_ issue-id]]
-   (-> db
-       (dissoc-in [:owner-bounties (:issue_id issue-id) :confirming?])
-       (assoc-in [:owner-bounties (:issue_id issue-id) :confirmed?] true))))
+ (fn [{:keys [db]} [_ issue-id]]
+   {:dispatch [:load-owner-bounties]
+    :db (-> db
+            (dissoc-in [:owner-bounties issue-id :confirming?])
+            (assoc-in [:owner-bounties  issue-id :confirmed?] true))}))
 
 (reg-event-db
  :payout-confirm-failed
  (fn [db [_ issue-id]]
+   (println "payout-confirm-failed" issue-id)
    (-> db
-       (dissoc-in [:owner-bounties (:issue_id issue-id) :confirming?])
-       (assoc-in [:owner-bounties (:issue_id issue-id) :confirm-failed?] true))))
+       (dissoc-in [:owner-bounties issue-id :confirming?])
+       (assoc-in [:owner-bounties issue-id :confirm-failed?] true))))
