@@ -19,7 +19,7 @@
         [:div.ui.container.grid
          [:div.ui.form.sixteen.wide.column
           [:h3 "Update address"]
-          [:p "Placeholder text for explaining what an Ethereum address is."]
+          [:p "Insert your Ethereum address in hex format."]
           [:div.field
            (if-not (empty? web3-accounts)
              [dropdown {:class "address-input"} "Select address"
