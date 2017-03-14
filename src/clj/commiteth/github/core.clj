@@ -27,7 +27,7 @@
 (defn authorize-url []
   (let [params (codec/form-encode {:client_id    (client-id)
                                    :redirect_uri (redirect-uri)
-                                   :scope        "admin:repo_hook user:email admin:org_hook"
+                                   :scope        "admin:repo_hook repo user:email admin:org_hook"
                                    :allow_signup true
                                    :state        (str (UUID/randomUUID))})]
     (str "https://github.com/login/oauth/authorize" "?" params)))
