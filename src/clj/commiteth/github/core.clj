@@ -78,7 +78,6 @@
                 (select-keys % repo-fields))
               (repos/repos (merge (auth-params token) {:type      "all"
                                                        :all-pages true})))
-         (filter #(not (:fork %)))
          (filter #(-> % :permissions :admin)))]
     (group-by :owner-login all-repos-with-admin-access)))
 
