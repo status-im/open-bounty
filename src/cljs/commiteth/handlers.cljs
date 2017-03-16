@@ -2,8 +2,7 @@
   (:require [commiteth.db :as db]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
             [ajax.core :refer [GET POST]]
-            [cuerdas.core :as str]
-            [plumbing.core :refer [dissoc-in]]))
+            [cuerdas.core :as str]))
 
 (reg-fx
  :http
@@ -275,6 +274,16 @@
                        [:set-flash-message
                         :error
                         (str "Failed to send transaction" e)]]})))))
+
+;; copied from plumbing.core to avoid cljsbuild warnings
+(defn dissoc-in
+  [m [k & ks]]
+  (when m
+    (if-let [res (and ks (dissoc-in (get m k) ks))]
+      (assoc m k res)
+      (let [res (dissoc m k)]
+        (when-not (empty? res)
+          res)))))
 
 (reg-event-fx
  :payout-confirmed
