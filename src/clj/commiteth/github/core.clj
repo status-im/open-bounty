@@ -75,6 +75,7 @@
          (map #(merge
                 {:owner-login (get-in % [:owner :login])}
                 {:owner-type (get-in % [:owner :type])}
+                {:owner-avatar-url (get-in % [:owner :avatar_url])}
                 (select-keys % repo-fields))
               (repos/repos (merge (auth-params token) {:type      "all"
                                                        :all-pages true})))

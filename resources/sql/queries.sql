@@ -72,17 +72,18 @@ AND repo = :repo;
 
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
-INSERT INTO repositories (repo_id, user_id, owner, repo, state)
+INSERT INTO repositories (repo_id, user_id, owner, repo, state, owner_avatar_url)
   SELECT
     :repo_id,
     :user_id,
     :owner,
     :repo,
-    :state
+    :state,
+    :owner_avatar_url
   WHERE NOT exists(SELECT 1
                    FROM repositories
                    WHERE repo_id = :repo_id)
-RETURNING repo_id, user_id, owner, repo, state;
+RETURNING repo_id, user_id, owner, repo, state, owner_avatar_url;
 
 -- :name get-enabled-repositories :? :*
 -- :doc returns enabled repositories for a given user-id

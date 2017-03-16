@@ -11,7 +11,8 @@
     (or
      (db/create-repository! con-db (-> repo
                                        (rename-keys {:id :repo_id
-                                                     :name :repo})
+                                                     :name :repo
+                                                     :owner-avatar-url :owner_avatar_url})
                                        (merge {:state 0})))
      (db/get-repo {:repo (:name repo)
                    :owner (:owner repo)}))))
