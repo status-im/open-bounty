@@ -1,5 +1,6 @@
 (ns commiteth.repos
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [commiteth.svg :as svg]))
 
 
 (defn repo-toggle-button [enabled busy on-click]
@@ -21,8 +22,11 @@
 (defn repo-card [repo]
   [:div.ui.card
    [:div.content
-    [:div.repo-label [:a {:href (:html_url repo)} (:full_name repo)]]
+    [:div.repo-label [:a {:href (:html_url repo)} (:full_name repo)]
+     (when  (:fork repo)
+       [:span.fork-span [svg/github-fork-icon]])]
     [:div.repo-description (:description repo)]]
+
    [:div.repo-button-container
     [repo-toggle-button
      (:enabled repo)
