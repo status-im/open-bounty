@@ -173,7 +173,7 @@
            :on-success #(dispatch [:repo-toggle-success %])
            :on-error #(dispatch [:repo-toggle-error repo %])
            :finally  #(println "finally" %)
-           :params     (select-keys repo [:id :owner :full_name :name])}}))
+           :params     (select-keys repo [:id :owner :owner-avatar-url :full_name :name])}}))
 
 
 (reg-event-db

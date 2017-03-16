@@ -64,6 +64,7 @@
            user-id :id} user
           {repo-id :id
            full-repo :full_name
+           owner-avatar-url :owner-avatar-url
            repo    :name} params
         [owner _] (str/split full-repo #"/")
         db-user (users/get-user (:id user))]
