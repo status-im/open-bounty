@@ -44,7 +44,7 @@
      [:div.item
       (:login user)]
      [:div.item
-      [:span.dropdown.icon]]
+      [svg/dropdown-icon]]
      (into menu
            (for [[target caption props] items]
              ^{:key target} [:div.item
