@@ -10,21 +10,20 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/pending-contracts con-db)))
 
-(defn list-owner-bounties
-  [owner]
+(defn owner-bounties
+  [owner-id]
   (jdbc/with-db-connection [con-db *db*]
-    (db/owner-bounties-list con-db {:owner_id owner})))
+    (db/owner-bounties con-db {:owner_id owner-id})))
+
+(defn open-bounties
+  []
+    (jdbc/with-db-connection [con-db *db*]
+      (db/open-bounties con-db)))
 
 (defn bounty-claims
   [issue-id]
   (jdbc/with-db-connection [con-db *db*]
-    (db/bounty-claims con-db {
-                              :issue_id issue-id})))
-
-(defn list-not-fixed-issues
-  [owner-id]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/owner-issues-list con-db {:owner_id owner-id})))
+    (db/bounty-claims con-db {:issue_id issue-id})))
 
 (defn pending-bounties-list
   []

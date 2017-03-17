@@ -293,7 +293,31 @@ updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 
--- :name owner-bounties-list :? :*
+-- :name open-bounties :? :*
+-- :doc all bounty issues for given owner
+SELECT
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.issue_number     AS issue_number,
+  i.title            AS issue_title,
+  i.repo_id          AS repo_id,
+  i.balance          AS balance,
+  i.confirm_hash     AS confirm_hash,
+  i.payout_hash      AS payout_hash,
+  i.payout_receipt   AS payout_receipt,
+  i.updated          AS updated,
+  r.owner            AS repo_owner,
+  r.owner_avatar_url AS repo_owner_avatar_url,
+  r.repo             AS repo_name
+FROM issues i, repositories r
+WHERE
+r.repo_id = i.repo_id
+AND i.confirm_hash is null
+ORDER BY balance desc, updated desc;
+
+
+
+-- :name owner-bounties :? :*
 -- :doc all bounty issues for given owner
 SELECT
   i.contract_address AS contract_address,
@@ -346,27 +370,6 @@ AND u.id = p.user_id
 AND r.repo_id = i.repo_id
 AND r.user_id = o.id
 AND i.issue_id = :issue_id;
-
-
-
--- :name owner-issues-list :? :*
--- :doc owner's bounty issues with no merged PR
-SELECT
-  i.contract_address AS contract_address,
-  i.issue_id         AS issue_id,
-  i.issue_number     AS issue_number,
-  i.title            AS issue_title,
-  i.repo_id          AS repo_id,
-  r.owner            AS repo_owner,
-  r.repo             AS repo_name
-FROM issues i, repositories r
-WHERE r.repo_id = i.repo_id
-AND r.user_id = :owner_id
-AND i.commit_sha IS NULL
-AND NOT exists(SELECT 1
-               FROM pull_requests
-               WHERE issue_number = i.issue_number
-               AND state = 1);
 
 
 -- :name open-bounty-contracts :? :*

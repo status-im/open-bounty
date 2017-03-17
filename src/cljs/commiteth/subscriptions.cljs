@@ -27,9 +27,9 @@
     (:flash-message db)))
 
 (reg-sub
-  :all-bounties
+  :open-bounties
   (fn [db _]
-    (:all-bounties db)))
+    (:open-bounties db)))
 
 (reg-sub
   :owner-bounties
