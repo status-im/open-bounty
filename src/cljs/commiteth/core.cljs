@@ -10,8 +10,9 @@
             [commiteth.handlers]
             [commiteth.subscriptions]
             [commiteth.activity :refer [activity-page]]
-            [commiteth.repos :refer [repos-page]]
             [commiteth.bounties :refer [bounties-page]]
+            [commiteth.repos :refer [repos-page]]
+            [commiteth.manage-payouts :refer [manage-payouts-page]]
             [commiteth.update-address :refer [update-address-page]]
             [commiteth.common :refer [input]]
             [commiteth.config :as config]
@@ -72,8 +73,9 @@
     (fn []
       (let [tabs (apply conj [[:activity "Activity"]]
                         (when @user
-                          [[:repos "Repositories"]
-                           [:bounties "Bounties"]]))]
+                          [[:bounties "Open bounties"]
+                           [:repos "Repositories"]
+                           [:manage-payouts "Manage Payouts"]]))]
         (into [:div.ui.attached.tabular.menu.tiny.commiteth-tabs]
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
@@ -105,8 +107,9 @@
 
 (def pages
   {:activity #'activity-page
-   :repos #'repos-page
    :bounties #'bounties-page
+   :repos #'repos-page
+   :manage-payouts #'manage-payouts-page
    :update-address #'update-address-page})
 
 

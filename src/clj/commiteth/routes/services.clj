@@ -105,7 +105,7 @@
   (format "%.4f" n))
 
 (defn user-bounties [user]
-  (let [owner-bounties (bounties-db/list-owner-bounties (:id user))]
+  (let [owner-bounties (bounties-db/owner-bounties (:id user))]
     (into {}
           (for [ob owner-bounties
                 :let [b (update ob :balance decimal->str)]]
@@ -156,6 +156,9 @@
            (GET "/activity-feed" []
                 (log/debug "/activity-feed")
                 (ok (activity-feed)))
+           (GET "/open-bounties" []
+                (log/debug "/open-bounties")
+                (ok (bounties-db/open-bounties)))
            (context "/user" []
                     (GET "/" []
                          :auth-rules authenticated?

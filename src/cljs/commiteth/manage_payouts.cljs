@@ -1,4 +1,4 @@
-(ns commiteth.bounties
+(ns commiteth.manage-payouts
   (:require [re-frame.core :as rf]
             [commiteth.common :refer [moment-timestamp]]))
 
@@ -19,7 +19,6 @@
         paid? (not-empty (:payout_hash claim))
         confirming? (:confirming? bounty)
         updated (:updated bounty)]
-    (println "paid?" paid? "merged?" merged? (and merged? ((comp not) paid?)))
     [:div.activity-item
      [:div.ui.grid.container
       [:div.left-column
@@ -56,7 +55,7 @@
             [claim-card bounty claim]))))
 
 
-(defn bounties-page []
+(defn manage-payouts-page []
   (let [owner-bounties (rf/subscribe [:owner-bounties])]
     (fn []
       (let [web3 (.-web3 js/window)
