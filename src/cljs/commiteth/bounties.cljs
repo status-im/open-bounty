@@ -18,10 +18,8 @@
                       {:href (issue-url owner repo-name issue-number)}
                       issue-title]]
     [:div.item.activity-item
-     "test"
      [:div.ui.mini.circular.image
-      [:img {:src avatar-url}]]]
-    [:div.item.activity-item
+      [:img {:src avatar-url}]]
      [:div.content
       [:div.header.display-name full-repo]
       [:div.description
