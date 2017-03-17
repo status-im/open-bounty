@@ -96,6 +96,19 @@
  (fn [db [_ activity-feed]]
    (assoc db :activity-feed activity-feed)))
 
+(reg-event-fx
+ :load-open-bounties
+ (fn [{:keys [db]} [_]]
+   {:db   db
+    :http {:method     GET
+           :url        "/api/open-bounties"
+           :on-success #(dispatch [:set-open-bounties %])}}))
+
+(reg-event-db
+ :set-open-bounties
+ (fn [db [_ issues]]
+   (assoc db :open-bounties issues)))
+
 
 (reg-event-fx
  :load-owner-bounties
@@ -125,7 +138,8 @@
    {:db
     (assoc db :user (:user user-profile))
     :dispatch-n [[:load-user-repos]
-                 [:load-owner-bounties]]}))
+                 [:load-owner-bounties]
+                 [:load-open-bounties]]}))
 
 (reg-event-db
  :clear-repos-loading

@@ -158,7 +158,8 @@
                 (ok (activity-feed)))
            (GET "/open-bounties" []
                 (log/debug "/open-bounties")
-                (ok (bounties-db/open-bounties)))
+                (ok (map #(update % :balance decimal->str)
+                         (bounties-db/open-bounties))))
            (context "/user" []
                     (GET "/" []
                          :auth-rules authenticated?
