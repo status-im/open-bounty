@@ -179,6 +179,16 @@
                  "To claim this bounty sign up at %s")
             balance-str contract-address image-url site-url)))
 
+
+(defn generate-merged-comment
+  [contract-address balance-str winner-login]
+  (format (str "Balance: %s\n"
+               "Contract address: %s\n"
+               "Network: Testnet\n"
+               "Status: pending maintainer confirmation\n"
+               "Winner: %s\n")
+          balance-str contract-address winner-login))
+
 (defn generate-paid-comment
   [contract-address balance-str payee-login]
   (format (str "Balance: %s\n"
@@ -186,6 +196,7 @@
                "Network: Testnet\n"
                "Paid to: %s\n")
           balance-str contract-address payee-login))
+
 
 (defn post-deploying-comment
   [owner repo issue-number]
@@ -217,6 +228,18 @@
   (let [comment (generate-open-comment owner repo issue-number contract-address balance balance-str)]
     (log/debug (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
+    (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
+                                  [owner repo comment-id]
+                                  (assoc (self-auth-params) :body comment))]
+      (tentacles/safe-parse (http/request req)))))
+
+(defn update-merged-issue-comment
+  "Update comment for a bounty issue with winning claim (waiting to be
+  signed off by maintainer)"
+  [owner repo comment-id contract-address balance-str winner-login]
+  (let [comment (generate-merged-comment contract-address balance-str winner-login)]
+    (log/debug (str "Updating merged bounty issue (" owner "/" repo ")"
+                    " comment#" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
                                   [owner repo comment-id]
                                   (assoc (self-auth-params) :body comment))]

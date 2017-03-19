@@ -63,13 +63,24 @@
   []
   (doseq [{contract-address :contract_address
            issue-id         :issue_id
-           payout-address   :payout_address} (db-bounties/pending-bounties)
+           payout-address   :payout_address
+           repo :repo
+           owner :owner
+           comment-id :comment_id
+           issue-number :issue_number
+           balance :balance
+           winner-login :winner_login} (db-bounties/pending-bounties)
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
       (log/error "Cannot sign pending bounty - winner has no payout address")
-      (->>
-       (wallet/execute contract-address payout-address value)
-       (db-bounties/update-execute-hash issue-id)))))
+      (let [execute-hash (wallet/execute contract-address payout-address value)]
+        (db-bounties/update-execute-hash issue-id execute-hash)
+        (github/update-merged-issue-comment owner
+                                            repo
+                                            comment-id
+                                            contract-address
+                                            (decimal->str balance)
+                                            winner-login)))))
 
 (defn update-confirm-hash
   "Gets transaction receipt for each pending payout and updates confirm_hash"

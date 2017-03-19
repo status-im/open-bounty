@@ -222,15 +222,23 @@ AND i.contract_address IS NULL;
 
 
 -- :name pending-bounties :? :*
--- :doc lists all recently closed issues awaiting to be signed
+-- :doc bounties with merged pull-requests awaiting to be signed
 SELECT
   i.contract_address AS contract_address,
+  r.owner            AS owner,
+  r.repo             AS repo,
+  i.comment_id       AS comment_id,
+  i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
+  i.balance          AS balance,
+  u.login            AS winner_login,
   u.address          AS payout_address
-FROM issues i, pull_requests p, users u
+FROM issues i, pull_requests p, users u, repositories r
 WHERE
 p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
+AND p.commit_sha = i.commit_sha
+AND r.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.execute_hash IS NULL;
 
