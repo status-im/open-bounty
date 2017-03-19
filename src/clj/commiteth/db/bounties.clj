@@ -25,20 +25,20 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/bounty-claims con-db {:issue_id issue-id})))
 
-(defn pending-bounties-list
+(defn pending-bounties
   []
   (jdbc/with-db-connection [con-db *db*]
-    (db/pending-bounties-list con-db)))
+    (db/pending-bounties con-db)))
 
-(defn pending-payouts-list
+(defn pending-payouts
   []
   (jdbc/with-db-connection [con-db *db*]
-    (db/pending-payouts-list con-db)))
+    (db/pending-payouts con-db)))
 
-(defn confirmed-payouts-list
+(defn confirmed-payouts
   []
   (jdbc/with-db-connection [con-db *db*]
-    (db/confirmed-payouts-list con-db)))
+    (db/confirmed-payouts con-db)))
 
 (defn update-confirm-hash
   [issue-id confirm-hash]

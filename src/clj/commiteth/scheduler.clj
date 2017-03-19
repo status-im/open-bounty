@@ -62,7 +62,7 @@
   []
   (doseq [{contract-address :contract_address
            issue-id         :issue_id
-           payout-address   :payout_address} (db-bounties/pending-bounties-list)
+           payout-address   :payout_address} (db-bounties/pending-bounties)
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
       (log/error "Cannot sign pending bounty - winner has no payout address")
@@ -74,7 +74,7 @@
   "Gets transaction receipt for each pending payout and updates confirm_hash"
   []
   (doseq [{issue-id     :issue_id
-           execute-hash :execute_hash} (db-bounties/pending-payouts-list)]
+           execute-hash :execute_hash} (db-bounties/pending-payouts)]
     (log/debug "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
@@ -85,11 +85,18 @@
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash} (db-bounties/confirmed-payouts-list)]
+           payout-hash :payout_hash} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
       (log/info "payout receipt for issue #" issue-id ": " receipt)
-      (db-bounties/update-payout-receipt issue-id receipt))))
+      (db-bounties/update-payout-receipt issue-id receipt)
+      (github/update-comment owner
+                             repo
+                             comment-id
+                             issue-number
+                             contract-address
+                             balance
+                             balance-str))))
 
 
 (defn abs

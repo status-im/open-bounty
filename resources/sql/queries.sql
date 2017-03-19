@@ -221,7 +221,7 @@ AND i.transaction_hash IS NULL
 AND i.contract_address IS NULL;
 
 
--- :name pending-bounties-list :? :*
+-- :name pending-bounties :? :*
 -- :doc lists all recently closed issues awaiting to be signed
 SELECT
   i.contract_address AS contract_address,
@@ -234,7 +234,7 @@ AND p.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.execute_hash IS NULL;
 
--- :name pending-payouts-list :? :*
+-- :name pending-payouts :? :*
 -- :doc lists all recently closed issues awaiting to be confirmed
 SELECT
   i.contract_address AS contract_address,
@@ -249,7 +249,7 @@ AND u.id = p.user_id
 AND i.confirm_hash IS NULL
 AND i.execute_hash IS NOT NULL;
 
--- :name confirmed-payouts-list :? :*
+-- :name confirmed-payouts :? :*
 -- :doc lists all recently confirmed bounty payouts
 SELECT
   i.contract_address AS contract_address,
