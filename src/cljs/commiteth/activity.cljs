@@ -17,11 +17,10 @@
                     issue-title]]
     (case item-type
       "new-bounty" [:div "New bounty opened for issue " issue-link]
-      "claim-payout" [:div "Received " [:span.balance "ETH " balance]
+      "claim-payout" [:div "Received ETH " balance
                       " for " issue-link]
       "open-claim" [:div "Submitted a claim for " issue-link]
-      "balance-update" [:div issue-link " bounty increased to ETH "
-                        [:div.balance balance]]
+      "balance-update" [:div issue-link " bounty increased to ETH " balance]
       "")))
 
 
