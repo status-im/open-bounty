@@ -20,7 +20,7 @@
       "claim-payout" [:div "Received " [:span.balance "ETH " balance]
                       " for " issue-link]
       "open-claim" [:div "Submitted a claim for " issue-link]
-      "balance-update" [:div issue-link " bounty increased to "
+      "balance-update" [:div issue-link " bounty increased to ETH "
                         [:div.balance balance]]
       "")))
 
