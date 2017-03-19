@@ -5,6 +5,7 @@
             [commiteth.db.issues :as issues]
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
+            [commiteth.util.util :refer [decimal->str]]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
             [clj-time.core :as t]
@@ -85,18 +86,24 @@
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash} (db-bounties/confirmed-payouts)]
+           payout-hash :payout_hash
+           contract-address :contract_address
+           repo :repo
+           owner :owner
+           comment-id :comment_id
+           issue-number :issue_number
+           balance :balance
+           payee-login :payee_login} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
       (log/info "payout receipt for issue #" issue-id ": " receipt)
       (db-bounties/update-payout-receipt issue-id receipt)
-      (github/update-comment owner
-                             repo
-                             comment-id
-                             issue-number
-                             contract-address
-                             balance
-                             balance-str))))
+      (github/update-paid-issue-comment owner
+                                        repo
+                                        comment-id
+                                        contract-address
+                                        (decimal->str balance)
+                                        payee-login))))
 
 
 (defn abs

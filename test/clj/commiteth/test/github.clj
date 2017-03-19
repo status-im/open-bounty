@@ -8,6 +8,6 @@
                      "Fixes #12 and cloSes       #000028 and also resolved \n#32"))]
       (is (= #{12 28 32} res))))
   (testing "Ignoring big numbers and zeroes"
-    (let [res (set (extract-issue-number
+/Users/tpatja/work/desktop-communicator/ui/pc/libqml/utils/style.cpp    (let [res (set (extract-issue-number
                      "Fixes #298374298229087345 and closes #0xFFEF"))]
       (is (= #{} res)))))

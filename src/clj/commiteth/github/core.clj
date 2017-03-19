@@ -75,10 +75,10 @@
          (map #(merge
                 {:owner-login (get-in % [:owner :login])}
                 {:owner-type (get-in % [:owner :type])}
-                {:owner-avatar-url (get-in % [:owner :avatar_url])}
                 (select-keys % repo-fields))
               (repos/repos (merge (auth-params token) {:type      "all"
                                                        :all-pages true})))
+         (filter #(not (:fork %)))
          (filter #(-> % :permissions :admin)))]
     (group-by :owner-login all-repos-with-admin-access)))
 
@@ -167,7 +167,7 @@
   [owner repo issue-number]
   (md-image "Contract deploying" (str (server-address) "/img/deploying_contract.png")))
 
-(defn generate-comment
+(defn generate-open-comment
   [owner repo issue-number contract-address balance balance-str]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number balance))
         balance   (str balance-str " ETH")
@@ -178,6 +178,14 @@
                  "Network: Testnet\n"
                  "To claim this bounty sign up at %s")
             balance-str contract-address image-url site-url)))
+
+(defn generate-paid-comment
+  [contract-address balance-str payee-login]
+  (format (str "Balance: %s\n"
+               "Contract address: %s\n"
+               "Network: Testnet\n"
+               "Paid to: %s\n")
+          balance-str contract-address payee-login))
 
 (defn post-deploying-comment
   [owner repo issue-number]
@@ -204,10 +212,22 @@
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
 (defn update-comment
+  "Update comment for an open bounty issue"
   [owner repo comment-id issue-number contract-address balance balance-str]
-  (let [comment (generate-comment owner repo issue-number contract-address balance balance-str)]
+  (let [comment (generate-open-comment owner repo issue-number contract-address balance balance-str)]
     (log/debug (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
+    (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
+                                  [owner repo comment-id]
+                                  (assoc (self-auth-params) :body comment))]
+      (tentacles/safe-parse (http/request req)))))
+
+(defn update-paid-issue-comment
+  "Update comment for a paid out bounty issue"
+  [owner repo comment-id contract-address balance-str payee-login]
+  (let [comment (generate-paid-comment contract-address balance-str payee-login)]
+    (log/debug (str "Updating paid bounty  (" owner "/" repo ")"
+                    " comment#" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
                                   [owner repo comment-id]
                                   (assoc (self-auth-params) :body comment))]

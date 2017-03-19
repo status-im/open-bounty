@@ -253,13 +253,20 @@ AND i.execute_hash IS NOT NULL;
 -- :doc lists all recently confirmed bounty payouts
 SELECT
   i.contract_address AS contract_address,
+  r.owner            AS owner,
+  r.repo             AS repo,
+  i.comment_id       AS comment_id,
+  i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
+  i.balance          AS balance,
   u.address          AS payout_address,
+  u.login           AS payee_login,
   i.payout_hash     AS payout_hash
-FROM issues i, pull_requests p, users u
+FROM issues i, pull_requests p, users u, repositories r
 WHERE
 p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
+AND r.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;

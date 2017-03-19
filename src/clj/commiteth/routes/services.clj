@@ -14,6 +14,7 @@
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
+            [commiteth.util.util :refer [decimal->str]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]))
@@ -100,9 +101,6 @@
                                    (map update-enabled repos)})
                github-repos))))
 
-
-(defn decimal->str [n]
-  (format "%.4f" n))
 
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
