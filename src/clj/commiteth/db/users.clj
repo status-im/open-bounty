@@ -5,14 +5,13 @@
   (:import [java.util Date]))
 
 (defn create-user
-  [user-id login name email avatar-url token]
+  [user-id login name email avatar-url]
   (jdbc/with-db-connection [con-db *db*]
     (db/create-user! con-db
       {:id      user-id
        :login   login
        :name    name
        :email   email
-       :token   token
        :avatar_url avatar-url
        :address nil
        :created (new Date)})))
@@ -32,12 +31,6 @@
   (log/debug "update-user-address" user-id address)
   (jdbc/with-db-connection [con-db *db*]
     (db/update-user-address! con-db {:id user-id :address address})))
-
-(defn update-user-token
-  "Updates user token and returns updated user"
-  [user-id token]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-user-token! con-db {:id user-id :token token})))
 
 (defn get-repo-owner
   "Gets repository owner by given repository id"

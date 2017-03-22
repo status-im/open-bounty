@@ -1,8 +1,19 @@
 (ns commiteth.handlers
   (:require [commiteth.db :as db]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
+            [re-frame.core :refer [dispatch
+                                   reg-event-db
+                                   reg-event-fx
+                                   reg-fx
+                                   inject-cofx]]
             [ajax.core :refer [GET POST]]
-            [cuerdas.core :as str]))
+            [cuerdas.core :as str]
+            [akiroz.re-frame.storage
+             :as rf-storage
+             :refer [reg-co-fx!]]))
+
+
+(rf-storage/reg-co-fx! :commiteth {:fx :store
+                                   :cofx :store})
 
 (reg-fx
  :http
@@ -23,13 +34,14 @@
  :redirect
  (fn [{:keys [path]}]
    (println "redirecting to" path)
-   (set! (.-pathname js/location) path))
+   (set! (.-pathname js/location) path)))
 
 
- (reg-event-db
-  :initialize-db
-  (fn [_ _]
-    db/default-db)))
+(reg-event-fx
+ :initialize-db
+ [(inject-cofx :store)]
+ (fn [{:keys [db store]} [_]]
+   {:db (merge db/default-db store)}))
 
 (reg-event-db
  :assoc-in
@@ -55,11 +67,42 @@
  (fn [db _]
    (dissoc db :flash-message)))
 
+
+(defn update-if-not-empty [m k val]
+  (conj m (when (not (empty? val)) [k val])))
+
+(defn update-local-storage-tokens [ls token admin-token]
+  (into {}
+        (-> ls
+            (update-if-not-empty :gh-token token)
+            (update-if-not-empty :gh-admin-token admin-token))))
+
 (reg-event-fx
  :set-active-user
- (fn [{:keys [db]} [_ user]]
+ (fn [{:keys [db store]} [_ user token admin-token]]
    {:db         (assoc db :user user)
-    :dispatch [:load-user-profile]}))
+    :dispatch-n [[:update-tokens token admin-token]
+                 [:load-user-profile]]}))
+
+(reg-event-fx
+ :update-tokens
+ [(inject-cofx :store)]
+ (fn [{:keys [db store]} [_ token admin-token]]
+   (let [ls-data (update-local-storage-tokens store token admin-token)]
+     (println "update-tokens, ls-data:" ls-data)
+     {:db         (merge db ls-data)
+      :store      ls-data
+      :dispatch [:load-user-repos]})))
+
+;; copied from plumbing.core to avoid cljsbuild warnings
+(defn dissoc-in
+  [m [k & ks]]
+  (when m
+    (if-let [res (and ks (dissoc-in (get m k) ks))]
+      (assoc m k res)
+      (let [res (dissoc m k)]
+        (when-not (empty? res)
+          res)))))
 
 (reg-event-fx
  :sign-out
@@ -156,6 +199,7 @@
    {:db   (assoc db :repos-loading? true)
     :http {:method     GET
            :url        "/api/user/repositories"
+           :params     {:token (:gh-admin-token db)}
            :on-success #(dispatch [:set-user-repos (:repositories %)])
            :on-error   #(dispatch [:set-flash-message
                                    :error "Failed to load repositories"])
@@ -175,7 +219,8 @@
 
 (reg-event-fx
  :toggle-repo
- (fn [{:keys [db]} [_ repo]]
+ [(inject-cofx :store)]
+ (fn [{:keys [db store]} [_ repo]]
    {:db   (assoc db :repos (update-repo-state
                             (:repos db)
                             (:full_name repo)
@@ -186,7 +231,12 @@
            :on-success #(dispatch [:repo-toggle-success %])
            :on-error #(dispatch [:repo-toggle-error repo %])
            :finally  #(println "finally" %)
-           :params     (select-keys repo [:id :owner :owner-avatar-url :full_name :name])}}))
+           :params   (merge {:token (:gh-admin-token store)}
+                            (select-keys repo [:id
+                                               :owner
+                                               :owner-avatar-url
+                                               :full_name
+                                               :name]))}}))
 
 
 (reg-event-db
@@ -287,16 +337,6 @@
                        [:set-flash-message
                         :error
                         (str "Failed to send transaction" e)]]})))))
-
-;; copied from plumbing.core to avoid cljsbuild warnings
-(defn dissoc-in
-  [m [k & ks]]
-  (when m
-    (if-let [res (and ks (dissoc-in (get m k) ks))]
-      (assoc m k res)
-      (let [res (dissoc m k)]
-        (when-not (empty? res)
-          res)))))
 
 (reg-event-fx
  :payout-confirmed

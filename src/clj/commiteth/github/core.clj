@@ -1,9 +1,11 @@
 (ns commiteth.github.core
-  (:require [tentacles.repos :as repos]
-            [tentacles.users :as users]
-            [tentacles.repos :as repos]
-            [tentacles.issues :as issues]
-            [tentacles.core :as tentacles]
+  (:require [tentacles
+             [core :as tentacles]
+             [repos :as repos]
+             [oauth :as oauth]
+             [users :as users]
+             [repos :as repos]
+             [issues :as issues]]
             [ring.util.codec :as codec]
             [commiteth.config :refer [env]]
             [clj-http.client :as http]
@@ -24,13 +26,22 @@
 (defn self [] (:github-user env))
 (defn self-password [] (:github-password env))
 
-(defn authorize-url []
+(defn authorize-url [scope]
   (let [params (codec/form-encode {:client_id    (client-id)
                                    :redirect_uri (redirect-uri)
-                                   :scope        "admin:repo_hook repo user:email admin:org_hook"
+                                   :scope        scope
                                    :allow_signup true
                                    :state        (str (UUID/randomUUID))})]
     (str "https://github.com/login/oauth/authorize" "?" params)))
+
+(defn signup-authorize-url []
+  (authorize-url "user:email"))
+
+(defn admin-authorize-url []
+  (authorize-url "admin:repo_hook repo user:email admin:org_hook"))
+
+(defn access-settings-url []
+  (str "https://github.com/settings/connections/applications/" (client-id)))
 
 (defn post-for-token
   [code state]
@@ -75,10 +86,10 @@
          (map #(merge
                 {:owner-login (get-in % [:owner :login])}
                 {:owner-type (get-in % [:owner :type])}
+                {:owner-avatar-url (get-in % [:owner :avatar_url])}
                 (select-keys % repo-fields))
               (repos/repos (merge (auth-params token) {:type      "all"
                                                        :all-pages true})))
-         (filter #(not (:fork %)))
          (filter #(-> % :permissions :admin)))]
     (group-by :owner-login all-repos-with-admin-access)))
 

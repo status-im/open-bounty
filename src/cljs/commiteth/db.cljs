@@ -8,4 +8,6 @@
    :open-bounties []
    :owner-bounties   {}
    :top-hunters []
-   :activity-feed []})
+   :activity-feed []
+   :gh-token nil
+   :gh-admin-token nil})

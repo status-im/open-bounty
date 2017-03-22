@@ -54,8 +54,8 @@
                  (into [:div.ui.cards]
                        (map repo-card group-repos))]))))))
 
-
-(defn repos-page []
+(defn repos-page-token-ok []
+  (println "repos-token-ok")
   (let [repos-loading? (rf/subscribe [:repos-loading?])]
     (fn []
       (if @repos-loading?
@@ -63,3 +63,15 @@
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader "Loading"]]]
         [repos-list]))))
+
+(defn repos-page []
+  (let [gh-admin-token (rf/subscribe [:gh-admin-token])]
+    (fn []
+      (println "gh-admin-token" @gh-admin-token)
+      (if (empty? @gh-admin-token)
+        [:div.ui.container
+         [:div.ui.warning.message
+          [:i.warning.icon]
+          "To set bounties for your repositories or for organizations' repositories where you have access, you need to grant Commit ETH the required permissions"]
+         [:a.ui.button.small {:href js/authorizeUrlAdmin} "Enable"]]
+        [repos-page-token-ok]))))

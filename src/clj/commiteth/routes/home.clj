@@ -1,5 +1,6 @@
 (ns commiteth.routes.home
   (:require [commiteth.layout :as layout]
+            [commiteth.github.core :as github]
             [compojure.core :refer [defroutes GET]]
             [ring.util.response :refer [redirect]]
             [ring.util.http-response :refer [ok header]]
@@ -8,15 +9,21 @@
 
 (defonce ^:const version (System/getProperty "commiteth.version"))
 
-(defn home-page [{user-id :id login :login token :token}]
-  (layout/render "home.html" {:userId user-id
+(defn home-page [{user-id :id
+                  login :login
+                  token :token
+                  admin-token :admin-token}]
+  (layout/render "home.html" {:user-id user-id
                               :login login
                               :token token
-                              :commitethVersion version}))
+                              :admin-token admin-token
+                              :authorize-url (github/signup-authorize-url)
+                              :authorize-url-admin (github/admin-authorize-url)
+                              :commiteth-version version}))
 
 (defroutes home-routes
-  (GET "/" {{identity :identity} :session}
-       (home-page identity))
+  (GET "/" {{user :identity} :session}
+       (home-page user))
   (GET "/logout" {session :session}
        (-> (redirect "/")
            (assoc :session (dissoc session :identity)))))
