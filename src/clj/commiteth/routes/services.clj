@@ -61,12 +61,12 @@
 
 (defn handle-toggle-repo [user params]
   (log/debug "handle-toggle-repo" user params)
-  (let [{token   :token
-           user-id :id} user
-          {repo-id :id
-           full-repo :full_name
-           owner-avatar-url :owner-avatar-url
-           repo    :name} params
+  (let [{user-id :id} user
+        {repo-id :id
+         full-repo :full_name
+         owner-avatar-url :owner-avatar-url
+         token   :token
+         repo    :name} params
         [owner _] (str/split full-repo #"/")
         db-user (users/get-user (:id user))]
     (if (empty? (:address db-user))
@@ -90,9 +90,9 @@
 (defn in? [coll elem]
   (some #(= elem %) coll))
 
-(defn handle-get-user-repos [user]
+(defn handle-get-user-repos [user token]
   (log/debug "handle-get-user-repos")
-  (let [github-repos (github/get-user-repos (:token user))
+  (let [github-repos (github/get-user-repos token)
         enabled-repos (vec (repositories/get-enabled (:id user)))
         repo-enabled? (fn [repo] (in? enabled-repos (:id repo)))
         update-enabled (fn [repo] (assoc repo :enabled (repo-enabled? repo)))]
@@ -164,7 +164,6 @@
                          :current-user user
                          (ok {:user (dissoc
                                      (users/get-user (:id user))
-                                     :token
                                      :email)}))
                     (POST "/address" []
                           :auth-rules authenticated?
@@ -179,10 +178,12 @@
                               (if (= 1 result)
                                 (ok)
                                 (internal-server-error)))))
-                    (GET "/repositories" []
+                    (GET "/repositories" {:keys [params]}
                          :auth-rules authenticated?
                          :current-user user
-                         (ok {:repositories (handle-get-user-repos user)}))
+                         (ok {:repositories (handle-get-user-repos
+                                             user
+                                             (:token params))}))
                     (GET "/enabled-repositories" []
                          :auth-rules authenticated?
                          :current-user user

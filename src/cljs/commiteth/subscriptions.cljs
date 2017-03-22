@@ -52,6 +52,11 @@
     (:activity-feed db)))
 
 (reg-sub
+  :gh-admin-token
+  (fn [db _]
+    (:gh-admin-token db)))
+
+(reg-sub
   :get-in
   (fn [db [_ path]]
     (get-in db path)))

@@ -3,14 +3,13 @@
 -- :name create-user! :<! :1
 -- :doc creates a new user record
 INSERT INTO users
-(id, login, name, email, avatar_url, token, address, created)
+(id, login, name, email, avatar_url, address, created)
 SELECT
   :id,
   :login,
   :name,
   :email,
   :avatar_url,
-  :token,
   :address,
   :created
 WHERE NOT exists(SELECT 1
@@ -24,16 +23,8 @@ UPDATE users
 SET login = :login,
 name = :name,
 email = :email,
-token = :token,
 address = :address
 WHERE id = :id;
-
--- :name update-user-token! :<! :1
--- :doc updates user token and returns updated user
-UPDATE users
-SET token = :token
-WHERE id = :id
-RETURNING id, login, name, email, token, address, created;
 
 -- :name update-user-address! :! :n
 UPDATE users

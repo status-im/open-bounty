@@ -173,18 +173,22 @@
 
 (defn load-user []
   (if-let [login js/user]
-    (when-not (= login @active-user)
-      (println "active user changed, loading user data")
-      (reset! active-user login)
-      (rf/dispatch [:set-active-user
-                    {:login login
-                     :id (js/parseInt js/userId)
-                     :token js/token}]))
+    (if (= login @active-user)
+      (do
+        (println "refresh with active user, updating tokens")
+        (rf/dispatch [:update-tokens js/token js/adminToken]))
+      (do
+        (println "active user changed, loading user data")
+        (reset! active-user login)
+        (rf/dispatch [:set-active-user
+                      {:login login
+                       :id (js/parseInt js/userId)}
+                      js/token
+                      js/adminToken])))
     (reset! active-user nil)))
 
 (defn load-data []
-  (doall
-   (map rf/dispatch
+  (doall (map rf/dispatch
         [[:load-open-bounties]
          [:load-activity-feed]
          [:load-top-hunters]]))

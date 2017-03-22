@@ -46,7 +46,8 @@
                  [org.clojure/tools.nrepl "0.2.12"]
                  [com.cemerick/piggieback "0.2.1"]
                  [jarohen/chime "0.2.0"]
-                 [com.andrewmcveigh/cljs-time "0.4.0"]]
+                 [com.andrewmcveigh/cljs-time "0.4.0"]
+                 [akiroz.re-frame/storage "0.1.1"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
