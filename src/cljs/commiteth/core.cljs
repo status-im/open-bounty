@@ -71,10 +71,10 @@
   (let [user (rf/subscribe [:user])
         current-page (rf/subscribe [:page])]
     (fn []
-      (let [tabs (apply conj [[:activity "Activity"]]
+      (let [tabs (apply conj [[:activity "Activity"]
+                              [:bounties "Open bounties"]]
                         (when @user
-                          [[:bounties "Open bounties"]
-                           [:repos "Repositories"]
+                          [[:repos "Repositories"]
                            [:manage-payouts "Manage Payouts"]]))]
         (into [:div.ui.attached.tabular.menu.tiny.commiteth-tabs]
               (for [[page caption] tabs]
@@ -183,8 +183,11 @@
     (reset! active-user nil)))
 
 (defn load-data []
-  (rf/dispatch [:load-activity-feed])
-  (rf/dispatch [:load-top-hunters])
+  (doall
+   (map rf/dispatch
+        [[:load-open-bounties]
+         [:load-activity-feed]
+         [:load-top-hunters]]))
   (load-user))
 
 (defonce timer-id (r/atom nil))

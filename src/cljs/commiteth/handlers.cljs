@@ -138,8 +138,7 @@
    {:db
     (assoc db :user (:user user-profile))
     :dispatch-n [[:load-user-repos]
-                 [:load-owner-bounties]
-                 [:load-open-bounties]]}))
+                 [:load-owner-bounties]]}))
 
 (reg-event-db
  :clear-repos-loading
