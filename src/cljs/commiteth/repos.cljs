@@ -92,4 +92,6 @@
           [:i.warning.icon]
           "To set bounties for your repositories or for organizations' repositories where you have access, you need to grant Commit ETH the required permissions"]
          [:a.ui.button.small {:href js/authorizeUrlAdmin} "Enable"]]
-        [repos-page-token-ok]))))
+        (do
+          (rf/dispatch [:load-user-repos])
+          [repos-page-token-ok])))))

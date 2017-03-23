@@ -96,8 +96,7 @@
    (let [ls-data (update-local-storage-tokens store login token admin-token)]
      (println "update-tokens, ls-data:" ls-data)
      {:db         (merge db ls-data)
-      :store      ls-data
-      :dispatch [:load-user-repos]})))
+      :store      ls-data})))
 
 ;; copied from plumbing.core to avoid cljsbuild warnings
 (defn dissoc-in
