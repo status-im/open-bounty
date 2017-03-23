@@ -54,7 +54,8 @@
 (reg-sub
   :gh-admin-token
   (fn [db _]
-    (:gh-admin-token db)))
+    (let [login (get-in db [:user :login])]
+      (get-in db [:tokens login :gh-admin-token]))))
 
 (reg-sub
   :get-in

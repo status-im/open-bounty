@@ -68,27 +68,32 @@
    (dissoc db :flash-message)))
 
 
-(defn update-if-not-empty [m k val]
-  (conj m (when (not (empty? val)) [k val])))
+(defn assoc-in-if-not-empty [m path val]
+  (if (not (empty? val))
+    (assoc-in m path val)
+    m))
 
-(defn update-local-storage-tokens [ls token admin-token]
+(defn update-local-storage-tokens [ls login token admin-token]
   (into {}
         (-> ls
-            (update-if-not-empty :gh-token token)
-            (update-if-not-empty :gh-admin-token admin-token))))
+            (assoc-in-if-not-empty [:tokens login :gh-token] token)
+            (assoc-in-if-not-empty [:tokens login :gh-admin-token] admin-token))))
+
+(defn tokens-from-local-storage [ls login]
+  (get-in ls [:tokens login]))
 
 (reg-event-fx
  :set-active-user
  (fn [{:keys [db store]} [_ user token admin-token]]
    {:db         (assoc db :user user)
-    :dispatch-n [[:update-tokens token admin-token]
+    :dispatch-n [[:update-tokens (:login user) token admin-token]
                  [:load-user-profile]]}))
 
 (reg-event-fx
  :update-tokens
  [(inject-cofx :store)]
- (fn [{:keys [db store]} [_ token admin-token]]
-   (let [ls-data (update-local-storage-tokens store token admin-token)]
+ (fn [{:keys [db store]} [_ login token admin-token]]
+   (let [ls-data (update-local-storage-tokens store login token admin-token)]
      (println "update-tokens, ls-data:" ls-data)
      {:db         (merge db ls-data)
       :store      ls-data
@@ -193,13 +198,18 @@
  (fn [db [_ repos]]
    (assoc db :repos repos)))
 
+
+(defn get-admin-token [db]
+  (let [login (get-in db [:user :login])]
+    (get-in db [:tokens login :gh-admin-token])))
+
 (reg-event-fx
  :load-user-repos
  (fn [{:keys [db]} [_]]
    {:db   (assoc db :repos-loading? true)
     :http {:method     GET
            :url        "/api/user/repositories"
-           :params     {:token (:gh-admin-token db)}
+           :params     {:token (get-admin-token db)}
            :on-success #(dispatch [:set-user-repos (:repositories %)])
            :on-error   #(dispatch [:set-flash-message
                                    :error "Failed to load repositories"])
@@ -231,7 +241,7 @@
            :on-success #(dispatch [:repo-toggle-success %])
            :on-error #(dispatch [:repo-toggle-error repo %])
            :finally  #(println "finally" %)
-           :params   (merge {:token (:gh-admin-token store)}
+           :params   (merge {:token (get-admin-token store)}
                             (select-keys repo [:id
                                                :owner
                                                :owner-avatar-url
