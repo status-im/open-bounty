@@ -4,8 +4,6 @@
             [secretary.core :as secretary]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
-            [markdown.core :refer [md->html]]
-            [ajax.core :refer [GET POST]]
             [commiteth.ajax :refer [load-interceptors!]]
             [commiteth.handlers]
             [commiteth.subscriptions]
@@ -171,6 +169,8 @@
 
 (defonce active-user (r/atom nil))
 
+
+;; TODO: update-tokens is unnecessarily getting dispatched on every timer tick
 (defn load-user []
   (if-let [login js/user]
     (if (= login @active-user)

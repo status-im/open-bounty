@@ -1,5 +1,6 @@
 (ns commiteth.repos
   (:require [re-frame.core :as rf]
+            [reagent.core :as r]
             [commiteth.svg :as svg]))
 
 
@@ -40,19 +41,36 @@
      group)])
 
 
+(defn show-forks-checkbox [show-atom]
+  [:div.ui.container
+   [:div.ui.checkbox.commiteth-toggle
+    [:input (merge {:type :checkbox
+                    :on-change #(swap! show-atom not)}
+                   (when @show-atom
+                     {:checked :checked}))]
+    [:label "Show forks"]]])
+
+
 (defn repos-list []
   (let [repos (rf/subscribe [:repos])
-        user (rf/subscribe [:user])]
+        user (rf/subscribe [:user])
+        show-atom (r/atom false)]
     (fn []
       (let [repo-groups (sort-by identity (fn [a _] (= a (:login @user)))
-                                 (keys @repos))]
-        (into [:div]
+                                 (keys @repos))
+            filter-fn (if @show-atom
+                        identity
+                        (fn [repo]
+                          (not (:fork repo))))]
+        (into [:div
+               [show-forks-checkbox show-atom]]
               (for [[group group-repos]
                     (map (fn [group] [group (get @repos group)])
                          repo-groups)]
                 [:div.repo-group-title [repo-group-title group (:login @user)]
                  (into [:div.ui.cards]
-                       (map repo-card group-repos))]))))))
+                       (map repo-card
+                            (filter filter-fn group-repos)))]))))))
 
 (defn repos-page-token-ok []
   (println "repos-token-ok")
