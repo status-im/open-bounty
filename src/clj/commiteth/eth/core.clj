@@ -71,7 +71,7 @@
                             :gas   gas})]
     (eth-rpc
      "personal_sendTransaction"
-     [(if (not (nil? to))
+     [(if-not (nil? to)
         (merge args {:to to})
         args)
       (eth-password)])))
@@ -143,8 +143,7 @@
            (log/debug "address hash" hash "addr" addr)
            (->>
             (map-indexed (fn [idx _]
-                           (let [hash-ch-int (-> (nth hash idx)
-                                                 (hex-ch->num))
+                           (let [hash-ch-int (hex-ch->num (nth hash idx))
                                  ch (nth addr idx)
                                  ch-lower (lower-ch ch)
                                  ch-upper (upper-ch ch)]

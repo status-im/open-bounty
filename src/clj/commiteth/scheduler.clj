@@ -181,7 +181,7 @@
 (mount/defstate scheduler
   :start (let [every-minute (rest
                              (periodic-seq (t/now)
-                                           (-> 1 t/minutes)))
+                                           (t/minutes 1)))
                stop-fn (chime-at every-minute
                                  run-periodic-tasks
                                  {:error-handler (fn [e]

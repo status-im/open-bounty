@@ -25,8 +25,7 @@
 (defn moment-timestamp [time]
   (let [now (.now js/Date.)
         js-time (clj->js time)]
-    (-> (js/moment.utc)
-        (.to js-time))))
+    (.to (js/moment.utc) js-time)))
 
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))

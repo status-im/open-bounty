@@ -82,15 +82,15 @@
   own login."
   [token]
   (let [all-repos-with-admin-access
-        (->>
-         (map #(merge
-                {:owner-login (get-in % [:owner :login])}
-                {:owner-type (get-in % [:owner :type])}
-                {:owner-avatar-url (get-in % [:owner :avatar_url])}
-                (select-keys % repo-fields))
-              (repos/repos (merge (auth-params token) {:type      "all"
-                                                       :all-pages true})))
-         (filter #(-> % :permissions :admin)))]
+        (filter #(-> % :permissions :admin)
+                (map #(merge
+                       {:owner-login (get-in % [:owner :login])}
+                       {:owner-type (get-in % [:owner :type])}
+                       {:owner-avatar-url (get-in % [:owner :avatar_url])}
+                       (select-keys % repo-fields))
+                     (repos/repos
+                      (merge (auth-params token) {:type      "all"
+                                                  :all-pages true}))))]
     (group-by :owner-login all-repos-with-admin-access)))
 
 (defn get-user

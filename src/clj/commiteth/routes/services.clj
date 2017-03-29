@@ -109,8 +109,9 @@
                 :let [b (update ob :balance decimal->str)]]
             [(:issue_id b)
              (conj b
-                   (let [claims (->> (bounties-db/bounty-claims (:issue_id b))
-                                     (map #(update % :balance decimal->str)))]
+                   (let [claims (map
+                                 #(update % :balance decimal->str)
+                                 (bounties-db/bounty-claims (:issue_id b)))]
                      {:claims claims}))]))))
 
 

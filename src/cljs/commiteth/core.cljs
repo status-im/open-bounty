@@ -119,7 +119,7 @@
         (into [:div.ui.items.top-hunters]
               (map-indexed (fn [idx hunter]
                              [:div.item
-                              [:div.leader-ordinal (str (+ 1 idx))]
+                              [:div.leader-ordinal (str (inc idx))]
                               [:div.ui..mini.circular.image
                                [:img {:src (:avatar-url hunter)}]]
                               [:div.content

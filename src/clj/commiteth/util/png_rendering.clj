@@ -26,8 +26,8 @@
 
 
 (defn gen-comment-image [address balance issue-url]
-  (let [qr-image  (-> (image->base64 (generate-qr-image address))
-                      (String. "ISO-8859-1"))
+  (let [qr-image  (String. (image->base64 (generate-qr-image address))
+                           "ISO-8859-1")
         html (:body (render "bounty.html"
                             {:qr-image  qr-image
                              :balance   balance
@@ -37,7 +37,7 @@
         {out :out err :err exit :exit}
         (sh command "-f" "png" "--quality" "80" "--width" "1336" "-" "-"
             :out-enc :bytes :in html)]
-    (if (= 0 exit)
+    (if (zero? exit)
       (do
         (log/debug "PNG generated succesfully" out err exit html)
         out)

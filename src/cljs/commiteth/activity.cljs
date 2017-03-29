@@ -39,7 +39,7 @@
     [:div.description
      [item-description item]]
     [:div.footer-row
-     (when (not (= item-type "new-bounty"))
+     (when-not (= item-type "new-bounty")
        [:div.balance-badge (str "ETH " balance )])
      [:div.time (moment-timestamp updated)]]]])
 

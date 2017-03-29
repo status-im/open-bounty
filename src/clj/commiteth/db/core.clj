@@ -1,12 +1,13 @@
 (ns commiteth.db.core
   (:require
-    [cheshire.core :refer [generate-string parse-string]]
-    [clojure.java.jdbc :as jdbc]
-    [conman.core :as conman]
-    [commiteth.config :refer [env]]
-    [mount.core :refer [defstate]]
-    [migratus.core :as migratus]
-    [mpg.core :as mpg])
+   [cheshire.core :refer [generate-string parse-string]]
+   [clojure.java.jdbc :as jdbc]
+   [conman.core :as conman]
+   [commiteth.config :refer [env]]
+   [mount.core :refer [defstate]]
+   [migratus.core :as migratus]
+   [mpg.core :as mpg]
+   [clojure.string :as str])
   (:import org.postgresql.util.PGobject
            java.sql.Array
            clojure.lang.IPersistentMap
@@ -75,7 +76,7 @@
     (let [conn      (.getConnection stmt)
           meta      (.getParameterMetaData stmt)
           type-name (.getParameterTypeName meta idx)]
-      (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
+      (if-let [elem-type (when (= (first type-name) \_) (str/join (rest type-name)))]
         (.setObject stmt idx (.createArrayOf conn elem-type (to-array v)))
         (.setObject stmt idx (to-pg-json v))))))
 

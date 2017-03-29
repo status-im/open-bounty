@@ -44,7 +44,7 @@
         (response/redirect "/")
         (let [admin-token? (str/includes? scope "repo")
               token-key (if admin-token? :admin-token :token)
-              user (-> (get-or-create-user access-token)
-                       (assoc token-key access-token))]
-          (-> (response/redirect "/")
-            (assoc :session {:identity user})))))))
+              user (assoc (get-or-create-user access-token)
+                          token-key access-token)]
+          (assoc (response/redirect "/")
+                 :session {:identity user}))))))

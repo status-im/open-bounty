@@ -11,7 +11,7 @@
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))]
     (fn []
       (let [web3 (.-web3 js/window)
-            web3-accounts (into [] (when-not (nil? web3) (-> web3
+            web3-accounts (vec (when-not (nil? web3) (-> web3
                                                          .-eth
                                                          .-accounts
                                                          js->clj)))]
@@ -24,9 +24,9 @@
            (if-not (empty? web3-accounts)
              [dropdown {:class "address-input"} "Select address"
               address
-              (into []
-                    (for [acc web3-accounts]
-                      acc))]
+              (vec
+               (for [acc web3-accounts]
+                 acc))]
              [:div.ui.input.address-input
               [input address {:placeholder  "0x0000000000000000000000000000000000000000"
                               :auto-complete "off"

@@ -20,10 +20,10 @@
 (defn get-enabled
   "Lists enabled repository id's for a given user-id"
   [user-id]
-  (->>
+  (mapcat
+   vals
     (jdbc/with-db-connection [con-db *db*]
-      (db/get-enabled-repositories con-db {:user_id user-id}))
-    (mapcat vals)))
+      (db/get-enabled-repositories con-db {:user_id user-id}))))
 
 (defn update-repo
   [repo-id updates]

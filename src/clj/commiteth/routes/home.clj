@@ -25,5 +25,5 @@
   (GET "/" {{user :identity} :session}
        (home-page user))
   (GET "/logout" {session :session}
-       (-> (redirect "/")
-           (assoc :session (dissoc session :identity)))))
+       (assoc (redirect "/")
+              :session (dissoc session :identity))))

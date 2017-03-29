@@ -69,7 +69,7 @@
 
 
 (defn assoc-in-if-not-empty [m path val]
-  (if (not (empty? val))
+  (if (seq val)
     (assoc-in m path val)
     m))
 
@@ -105,7 +105,7 @@
     (if-let [res (and ks (dissoc-in (get m k) ks))]
       (assoc m k res)
       (let [res (dissoc m k)]
-        (when-not (empty? res)
+        (when (seq res)
           res)))))
 
 (reg-event-fx
@@ -251,10 +251,12 @@
 (reg-event-db
  :repo-toggle-success
  (fn [db [_ repo]]
-   (assoc db :repos (update-repo-state (:repos db)
-                                       (:full_name repo)
-                                       {:busy? false
-                                        :enabled (:enabled repo)} ))))
+   (update-in db
+              [:repos]
+              update-repo-state
+              (:full_name repo)
+              {:busy? false
+               :enabled (:enabled repo)})))
 
 (reg-event-fx
  :repo-toggle-error
@@ -315,11 +317,10 @@
   [issue-id]
   (fn [error payout-hash]
     (when error
-      (do
-        (dispatch [:set-flash-message
-                   :error
-                   (str "Error sending transaction: " error)])
-        (dispatch [:payout-confirm-failed issue-id])))
+      (dispatch [:set-flash-message
+                 :error
+                 (str "Error sending transaction: " error)])
+      (dispatch [:payout-confirm-failed issue-id]))
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
 
