@@ -61,3 +61,13 @@
   :get-in
   (fn [db [_ path]]
     (get-in db path)))
+
+(reg-sub
+ :usage-metrics
+   (fn [db _]
+     (:usage-metrics db)))
+
+(reg-sub
+ :metrics-loading?
+   (fn [db _]
+     (:metrics-loading? db)))

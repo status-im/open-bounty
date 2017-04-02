@@ -105,6 +105,11 @@
      first
      :email)))
 
+(defn status-team-member?
+  [token]
+  (let [user-teams (map :name (users/my-teams (auth-params token)))]
+    (true? (some #(= "Status" %) user-teams))))
+
 (defn our-webhooks
   [owner repo token]
   (let [hooks (repos/hooks owner repo (auth-params token))

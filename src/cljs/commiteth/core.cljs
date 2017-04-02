@@ -12,6 +12,7 @@
             [commiteth.repos :refer [repos-page]]
             [commiteth.manage-payouts :refer [manage-payouts-page]]
             [commiteth.update-address :refer [update-address-page]]
+            [commiteth.usage-metrics :refer [usage-metrics-page]]
             [commiteth.common :refer [input]]
             [commiteth.config :as config]
             [commiteth.svg :as svg]
@@ -73,7 +74,9 @@
                               [:bounties "Open bounties"]]
                         (when @user
                           [[:repos "Repositories"]
-                           [:manage-payouts "Manage Payouts"]]))]
+                           [:manage-payouts "Manage Payouts"]
+                           (when (:status-team-member? @user)
+                             [:usage-metrics "Usage metrics"])]))]
         (into [:div.ui.attached.tabular.menu.tiny.commiteth-tabs]
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
@@ -108,7 +111,8 @@
    :bounties #'bounties-page
    :repos #'repos-page
    :manage-payouts #'manage-payouts-page
-   :update-address #'update-address-page})
+   :update-address #'update-address-page
+   :usage-metrics #'usage-metrics-page})
 
 
 (defn top-hunters []

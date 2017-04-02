@@ -170,12 +170,23 @@
  (fn [db [_ issues]]
    (assoc db :owner-bounties issues)))
 
+(defn get-ls-token [db token]
+  (let [login (get-in db [:user :login])]
+    (get-in db [:tokens login token])))
+
+(defn get-user-token [db]
+  (get-ls-token db :gh-token))
+
+(defn get-admin-token [db]
+  (get-ls-token db :gh-admin-token))
+
 (reg-event-fx
  :load-user-profile
  (fn [{:keys [db]} [_]]
    {:db   db
     :http {:method     GET
            :url        "/api/user"
+           :params {:token (get-admin-token db)}
            :on-success #(dispatch [:set-user-profile %])
            :on-error #(dispatch [:sign-out])}}))
 
@@ -198,9 +209,6 @@
    (assoc db :repos repos)))
 
 
-(defn get-admin-token [db]
-  (let [login (get-in db [:user :login])]
-    (get-in db [:tokens login :gh-admin-token])))
 
 (reg-event-fx
  :load-user-repos
@@ -362,3 +370,27 @@
    (-> db
        (dissoc-in [:owner-bounties issue-id :confirming?])
        (assoc-in [:owner-bounties issue-id :confirm-failed?] true))))
+
+
+(reg-event-fx
+ :load-usage-metrics
+ (fn [{:keys [db]} [_]]
+   (println "load-usage-metrics")
+   {:db   (assoc db :metrics-loading? true)
+    :http {:method     GET
+           :url        "/api/usage-metrics"
+           :params {:token (get-admin-token db)}
+           :on-success #(dispatch [:set-usage-metrics %])
+           :on-error #(println "load-usage-metrics error:" %)
+           :finally #(dispatch [:metrics-loaded])}}))
+
+(reg-event-db
+ :set-usage-metrics
+ (fn [db [_ metrics]]
+   (println "set-usage-metrics")
+   (assoc db :usage-metrics metrics)))
+
+(reg-event-db
+ :metrics-loaded
+ (fn [db [_]]
+   (dissoc db :metrics-loading?)))

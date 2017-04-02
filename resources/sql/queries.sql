@@ -472,3 +472,19 @@ SELECT
 FROM activity_feed_view
 ORDER BY updated DESC
 LIMIT 100;
+
+
+-- :name usage-metrics-by-day :? :*
+-- :doc data for usage metrics chart
+SELECT * FROM (
+  SELECT d.DAY,
+  coalesce(max(registered_users), (SELECT max(registered_users) FROM usage_metrics WHERE change_timestamp < d.day)) AS registered_users,
+  coalesce(max(users_with_address), (SELECT max(users_with_address) FROM usage_metrics WHERE change_timestamp < d.day)) AS users_with_address
+  FROM
+  (SELECT day FROM generate_series(CURRENT_DATE - INTERVAL '365 day', CURRENT_DATE, '1 day'::interval) AS day) AS d
+  LEFT OUTER JOIN usage_metrics um
+  ON d.day = date_trunc('day', um.change_timestamp)
+  GROUP BY d.day
+  ORDER BY 1 desc
+  LIMIT :limit_days) AS a
+ORDER BY a.day ASC;

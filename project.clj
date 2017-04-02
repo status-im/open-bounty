@@ -26,7 +26,6 @@
                  [cprop "0.1.10"]
                  [org.clojure/tools.cli "0.3.5"]
                  [luminus-nrepl "0.1.4"]
-                 [buddy "1.3.0"]
                  [buddy/buddy-auth "1.4.1"]
                  [luminus-migrations "0.3.0"]
                  [conman "0.6.3"]
@@ -47,7 +46,8 @@
                  [com.cemerick/piggieback "0.2.1"]
                  [jarohen/chime "0.2.0"]
                  [com.andrewmcveigh/cljs-time "0.4.0"]
-                 [akiroz.re-frame/storage "0.1.1"]]
+                 [akiroz.re-frame/storage "0.1.1"]
+                 [cljsjs/chartjs "2.5.0-0"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]

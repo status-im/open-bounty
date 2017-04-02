@@ -30,7 +30,6 @@
                              balance
                              issue-title
                              item-type] :as  item}]
-  (println avatar-url)
   [:div.item.activity-item
    [:div.ui.mini.circular.image
     [:img {:src avatar-url}]]

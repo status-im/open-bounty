@@ -6,6 +6,7 @@
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
             [commiteth.db.users :as users]
+            [commiteth.db.usage-metrics :as usage-metrics]
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties-db]
             [commiteth.bounties :as bounties]
@@ -35,6 +36,12 @@
   (update-in acc [:letks] into [binding `(:identity ~'+compojure-api-request+)]))
 
 
+(defn status-team-member? [req]
+  (let [token (get-in req [:params :token])
+        member? (github/status-team-member? token)]
+    (log/debug "token" token "member?" member?)
+    member?))
+
 (defn enable-repo [repo-id repo full-repo token]
   (log/debug "enable-repo" repo-id repo)
   (when (github/webhook-exists? full-repo token)
@@ -57,7 +64,6 @@
   (repositories/update-repo repo-id {:hook_secret ""
                                      :state 0
                                      :hook_id nil}))
-
 
 (defn handle-toggle-repo [user params]
   (log/debug "handle-toggle-repo" user params)
@@ -140,6 +146,16 @@
          activity-items)))
 
 
+(defn current-user-token [user]
+  (some identity (map #(% user) [:token :admin-token])))
+
+(defn handle-get-user [user admin-token]
+  (let [status-member? (github/status-team-member? admin-token)]
+    {:user
+     (-> (users/get-user (:id user))
+         (dissoc :email)
+         (assoc :status-team-member? status-member?))}))
+
 (defapi service-routes
   (when (:dev env)
     {:swagger {:ui   "/swagger-ui"
@@ -159,13 +175,18 @@
                 (log/debug "/open-bounties")
                 (ok (map #(update % :balance decimal->str)
                          (bounties-db/open-bounties))))
+           (GET "/usage-metrics" []
+                :query-params [token :- String]
+                :auth-rules status-team-member?
+                :current-user user
+                (do
+                  (log/debug "/usage-metrics" user)
+                  (ok (usage-metrics/usage-metrics-by-day))))
            (context "/user" []
-                    (GET "/" []
+                    (GET "/" {:keys [params]}
                          :auth-rules authenticated?
                          :current-user user
-                         (ok {:user (dissoc
-                                     (users/get-user (:id user))
-                                     :email)}))
+                         (ok (handle-get-user user (:token params))))
                     (POST "/address" []
                           :auth-rules authenticated?
                           :body-params [user-id :- Long, address :- String]

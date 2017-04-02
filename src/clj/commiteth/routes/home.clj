@@ -26,4 +26,4 @@
        (home-page user))
   (GET "/logout" {session :session}
        (assoc (redirect "/")
-              :session (dissoc session :identity))))
+              :session nil)))
