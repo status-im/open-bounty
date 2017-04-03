@@ -228,8 +228,7 @@
 
 (reg-event-fx
  :toggle-repo
- [(inject-cofx :store)]
- (fn [{:keys [db store]} [_ repo]]
+ (fn [{:keys [db]} [_ repo]]
    {:db   (assoc db :repos (update-repo-state
                             (:repos db)
                             (:full_name repo)
@@ -240,7 +239,7 @@
            :on-success #(dispatch [:repo-toggle-success %])
            :on-error #(dispatch [:repo-toggle-error repo %])
            :finally  #(println "finally" %)
-           :params   (merge {:token (get-admin-token store)}
+           :params   (merge {:token (get-admin-token db)}
                             (select-keys repo [:id
                                                :owner
                                                :owner-avatar-url
