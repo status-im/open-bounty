@@ -68,9 +68,12 @@
                     (map (fn [group] [group (get @repos group)])
                          repo-groups)]
                 [:div.repo-group-title [repo-group-title group (:login @user)]
-                 (into [:div.ui.cards]
-                       (map repo-card
-                            (filter filter-fn group-repos)))]))))))
+                 (let [filtered-group-repos (filter filter-fn group-repos)]
+                   (if (empty? filtered-group-repos)
+                     [:div.ui.text "No data"]
+                     (into [:div.ui.cards]
+                           (map repo-card
+                                filtered-group-repos))))]))))))
 
 (defn repos-page-token-ok []
   (println "repos-token-ok")
