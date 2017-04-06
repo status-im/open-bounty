@@ -49,5 +49,5 @@
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader "Loading"]]]
         [:div
-         [:h2 "Usage metrics for past 14 days"]
+         [:h2 "Usage metrics for the past 30 days"]
          [chartjs-component]]))))
