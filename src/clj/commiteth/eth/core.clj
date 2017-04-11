@@ -64,8 +64,7 @@
 
 (defn send-transaction
   [from to value & [params]]
-  ;; todo: estimate gas instead of hardcoding
-  (let [gas (format "0x%x" 2600000)
+  (let [gas (estimate-gas from to value params)
         args (merge params {:from  from
                             :value value
                             :gas   gas})]
