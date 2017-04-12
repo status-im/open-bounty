@@ -213,14 +213,15 @@
 (reg-event-fx
  :load-user-repos
  (fn [{:keys [db]} [_]]
-   {:db   (assoc db :repos-loading? true)
-    :http {:method     GET
-           :url        "/api/user/repositories"
-           :params     {:token (get-admin-token db)}
-           :on-success #(dispatch [:set-user-repos (:repositories %)])
-           :on-error   #(dispatch [:set-flash-message
-                                   :error "Failed to load repositories"])
-           :finally    #(dispatch [:clear-repos-loading])}}))
+   (conj  {:db   (assoc db :repos-loading? true)}
+          (when-let [token (get-admin-token db)]
+            :http {:method     GET
+                   :url        "/api/user/repositories"
+                   :params     {:token token}
+                   :on-success #(dispatch [:set-user-repos (:repositories %)])
+                   :on-error   #(dispatch [:set-flash-message
+                                           :error "Failed to load repositories"])
+                   :finally    #(dispatch [:clear-repos-loading])}))))
 
 
 (defn update-repo-state [all-repos full-name data]
