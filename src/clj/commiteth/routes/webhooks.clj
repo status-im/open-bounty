@@ -131,7 +131,7 @@
                                   (first)
                                   (ensure-bounty-issue owner repo))]
     (log/debug "Referenced bounty issue found" repo bounty-issue-number)
-    (users/create-user user-id login name nil avatar_url nil)
+    (users/create-user user-id login name nil avatar_url)
     (let [issue (github/get-issue owner repo bounty-issue-number)
           pr-data {:repo_id   repo-id
                    :pr_id     id

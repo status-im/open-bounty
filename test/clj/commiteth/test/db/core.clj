@@ -26,7 +26,6 @@
                      :name    "Linus Torvalds"
                      :avatar_url ""
                      :email   nil
-                     :token   "not null"
                      :address "address"
                      :created nil}))))
     (is (= {:id      1
@@ -34,7 +33,6 @@
             :name    "Linus Torvalds"
             :email   nil
             :avatar_url ""
-            :token   "not null"
             :address "address"
             :created nil}
           (db/get-user t-conn {:id 1})))))
