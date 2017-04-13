@@ -4,13 +4,13 @@
   :dependencies [[metosin/compojure-api "1.1.10"
                   :exclusions [joda-time]]
                  [re-frame "0.9.2"]
-                 [cljs-ajax "0.5.8"]
+                 [cljs-ajax "0.5.9"]
                  [secretary "1.2.3"]
                  [reagent-utils "0.2.1"]
                  [reagent "0.6.1"]
-                 [org.clojure/clojurescript "1.9.495"]
+                 [org.clojure/clojurescript "1.9.518"]
                  [org.clojure/clojure "1.8.0"]
-                 [selmer "1.10.6"]
+                 [selmer "1.10.7"]
                  [markdown-clj "0.9.98"]
                  [ring-middleware-format "0.7.2"]
                  [metosin/ring-http-response "0.8.2"]
@@ -42,7 +42,7 @@
                  [mpg "1.3.0"]
                  [pandect "0.6.1"]
                  [cljsjs/moment "2.17.1-0"]
-                 [org.clojure/tools.nrepl "0.2.12"]
+                 [org.clojure/tools.nrepl "0.2.13"]
                  [com.cemerick/piggieback "0.2.1"]
                  [jarohen/chime "0.2.0"]
                  [com.andrewmcveigh/cljs-time "0.4.0"]
@@ -112,10 +112,10 @@
                             [pjstadig/humane-test-output "0.8.1"]
                             [doo "0.1.7"]
                             [binaryage/devtools "0.9.2"]
-                            [figwheel-sidecar "0.5.9"]
-                            [org.clojure/tools.nrepl "0.2.12"]
+                            [figwheel-sidecar "0.5.10"]
+                            [org.clojure/tools.nrepl "0.2.13"]
                             [com.cemerick/piggieback "0.2.1"]
-                            [sablono "0.7.7"]]
+                            [sablono "0.8.0"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
                             [lein-doo "0.1.7"]
                             [lein-figwheel "0.5.9"]]
@@ -140,7 +140,7 @@
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
    :test  {:resource-paths ["env/dev/resources" "env/test/resources"]
-           :dependencies   [[devcards "0.2.2"]]
+           :dependencies   [[devcards "0.2.3"]]
            :cljsbuild
            {:builds
             {:test
