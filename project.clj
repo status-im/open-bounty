@@ -72,7 +72,7 @@
 
   :ring {:destroy commiteth.scheduler/stop-scheduler}
 
-
+  :uberjar-exclusions [#"public/README.md" #"public/cards.html"]
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
