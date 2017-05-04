@@ -57,7 +57,7 @@
         activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])]
     (fn []
       (if @activity-feed-loading?
-        [:container
+        [:div
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader "Loading"]]]
         [activity-list @activity-items]))))
