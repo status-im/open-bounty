@@ -42,12 +42,22 @@
        [:div.balance-badge (str "ETH " balance )])
      [:div.time (moment-timestamp updated)]]]])
 
-(defn activity-page []
-  (let [activity-items (rf/subscribe [:activity-feed])]
-    (fn []
+
+
+(defn activity-list [activity-items]
       [:div.ui.container
-       (if (empty? @activity-items)
+       (if (empty? activity-items)
          [:div.ui.text "No data"]
          (into [:div.ui.items]
-               (for [item @activity-items]
-                 [activity-item item])))])))
+               (for [item activity-items]
+                 [activity-item item])))]  )
+
+(defn activity-page []
+  (let [activity-items (rf/subscribe [:activity-feed])
+        activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])]
+    (fn []
+      (if @activity-feed-loading?
+        [:container
+         [:div.ui.active.inverted.dimmer
+          [:div.ui.text.loader "Loading"]]]
+        [activity-list @activity-items]))))

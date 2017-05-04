@@ -15,8 +15,8 @@
          balance :balance} bounty
         full-repo (str owner "/" repo-name)
         issue-link [:a
-                      {:href (issue-url owner repo-name issue-number)}
-                      issue-title]]
+                    {:href (issue-url owner repo-name issue-number)}
+                    issue-title]]
     [:div.item.activity-item
      [:div.ui.mini.circular.image
       [:img {:src avatar-url}]]
@@ -28,13 +28,21 @@
        [:div.balance-badge (str "ETH " balance )]
        [:div.time (moment-timestamp updated)]]]]))
 
+(defn bounties-list [open-bounties]
+  [:div.ui.container
+   (if (empty? open-bounties)
+     [:div.ui.text "No data"]
+     (into [:div.ui.items]
+           (for [bounty open-bounties]
+             [bounty-item bounty])))])
+
 
 (defn bounties-page []
-  (let [open-bounties (rf/subscribe [:open-bounties])]
+  (let [open-bounties (rf/subscribe [:open-bounties])
+        open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
-      [:div.ui.container
-       (if (empty? @open-bounties)
-         [:div.ui.text "No data"]
-         (into [:div.ui.items]
-               (for [bounty @open-bounties]
-                 [bounty-item bounty])))])))
+      (if @open-bounties-loading?
+        [:container
+         [:div.ui.active.inverted.dimmer
+          [:div.ui.text.loader "Loading"]]]
+        [bounties-list @open-bounties]))))
