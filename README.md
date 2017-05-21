@@ -5,7 +5,7 @@ Allows you to set bounties for Github issues, paid out in Ether.
 More information:
 http://wiki.status.im/proposals/commiteth/
 
-Live alpha version (uses Ropsten testnet):
+Live alpha version:
 https://commiteth.com
 
 
