@@ -17,7 +17,7 @@
   (:import [java.util UUID]))
 
 (def ^:dynamic url "https://api.github.com/")
-
+(defonce ^:const on-testnet? (System/getProperty "commiteth.onTestnet"))
 (defn server-address [] (:server-address env))
 (defn client-id [] (:github-client-id env))
 (defn client-secret [] (:github-client-secret env))
@@ -183,6 +183,12 @@
   [owner repo issue-number]
   (md-image "Contract deploying" (str (server-address) "/img/deploying_contract.png")))
 
+(defn network-text []
+  (str "Network: " (if on-testnet?
+                     "Testnet"
+                     "Mainnet")
+       "\n"))
+
 (defn generate-open-comment
   [owner repo issue-number contract-address balance balance-str]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number balance))
@@ -191,7 +197,7 @@
     (format (str "Current balance: %s\n"
                  "Contract address: %s\n"
                  "%s\n"
-                 "Network: Testnet\n"
+                 (network-text)
                  "To claim this bounty sign up at %s")
             balance-str contract-address image-url site-url)))
 
@@ -200,7 +206,7 @@
   [contract-address balance-str winner-login]
   (format (str "Balance: %s\n"
                "Contract address: %s\n"
-               "Network: Testnet\n"
+               (network-text)
                "Status: pending maintainer confirmation\n"
                "Winner: %s\n")
           balance-str contract-address winner-login))
@@ -209,7 +215,7 @@
   [contract-address balance-str payee-login]
   (format (str "Balance: %s\n"
                "Contract address: %s\n"
-               "Network: Testnet\n"
+               (network-text)
                "Paid to: %s\n")
           balance-str contract-address payee-login))
 

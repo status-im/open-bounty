@@ -101,7 +101,9 @@
         (when-not @user
           [:div.ui.text.content
            [:div.ui.divider.hidden]
-           [:h2.ui.header "Commit ETH (Testnet)"]
+           [:h2.ui.header (if (config/on-testnet?)
+                            "Commit ETH (Testnet)"
+                            "Commit ETH")]
            [:h2.ui.subheader "Earn ETH by committing to open source projects"]
            [:div.ui.divider.hidden]])
         [tabs]]])))
