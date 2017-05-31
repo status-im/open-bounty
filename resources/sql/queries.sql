@@ -185,7 +185,7 @@ WHERE r.user_id = u.id
 AND i.repo_id = r.repo_id
 AND i.contract_address IS NULL
 AND i.transaction_hash IS NOT NULL
-AND i.updated < now() at time zone 'UTC' < interval '1 hour';
+AND i.updated < now() at time zone 'UTC' - interval '1 hour';
 
 
 -- Pull Requests -------------------------------------------------------------------
