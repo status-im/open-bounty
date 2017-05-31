@@ -8,9 +8,10 @@
             [clojure.string :as str]
             [pandect.core :as pandect]))
 
-(def eth-rpc-url "http://localhost:8545")
+(defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
 (defn eth-password [] (:eth-password env))
+(defn gas-price [] (:gas-price env))
 
 (defn eth-rpc
   [method params]
@@ -21,7 +22,7 @@
                                   :id      request-id})
         options  {:headers {"content-type" "application/json"}
                   :body body}
-        response (:body @(post eth-rpc-url options))
+        response (:body @(post (eth-rpc-url) options))
         result   (json/read-str response :key-fn keyword)]
     (log/debug body "\n" result)
     (if (= (:id result) request-id)
@@ -65,9 +66,12 @@
 (defn send-transaction
   [from to value & [params]]
   (let [gas (estimate-gas from to value params)
-        args (merge params {:from  from
-                            :value value
-                            :gas   gas})]
+        args (merge params
+                    {:from  from
+                     :value value
+                     :gas   gas}
+                    (when-not (nil? (gas-price))
+                      {:gasPrice gas-price}))]
     (eth-rpc
      "personal_sendTransaction"
      [(if-not (nil? to)
