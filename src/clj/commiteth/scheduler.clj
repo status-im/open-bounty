@@ -59,7 +59,7 @@
   []
   (doseq [{issue-id :issue_id
            transaction-hash :transaction_hash
-           owner-address :owner_address} (issues/list-pending-deployments)]
+           owner-address :owner_address} (issues/list-failed-deployments)]
     (when (nil? (eth/get-transaction-receipt transaction-hash))
       (log/info "Detected nil transaction receipt for pending contract deployment for issue" issue-id ", re-deploying contract")
       (deploy-contract owner-address issue-id))))
