@@ -165,7 +165,8 @@ WHERE issue_id = :issue_id;
 -- :doc retrieves pending transaction ids
 SELECT
   issue_id,
-  transaction_hash
+  transaction_hash,
+  owner_address
 FROM issues
 WHERE contract_address IS NULL
 AND issues.transaction_hash IS NOT NULL;
