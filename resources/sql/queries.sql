@@ -164,12 +164,14 @@ WHERE issue_id = :issue_id;
 -- :name list-pending-deployments :? :*
 -- :doc retrieves pending transaction ids
 SELECT
-  issue_id,
-  transaction_hash,
-  owner_address
-FROM issues
-WHERE contract_address IS NULL
-AND issues.transaction_hash IS NOT NULL;
+  i.issue_id as issue_id,
+  i.transaction_hash as transaction_hash,
+  u.address as owner_address
+FROM issues i, users u, repositories r
+WHERE r.user_id = u.id
+AND i.repo_id = r.repo_id
+AND i.contract_address IS NULL
+AND i.transaction_hash IS NOT NULL;
 
 -- Pull Requests -------------------------------------------------------------------
 
