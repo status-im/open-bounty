@@ -184,7 +184,9 @@
 (defn run-periodic-tasks [time]
   (do
     (log/debug "run-periodic-tasks" time)
-    (redeploy-failed-contracts)
+    ;; TODO: disabled for now. looks like it may cause extraneus
+    ;; contract deployments and costs
+    #_(redeploy-failed-contracts)
     (deploy-pending-contracts)
     (update-issue-contract-address)
     (update-confirm-hash)
