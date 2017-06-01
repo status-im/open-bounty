@@ -12,7 +12,8 @@
             [clojure.tools.logging :as log]
             [clojure.string :as str]))
 
-
+(defn root-path []
+  (if (env :on-testnet) "/test" "/"))
 
 (defn- create-user [token user]
   (let [{name    :name
@@ -33,7 +34,7 @@
       (create-user token user))))
 
 (defroutes redirect-routes
-  (GET "/callback" [code state]
+  (GET (str (root-path) "callback") [code state]
     (let [resp         (github/post-for-token code state)
           body         (keywordize-keys (codec/form-decode (:body resp)))
           scope        (:scope body)
@@ -41,10 +42,10 @@
       (log/debug "github sign-in callback, response body:" body)
       (if (:error body)
         ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
-        (response/redirect "/")
+        (response/redirect (root-path))
         (let [admin-token? (str/includes? scope "repo")
               token-key (if admin-token? :admin-token :token)
               user (assoc (get-or-create-user access-token)
                           token-key access-token)]
-          (assoc (response/redirect "/")
+          (assoc (response/redirect (root-path))
                  :session {:identity user}))))))
