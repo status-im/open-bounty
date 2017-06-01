@@ -65,9 +65,11 @@
 (defn send-transaction
   [from to value & [params]]
   (let [gas (estimate-gas from to value params)
-        args (merge params {:from  from
-                            :value value
-                            :gas   gas})]
+        gasPrice (format "0x%x" 10000000000)
+        args (merge params {:from     from
+                            :value    value
+                            :gas      gas
+                            :gasPrice gasPrice})]
     (eth-rpc
      "personal_sendTransaction"
      [(if-not (nil? to)
@@ -89,10 +91,9 @@
 (defn deploy-contract
   [owner]
   (let [contract-code (-> "contracts/wallet.data" io/resource slurp)
-        owner1        (format-param (eth-account))
         owner2        (format-param owner)
-        data          (str contract-code owner1 owner2)
-        value         (format "0x%x" 1)]
+        data          (str contract-code owner2)
+        value         (format "0x%x" 0)]
     (send-transaction (eth-account) nil value {:data data})))
 
 (defn format-call-params
