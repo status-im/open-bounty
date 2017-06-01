@@ -93,13 +93,12 @@
 (defn deploy-contract
   [owner]
   (let [contract-code (-> "contracts/wallet.data" io/resource slurp)
-        owner1        (format-param (eth-account))
         owner2        (format-param owner)
-        data          (str contract-code owner1 owner2)
-        value         (format "0x%x" 1)]
+        data          (str contract-code owner2)
+        value         (format "0x%x" 0)]
     (send-transaction (eth-account) nil value {:data data})))
 
-(defn- format-call-params
+(defn format-call-params
   [method-id & params]
   (let [params (join (map format-param params))]
     (str method-id params)))
@@ -112,7 +111,7 @@
 (defn execute
   [from contract method-id & params]
   (let [data (apply format-call-params method-id params)
-        value (format "0x%x" 1)]
+        value (format "0x%x" 0)]
     (send-transaction from contract value {:data data})))
 
 
