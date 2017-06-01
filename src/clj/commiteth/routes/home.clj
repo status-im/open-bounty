@@ -21,7 +21,8 @@
                               :authorize-url (github/signup-authorize-url)
                               :authorize-url-admin (github/admin-authorize-url)
                               :commiteth-version version
-                              :on-testnet? (env :on-testnet)}))
+                              :on-testnet? (env :on-testnet)
+                              :root-path (if (env :on-testnet) "/test" "")}))
 
 (defroutes home-routes
   (GET "/" {{user :identity} :session}

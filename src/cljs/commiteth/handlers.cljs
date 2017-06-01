@@ -17,7 +17,10 @@
 
 (reg-fx
  :http
- (fn [{:keys [method url on-success on-error finally params]}]
+ (fn [{:keys [method url_ on-success on-error finally params]}]
+   (let [url (if (config/on-testnet?)
+               (str "/test" url_)
+               url_)])
    (method url
            {:headers {"Accept" "application/transit+json"}
             :handler on-success
