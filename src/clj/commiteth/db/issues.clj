@@ -46,6 +46,12 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/list-pending-deployments con-db)))
 
+
+(defn list-failed-deployments
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/list-failed-deployments con-db)))
+
 (defn get-balance
   [contract-address]
   (jdbc/with-db-connection [con-db *db*]
