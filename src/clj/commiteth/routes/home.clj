@@ -5,10 +5,10 @@
             [ring.util.response :refer [redirect]]
             [ring.util.http-response :refer [ok header]]
             [clojure.tools.logging :as log]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [commiteth.config :refer [env]]))
 
 (defonce ^:const version (System/getProperty "commiteth.version"))
-(defonce ^:const on-testnet? (System/getProperty "commiteth.onTestnet"))
 
 (defn home-page [{user-id :id
                   login :login
@@ -21,7 +21,7 @@
                               :authorize-url (github/signup-authorize-url)
                               :authorize-url-admin (github/admin-authorize-url)
                               :commiteth-version version
-                              :on-testnet? on-testnet?}))
+                              :on-testnet? (env :on-testnet)}))
 
 (defroutes home-routes
   (GET "/" {{user :identity} :session}

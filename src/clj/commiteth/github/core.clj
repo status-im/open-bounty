@@ -7,7 +7,6 @@
              [repos :as repos]
              [issues :as issues]]
             [ring.util.codec :as codec]
-            [commiteth.config :refer [env]]
             [clj-http.client :as http]
             [commiteth.config :refer [env]]
             [digest :refer [sha-256]]
@@ -17,7 +16,6 @@
   (:import [java.util UUID]))
 
 (def ^:dynamic url "https://api.github.com/")
-(defonce ^:const on-testnet? (System/getProperty "commiteth.onTestnet"))
 (defn server-address [] (:server-address env))
 (defn client-id [] (:github-client-id env))
 (defn client-secret [] (:github-client-secret env))
@@ -25,6 +23,7 @@
 (defn hook-secret [] (:github-hook-secret env))
 (defn self [] (:github-user env))
 (defn self-password [] (:github-password env))
+(defn on-testnet? [] (env :on-testnet))
 
 (defn authorize-url [scope]
   (let [params (codec/form-encode {:client_id    (client-id)
@@ -184,7 +183,7 @@
   (md-image "Contract deploying" (str (server-address) "/img/deploying_contract.png")))
 
 (defn network-text []
-  (str "Network: " (if on-testnet?
+  (str "Network: " (if (on-testnet?)
                      "Testnet"
                      "Mainnet")
        "\n"))
