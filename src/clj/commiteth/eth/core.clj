@@ -72,6 +72,8 @@
                      :gas   gas}
                     (when-not (nil? (gas-price))
                       {:gasPrice gas-price}))]
+    (log/debug "gas:" gas)
+    (log/debug "args:" args)
     (eth-rpc
      "personal_sendTransaction"
      [(if-not (nil? to)
