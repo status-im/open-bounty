@@ -184,7 +184,7 @@
 
 (defn network-text []
   (str "Network: " (if (on-testnet?)
-                     "Testnet"
+                     "Testnet (Rinkeby)"
                      "Mainnet")
        "\n"))
 
