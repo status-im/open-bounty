@@ -1,6 +1,5 @@
 (ns commiteth.handlers
   (:require [commiteth.db :as db]
-            [commiteth.config :as config]
             [re-frame.core :refer [dispatch
                                    reg-event-db
                                    reg-event-fx
