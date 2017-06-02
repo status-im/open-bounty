@@ -4,7 +4,7 @@
             [ring.util.codec :as codec]
             [commiteth.github.core :as github]
             [commiteth.db.users :as users]
-            [commiteth.layout :refer [error-page]]
+            [commiteth.config :refer [env]]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.response :as response]
             [commiteth.layout :refer [render]]
@@ -41,10 +41,10 @@
       (log/debug "github sign-in callback, response body:" body)
       (if (:error body)
         ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
-        (response/redirect "/")
+        (response/redirect (str (env :server-address) "/"))
         (let [admin-token? (str/includes? scope "repo")
               token-key (if admin-token? :admin-token :token)
               user (assoc (get-or-create-user access-token)
                           token-key access-token)]
-          (assoc (response/redirect "/")
+          (assoc (response/redirect (str (env :server-address) "/"))
                  :session {:identity user}))))))
