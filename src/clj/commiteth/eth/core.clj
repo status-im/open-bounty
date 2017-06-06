@@ -74,7 +74,6 @@
                     (when-not (contains? params :gas)
                       {:gas
                        (estimate-gas from to value params)}))]
-    (log/debug "gas:" gas)
     (log/debug "args:" args)
     (eth-rpc
      "personal_sendTransaction"
