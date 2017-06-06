@@ -65,13 +65,15 @@
 
 (defn send-transaction
   [from to value & [params]]
-  (let [gas (estimate-gas from to value params)
+  (let [
         args (merge params
                     {:from  from
-                     :value value
-                     :gas   gas}
+                     :value value}
                     (when-not (nil? (gas-price))
-                      {:gasPrice gas-price}))]
+                      {:gasPrice gas-price})
+                    (when-not (contains? params :gas)
+                      {:gas
+                       (estimate-gas from to value params)}))]
     (log/debug "gas:" gas)
     (log/debug "args:" args)
     (eth-rpc
