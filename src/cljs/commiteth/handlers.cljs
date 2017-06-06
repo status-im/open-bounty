@@ -349,7 +349,7 @@
    (let [send-transaction-fn (aget js/web3 "eth" "sendTransaction")
          payload {:from  owner-address
                   :to    contract-address
-                  :value 1
+                  :value 0
                   :data  (str "0x797af627" confirm-hash)}]
      (try
        (apply send-transaction-fn [(clj->js payload)
