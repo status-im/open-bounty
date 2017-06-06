@@ -2,7 +2,7 @@
   (:require [commiteth.eth.core :as eth]
             [clojure.tools.logging :as log]))
 
-(def confirmation-topic "0xe1c52dc63b719ade82e8bea94cc41a0d5d28e4aaf536adb5e9cccc9ff8c1aeda")
+(def confirmation-topic "0x1733cbb53659d713b79580f79f3f9ff215f78a7c7aa45890f3b89fc5cddfbf32")
 
 (defn get-owner
   [contract index]
@@ -29,7 +29,7 @@
         confirmation-event     (first (filter has-confirmation-event logs))
         confirmation-data      (:data confirmation-event)]
     (when confirmation-data
-      (subs confirmation-data 66))))
+      (subs confirmation-data 2 66))))
 
   (defn erc20-transfer 
     [contract token to amount]
@@ -42,3 +42,4 @@
                 "0x60"
                 "0x44"
                 (eth/format-call-params "0xa9059cbb" to amount)))
+                
