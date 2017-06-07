@@ -70,7 +70,7 @@
                     {:from  from
                      :value value}
                     (when-not (nil? (gas-price))
-                      {:gasPrice gas-price})
+                      {:gasPrice (gas-price)})
                     (when-not (contains? params :gas)
                       {:gas
                        (estimate-gas from to value params)}))]
