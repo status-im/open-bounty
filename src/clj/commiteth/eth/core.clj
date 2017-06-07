@@ -99,7 +99,8 @@
         owner2        (format-param owner)
         data          (str contract-code owner2)
         value         (format "0x%x" 0)]
-    (send-transaction (eth-account) nil value {:data data})))
+    (send-transaction (eth-account) nil value {:gas   "0x80000"
+                                               :data  data})))
 
 (defn format-call-params
   [method-id & params]
