@@ -264,7 +264,7 @@ AND u.id = p.user_id
 AND i.execute_hash IS NULL;
 
 -- :name pending-payouts :? :*
--- :doc lists all recently closed issues awaiting to be confirmed
+-- :doc recently closed issues awaiting for bot confirmation to be mined
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,

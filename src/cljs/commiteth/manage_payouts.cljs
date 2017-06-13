@@ -17,6 +17,7 @@
          issue-title :issue_title} claim
         merged? (= 1 (:pr_state claim))
         paid? (not-empty (:payout_hash claim))
+        bot-confirm-unmined? (empty? (:confirm_hash bounty))
         confirming? (:confirming? bounty)
         updated (:updated bounty)]
     [:div.activity-item
@@ -37,7 +38,7 @@
                  {}
                  {:disabled true})
                {:on-click #(rf/dispatch [:confirm-payout claim])}
-               (when confirming?
+               (when (or confirming? bot-confirm-unmined?)
                  {:class "busy loading" :disabled true}))
         (if paid?
           "Signed off"
