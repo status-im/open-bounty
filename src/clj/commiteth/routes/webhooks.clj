@@ -164,6 +164,13 @@
                        (merge pr-data {:state :closed
                                        :commit_sha head-sha}))))))))
 
+(defn handle-issue-edited
+  [webhook-payload]
+  (let [gh-issue (:issue webhook-payload)
+        issue-id (:id gh-issue)
+        new-title (:title gh-issue)]
+    (issues/update-issue-title issue-id new-title)))
+
 
 (defn handle-issue
   [webhook-payload]
@@ -174,7 +181,9 @@
     (when (and
            (= "closed" action)
            (bounties/has-bounty-label? (:issue webhook-payload)))
-      (handle-issue-closed webhook-payload)))
+      (handle-issue-closed webhook-payload))
+    (when (= "edited" action)
+           (handle-issue-edited webhook-payload)))
   (ok))
 
 

@@ -206,6 +206,7 @@
                                                    (log/error "Scheduled task failed" e)
                                                    (throw e))})]
            (log/info "started scheduler")
+           (bounties/update-bounty-issue-titles)
            stop-fn)
   :stop (do
           (log/info "stopping scheduler")

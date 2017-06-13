@@ -73,3 +73,16 @@
     (if png-data
       (comment-images/save-image! issue-id hash png-data)
       (log/error "Failed ot generate PNG"))))
+
+
+(defn update-bounty-issue-titles
+  "Update stored titles for bounty issues if changed on Github side"
+  []
+  (log/debug "update-bounty-issue-titles")
+  (for [{:keys [title issue_number repo owner]}
+        (issues/get-issue-titles)]
+    (let [gh-issue (github/get-issue owner repo issue_number)]
+      (if-not (= title (:title gh-issue))
+        (do
+          (log/info "Updating changed title for issue" (:id gh-issue))
+          (issues/update-issue-title (:id gh-issue) (:title gh-issue)))))))

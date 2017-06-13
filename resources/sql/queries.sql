@@ -84,6 +84,12 @@ WHERE user_id = :user_id
 AND state = 2;
 
 
+-- :name get-issue-titles :? :*
+SELECT i.title, i.issue_number, r.repo, r.owner
+FROM issues i, repositories r
+WHERE i.repo_id = r.repo_id;
+
+
 -- :name update-repo-generic :! :n
 /* :require [clojure.string :as string]
             [hugsql.parameters :refer [identifier-param-quote]] */
@@ -159,6 +165,12 @@ RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.comment_id,
 UPDATE issues
 SET comment_id = :comment_id,
 updated = timezone('utc'::text, now())
+WHERE issue_id = :issue_id;
+
+-- :name update-issue-title :! :n
+-- :doc updates title for a given issue-id
+UPDATE issues
+SET title = :title
 WHERE issue_id = :issue_id;
 
 -- :name list-pending-deployments :? :*

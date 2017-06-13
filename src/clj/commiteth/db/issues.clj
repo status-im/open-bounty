@@ -19,6 +19,18 @@
     (db/update-commit-sha con-db {:issue_id issue-id
                                  :commit_sha commit-sha})))
 
+(defn get-issue-titles
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issue-titles con-db {})))
+
+(defn update-issue-title
+  [issue-id title]
+    (jdbc/with-db-connection [con-db *db*]
+    (db/update-issue-title con-db {:issue_id issue-id
+                                   :title title})))
+
+
 (defn update-transaction-hash
   "Updates issue with transaction-hash"
   [issue-id transaction-hash]
