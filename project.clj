@@ -118,7 +118,7 @@
                             [sablono "0.8.0"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
                             [lein-doo "0.1.7"]
-                            [lein-figwheel "0.5.9"]]
+                            [lein-figwheel "0.5.10"]]
            :cljsbuild
            {:builds
             [{:id "app"
