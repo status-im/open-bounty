@@ -88,7 +88,7 @@
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
       (log/error "Cannot sign pending bounty - winner has no payout address")
-      (let [execute-hash (wallet/execute contract-address payout-address value)]
+      (let [execute-hash (wallet/send-all contract-address payout-address)]
         (db-bounties/update-execute-hash issue-id execute-hash)
         (github/update-merged-issue-comment owner
                                             repo
