@@ -11,30 +11,47 @@ https://commiteth.com
 
 ## Prerequisites
 
-* You will need [Leiningen][1] 2.0 or above installed.
+You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above installed.
 
-[1]: https://github.com/technomancy/leiningen
+### PostgreSQL
+
+Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
+
+```
+sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
+sudo -u postgres createdb commiteth
+```
 
 ## Running
 
-    lein run
-    lein figwheel
-    lein less auto
+Launch following commands each in its own shell:
+
+```
+lein run
+lein figwheel
+lein less auto
+
+```
 
 ## Testing
 
 ### Clojure tests
 
-    lein test
+```
+lein test
+```
 
 ### ClojureScript tests
 
-
-    lein with-profile test phantom test
+```
+lein with-profile test doo phantom test
+```
 
 ### Reagent component devcards
 
-    lein with-profile test figwheel devcards
+```
+lein with-profile test figwheel devcards
+```
 
 Open http://localhost:3449/cards.html
 
