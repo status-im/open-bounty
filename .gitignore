@@ -2,6 +2,9 @@
 /lib
 /classes
 /checkouts
+/out
+/resources/public/js/compiled
+/resources/public/css/style.css
 pom.xml
 *.jar
 *.class
