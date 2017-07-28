@@ -35,7 +35,8 @@
 (defn get-repo
   "Get a repo from DB given it's full name (owner/repo-name)"
   [full-name]
-  (let [[owner repo-name] (str/split full-name #"/")]
-    (jdbc/with-db-connection [con-db *db*]
-      (db/get-repo {:owner owner
-                    :repo repo-name}))))
+  (when full-name
+    (let [[owner repo-name] (str/split full-name #"/")]
+      (jdbc/with-db-connection [con-db *db*]
+        (db/get-repo {:owner owner
+                      :repo repo-name})))))
