@@ -30,7 +30,7 @@ sudo -u postgres createdb commiteth
 ```
 Application name: a_unique_id
 Homepage URL: http://_your_.ddns.net:3000/
-Authorization URL: http://jeluard.ddns.net:3000/callback
+Authorization URL: http://_your_.ddns.net:3000/callback
 ```
 
 
