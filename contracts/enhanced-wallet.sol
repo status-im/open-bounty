@@ -2,6 +2,7 @@
 // Multi-sig, daily-limited account proxy/wallet.
 // @authors:
 // Gav Wood <g@ethdev.com>
+// Ricardo Schmidt <3esmit@gmail.com> (token enhanced)
 // inheritable "property" contract that enables methods to be protected by requiring the acquiescence of either a
 // single, or, crucially, each of a number of, designated owners.
 // usage:
@@ -29,6 +30,8 @@ contract WalletEvents {
 
   // Funds has arrived into the wallet (record how much).
   event Deposit(address _from, uint value);
+  // Tokens has arrived into walled 
+  event TokenDeposit(address _token, address _from, uint value);
   // Single transaction going out of the wallet (record who signed for it, how much, and to whom it's going).
   event SingleTransact(address owner, uint value, address to, bytes data, address created);
   // Multi-sig transaction going out of the wallet (record who signed for it last, the operation hash, how much, and to whom it's going).
@@ -59,6 +62,26 @@ contract WalletAbi {
 
   function execute(address _to, uint _value, bytes _data) external returns (bytes32 o_hash);
   function confirm(bytes32 _h) returns (bool o_success);
+  function depositToken(address _token, bytes _data);
+  function deposit(address _from, uint256 _amount, address _token, bytes _data);
+  function watch(address _tokenAddr);
+}
+contract ERC20 {
+    uint256 public totalSupply;
+    function balanceOf(address who) constant returns (uint256);
+    function allowance(address owner, address spender) constant returns (uint256);
+    function transfer(address to, uint256 value) returns (bool ok);
+    function transferFrom(address from, address to, uint256 value) returns (bool ok);
+    function approve(address spender, uint256 value) returns (bool ok);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+contract ApproveAndCallFallBack {
+    function receiveApproval(address from, uint256 _amount, address _token, bytes _data);
+}
+
+contract ERC23Receiver {
+    function tokenFallback(address _from, uint _value, bytes _data);
 }
 
 contract WalletLibrary is WalletEvents {
@@ -101,6 +124,77 @@ contract WalletLibrary is WalletEvents {
     if (msg.value > 0)
       Deposit(msg.sender, msg.value);
   }
+
+  /**
+  * @notice deposit a ERC20 token. The amount of deposit is the allowance set to this contract.
+  * @param _token the token contract address
+  * @param _data might be used by child implementations
+  **/ 
+  function depositToken(address _token, bytes _data){
+    address sender = msg.sender;
+    uint amount = ERC20(_token).allowance(sender, this);
+    deposit(sender, amount, _token, _data);
+  }
+      
+  /**
+  * @notice deposit a ERC20 token. The amount of deposit is the allowance set to this contract.
+  * @param _token the token contract address
+  * @param _data might be used by child implementations
+  **/ 
+  function deposit(address _from, uint256 _amount, address _token, bytes _data) {
+    if(_from == address(this)) return;
+    uint _nonce = nonce;
+    if(!ERC20(_token).transferFrom(_from, this, _amount)) throw;
+    if(nonce == _nonce){ //ERC23 not executed _deposited tokenFallback by
+      _deposited(_from, _amount, _token, _data);
+    }
+  }
+
+  /**
+    * @notice watches for balance in a token contract
+    * @param _tokenAddr the token contract address
+    **/   
+  function watch(address _tokenAddr) {
+    uint oldBal = tokenBalances[_tokenAddr];
+    uint newBal = ERC20(_tokenAddr).balanceOf(this);
+    if(newBal > oldBal){
+      _deposited(0x0, newBal-oldBal,_tokenAddr,new bytes(0));
+    }
+  }
+
+  /**
+    * @notice ERC23 Token fallback
+    * @param _from address incoming token
+    * @param _amount incoming amount
+    **/    
+  function tokenFallback(address _from, uint _amount, bytes _data) {
+    _deposited(_from, _amount, msg.sender, _data);
+  }
+    
+  /** 
+    * @notice Called MiniMeToken approvesAndCall to this contract, calls deposit.
+    * @param _from address incoming token
+    * @param _amount incoming amount
+    * @param _token the token contract address
+    * @param _data (might be used by child classes)
+    */ 
+  function receiveApproval(address _from, uint256 _amount, address _token, bytes _data){
+    deposit(_from, _amount, _token, _data);
+  }
+    
+  /**
+    * @dev register the deposit to refundings
+    **/
+  function _deposited(address _from,  uint _amount, address _tokenAddr, bytes _data) internal {
+    TokenDeposit(_tokenAddr,_from,_amount);
+    nonce++;
+    if(tokenBalances[_tokenAddr] == 0){
+      tokens.push(_tokenAddr);  
+      tokenBalances[_tokenAddr] = ERC20(_tokenAddr).balanceOf(this);
+    }else{
+      tokenBalances[_tokenAddr] += _amount;
+    }
+}
 
   // constructor is given number of sigs required to do protected "onlymanyowners" transactions
   // as well as the selection of addresses capable of confirming them.
@@ -223,6 +317,7 @@ contract WalletLibrary is WalletEvents {
 
   // kills the contract sending everything to `_to`.
   function kill(address _to) onlymanyowners(sha3(msg.data)) external {
+    withdrawAll(_to);
     suicide(_to);
   }
 
@@ -254,6 +349,34 @@ contract WalletLibrary is WalletEvents {
       if (!confirm(o_hash)) {
         ConfirmationNeeded(o_hash, msg.sender, _value, _to, _data);
       }
+    }
+  }
+  
+  function sendAll(address _to) external {
+    if (msg.sender != address(this)) throw;
+    withdrawAll(_to);
+    _to.transfer(this.balance);
+  }
+      
+      
+  function withdrawAll(address _to) internal {
+    uint len = tokens.length;
+    for(uint i = 0;i< len; i++){
+      address _token = tokens[i];
+      withdraw(_token,_to,tokenBalances[_token]);
+    }
+  }
+  /**
+    * @dev withdraw token amount to dest
+    **/
+  function withdraw(address _tokenAddr, address _dest, uint _amount)
+  internal returns (bool){
+    if(_amount == 0) return true;
+    tokenBalances[_tokenAddr] -= _amount;
+    ERC20 token = ERC20(_tokenAddr);
+    token.approve(this, 0); 
+    if(token.approve(this, _amount)){
+      return token.transferFrom(this, _dest, _amount);
     }
   }
 
@@ -384,6 +507,10 @@ contract WalletLibrary is WalletEvents {
   // list of owners
   uint[256] m_owners;
 
+  mapping (address => uint) public tokenBalances;
+  address[] public tokens;
+  uint nonce
+
   uint constant c_maxOwners = 250;
   // index on the list of owners to allow reverse lookup
   mapping(uint => uint) m_ownerIndex;
@@ -409,6 +536,7 @@ contract Wallet is WalletEvents {
     // plus 2 32bytes for each uint
     uint argarraysize = (2 + _owners.length);
     uint argsize = (2 + argarraysize) * 32;
+    bool ret;
 
     assembly {
       // Add the signature first to memory
@@ -417,8 +545,9 @@ contract Wallet is WalletEvents {
       // code
       codecopy(0x4,  sub(codesize, argsize), argsize)
       // Delegate call to the library
-      delegatecall(sub(gas, 10000), target, 0x0, add(argsize, 0x4), 0x0, 0x0)
+      ret := delegatecall(sub(gas, 10000), target, 0x0, add(argsize, 0x4), 0x0, 0x0)
     }
+    if (!ret) throw;
   }
 
   // METHODS
@@ -461,4 +590,8 @@ contract Wallet is WalletEvents {
 
   // list of owners
   uint[256] m_owners;
+
+  mapping (address => uint) public tokenBalances;
+  address[] public tokens;
+  uint nonce
 }

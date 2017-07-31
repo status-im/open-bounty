@@ -31,15 +31,15 @@
     (when confirmation-data
       (subs confirmation-data 2 66))))
 
-  (defn erc20-transfer 
-    [contract token to amount]
-    (log/debug "multisig.erc20-transfer(contract, token, to, amount)" contract token to amount)
+  (defn send-all 
+    [contract to]
+    (log/debug "multisig.send-all(contract, to)" contract to)
     (eth/execute (eth/eth-account)
                 contract
                 "0xb61d27f6"
-                token
+                contract
                 0
                 "0x60"
-                "0x44"
-                (eth/format-call-params "0xa9059cbb" to amount)))
+                "0x24"
+    (eth/format-call-params "0xd660c45d" to)))
                 
