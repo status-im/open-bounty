@@ -1,4 +1,5 @@
 pragma solidity ^0.4.11;
+
 contract ERC20 {
     uint256 public totalSupply;
     function balanceOf(address who) constant returns (uint256);
@@ -9,11 +10,12 @@ contract ERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
+
 contract MultiSigLibrary {
 
     address constant _walletLibrary = 0xcafecafecafecafecafecafecafecafecafecafe;
     uint constant public MAX_OWNER_COUNT = 50;
-    
+
     event Confirmation(address indexed _sender, uint indexed _transactionId);
     event Revocation(address indexed _sender, uint indexed _transactionId);
     event Submission(uint indexed _transactionId);
@@ -25,7 +27,7 @@ contract MultiSigLibrary {
     event OwnerRemoval(address indexed _owner);
     event RequirementChange(uint _required);
     event IgnoredToken(address indexed _owner, address _token, bool ignored);
-    
+
     mapping (uint => Transaction) public transactions;
     mapping (uint => mapping (address => bool)) public confirmations;
     mapping (address => bool) public isOwner;
@@ -37,7 +39,7 @@ contract MultiSigLibrary {
     mapping (address => bool) public ignoredTokens;
     address[] public tokens;
     uint nonce;
-    
+
     struct Transaction {
         address destination;
         uint value;
@@ -102,8 +104,8 @@ contract MultiSigLibrary {
     }
 
     /*
-     * Public functions
-     */
+        * Public functions
+        */
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
@@ -124,7 +126,9 @@ contract MultiSigLibrary {
     * @param _token the token contract address
     * @param _data might be used by child implementations
     **/ 
-    function depositToken(address _token, bytes _data) public {
+    function depositToken(address _token, bytes _data) 
+        public 
+    {
         address sender = msg.sender;
         uint amount = ERC20(_token).allowance(sender, this);
         deposit(sender, amount, _token, _data);
@@ -135,7 +139,9 @@ contract MultiSigLibrary {
     * @param _token the token contract address
     * @param _data might be used by child implementations
     **/ 
-    function deposit(address _from, uint256 _amount, address _token, bytes _data) public {
+    function deposit(address _from, uint256 _amount, address _token, bytes _data) 
+        public 
+    {
         if(_from == address(this)) return;
         uint _nonce = nonce;
         assert(ERC20(_token).transferFrom(_from, this, _amount));
@@ -149,7 +155,9 @@ contract MultiSigLibrary {
     * @param _from address incoming token
     * @param _amount incoming amount
     **/    
-    function tokenFallback(address _from, uint _amount, bytes _data) public {
+    function tokenFallback(address _from, uint _amount, bytes _data) 
+        public 
+    {
         _deposited(_from, _amount, msg.sender, _data);
     }
         
@@ -160,23 +168,11 @@ contract MultiSigLibrary {
     * @param _token the token contract address
     * @param _data (might be used by child classes)
     */ 
-    function receiveApproval(address _from, uint256 _amount, address _token, bytes _data){
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes _data) 
+    {
         deposit(_from, _amount, _token, _data);
     }
-        
-    /**
-    * @dev register the deposit
-    **/
-    function _deposited(address _from,  uint _amount, address _tokenAddr, bytes _data) internal {
-        TokenDeposit(_tokenAddr,_from,_amount);
-        nonce++;
-        if(tokenBalances[_tokenAddr] == 0){
-            tokens.push(_tokenAddr);  
-            tokenBalances[_tokenAddr] = ERC20(_tokenAddr).balanceOf(this);
-        }else{
-            tokenBalances[_tokenAddr] += _amount;
-        }
-    }
+    
 
     /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
     /// @param owner Address of new owner.
@@ -197,7 +193,9 @@ contract MultiSigLibrary {
     * @param _tokenAddr the token contract address
     * @param _data any data
     **/   
-    function watch(address _tokenAddr, bytes _data) ownerExists(msg.sender) {
+    function watch(address _tokenAddr, bytes _data) 
+        ownerExists(msg.sender) 
+    {
         uint oldBal = tokenBalances[_tokenAddr];
         uint newBal = ERC20(_tokenAddr).balanceOf(this);
         if(newBal > oldBal){
@@ -210,7 +208,9 @@ contract MultiSigLibrary {
     * @param _tokenAddr the token contract address
     * @param _ignore true if is to ignore, false if not ignore (default)
     **/   
-    function ignoreToken(address _tokenAddr, bool _ignore) ownerExists(msg.sender) {
+    function ignoreToken(address _tokenAddr, bool _ignore) 
+        ownerExists(msg.sender) 
+    {
         IgnoredToken(msg.sender, _tokenAddr, _ignore);
         ignoredTokens[_tokenAddr] = _ignore;
     }
@@ -321,38 +321,73 @@ contract MultiSigLibrary {
         }
     }
 
-    function sendAll(address _to) onlyWallet {
-        withdrawAll(_to);
-        _to.transfer(this.balance);
+    /**
+    * @dev gives full ownership of this wallet to `_dest` removing older owners from wallet
+    * @param _dest the address of new controller
+    **/    
+    function releaseWallet(address _dest)
+        public
+        notNull(_dest)
+        ownerDoesNotExist(_dest)
+        onlyWallet
+    {
+        address[] memory _owners = owners;
+        uint numOwners = _owners.length;
+        addOwner(_dest);
+        for(uint i = 0; i < numOwners; i++){
+            removeOwner(_owners[i]);
+        }
     }
-      
-    function withdrawAll(address _dest) internal {
+
+    /**
+    * @dev withdraw all recognized tokens balances and ether to `_dest`
+    * @param _dest the address of receiver
+    **/    
+    function withdrawEverything(address _dest) 
+        public
+        notNull(_dest)
+        onlyWallet
+    {
+        withdrawAllTokens(_dest);
+        _dest.transfer(this.balance);
+    }
+
+    /**
+    * @dev withdraw all recognized tokens balances to `_dest`
+    * @param _dest the address of receiver
+    **/    
+    function withdrawAllTokens(address _dest) 
+        public 
+        notNull(_dest)
+        onlyWallet
+    {
         uint len = tokens.length;
         for(uint i = 0;i< len; i++){
             address _tokenAddr = tokens[i];
             uint _amount = tokenBalances[_tokenAddr];
             if(_amount > 0 && !ignoredTokens[_tokenAddr]) {
                 delete tokenBalances[_tokenAddr];
-                ERC20 token = ERC20(_tokenAddr);
-                token.approve(this, 0); 
-                if(token.approve(this, _amount)){
-                    assert(token.transferFrom(this, _dest, _amount));
-                }
+                ERC20(_tokenAddr).transfer(_dest, _amount);
             }
         }
     }
+
     /**
-    * @dev withdraw token amount to dest
+    * @dev withdraw `_tokenAddr` `_amount` to `_dest`
+    * @param _tokenAddr the address of the token
+    * @param _dest the address of receiver
+    * @param _amount the number of tokens to send
     **/
-    function withdraw(address _tokenAddr, address _dest, uint _amount)
-    internal returns (bool){
-        if(_amount == 0) return true;
-        tokenBalances[_tokenAddr] -= _amount;
-        ERC20 token = ERC20(_tokenAddr);
-        token.approve(this, 0); 
-        if(token.approve(this, _amount)){
-            return token.transferFrom(this, _dest, _amount);
-        }
+    function withdrawToken(address _tokenAddr, address _dest, uint _amount)
+        public
+        notNull(_dest)
+        onlyWallet 
+    {
+        require(_amount > 0);
+        uint _balance = tokenBalances[_tokenAddr];
+        require(_amount <= _balance);
+        tokenBalances[_tokenAddr] = _balance - _amount;
+        assert(ERC20(_tokenAddr).transfer(_dest, _amount));
     }
 
     /// @dev Returns the confirmation status of a transaction.
@@ -373,8 +408,8 @@ contract MultiSigLibrary {
     }
 
     /*
-     * Internal functions
-     */
+    * Internal functions
+    */
     /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
     /// @param destination Transaction target address.
     /// @param value Transaction ether value.
@@ -395,10 +430,26 @@ contract MultiSigLibrary {
         transactionCount += 1;
         Submission(transactionId);
     }
-
+    
+    /**
+    * @dev register the deposit
+    **/
+    function _deposited(address _from,  uint _amount, address _tokenAddr, bytes _data) 
+        internal 
+    {
+        TokenDeposit(_tokenAddr,_from,_amount);
+        nonce++;
+        if(tokenBalances[_tokenAddr] == 0){
+            tokens.push(_tokenAddr);  
+            tokenBalances[_tokenAddr] = ERC20(_tokenAddr).balanceOf(this);
+        }else{
+            tokenBalances[_tokenAddr] += _amount;
+        }
+    }
+    
     /*
-     * Web3 call functions
-     */
+        * Web3 call functions
+        */
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Number of confirmations.
@@ -488,9 +539,9 @@ contract MultiSigLibrary {
 
 contract EnhancedMultiSig {
 
-    address constant _walletLibrary = 0xcaa92e30bdd862e602779c1b9e1be816f48790a6;
+    address constant _walletLibrary = 0xcafecafecafecafecafecafecafecafecafecafe;
     uint constant public MAX_OWNER_COUNT = 50;
-    
+
     event Confirmation(address indexed _sender, uint indexed _transactionId);
     event Revocation(address indexed _sender, uint indexed _transactionId);
     event Submission(uint indexed _transactionId);
@@ -502,7 +553,7 @@ contract EnhancedMultiSig {
     event OwnerRemoval(address indexed _owner);
     event RequirementChange(uint _required);
     event IgnoredToken(address indexed _owner, address _token, bool ignored);
-    
+
     mapping (uint => Transaction) public transactions;
     mapping (uint => mapping (address => bool)) public confirmations;
     mapping (address => bool) public isOwner;
@@ -514,7 +565,7 @@ contract EnhancedMultiSig {
     mapping (address => bool) public ignoredTokens;
     address[] public tokens;
     uint nonce;
-    
+
     struct Transaction {
         address destination;
         uint value;
@@ -522,7 +573,7 @@ contract EnhancedMultiSig {
         bool executed;
     }
 
-    
+
     // WALLET CONSTRUCTOR
     function EnhancedMultiSig(address[] _owners, uint _required) {
         require(_required > 0);
@@ -561,8 +612,8 @@ contract EnhancedMultiSig {
         }
     }
     /*
-     * Web3 call functions
-     */
+        * Web3 call functions
+        */
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Number of confirmations.
@@ -648,20 +699,5 @@ contract EnhancedMultiSig {
             _transactionIds[i - from] = transactionIdsTemp[i];
     }
 
-    /// @dev Returns the confirmation status of a transaction.
-    /// @param transactionId Transaction ID.
-    /// @return Confirmation status.
-    function isConfirmed(uint transactionId)
-        public
-        constant
-        returns (bool)
-    {
-        uint count = 0;
-        for (uint i=0; i<owners.length; i++) {
-            if (confirmations[transactionId][owners[i]])
-                count += 1;
-            if (count == required)
-                return true;
-        }
-    }
 }
+ 
