@@ -350,7 +350,7 @@
          payload {:from  owner-address
                   :to    contract-address
                   :value 0
-                  :data  (str "0x797af627" confirm-hash)}]
+                  :data  (str "0xc01a8c84" confirm-hash)}]
      (try
        (apply send-transaction-fn [(clj->js payload)
                                    (send-transaction-callback issue-id)])
