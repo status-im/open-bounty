@@ -11,9 +11,9 @@ contract ERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-contract MultiSigLibrary {
+contract MultiSigTokenWallet {
 
-    address constant _walletLibrary = 0xcafecafecafecafecafecafecafecafecafecafe;
+    address constant _walletLibrary = 0x0; 
     uint constant public MAX_OWNER_COUNT = 50;
 
     event Confirmation(address indexed _sender, uint indexed _transactionId);
@@ -109,7 +109,7 @@ contract MultiSigLibrary {
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
-    function MultiSigLibrary(address[] _owners, uint _required)
+    function MultiSigTokenWallet(address[] _owners, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
@@ -539,7 +539,7 @@ contract MultiSigLibrary {
 
 contract EnhancedMultiSig {
 
-    address constant _walletLibrary = 0xcafecafecafecafecafecafecafecafecafecafe;
+    address constant _walletLibrary = 0xf5f6853e0ebA27074A804358eEdF4E89eFaebc98;
     uint constant public MAX_OWNER_COUNT = 50;
 
     event Confirmation(address indexed _sender, uint indexed _transactionId);
@@ -700,4 +700,3 @@ contract EnhancedMultiSig {
     }
 
 }
- 

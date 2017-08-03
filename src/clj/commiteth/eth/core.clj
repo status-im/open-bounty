@@ -96,8 +96,9 @@
 (defn deploy-contract
   [owner]
   (let [contract-code (-> "contracts/wallet.data" io/resource slurp)
+        owner1        (format-param (eth-account))
         owner2        (format-param owner)
-        data          (str contract-code owner2)
+        data (str contract-code owner1 owner2)
         value         (format "0x%x" 0)]
     (send-transaction (eth-account) nil value {:gas   "0x80000"
                                                :data  data})))
