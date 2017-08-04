@@ -12,3 +12,12 @@
                (json/read-str))]
     (-> (get-in m ["ticker" "price"])
         (read-string))))
+
+
+(defn bounty-usd-value
+  "Get current USD value of a bounty. bounty is a map of token-name to value"
+  [bounty]
+  (reduce + (map (fn [[token value]]
+                   (let [usd-price (get-token-usd-price token)]
+                     (* usd-price value)))
+                 bounty)))
