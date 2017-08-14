@@ -191,19 +191,18 @@
 (defn generate-open-comment
   [owner repo issue-number contract-address balance balance-str]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number balance))
-        balance   (str balance-str " ETH")
         site-url  (md-url (server-address) (server-address))]
-    (format (str "Current balance: %s\n"
+    (format (str "Current balance: %s ETH\n"
                  "Contract address: %s\n"
                  "%s\n"
                  (network-text)
                  "To claim this bounty sign up at %s")
-            balance-str contract-address image-url site-url)))
+            balance contract-address image-url site-url)))
 
 
 (defn generate-merged-comment
   [contract-address balance-str winner-login]
-  (format (str "Balance: %s\n"
+  (format (str "Balance: %s ETH\n"
                "Contract address: %s\n"
                (network-text)
                "Status: pending maintainer confirmation\n"
@@ -212,7 +211,7 @@
 
 (defn generate-paid-comment
   [contract-address balance-str payee-login]
-  (format (str "Balance: %s\n"
+  (format (str "Balance: %s ETH\n"
                "Contract address: %s\n"
                (network-text)
                "Paid to: %s\n")

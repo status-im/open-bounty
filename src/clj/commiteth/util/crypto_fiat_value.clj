@@ -3,7 +3,9 @@
             [clojure.data.json :as json]))
 
 
-(defn get-token-usd-price [token]
+(defn get-token-usd-price
+  "Get current USD value for a token using cryptonator API"
+  [token]
   (let [url (str "https://api.cryptonator.com/api/ticker/"
                  token
                  "-usd")

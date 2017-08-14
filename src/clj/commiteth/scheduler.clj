@@ -27,7 +27,7 @@
                repo         :repo
                comment-id   :comment_id
                issue-number :issue_number} issue
-              balance-str (eth/get-balance-eth contract-address 8)
+              balance-str (eth/get-balance-eth contract-address 6)
               balance (read-string balance-str)]
           (bounties/update-bounty-comment-image issue-id
                                                 owner
@@ -158,7 +158,7 @@
            old-balance      :balance
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
-      (let [current-balance-eth-str (eth/get-balance-eth contract-address 8)
+      (let [current-balance-eth-str (eth/get-balance-eth contract-address 6)
             current-balance-eth (read-string current-balance-eth-str)]
         (log/debug "update-balances" current-balance-eth
                    current-balance-eth-str owner repo issue-number)
