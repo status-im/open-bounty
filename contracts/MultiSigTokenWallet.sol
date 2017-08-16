@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.15;
 
 contract ERC20 {
     uint256 public totalSupply;
@@ -102,9 +102,10 @@ contract MultiSigTokenWallet {
             Deposit(msg.sender, msg.value);
     }
 
-    /*
-        * Public functions
-        */
+    /**
+     * Public functions
+     * 
+     **/
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
