@@ -7,9 +7,6 @@
 (defonce method-ids
   {:submit-transaction (eth/sig->method-id "submitTransaction(address,uint256,bytes)")})
 
-(defn get-owner
-  [contract index]
-  (eth/call contract "0x025e7c27" index))
 
 (defn execute
   [contract to value]
