@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.15;
 
 contract ERC20 {
     uint256 public totalSupply;
@@ -13,7 +13,25 @@ contract ERC20 {
 
 contract MultiSigTokenWallet {
 
-    address constant _walletLibrary = 0x0; 
+    address[] public owners;
+    mapping (uint => Transaction) public transactions;
+    mapping (uint => mapping (address => bool)) public confirmations;
+
+    mapping (address => bool) public isOwner;
+    mapping (address => uint) public tokenBalances;
+    mapping (address => address[]) public userList;
+    address[] public tokens;
+    uint public required;
+    uint public transactionCount;
+    uint nonce;
+
+    struct Transaction {
+        address destination;
+        uint value;
+        bytes data;
+        bool executed;
+    }
+
     uint constant public MAX_OWNER_COUNT = 50;
 
     event Confirmation(address indexed _sender, uint indexed _transactionId);
@@ -26,27 +44,7 @@ contract MultiSigTokenWallet {
     event OwnerAddition(address indexed _owner);
     event OwnerRemoval(address indexed _owner);
     event RequirementChange(uint _required);
-    event IgnoredToken(address indexed _owner, address _token, bool ignored);
-
-    mapping (uint => Transaction) public transactions;
-    mapping (uint => mapping (address => bool)) public confirmations;
-    mapping (address => bool) public isOwner;
-    address[] public owners;
-    uint public required;
-    uint public transactionCount;
-
-    mapping (address => uint) public tokenBalances;
-    mapping (address => bool) public ignoredTokens;
-    address[] public tokens;
-    uint nonce;
-
-    struct Transaction {
-        address destination;
-        uint value;
-        bytes data;
-        bool executed;
-    }
-
+    
     modifier onlyWallet() {
         require (msg.sender == address(this));
         _;
@@ -88,7 +86,7 @@ contract MultiSigTokenWallet {
     }
 
     modifier validRequirement(uint ownerCount, uint _required) {
-        require (   ownerCount <= MAX_OWNER_COUNT
+        require (ownerCount <= MAX_OWNER_COUNT
             && _required <= ownerCount
             && _required != 0
             && ownerCount != 0);
@@ -103,16 +101,18 @@ contract MultiSigTokenWallet {
             Deposit(msg.sender, msg.value);
     }
 
-    /*
-        * Public functions
-        */
+    /**
+    * Public functions
+    * 
+    **/
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
-    function MultiSigTokenWallet(address[] _owners, uint _required)
+    function Constructor(address[] _owners, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
+        require(owners.length == 0 && required == 0);
         for (uint i=0; i<_owners.length; i++) {
             require (!isOwner[_owners[i]] && _owners[i] != 0);
             isOwner[_owners[i]] = true;
@@ -149,7 +149,32 @@ contract MultiSigTokenWallet {
             _deposited(_from, _amount, _token, _data);
         }
     }
+    /**
+    * @notice watches for balance in a token contract
+    * @param _tokenAddr the token contract address
+    * @param _data any data
+    **/   
+    function watch(address _tokenAddr, bytes _data) 
+        ownerExists(msg.sender) 
+    {
+        uint oldBal = tokenBalances[_tokenAddr];
+        uint newBal = ERC20(_tokenAddr).balanceOf(this);
+        if(newBal > oldBal){
+            _deposited(0x0, newBal-oldBal, _tokenAddr, _data);
+        }
+    }
 
+    function setMyTokenList(address[] _tokenList)  
+    {
+        userList[msg.sender] = _tokenList;
+    }
+
+    function setTokenList(address[] _tokenList) 
+        onlyWallet
+    {
+        tokens = _tokenList;
+    }
+    
     /**
     * @notice ERC23 Token fallback
     * @param _from address incoming token
@@ -186,33 +211,6 @@ contract MultiSigTokenWallet {
         isOwner[owner] = true;
         owners.push(owner);
         OwnerAddition(owner);
-    }
-
-    /**
-    * @notice watches for balance in a token contract
-    * @param _tokenAddr the token contract address
-    * @param _data any data
-    **/   
-    function watch(address _tokenAddr, bytes _data) 
-        ownerExists(msg.sender) 
-    {
-        uint oldBal = tokenBalances[_tokenAddr];
-        uint newBal = ERC20(_tokenAddr).balanceOf(this);
-        if(newBal > oldBal){
-            _deposited(0x0, newBal-oldBal, _tokenAddr, _data);
-        }
-    }
-
-    /**
-    * @notice ignores a token for sendAll
-    * @param _tokenAddr the token contract address
-    * @param _ignore true if is to ignore, false if not ignore (default)
-    **/   
-    function ignoreToken(address _tokenAddr, bool _ignore) 
-        ownerExists(msg.sender) 
-    {
-        IgnoredToken(msg.sender, _tokenAddr, _ignore);
-        ignoredTokens[_tokenAddr] = _ignore;
     }
 
     /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
@@ -252,6 +250,24 @@ contract MultiSigTokenWallet {
         isOwner[newOwner] = true;
         OwnerRemoval(owner);
         OwnerAddition(newOwner);
+    }
+
+    /**
+    * @dev gives full ownership of this wallet to `_dest` removing older owners from wallet
+    * @param _dest the address of new controller
+    **/    
+    function releaseWallet(address _dest)
+        public
+        notNull(_dest)
+        ownerDoesNotExist(_dest)
+        onlyWallet
+    {
+        address[] memory _owners = owners;
+        uint numOwners = _owners.length;
+        addOwner(_dest);
+        for(uint i = 0; i < numOwners; i++){
+            removeOwner(_owners[i]);
+        }
     }
 
     /// @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
@@ -322,24 +338,6 @@ contract MultiSigTokenWallet {
     }
 
     /**
-    * @dev gives full ownership of this wallet to `_dest` removing older owners from wallet
-    * @param _dest the address of new controller
-    **/    
-    function releaseWallet(address _dest)
-        public
-        notNull(_dest)
-        ownerDoesNotExist(_dest)
-        onlyWallet
-    {
-        address[] memory _owners = owners;
-        uint numOwners = _owners.length;
-        addOwner(_dest);
-        for(uint i = 0; i < numOwners; i++){
-            removeOwner(_owners[i]);
-        }
-    }
-
-    /**
     * @dev withdraw all recognized tokens balances and ether to `_dest`
     * @param _dest the address of receiver
     **/    
@@ -361,11 +359,17 @@ contract MultiSigTokenWallet {
         notNull(_dest)
         onlyWallet
     {
-        uint len = tokens.length;
+        address[] memory _tokenList;
+        if(userList[_dest].length > 0){
+            _tokenList = userList[_dest];
+        } else {
+            _tokenList = tokens;
+        }
+        uint len = _tokenList.length;
         for(uint i = 0;i< len; i++){
-            address _tokenAddr = tokens[i];
+            address _tokenAddr = _tokenList[i];
             uint _amount = tokenBalances[_tokenAddr];
-            if(_amount > 0 && !ignoredTokens[_tokenAddr]) {
+            if(_amount > 0) {
                 delete tokenBalances[_tokenAddr];
                 ERC20(_tokenAddr).transfer(_dest, _amount);
             }
@@ -448,8 +452,8 @@ contract MultiSigTokenWallet {
     }
     
     /*
-        * Web3 call functions
-        */
+    * Web3 call functions
+    */
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Number of confirmations.
@@ -488,168 +492,14 @@ contract MultiSigTokenWallet {
         return owners;
     }
 
-    /// @dev Returns array with owner addresses, which confirmed transaction.
-    /// @param transactionId Transaction ID.
-    /// @return Returns array of owner addresses.
-    function getConfirmations(uint transactionId)
-        public
-        constant
-        returns (address[] _confirmations)
-    {
-        address[] memory confirmationsTemp = new address[](owners.length);
-        uint count = 0;
-        uint i;
-        for (i=0; i<owners.length; i++)
-            if (confirmations[transactionId][owners[i]]) {
-                confirmationsTemp[count] = owners[i];
-                count += 1;
-            }
-        _confirmations = new address[](count);
-        for (i=0; i<count; i++)
-            _confirmations[i] = confirmationsTemp[i];
-    }
-
-    /// @dev Returns list of transaction IDs in defined range.
-    /// @param from Index start position of transaction array.
-    /// @param to Index end position of transaction array.
-    /// @param pending Include pending transactions.
-    /// @param executed Include executed transactions.
-    /// @return Returns array of transaction IDs.
-    function getTransactionIds(uint from, uint to, bool pending, bool executed)
-        public
-        constant
-        returns (uint[] _transactionIds)
-    {
-        uint[] memory transactionIdsTemp = new uint[](transactionCount);
-        uint count = 0;
-        uint i;
-        for (i=0; i<transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
-            {
-                transactionIdsTemp[count] = i;
-                count += 1;
-            }
-        _transactionIds = new uint[](to - from);
-        for (i=from; i<to; i++)
-            _transactionIds[i - from] = transactionIdsTemp[i];
-    }
-
-}
-
-contract EnhancedMultiSig {
-
-    address constant _walletLibrary = 0xf5f6853e0ebA27074A804358eEdF4E89eFaebc98;
-    uint constant public MAX_OWNER_COUNT = 50;
-
-    event Confirmation(address indexed _sender, uint indexed _transactionId);
-    event Revocation(address indexed _sender, uint indexed _transactionId);
-    event Submission(uint indexed _transactionId);
-    event Execution(uint indexed _transactionId);
-    event ExecutionFailure(uint indexed _transactionId);
-    event Deposit(address indexed _sender, uint _value);
-    event TokenDeposit(address _token, address indexed _sender, uint _value);
-    event OwnerAddition(address indexed _owner);
-    event OwnerRemoval(address indexed _owner);
-    event RequirementChange(uint _required);
-    event IgnoredToken(address indexed _owner, address _token, bool ignored);
-
-    mapping (uint => Transaction) public transactions;
-    mapping (uint => mapping (address => bool)) public confirmations;
-    mapping (address => bool) public isOwner;
-    address[] public owners;
-    uint public required;
-    uint public transactionCount;
-
-    mapping (address => uint) public tokenBalances;
-    mapping (address => bool) public ignoredTokens;
-    address[] public tokens;
-    uint nonce;
-
-    struct Transaction {
-        address destination;
-        uint value;
-        bytes data;
-        bool executed;
-    }
-
-
-    // WALLET CONSTRUCTOR
-    function EnhancedMultiSig(address[] _owners, uint _required) {
-        require(_required > 0);
-        uint len = _owners.length;
-        require(len <= MAX_OWNER_COUNT);
-        require(len >= _required);
-        for (uint i=0; i < len; i++) {
-            require (!isOwner[_owners[i]] && _owners[i] != 0);
-            isOwner[_owners[i]] = true;
-        }
-        owners = _owners;
-        required = _required;
-    }
-
-    /// @dev Fallback function allows to deposit ether or other functions in library.
-    function()
-        payable
-    {
-        _walletLibrary.delegatecall(msg.data);
-    }
-
-    /// @dev Returns the confirmation status of a transaction.
-    /// @param transactionId Transaction ID.
-    /// @return Confirmation status.
-    function isConfirmed(uint transactionId)
-        public
-        constant
-        returns (bool)
-    {
-        uint count = 0;
-        for (uint i=0; i<owners.length; i++) {
-            if (confirmations[transactionId][owners[i]])
-                count += 1;
-            if (count == required)
-                return true;
-        }
-    }
-    /*
-        * Web3 call functions
-        */
-    /// @dev Returns number of confirmations of a transaction.
-    /// @param transactionId Transaction ID.
-    /// @return Number of confirmations.
-    function getConfirmationCount(uint transactionId)
-        public
-        constant
-        returns (uint count)
-    {
-        for (uint i=0; i<owners.length; i++)
-            if (confirmations[transactionId][owners[i]])
-                count += 1;
-    }
-
-    /// @dev Returns total number of transactions after filters are applied.
-    /// @param pending Include pending transactions.
-    /// @param executed Include executed transactions.
-    /// @return Total number of transactions after filters are applied.
-    function getTransactionCount(bool pending, bool executed)
-        public
-        constant
-        returns (uint count)
-    {
-        for (uint i=0; i<transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
-                count += 1;
-    }
-
-    /// @dev Returns list of owners.
-    /// @return List of owner addresses.
-    function getOwners()
+    /// @dev Returns list of tokens.
+    /// @return List of token addresses.
+    function getTokenList()
         public
         constant
         returns (address[])
     {
-        return owners;
+        return tokens;
     }
 
     /// @dev Returns array with owner addresses, which confirmed transaction.

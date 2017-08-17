@@ -6,7 +6,8 @@
             [clojure.string :refer [join]]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
-            [pandect.core :as pandect]))
+            [pandect.core :as pandect]
+            [commiteth.eth.multisig-wallet :as multisig]))
 
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
@@ -95,13 +96,7 @@
 
 (defn deploy-contract
   [owner]
-  (let [contract-code (-> "contracts/wallet.data" io/resource slurp)
-        owner1        (format-param (eth-account))
-        owner2        (format-param owner)
-        data (str contract-code owner1 owner2)
-        value         (format "0x%x" 0)]
-    (send-transaction (eth-account) nil value {:gas   "0x80000"
-                                               :data  data})))
+  (multisig/create-new (eth-account) owner 2))
 
 (defn format-call-params
   [method-id & params]
