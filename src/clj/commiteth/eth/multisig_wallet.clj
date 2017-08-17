@@ -3,12 +3,15 @@
             [clojure.tools.logging :as log]))
 
 (defonce method-ids
-  {:submit-transaction (eth/sig->method-id "submitTransaction(address,uint256,bytes)")
-   :withdraw-everything (eth/sig->method-id "withdrawEverything(address)")
-   :token-balances (eth/sig->method-id "tokenBalances(address)")
-   :get-token-list (eth/sig->method-id "getTokenList()")
-   :create (eth/sig->method-id "create(address[],uint256)")
-   :watch (eth/sig->method-id "watch(address,bytes)")})
+  (into {}
+        (map (fn [k signature]
+               [k (eth/sig->method-id signature)])
+             {:submit-transaction "submitTransaction(address,uint256,bytes)"
+              :withdraw-everything "withdrawEverything(address)"
+              :token-balances "tokenBalances(address)"
+              :get-token-list "getTokenList()"
+              :create "create(address[],uint256)"
+              :watch "watch(address,bytes)"})))
 
 (defonce topics
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
