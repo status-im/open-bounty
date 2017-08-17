@@ -142,6 +142,10 @@
   (let [s (apply str (take 8 (sha3 signature)))]
     (str "0x" s)))
 
+(defn event-sig->topic-id [signature]
+  (let [s (sha3 signature)]
+    (str "0x" s)))
+
 (defn valid-address?
   "Validate given ethereum address. Checksum validation is performed
   and input is case-sensitive"
