@@ -134,6 +134,14 @@
 (defn lower-ch [ch]
   (first (str/lower-case ch)))
 
+(defn sha3 [x]
+  (pandect/keccak-256 x))
+
+
+(defn sig->method-id [signature]
+  (let [s (apply str (take 8 (sha3 signature)))]
+    (str "0x" s)))
+
 (defn valid-address?
   "Validate given ethereum address. Checksum validation is performed
   and input is case-sensitive"
@@ -146,7 +154,7 @@
    (and (boolean (re-matches #"(?i)^(0x)?[0-9a-f]{40}$" address))
         (if checksum-validate?
           (let [addr (strip-0x address)
-               hash (pandect/keccak-256 (str/lower-case addr))]
+               hash (sha3 (str/lower-case addr))]
            (log/debug "address hash" hash "addr" addr)
            (->>
             (map-indexed (fn [idx _]
