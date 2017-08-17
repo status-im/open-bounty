@@ -19,7 +19,7 @@ contract MultiSigTokenWallet {
 
     mapping (address => bool) public isOwner;
     mapping (address => uint) public tokenBalances;
-    mapping (address => bool) public ignoredTokens;
+    mapping (address => address[]) public userList;
     address[] public tokens;
     uint public required;
     uint public transactionCount;
@@ -44,8 +44,7 @@ contract MultiSigTokenWallet {
     event OwnerAddition(address indexed _owner);
     event OwnerRemoval(address indexed _owner);
     event RequirementChange(uint _required);
-    event IgnoredToken(address indexed _owner, address _token, bool ignored);
-
+    
     modifier onlyWallet() {
         require (msg.sender == address(this));
         _;
@@ -103,9 +102,9 @@ contract MultiSigTokenWallet {
     }
 
     /**
-     * Public functions
-     * 
-     **/
+    * Public functions
+    * 
+    **/
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
@@ -150,7 +149,32 @@ contract MultiSigTokenWallet {
             _deposited(_from, _amount, _token, _data);
         }
     }
+    /**
+    * @notice watches for balance in a token contract
+    * @param _tokenAddr the token contract address
+    * @param _data any data
+    **/   
+    function watch(address _tokenAddr, bytes _data) 
+        ownerExists(msg.sender) 
+    {
+        uint oldBal = tokenBalances[_tokenAddr];
+        uint newBal = ERC20(_tokenAddr).balanceOf(this);
+        if(newBal > oldBal){
+            _deposited(0x0, newBal-oldBal, _tokenAddr, _data);
+        }
+    }
 
+    function setMyTokenList(address[] _tokenList)  
+    {
+        userList[msg.sender] = _tokenList;
+    }
+
+    function setTokenList(address[] _tokenList) 
+        onlyWallet
+    {
+        tokens = _tokenList;
+    }
+    
     /**
     * @notice ERC23 Token fallback
     * @param _from address incoming token
@@ -187,33 +211,6 @@ contract MultiSigTokenWallet {
         isOwner[owner] = true;
         owners.push(owner);
         OwnerAddition(owner);
-    }
-
-    /**
-    * @notice watches for balance in a token contract
-    * @param _tokenAddr the token contract address
-    * @param _data any data
-    **/   
-    function watch(address _tokenAddr, bytes _data) 
-        ownerExists(msg.sender) 
-    {
-        uint oldBal = tokenBalances[_tokenAddr];
-        uint newBal = ERC20(_tokenAddr).balanceOf(this);
-        if(newBal > oldBal){
-            _deposited(0x0, newBal-oldBal, _tokenAddr, _data);
-        }
-    }
-
-    /**
-    * @notice ignores a token for sendAll
-    * @param _tokenAddr the token contract address
-    * @param _ignore true if is to ignore, false if not ignore (default)
-    **/   
-    function ignoreToken(address _tokenAddr, bool _ignore) 
-        ownerExists(msg.sender) 
-    {
-        IgnoredToken(msg.sender, _tokenAddr, _ignore);
-        ignoredTokens[_tokenAddr] = _ignore;
     }
 
     /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
@@ -253,6 +250,24 @@ contract MultiSigTokenWallet {
         isOwner[newOwner] = true;
         OwnerRemoval(owner);
         OwnerAddition(newOwner);
+    }
+
+    /**
+    * @dev gives full ownership of this wallet to `_dest` removing older owners from wallet
+    * @param _dest the address of new controller
+    **/    
+    function releaseWallet(address _dest)
+        public
+        notNull(_dest)
+        ownerDoesNotExist(_dest)
+        onlyWallet
+    {
+        address[] memory _owners = owners;
+        uint numOwners = _owners.length;
+        addOwner(_dest);
+        for(uint i = 0; i < numOwners; i++){
+            removeOwner(_owners[i]);
+        }
     }
 
     /// @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
@@ -323,24 +338,6 @@ contract MultiSigTokenWallet {
     }
 
     /**
-    * @dev gives full ownership of this wallet to `_dest` removing older owners from wallet
-    * @param _dest the address of new controller
-    **/    
-    function releaseWallet(address _dest)
-        public
-        notNull(_dest)
-        ownerDoesNotExist(_dest)
-        onlyWallet
-    {
-        address[] memory _owners = owners;
-        uint numOwners = _owners.length;
-        addOwner(_dest);
-        for(uint i = 0; i < numOwners; i++){
-            removeOwner(_owners[i]);
-        }
-    }
-
-    /**
     * @dev withdraw all recognized tokens balances and ether to `_dest`
     * @param _dest the address of receiver
     **/    
@@ -362,11 +359,17 @@ contract MultiSigTokenWallet {
         notNull(_dest)
         onlyWallet
     {
-        uint len = tokens.length;
+        address[] memory _tokenList;
+        if(userList[_dest].length > 0){
+            _tokenList = userList[_dest];
+        } else {
+            _tokenList = tokens;
+        }
+        uint len = _tokenList.length;
         for(uint i = 0;i< len; i++){
-            address _tokenAddr = tokens[i];
+            address _tokenAddr = _tokenList[i];
             uint _amount = tokenBalances[_tokenAddr];
-            if(_amount > 0 && !ignoredTokens[_tokenAddr]) {
+            if(_amount > 0) {
                 delete tokenBalances[_tokenAddr];
                 ERC20(_tokenAddr).transfer(_dest, _amount);
             }
@@ -449,8 +452,8 @@ contract MultiSigTokenWallet {
     }
     
     /*
-        * Web3 call functions
-        */
+    * Web3 call functions
+    */
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Number of confirmations.
@@ -487,6 +490,16 @@ contract MultiSigTokenWallet {
         returns (address[])
     {
         return owners;
+    }
+
+    /// @dev Returns list of tokens.
+    /// @return List of token addresses.
+    function getTokenList()
+        public
+        constant
+        returns (address[])
+    {
+        return tokens;
     }
 
     /// @dev Returns array with owner addresses, which confirmed transaction.

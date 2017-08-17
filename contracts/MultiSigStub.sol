@@ -2,7 +2,7 @@ pragma solidity ^0.4.15;
 
 /**
  * @title MultiSigStub  
- * Contact that delegates calls to a library to build a full MultiSigWallet that is cheap to create. 
+ * Contract that delegates calls to a library to build a full MultiSigWallet that is cheap to create. 
  */
 contract MultiSigStub {
 
