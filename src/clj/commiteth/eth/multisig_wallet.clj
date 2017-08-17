@@ -2,7 +2,7 @@
   (:require [commiteth.eth.core :as eth]
             [clojure.tools.logging :as log]))
 
-(defonce methods
+(defonce method-ids
   {:submit-transaction (eth/sig->method-id "submitTransaction(address,uint256,bytes)")
    :withdraw-everything (eth/sig->method-id "withdrawEverything(address)")
    :token-balances (eth/sig->method-id "tokenBalances(address)")
@@ -20,19 +20,24 @@
   [owner1 owner2 required]
   (eth/execute (eth/eth-account)
                factory-contract-addr
-               (:create methods)
+               (:create method-ids)
                0x40
                0x2
                required
                owner1
                owner2))
 
+(defn deploy-multisig
+  [owner]
+  (create-new (eth/eth-account) owner 2))
+
+
 (defn execute
   [contract to value]
   (log/debug "multisig.execute(contract, to, value)" contract to value)
   (eth/execute (eth/eth-account)
                contract
-               (:submit-transaction methods)
+               (:submit-transaction method-ids)
                to
                value
                "0x60"
@@ -70,11 +75,11 @@
   [contract to]
   (log/debug "multisig.send-all(contract, to)" contract to)
   (let [params (eth/format-call-params
-                (:withdraw-everything methods)
+                (:withdraw-everything method-ids)
                 to)]
     (eth/execute (eth/eth-account)
                  contract
-                 (:submit-transaction methods)
+                 (:submit-transaction method-ids)
                  contract
                  0
                  "0x60"
@@ -87,14 +92,14 @@
   (log/debug "multisig.watch-token(contract, token)" contract token)
   (eth/execute (eth/eth-account)
                contract
-               (:watch methods)
+               (:watch method-ids)
                token
                0))
 
 (defn token-balance
   [contract token]
-  (eth/call contract (:token-balances methods) token))
+  (eth/call contract (:token-balances method-ids) token))
 
 (defn tokens-list
   [contract]
-  (eth/call contract (:get-token-list methods)))
+  (eth/call contract (:get-token-list method-ids)))

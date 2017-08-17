@@ -6,8 +6,7 @@
             [clojure.string :refer [join]]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
-            [pandect.core :as pandect]
-            [commiteth.eth.multisig-wallet :as multisig]))
+            [pandect.core :as pandect]))
 
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
@@ -92,11 +91,6 @@
   (if (number? param)
     (format "%064x" param)
     (clojure.string/replace (format "%64s" (subs param 2)) " " "0")))
-
-
-(defn deploy-contract
-  [owner]
-  (multisig/create-new (eth-account) owner 2))
 
 (defn format-call-params
   [method-id & params]

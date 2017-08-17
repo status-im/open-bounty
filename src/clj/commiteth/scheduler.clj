@@ -46,7 +46,7 @@
 
 
 (defn deploy-contract [owner-address issue-id]
-  (let [transaction-hash (eth/deploy-contract owner-address)]
+  (let [transaction-hash (wallet/deploy-multisig owner-address)]
       (if (nil? transaction-hash)
         (log/error "Failed to deploy contract to" owner-address)
         (log/info "Contract deployed, transaction-hash:"
