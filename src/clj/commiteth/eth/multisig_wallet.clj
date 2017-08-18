@@ -4,7 +4,7 @@
 
 (defonce method-ids
   (into {}
-        (map (fn [k signature]
+        (map (fn [[k signature]]
                [k (eth/sig->method-id signature)])
              {:submit-transaction "submitTransaction(address,uint256,bytes)"
               :withdraw-everything "withdrawEverything(address)"
