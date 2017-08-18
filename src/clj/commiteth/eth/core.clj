@@ -11,7 +11,12 @@
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
 (defn eth-password [] (:eth-password env))
-(defn gas-price [] (:gas-price env))
+
+(defn gas-price
+  []
+  (-> (:gas-price env 2000000000)
+      str
+      BigInteger.))
 
 (defn eth-rpc
   [method params]
@@ -43,6 +48,11 @@
   [hex]
   (new BigInteger (subs hex 2) 16))
 
+(defn integer->hex
+  "Convert integer to 0x prefixed hex string. Works with native ints and BigInteger"
+  [n]
+  (str "0x" (.toString (BigInteger. (str n)) 16)))
+
 (defn from-wei
   [wei]
   (/ wei 1000000000000000000))
@@ -70,7 +80,7 @@
                     {:from  from
                      :value value}
                     (when-not (nil? (gas-price))
-                      {:gasPrice (gas-price)})
+                      {:gasPrice (integer->hex gas-price)})
                     (when-not (contains? params :gas)
                       {:gas
                        (estimate-gas from to value params)}))]
