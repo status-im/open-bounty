@@ -48,12 +48,15 @@
                  [jarohen/chime "0.2.2"]
                  [com.andrewmcveigh/cljs-time "0.5.1"]
                  [akiroz.re-frame/storage "0.1.2"]
-                 [cljsjs/chartjs "2.6.0-0"]]
+                 [cljsjs/chartjs "2.6.0-0"]
+                 [org.web3j/core "2.3.0"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
   :resource-paths ["resources" "target/cljsbuild"]
+  :java-source-paths ["src/java"]
   :target-path "target/%s/"
+  :repositories {"MVN repository" "https://mvnrepository.com"}
   :main commiteth.core
   :migratus {:store :database
              :migration-dir "migrations"
