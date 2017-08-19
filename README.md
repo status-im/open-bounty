@@ -7,6 +7,12 @@ http://wiki.status.im/proposals/commiteth/
 
 Live alpha version:
 https://commiteth.com
+The `master` branch is automatically deployed here.
+
+
+Live testnet (Rinkeby) version:
+https://commiteth.com:444
+The `develop` branch is automatically deployed here.
 
 
 ## Prerequisites
@@ -30,8 +36,19 @@ Launch following commands each in its own shell:
 lein run
 lein figwheel
 lein less auto
+```
+
+## Uberjar build
+
+To create a standalone uberjar:
 
 ```
+lein with-profile uberjar cljsbuild once min
+lein uberjar
+```
+
+This creates `target/uberjar/commiteth-<git-sha>.jar`
+
 
 ## Testing
 
