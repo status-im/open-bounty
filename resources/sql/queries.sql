@@ -251,7 +251,7 @@ SELECT
   i.comment_id       AS comment_id,
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
-  i.balance          AS balance,
+  i.balance_eth      AS balance,
   u.login            AS winner_login,
   u.address          AS payout_address
 FROM issues i, pull_requests p, users u, repositories r
@@ -287,7 +287,7 @@ SELECT
   i.comment_id       AS comment_id,
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
-  i.balance          AS balance,
+  i.balance_eth      AS balance,
   u.address          AS payout_address,
   u.login           AS payee_login,
   i.payout_hash     AS payout_hash
@@ -337,7 +337,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
-  i.balance          AS balance,
+  i.balance_eth      AS balance,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -361,7 +361,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
-  i.balance          AS balance,
+  i.balance_eth      AS balance,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -383,7 +383,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
-  i.balance          AS balance,
+  i.balance_eth      AS balance,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -417,7 +417,7 @@ SELECT
   i.comment_id       AS comment_id,
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
-  i.balance          AS balance
+  i.balance_eth      AS balance
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
 AND contract_address IS NOT NULL
@@ -429,7 +429,7 @@ SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
-  i.balance          AS balance,
+  i.balance_eth      AS balance,
   r.owner            AS owner,
   r.repo             AS repo
 FROM issues i, repositories r
@@ -440,14 +440,14 @@ AND r.repo = :repo;
 
 -- :name get-balance :? :1
 -- :doc gets current balance of a wallet attached to a given issue
-SELECT balance
+SELECT balance_eth AS balance
 FROM issues
 WHERE contract_address = :contract_address;
 
 -- :name update-balance :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
-SET balance = :balance,
+SET balance_eth = :balance,
 updated = timezone('utc'::text, now())
 WHERE contract_address = :contract_address;
 
@@ -477,7 +477,7 @@ u.id AS user_id,
 u.login AS login,
 u.name AS user_name,
 u.avatar_url AS avatar_url,
-SUM(i.balance) AS total_eth
+SUM(i.balance_eth) AS total_eth
 FROM issues i, users u, pull_requests pr
 WHERE
 pr.commit_sha = i.commit_sha
