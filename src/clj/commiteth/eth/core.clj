@@ -75,12 +75,11 @@
 
 (defn send-transaction
   [from to value & [params]]
-  (let [
-        args (merge params
+  (let [args (merge params
                     {:from  from
                      :value value}
                     (when-not (nil? (gas-price))
-                      {:gasPrice (integer->hex gas-price)})
+                      {:gasPrice (integer->hex (gas-price))})
                     (when-not (contains? params :gas)
                       {:gas
                        (estimate-gas from to value params)}))]
