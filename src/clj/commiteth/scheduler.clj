@@ -1,6 +1,7 @@
 (ns commiteth.scheduler
   (:require [commiteth.eth.core :as eth]
-            [commiteth.eth.multisig-wallet :as wallet]
+            [commiteth.eth.multisig-wallet :as multisig]
+            [commiteth.eth.token-data :as token-data]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
             [commiteth.db.bounties :as db-bounties]
@@ -21,7 +22,7 @@
     (log/debug "pending deployment:" transaction-hash)
     (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
       (log/info "transaction receipt for issue #" issue-id ": " receipt)
-      (when-let [contract-address (:contractAddress receipt)]
+      (when-let [contract-address (multisig/find-created-multisig-address receipt)]
         (let [issue   (issues/update-contract-address issue-id contract-address)
               {owner        :owner
                repo         :repo
@@ -46,7 +47,7 @@
 
 
 (defn deploy-contract [owner-address issue-id]
-  (let [transaction-hash (wallet/deploy-multisig owner-address)]
+  (let [transaction-hash (multisig/deploy-multisig owner-address)]
       (if (nil? transaction-hash)
         (log/error "Failed to deploy contract to" owner-address)
         (log/info "Contract deployed, transaction-hash:"
@@ -88,7 +89,7 @@
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
       (log/error "Cannot sign pending bounty - winner has no payout address")
-      (let [execute-hash (wallet/send-all contract-address payout-address)]
+      (let [execute-hash (multisig/send-all contract-address payout-address)]
         (db-bounties/update-execute-hash issue-id execute-hash)
         (github/update-merged-issue-comment owner
                                             repo
@@ -105,7 +106,7 @@
     (log/debug "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
-      (when-let [confirm-hash (wallet/find-confirmation-hash receipt)]
+      (when-let [confirm-hash (multisig/find-confirmation-hash receipt)]
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
 (defn update-payout-receipt
@@ -179,6 +180,21 @@
                                  contract-address
                                  current-balance-eth
                                  current-balance-eth-str))))))
+
+
+(defn update-bounty-token-balances
+  "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
+  [bounty-addr]
+  (for [[tla token-data] (token-data/as-map)]
+    (let [balance (multisig/token-balance bounty-addr tla)]
+      (when (> balance 0)
+        (do
+          (println "bounty at" bounty-addr "has" balance "of tla" tla)
+          (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
+            (when (not= balance internal-balance)
+              (println "balances not in sync, calling watch")
+              (multisig/watch-token bounty-addr tla))))))))
+
 
 
 (defn run-periodic-tasks [time]

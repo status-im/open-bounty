@@ -2,7 +2,8 @@
   (:require [commiteth.eth.core :as eth]
             [commiteth.eth.web3j
              :refer [create-web3j creds]]
-            [commiteth.config :refer [env]])
+            [commiteth.config :refer [env]]
+            [clojure.tools.logging :as log])
   (:import [org.web3j
             abi.datatypes.generated.Uint256
             abi.datatypes.Address
@@ -34,7 +35,7 @@
    (let [contract (load-tokenreg-contract addr)]
      ;(assert (.isValid contract)) ;; web3j's isValid can't be trusted...
      (let [token-count (-> contract .tokenCount .get .getValue)]
-       (println "token-count" token-count)
+       (log/debug "token-count" token-count)
        (into {}
              (map (fn [[addr tla digits name owner]]
                     [(-> tla str keyword)

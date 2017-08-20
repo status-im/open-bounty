@@ -27,3 +27,9 @@
 
 (defn token-info [tla]
   (get @token-data-atom (keyword tla)))
+
+(defn token-info-by-addr [addr]
+  (let [tokens-data (as-map)]
+    (first (filter (fn [[tla data]]
+                     (= (:address data) addr))
+                   tokens-data))))

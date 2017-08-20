@@ -9,7 +9,7 @@
             abi.datatypes.Address]
            [commiteth.eth.contracts MultiSigTokenWallet]))
 
-(defonce method-ids
+(def method-ids
   (into {}
         (map (fn [[k signature]]
                [k (eth/sig->method-id signature)])
@@ -18,10 +18,10 @@
               :token-balances "tokenBalances(address)"
               :get-token-list "getTokenList()"
               :create "create(address[],uint256)"
-              :watch "watch(address,bytes)"
+              :watch "watch(address)"
               :balance-of "balanceOf(address)"})))
 
-(defonce topics
+(def topics
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
    :submission (eth/event-sig->topic-id "Submission(uint256)")})
 
@@ -114,16 +114,6 @@
                  (:watch method-ids)
                  token-address)))
 
-(defn token-balances
-  "Query ERC20 token balances from bounty contract"
-  [bounty-contract token]
-  (let [token-address (get-token-address token)]
-    (println "token-address:" token-address)
-    (eth/call bounty-contract
-              (:token-balances method-ids)
-              token-address
-              0)))
-
 
 (defn load-bounty-contract [addr]
   (MultiSigTokenWallet/load addr
@@ -142,7 +132,7 @@
 
 
 (defn token-balance-in-bounty
-  "Query ERC20 token balances from bounty contract"
+  "Query (internal) ERC20 token balance from bounty contract for given token TLA"
   [bounty-addr token]
   (let [bounty-contract (load-bounty-contract bounty-addr)
         token-address (get-token-address token)
@@ -155,7 +145,7 @@
         (convert-token-value token))))
 
 (defn token-balance
-  "Query balance of given ERC20 token for given address from ERC20 contract"
+  "Query balance of given ERC20 token TLA for given address from ERC20 contract"
   [bounty-addr token]
   (let [token-address (get-token-address token)]
     (-> (eth/call token-address
