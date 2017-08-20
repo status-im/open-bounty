@@ -5,7 +5,7 @@ WEB3J=$(which web3j)
 
 # compile contracts
 for f in contracts/*.sol; do
-    $SOLC $f --bin --abi --optimize -o resources/contracts
+    $SOLC $f --overwrite --bin --abi --optimize -o resources/contracts
 done
 
 # generate java classes
