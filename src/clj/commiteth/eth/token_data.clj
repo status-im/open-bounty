@@ -13,8 +13,11 @@
     (log/info "token-data started")
     (let [token-data
           (if (env :on-testnet true)
-            (env :testnet-token-data {})
-            (token-reg/load-parity-tokenreg-data))]
+            (if-let [token-data (env :testnet-token-data)]
+              token-data
+              (token-reg/load-parity-tokenreg-data token-reg/STATUS-RINKEBY-ADDR))
+
+            (token-reg/load-parity-tokenreg-data token-reg/PARITY-MAINNET-ADDR))]
       (reset! token-data-atom token-data)))
   :stop
   (log/info "token-data stopped"))
@@ -22,5 +25,5 @@
 (defn as-map []
   @token-data-atom)
 
-(defn token-info [mnemonic]
-  (get @token-data-atom (keyword mnemonic)))
+(defn token-info [tla]
+  (get @token-data-atom (keyword tla)))
