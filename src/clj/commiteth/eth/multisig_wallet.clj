@@ -60,9 +60,9 @@
     (when confirmation-data
       (subs confirmation-data 2 66))))
 
-(defn find-factory-hash
-  [receipt]
-  (let [logs                   (:logs receipt)
+(defn find-created-multisig-address
+  [tx-receipt]
+  (let [logs                   (:logs tx-receipt)
         factory-topic? (fn [topic]
                          (= topic
                             (:factory-create topics)))
@@ -71,7 +71,7 @@
         factory-event     (first (filter has-factory-event? logs))
         factory-data      (:data factory-event)]
     (when factory-data
-      (subs factory-data 2 66))))
+      (str "0x" (subs factory-data 26)))))
 
 
 (defn send-all
