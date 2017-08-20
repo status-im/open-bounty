@@ -43,7 +43,6 @@ lein less auto
 To create a standalone uberjar:
 
 ```
-lein with-profile uberjar cljsbuild once min
 lein uberjar
 ```
 

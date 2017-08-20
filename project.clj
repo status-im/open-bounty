@@ -57,7 +57,7 @@
   :java-source-paths ["src/java"]
   :target-path "target/%s/"
   :repositories {"MVN repository" "https://mvnrepository.com"}
-  :main commiteth.core
+  :main ^:skip-aot commiteth.core
   :migratus {:store :database
              :migration-dir "migrations"
              :db ~(get (System/getenv) "DATABASE_URL")}
@@ -88,7 +88,7 @@
 
   :profiles
   {:uberjar       {:omit-source    true
-                   :prep-tasks     [["javac"] ["compile"] ["cljsbuild" "once" "min"]]
+                   :prep-tasks     [["javac"] ["compile"] ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
                     {:min
