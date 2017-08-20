@@ -1,7 +1,13 @@
 (ns commiteth.eth.multisig-wallet
   (:require [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
-            [clojure.tools.logging :as log]))
+            [commiteth.eth.web3j
+             :refer [create-web3j creds]]
+            [clojure.tools.logging :as log]
+            [commiteth.eth.token-data :as token-data])
+  (:import [org.web3j
+            abi.datatypes.Address]
+           [commiteth.eth.contracts MultiSigTokenWallet]))
 
 (defonce method-ids
   (into {}
@@ -12,7 +18,8 @@
               :token-balances "tokenBalances(address)"
               :get-token-list "getTokenList()"
               :create "create(address[],uint256)"
-              :watch "watch(address,bytes)"})))
+              :watch "watch(address,bytes)"
+              :balance-of "balanceOf(address)"})))
 
 (defonce topics
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
@@ -76,7 +83,7 @@
       (str "0x" (subs factory-data 26)))))
 
 
-(defn send-all
+(defn send-all ;; TODO: not tested
   [contract to]
   (log/debug "multisig.send-all(contract, to)" contract to)
   (let [params (eth/format-call-params
@@ -92,19 +99,67 @@
                  params)))
 
 
+(defn get-token-address [token]
+  (let [token-details (token-data/token-info token)]
+    (assert token-details)
+    (:address token-details)))
+
 (defn watch-token
-  [contract token]
-  (log/debug "multisig.watch-token(contract, token)" contract token)
-  (eth/execute (eth/eth-account)
-               contract
-               (:watch method-ids)
-               token
-               0))
+  [bounty-addr token]
+  (log/debug "multisig.watch-token(contract, token)" bounty-addr token)
+  (let [token-address (get-token-address token)]
+    (assert token-address)
+    (eth/execute (eth/eth-account)
+                 bounty-addr
+                 (:watch method-ids)
+                 token-address)))
+
+(defn token-balances
+  "Query ERC20 token balances from bounty contract"
+  [bounty-contract token]
+  (let [token-address (get-token-address token)]
+    (println "token-address:" token-address)
+    (eth/call bounty-contract
+              (:token-balances method-ids)
+              token-address
+              0)))
+
+
+(defn load-bounty-contract [addr]
+  (MultiSigTokenWallet/load addr
+                 (create-web3j)
+                 (creds)
+                 (eth/gas-price)
+                 (BigInteger/valueOf 500000)))
+
+(defn convert-token-value
+  "Convert given value to decimal using given token's base"
+  [value token]
+  (let [token-details (token-data/token-info token)
+        token-base (:base token-details)]
+    (-> value
+        (/ (Math/pow 10 token-base)))))
+
+
+(defn token-balance-in-bounty
+  "Query ERC20 token balances from bounty contract"
+  [bounty-addr token]
+  (let [bounty-contract (load-bounty-contract bounty-addr)
+        token-address (get-token-address token)
+        token-addr-web3j (Address. token-address)]
+    (-> bounty-contract
+        (.tokenBalances
+         token-addr-web3j)
+        .get
+        .getValue
+        (convert-token-value token))))
 
 (defn token-balance
-  [contract token]
-  (eth/call contract (:token-balances method-ids) token))
-
-(defn tokens-list
-  [contract]
-  (eth/call contract (:get-token-list method-ids)))
+  "Query balance of given ERC20 token for given address from ERC20 contract"
+  [bounty-addr token]
+  (let [token-address (get-token-address token)]
+    (-> (eth/call token-address
+                  (:balance-of method-ids)
+                  bounty-addr)
+        eth/hex->big-integer
+        (convert-token-value token))))
