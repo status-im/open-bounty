@@ -1,5 +1,6 @@
 (ns commiteth.eth.multisig-wallet
   (:require [commiteth.eth.core :as eth]
+            [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]))
 
 (defonce method-ids
@@ -17,12 +18,13 @@
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
    :submission (eth/event-sig->topic-id "Submission(uint256)")})
 
-(defonce factory-contract-addr "0xb1d6Bf03e99bB2e9c5eBE010ecB0fc910a1CD65b")
+(defn factory-contract-addr []
+  (env :contract-factory-addr "0xb1d6Bf03e99bB2e9c5eBE010ecB0fc910a1CD65b"))
 
 (defn create-new
   [owner1 owner2 required]
   (eth/execute (eth/eth-account)
-               factory-contract-addr
+               (factory-contract-addr)
                (:create method-ids)
                0x40
                0x2
