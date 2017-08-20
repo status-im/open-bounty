@@ -1,15 +1,6 @@
 pragma solidity ^0.4.15;
 
-contract ERC20 {
-    uint256 public totalSupply;
-    function balanceOf(address who) constant returns (uint256);
-    function allowance(address owner, address spender) constant returns (uint256);
-    function transfer(address to, uint256 value) returns (bool ok);
-    function transferFrom(address from, address to, uint256 value) returns (bool ok);
-    function approve(address spender, uint256 value) returns (bool ok);
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-}
+import "./ERC20.sol";
 
 contract MultiSigTokenWallet {
 
@@ -86,10 +77,7 @@ contract MultiSigTokenWallet {
     }
 
     modifier validRequirement(uint ownerCount, uint _required) {
-        require (ownerCount <= MAX_OWNER_COUNT
-            && _required <= ownerCount
-            && _required != 0
-            && ownerCount != 0);
+        require (ownerCount <= MAX_OWNER_COUNT && _required <= ownerCount && _required != 0 && ownerCount != 0);
         _;
     }
 
@@ -108,13 +96,13 @@ contract MultiSigTokenWallet {
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
-    function Constructor(address[] _owners, uint _required)
+    function constructor(address[] _owners, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
         require(owners.length == 0 && required == 0);
-        for (uint i=0; i<_owners.length; i++) {
-            require (!isOwner[_owners[i]] && _owners[i] != 0);
+        for (uint i = 0; i < _owners.length; i++) {
+            require(!isOwner[_owners[i]] && _owners[i] != 0);
             isOwner[_owners[i]] = true;
         }
         owners = _owners;
@@ -142,29 +130,32 @@ contract MultiSigTokenWallet {
     function deposit(address _from, uint256 _amount, address _token, bytes _data) 
         public 
     {
-        if(_from == address(this)) return;
+        if (_from == address(this))
+            return;
         uint _nonce = nonce;
-        assert(ERC20(_token).transferFrom(_from, this, _amount));
-        if(nonce == _nonce){ //ERC23 not executed _deposited tokenFallback by
+        bool result = ERC20(_token).transferFrom(_from, this, _amount);
+        assert(result);
+        //ERC23 not executed _deposited tokenFallback by
+        if (nonce == _nonce) {
             _deposited(_from, _amount, _token, _data);
         }
     }
     /**
     * @notice watches for balance in a token contract
     * @param _tokenAddr the token contract address
-    * @param _data any data
     **/   
-    function watch(address _tokenAddr, bytes _data) 
+    function watch(address _tokenAddr) 
         ownerExists(msg.sender) 
     {
         uint oldBal = tokenBalances[_tokenAddr];
         uint newBal = ERC20(_tokenAddr).balanceOf(this);
-        if(newBal > oldBal){
-            _deposited(0x0, newBal-oldBal, _tokenAddr, _data);
+        if (newBal > oldBal) {
+            _deposited(0x0, newBal-oldBal, _tokenAddr, new bytes(0));
         }
     }
 
-    function setMyTokenList(address[] _tokenList)  
+    function setMyTokenList(address[] _tokenList) 
+        public
     {
         userList[msg.sender] = _tokenList;
     }
@@ -193,8 +184,7 @@ contract MultiSigTokenWallet {
     * @param _token the token contract address
     * @param _data (might be used by child classes)
     */ 
-    function receiveApproval(address _from, uint256 _amount, address _token, bytes _data) 
-    {
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes _data) {
         deposit(_from, _amount, _token, _data);
     }
     
@@ -221,11 +211,13 @@ contract MultiSigTokenWallet {
         ownerExists(owner)
     {
         isOwner[owner] = false;
-        for (uint i=0; i<owners.length - 1; i++)
+        uint _len = owners.length - 1;
+        for (uint i = 0; i < _len; i++) {
             if (owners[i] == owner) {
                 owners[i] = owners[owners.length - 1];
                 break;
             }
+        }
         owners.length -= 1;
         if (required > owners.length)
             changeRequirement(owners.length);
@@ -241,11 +233,12 @@ contract MultiSigTokenWallet {
         ownerExists(owner)
         ownerDoesNotExist(newOwner)
     {
-        for (uint i=0; i<owners.length; i++)
+        for (uint i = 0; i < owners.length; i++) {
             if (owners[i] == owner) {
                 owners[i] = newOwner;
                 break;
             }
+        }
         isOwner[owner] = false;
         isOwner[newOwner] = true;
         OwnerRemoval(owner);
@@ -265,7 +258,7 @@ contract MultiSigTokenWallet {
         address[] memory _owners = owners;
         uint numOwners = _owners.length;
         addOwner(_dest);
-        for(uint i = 0; i < numOwners; i++){
+        for (uint i = 0; i < numOwners; i++) {
             removeOwner(_owners[i]);
         }
     }
@@ -326,13 +319,13 @@ contract MultiSigTokenWallet {
         notExecuted(transactionId)
     {
         if (isConfirmed(transactionId)) {
-            Transaction storage tx = transactions[transactionId];
-            tx.executed = true;
-            if (tx.destination.call.value(tx.value)(tx.data))
+            Transaction storage txx = transactions[transactionId];
+            txx.executed = true;
+            if (txx.destination.call.value(txx.value)(txx.data)) {
                 Execution(transactionId);
-            else {
+            } else {
                 ExecutionFailure(transactionId);
-                tx.executed = false;
+                txx.executed = false;
             }
         }
     }
@@ -360,16 +353,16 @@ contract MultiSigTokenWallet {
         onlyWallet
     {
         address[] memory _tokenList;
-        if(userList[_dest].length > 0){
+        if (userList[_dest].length > 0) {
             _tokenList = userList[_dest];
         } else {
             _tokenList = tokens;
         }
         uint len = _tokenList.length;
-        for(uint i = 0;i< len; i++){
+        for (uint i = 0;i < len; i++) {
             address _tokenAddr = _tokenList[i];
             uint _amount = tokenBalances[_tokenAddr];
-            if(_amount > 0) {
+            if (_amount > 0) {
                 delete tokenBalances[_tokenAddr];
                 ERC20(_tokenAddr).transfer(_dest, _amount);
             }
@@ -391,7 +384,8 @@ contract MultiSigTokenWallet {
         uint _balance = tokenBalances[_tokenAddr];
         require(_amount <= _balance);
         tokenBalances[_tokenAddr] = _balance - _amount;
-        assert(ERC20(_tokenAddr).transfer(_dest, _amount));
+        bool result = ERC20(_tokenAddr).transfer(_dest, _amount);
+        assert(result);
     }
 
     /// @dev Returns the confirmation status of a transaction.
@@ -403,7 +397,7 @@ contract MultiSigTokenWallet {
         returns (bool)
     {
         uint count = 0;
-        for (uint i=0; i<owners.length; i++) {
+        for (uint i = 0; i < owners.length; i++) {
             if (confirmations[transactionId][owners[i]])
                 count += 1;
             if (count == required)
@@ -438,15 +432,15 @@ contract MultiSigTokenWallet {
     /**
     * @dev register the deposit
     **/
-    function _deposited(address _from,  uint _amount, address _tokenAddr, bytes _data) 
+    function _deposited(address _from,  uint _amount, address _tokenAddr, bytes) 
         internal 
     {
         TokenDeposit(_tokenAddr,_from,_amount);
         nonce++;
-        if(tokenBalances[_tokenAddr] == 0){
+        if (tokenBalances[_tokenAddr] == 0) {
             tokens.push(_tokenAddr);  
             tokenBalances[_tokenAddr] = ERC20(_tokenAddr).balanceOf(this);
-        }else{
+        } else {
             tokenBalances[_tokenAddr] += _amount;
         }
     }
@@ -462,9 +456,10 @@ contract MultiSigTokenWallet {
         constant
         returns (uint count)
     {
-        for (uint i=0; i<owners.length; i++)
+        for (uint i = 0; i < owners.length; i++) {
             if (confirmations[transactionId][owners[i]])
                 count += 1;
+        }
     }
 
     /// @dev Returns total number of transactions after filters are applied.
@@ -476,10 +471,10 @@ contract MultiSigTokenWallet {
         constant
         returns (uint count)
     {
-        for (uint i=0; i<transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
+        for (uint i = 0; i < transactionCount; i++) {
+            if (pending && !transactions[i].executed || executed && transactions[i].executed)
                 count += 1;
+        }
     }
 
     /// @dev Returns list of owners.
@@ -513,14 +508,16 @@ contract MultiSigTokenWallet {
         address[] memory confirmationsTemp = new address[](owners.length);
         uint count = 0;
         uint i;
-        for (i=0; i<owners.length; i++)
+        for (i = 0; i < owners.length; i++) {
             if (confirmations[transactionId][owners[i]]) {
                 confirmationsTemp[count] = owners[i];
                 count += 1;
             }
+        }
         _confirmations = new address[](count);
-        for (i=0; i<count; i++)
+        for (i = 0; i < count; i++) {
             _confirmations[i] = confirmationsTemp[i];
+        }
     }
 
     /// @dev Returns list of transaction IDs in defined range.
@@ -537,16 +534,16 @@ contract MultiSigTokenWallet {
         uint[] memory transactionIdsTemp = new uint[](transactionCount);
         uint count = 0;
         uint i;
-        for (i=0; i<transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
-            {
+        for (i = 0; i < transactionCount; i++) {
+            if (pending && !transactions[i].executed || executed && transactions[i].executed) {
                 transactionIdsTemp[count] = i;
                 count += 1;
             }
+        }
         _transactionIds = new uint[](to - from);
-        for (i=from; i<to; i++)
+        for (i = from; i < to; i++) {
             _transactionIds[i - from] = transactionIdsTemp[i];
+        }
     }
 
 }
