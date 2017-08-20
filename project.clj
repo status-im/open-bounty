@@ -67,12 +67,18 @@
             [lein-cljsbuild "1.1.3"]
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
+            [lein-shell "0.5.0"]
             [cider/cider-nrepl "0.14.0"]
             [lein-sha-version "0.1.1"]]
 
 
   :less {:source-paths ["src/less"]
          :target-path "resources/public/css"}
+
+  :auto {"build-contracts" {:file-pattern #"\.(sol)\n"
+                            :paths ["./contracts"]}}
+
+  :aliases {"build-contracts" ["shell" "./build_contracts.sh"]}
 
   :ring {:destroy commiteth.scheduler/stop-scheduler}
 
@@ -88,7 +94,7 @@
 
   :profiles
   {:uberjar       {:omit-source    true
-                   :prep-tasks     [["javac"] ["compile"] ["cljsbuild" "once" "min"] ["less" "once"]]
+                   :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
                     {:min
