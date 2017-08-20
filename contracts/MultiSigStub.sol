@@ -20,32 +20,32 @@ contract MultiSigStub {
     }
     
     function MultiSigStub(address[] _owners, uint256 _required) {
-        //bytes4 sig = bytes4(sha3("Constructor(address[],uint256)"));
-        bytes4 sig = 0xe0c4e63b;
+        //bytes4 sig = bytes4(sha3("constructor(address[],uint256)"));
+        bytes4 sig = 0x36756a23;
         uint argarraysize = (2 + _owners.length);
         uint argsize = (1 + argarraysize) * 32;
         uint size = 4 + argsize;
-        bytes32 m_data = _malloc(size);
+        bytes32 mData = _malloc(size);
 
         assembly {
-            mstore(m_data, sig)
-            codecopy(add(m_data, 0x4), sub(codesize, argsize), argsize)
+            mstore(mData, sig)
+            codecopy(add(mData, 0x4), sub(codesize, argsize), argsize)
         }
-        _delegatecall(m_data, size);
+        _delegatecall(mData, size);
     }
     
     modifier delegated {
         uint size = msg.data.length;
-        bytes32 m_data = _malloc(size);
+        bytes32 mData = _malloc(size);
 
         assembly {
-            calldatacopy(m_data, 0x0, size)
+            calldatacopy(mData, 0x0, size)
         }
 
-        bytes32 m_result = _delegatecall(m_data, size);
+        bytes32 mResult = _delegatecall(mData, size);
         _;
         assembly {
-            return(m_result, 0x20)
+            return(mResult, 0x20)
         }
     }
     
@@ -71,7 +71,7 @@ contract MultiSigStub {
         
     }
     
-    function watch(address _tokenAddr, bytes _data)
+    function watch(address _tokenAddr)
         public
         delegated
     {
@@ -99,7 +99,7 @@ contract MultiSigStub {
     /*
     * Web3 call functions
     */
-    function tokenBalances(address) 
+    function tokenBalances(address tokenAddress) 
         public
         constant 
         delegated 
@@ -165,14 +165,16 @@ contract MultiSigStub {
         address[] memory confirmationsTemp = new address[](owners.length);
         uint count = 0;
         uint i;
-        for (i=0; i<owners.length; i++)
+        for (i = 0; i < owners.length; i++) {
             if (confirmations[transactionId][owners[i]]) {
                 confirmationsTemp[count] = owners[i];
                 count += 1;
             }
+        }
         _confirmations = new address[](count);
-        for (i=0; i<count; i++)
+        for (i = 0; i < count; i++) {
             _confirmations[i] = confirmationsTemp[i];
+        }
     }
 
     /// @dev Returns list of transaction IDs in defined range.
@@ -186,43 +188,42 @@ contract MultiSigStub {
         constant
         returns (uint[] _transactionIds)
     {
-        uint total = transactionCount;
-        uint[] memory transactionIdsTemp = new uint[](total);
+        uint[] memory transactionIdsTemp = new uint[](transactionCount);
         uint count = 0;
         uint i;
-        for (i=0; i<total; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
-            {
+        for (i = 0; i < transactionCount; i++) {
+            if (pending && !transactions[i].executed || executed && transactions[i].executed) {
                 transactionIdsTemp[count] = i;
                 count += 1;
             }
+        }
         _transactionIds = new uint[](to - from);
-        for (i=from; i<to; i++)
+        for (i = from; i < to; i++) {
             _transactionIds[i - from] = transactionIdsTemp[i];
+        }
     }
 
 
     function _malloc(uint size) 
         private 
-        returns(bytes32 m_data) 
+        returns(bytes32 mData) 
     {
         assembly {
-            m_data := mload(0x40)
-            mstore(0x40, add(m_data, size))
+            mData := mload(0x40)
+            mstore(0x40, add(mData, size))
         }
     }
 
-    function _delegatecall(bytes32 m_data, uint size) 
+    function _delegatecall(bytes32 mData, uint size) 
         private 
-        returns(bytes32 m_result) 
+        returns(bytes32 mResult) 
     {
-        address target = 0x9485e92ab84b62c31c64465d8ff98fab87a8c908; //Rinkby only
-        m_result = _malloc(32);
+        address target = 0xcAFE992Df476564894C47999B5F81F7a785572c8; //Multinetwork
+        mResult = _malloc(32);
         bool failed;
 
         assembly {
-            failed := iszero(delegatecall(sub(gas, 10000), target, m_data, size, m_result, 0x20))
+            failed := iszero(delegatecall(sub(gas, 10000), target, mData, size, mResult, 0x20))
         }
 
         assert(!failed);
