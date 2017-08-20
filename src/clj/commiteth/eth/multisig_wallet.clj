@@ -17,7 +17,7 @@
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
    :submission (eth/event-sig->topic-id "Submission(uint256)")})
 
-(defonce factory-contract-addr "0xbcBc5b8cE5c76Ed477433636926f76897401f838")
+(defonce factory-contract-addr "0xb1d6Bf03e99bB2e9c5eBE010ecB0fc910a1CD65b")
 
 (defn create-new
   [owner1 owner2 required]
