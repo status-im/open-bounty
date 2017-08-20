@@ -6,6 +6,19 @@ pragma solidity ^0.4.15;
  */
 contract MultiSigStub {
 
+    address[] public owners;
+    address[] public tokens;
+    mapping (uint => Transaction) public transactions;
+    mapping (uint => mapping (address => bool)) public confirmations;
+    uint public transactionCount;
+
+    struct Transaction {
+        address destination;
+        uint value;
+        bytes data;
+        bool executed;
+    }
+    
     function MultiSigStub(address[] _owners, uint256 _required) {
         //bytes4 sig = bytes4(sha3("Constructor(address[],uint256)"));
         bytes4 sig = 0xe0c4e63b;
@@ -21,9 +34,7 @@ contract MultiSigStub {
         _delegatecall(m_data, size);
     }
     
-    function()
-        payable
-    {
+    modifier delegated {
         uint size = msg.data.length;
         bytes32 m_data = _malloc(size);
 
@@ -32,11 +43,165 @@ contract MultiSigStub {
         }
 
         bytes32 m_result = _delegatecall(m_data, size);
-
+        _;
         assembly {
             return(m_result, 0x20)
         }
     }
+    
+    function()
+        payable
+        delegated
+    {
+
+    }
+
+    function submitTransaction(address destination, uint value, bytes data)
+        public
+        delegated
+        returns (uint)
+    {
+        
+    }
+    
+    function confirmTransaction(uint transactionId)
+        public
+        delegated
+    {
+        
+    }
+    
+    function watch(address _tokenAddr, bytes _data)
+        public
+        delegated
+    {
+        
+    }
+    
+    function setMyTokenList(address[] _tokenList)  
+        public
+        delegated
+    {
+
+    }
+    /// @dev Returns the confirmation status of a transaction.
+    /// @param transactionId Transaction ID.
+    /// @return Confirmation status.
+    function isConfirmed(uint transactionId)
+        public
+        constant
+        delegated
+        returns (bool)
+    {
+
+    }
+    
+    /*
+    * Web3 call functions
+    */
+    function tokenBalances(address) 
+        public
+        constant 
+        delegated 
+        returns (uint)
+    {
+
+    }
+
+
+    /// @dev Returns number of confirmations of a transaction.
+    /// @param transactionId Transaction ID.
+    /// @return Number of confirmations.
+    function getConfirmationCount(uint transactionId)
+        public
+        constant
+        delegated
+        returns (uint)
+    {
+
+    }
+
+    /// @dev Returns total number of transactions after filters are applied.
+    /// @param pending Include pending transactions.
+    /// @param executed Include executed transactions.
+    /// @return Total number of transactions after filters are applied.
+    function getTransactionCount(bool pending, bool executed)
+        public
+        constant
+        delegated
+        returns (uint)
+    {
+
+    }
+
+    /// @dev Returns list of owners.
+    /// @return List of owner addresses.
+    function getOwners()
+        public
+        constant
+        returns (address[])
+    {
+        return owners;
+    }
+
+    /// @dev Returns list of tokens.
+    /// @return List of token addresses.
+    function getTokenList()
+        public
+        constant
+        returns (address[])
+    {
+        return tokens;
+    }
+
+    /// @dev Returns array with owner addresses, which confirmed transaction.
+    /// @param transactionId Transaction ID.
+    /// @return Returns array of owner addresses.
+    function getConfirmations(uint transactionId)
+        public
+        constant
+        returns (address[] _confirmations)
+    {
+        address[] memory confirmationsTemp = new address[](owners.length);
+        uint count = 0;
+        uint i;
+        for (i=0; i<owners.length; i++)
+            if (confirmations[transactionId][owners[i]]) {
+                confirmationsTemp[count] = owners[i];
+                count += 1;
+            }
+        _confirmations = new address[](count);
+        for (i=0; i<count; i++)
+            _confirmations[i] = confirmationsTemp[i];
+    }
+
+    /// @dev Returns list of transaction IDs in defined range.
+    /// @param from Index start position of transaction array.
+    /// @param to Index end position of transaction array.
+    /// @param pending Include pending transactions.
+    /// @param executed Include executed transactions.
+    /// @return Returns array of transaction IDs.
+    function getTransactionIds(uint from, uint to, bool pending, bool executed)
+        public
+        constant
+        returns (uint[] _transactionIds)
+    {
+        uint total = transactionCount;
+        uint[] memory transactionIdsTemp = new uint[](total);
+        uint count = 0;
+        uint i;
+        for (i=0; i<total; i++)
+            if (   pending && !transactions[i].executed
+                || executed && transactions[i].executed)
+            {
+                transactionIdsTemp[count] = i;
+                count += 1;
+            }
+        _transactionIds = new uint[](to - from);
+        for (i=from; i<to; i++)
+            _transactionIds[i - from] = transactionIdsTemp[i];
+    }
+
 
     function _malloc(uint size) 
         private 
@@ -52,7 +217,7 @@ contract MultiSigStub {
         private 
         returns(bytes32 m_result) 
     {
-        address target = 0x370A93cd1DC15875fF02aa0b952D44Bb3dD905E5; //will be replaced by correct value
+        address target = 0x9485e92ab84b62c31c64465d8ff98fab87a8c908; //Rinkby only
         m_result = _malloc(32);
         bool failed;
 
@@ -62,6 +227,5 @@ contract MultiSigStub {
 
         assert(!failed);
     }
-
+    
 }
- 

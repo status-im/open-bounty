@@ -14,16 +14,16 @@ contract ERC20 {
 contract MultiSigTokenWallet {
 
     address[] public owners;
+    address[] public tokens;
     mapping (uint => Transaction) public transactions;
     mapping (uint => mapping (address => bool)) public confirmations;
-
-    mapping (address => bool) public isOwner;
-    mapping (address => uint) public tokenBalances;
-    mapping (address => address[]) public userList;
-    address[] public tokens;
-    uint public required;
     uint public transactionCount;
-    uint nonce;
+    
+    mapping (address => uint) public tokenBalances;
+    mapping (address => bool) public isOwner;
+    mapping (address => address[]) public userList;
+    uint public required;
+    uint public nonce;
 
     struct Transaction {
         address destination;
