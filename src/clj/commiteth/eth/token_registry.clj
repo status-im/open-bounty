@@ -37,17 +37,19 @@
      (let [token-count (-> contract .tokenCount .get .getValue)]
        (log/debug "token-count" token-count)
        (into {}
-             (map (fn [[addr tla digits name owner]]
-                    [(-> tla str keyword)
-                     {:tla (str tla)
-                      :name (str name)
-                      :base (.getValue digits)
-                      :address (str addr)
-                      :owner (str owner)}])
-                  (for [i (range token-count)]
-                    (-> (.token contract
-                                (org.web3j.abi.datatypes.generated.Uint256. i))
-                        .get))))))))
+             (->> (map (fn [[addr tla digits name owner]]
+                        [(-> tla str keyword)
+                         {:tla (str tla)
+                          :name (str name)
+                          :base (.getValue digits)
+                          :address (str addr)
+                          :owner (str owner)}])
+                      (for [i (range token-count)]
+                        (-> (.token contract
+                                    (org.web3j.abi.datatypes.generated.Uint256. i))
+                            .get)))
+                  ;; ignore empty records
+                  (filter (fn [[tla _]] (not= ":" (str tla))))))))))
 
 (defn deploy-parity-tokenreg
   "Deploy an instance of parity token-registry to current network"
