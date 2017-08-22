@@ -252,6 +252,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
   i.balance_eth      AS balance,
+  i.tokens           AS tokens,
   u.login            AS winner_login,
   u.address          AS payout_address
 FROM issues i, pull_requests p, users u, repositories r
@@ -288,6 +289,7 @@ SELECT
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
   i.balance_eth      AS balance,
+  i.tokens           AS tokens,
   u.address          AS payout_address,
   u.login           AS payee_login,
   i.payout_hash     AS payout_hash
@@ -329,6 +331,14 @@ updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 
+-- :name update-token-balances :! :n
+-- :doc updates issue with given token balances
+UPDATE issues
+SET tokens = :token_balances::jsonb,
+updated = timezone('utc'::text, now())
+WHERE contract_address = :contract_address;
+
+
 -- :name open-bounties :? :*
 -- :doc all bounty issues for given owner
 SELECT
@@ -338,6 +348,7 @@ SELECT
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
   i.balance_eth      AS balance,
+  i.tokens           AS tokens,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -349,7 +360,7 @@ FROM issues i, repositories r
 WHERE
 r.repo_id = i.repo_id
 AND i.confirm_hash is null
-ORDER BY balance desc, updated desc;
+ORDER BY balance desc, updated desc; -- TODO: order by USD value first
 
 
 
@@ -361,7 +372,8 @@ SELECT
   i.issue_number     AS issue_number,
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
-  i.balance_eth      AS balance,
+  i.balance_eth      AS balance_eth,
+  i.tokens           AS tokens,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -384,6 +396,7 @@ SELECT
   i.title            AS issue_title,
   i.repo_id          AS repo_id,
   i.balance_eth      AS balance,
+  i.tokens           AS tokens,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -417,7 +430,8 @@ SELECT
   i.comment_id       AS comment_id,
   i.issue_number     AS issue_number,
   i.issue_id         AS issue_id,
-  i.balance_eth      AS balance
+  i.balance_eth      AS balance,
+  i.tokens           AS tokens
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
 AND contract_address IS NOT NULL
@@ -430,6 +444,7 @@ SELECT
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
   i.balance_eth      AS balance,
+  i.tokens           AS tokens,
   r.owner            AS owner,
   r.repo             AS repo
 FROM issues i, repositories r
@@ -438,13 +453,7 @@ AND r.repo_id = i.repo_id
 AND r.owner = :owner
 AND r.repo = :repo;
 
--- :name get-balance :? :1
--- :doc gets current balance of a wallet attached to a given issue
-SELECT balance_eth AS balance
-FROM issues
-WHERE contract_address = :contract_address;
-
--- :name update-balance :! :n
+-- :name update-eth-balance :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
 SET balance_eth = :balance,
@@ -484,7 +493,7 @@ pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
 GROUP BY u.id
-ORDER BY total_eth DESC;
+ORDER BY total_eth DESC; -- TODO: this should work with value_usd
 
 
 -- :name bounties-activity :? :*

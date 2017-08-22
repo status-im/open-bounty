@@ -64,13 +64,14 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/list-failed-deployments con-db)))
 
-(defn get-balance
-  [contract-address]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/get-balance con-db {:contract_address contract-address})))
-
-(defn update-balance
+(defn update-eth-balance
   [contract-address balance]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-balance con-db {:contract_address contract-address
+    (db/update-eth-balance con-db {:contract_address contract-address
                                :balance          balance})))
+
+(defn update-token-balances
+  [contract-address balances]
+    (jdbc/with-db-connection [con-db *db*]
+    (db/update-token-balances con-db {:contract_address contract-address
+                                      :token_balances   balances})))

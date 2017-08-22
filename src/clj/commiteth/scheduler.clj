@@ -157,16 +157,23 @@
            repo             :repo
            comment-id       :comment_id
            issue-id         :issue_id
-           old-balance      :balance
+           db-balance-eth   :balance
+           db-tokens        :tokens
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
       (let [current-balance-eth-str (eth/get-balance-eth contract-address 6)
-            current-balance-eth (read-string current-balance-eth-str)]
+            current-balance-eth (read-string current-balance-eth-str)
+            current-token-balances (multisig/token-balances contract-address)]
         (log/debug "update-balances" current-balance-eth
                    current-balance-eth-str owner repo issue-number)
-        (when-not (float= old-balance current-balance-eth)
+        (when (or
+               (not (float= db-balance-eth current-balance-eth))
+               (not= db-tokens current-token-balances))
           (log/debug "balances differ")
-          (issues/update-balance contract-address current-balance-eth)
+          (-> contract-address
+              (issues/update-eth-balance current-balance-eth)
+              (issues/update-token-balances current-token-balances))
+          ;; TODO: comment and comment image will show tokens and USD value
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
@@ -204,8 +211,11 @@
    + key total-usd -> current total USD value for all funds"
   [bounty-addr]
   (let [token-balances (multisig/token-balances bounty-addr)
-        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))]
-    (merge token-balances {:ETH eth-balance})))
+        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))
+        all-funds
+        (merge token-balances
+               {:ETH eth-balance})]
+    (merge all-funds {:total-usd (fiat-util/bounty-usd-value all-funds)})))
 
 
 
