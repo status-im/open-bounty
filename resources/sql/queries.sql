@@ -339,6 +339,13 @@ updated = timezone('utc'::text, now())
 WHERE contract_address = :contract_address;
 
 
+-- :name update-usd-value :! :n
+-- :doc updates issue with given USD value
+UPDATE issues
+SET value_usd = :usd_value
+WHERE contract_address = :contract_address;
+
+
 -- :name open-bounties :? :*
 -- :doc all bounty issues for given owner
 SELECT

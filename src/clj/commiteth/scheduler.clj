@@ -155,7 +155,6 @@
   [bounty-addr]
   (doseq [[tla token-data] (token-data/as-map)]
     (let [balance (multisig/token-balance bounty-addr tla)]
-      (println tla bounty-addr balance)
       (when (> balance 0)
         (do
           (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
@@ -169,8 +168,29 @@
   []
   (doseq [{bounty-address :contract_address}
           (db-bounties/open-bounty-contracts)]
-    (println "bounty-address" bounty-address)
     (update-bounty-token-balances bounty-address)))
+
+
+(defn get-bounty-funds
+  "Get funds in given bounty contract.
+  Returns map of asset -> balance
+   + key total-usd -> current total USD value for all funds"
+  [bounty-addr]
+  (let [token-balances (multisig/token-balances bounty-addr)
+        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))
+        all-funds
+        (merge token-balances
+               {:ETH eth-balance})]
+    (merge all-funds {:total-usd (fiat-util/bounty-usd-value all-funds)})))
+
+(defn update-open-issue-usd-values
+  "Sum up current USD values of all crypto assets in a bounty and store to DB"
+  []
+  (doseq [{bounty-addr :contract_address}
+          (db-bounties/open-bounty-contracts)]
+    (let [funds (get-bounty-funds bounty-addr)]
+      (issues/update-usd-value bounty-addr
+                               (:total-usd funds)))))
 
 (defn update-balances
   []
@@ -211,23 +231,10 @@
                                  balance-eth
                                  balance-eth-str))))))
 
-(defn get-bounty-funds
-  "Get funds in given bounty contract.
-  Returns map of asset -> balance
-   + key total-usd -> current total USD value for all funds"
-  [bounty-addr]
-  (let [token-balances (multisig/token-balances bounty-addr)
-        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))
-        all-funds
-        (merge token-balances
-               {:ETH eth-balance})]
-    (merge all-funds {:total-usd (fiat-util/bounty-usd-value all-funds)})))
 
-
-
-(defn run-periodic-tasks [time]
+(defn run-1-min-interval-tasks [time]
   (do
-    (log/debug "run-periodic-tasks" time)
+    (log/debug "run-1-min-interval-tasks" time)
     ;; TODO: disabled for now. looks like it may cause extraneus
     ;; contract deployments and costs
     #_(redeploy-failed-contracts)
@@ -238,21 +245,35 @@
     (self-sign-bounty)
     (update-contract-internal-balances)
     (update-balances)
-    (log/debug "run-periodic-tasks done")))
+    (log/debug "run-1-min-interval-tasks done")))
+
+
+(defn run-10-min-interval-tasks [time]
+  (do
+    (log/debug "run-1-min-interval-tasks" time)
+    (update-open-issue-usd-values)
+    (log/debug "run-10-min-interval-tasks done")))
 
 
 (mount/defstate scheduler
   :start (let [every-minute (rest
                              (periodic-seq (t/now)
                                            (t/minutes 1)))
+               every-10-minutes (rest
+                                 (periodic-seq (t/now)
+                                               (t/minutes 10)))
+               error-handler (fn [e]
+                               (log/error "Scheduled task failed" e)
+                               (throw e))
                stop-fn (chime-at every-minute
-                                 run-periodic-tasks
-                                 {:error-handler (fn [e]
-                                                   (log/error "Scheduled task failed" e)
-                                                   (throw e))})]
+                                 run-1-min-interval-tasks
+                                 {:error-handler error-handler})
+               stop-fn2 (chime-at every-10-minutes
+                                  run-10-min-interval-tasks
+                                  {:error-handler error-handler})]
            (log/info "started scheduler")
            (bounties/update-bounty-issue-titles)
-           stop-fn)
+           (fn [] (do (stop-fn) (stop-fn2))))
   :stop (do
           (log/info "stopping scheduler")
           (scheduler)))

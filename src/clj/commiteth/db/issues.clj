@@ -17,7 +17,7 @@
   [issue-id commit-sha]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-commit-sha con-db {:issue_id issue-id
-                                 :commit_sha commit-sha})))
+                                  :commit_sha commit-sha})))
 
 (defn get-issue-titles
   []
@@ -26,7 +26,7 @@
 
 (defn update-issue-title
   [issue-id title]
-    (jdbc/with-db-connection [con-db *db*]
+  (jdbc/with-db-connection [con-db *db*]
     (db/update-issue-title con-db {:issue_id issue-id
                                    :title title})))
 
@@ -68,10 +68,16 @@
   [contract-address balance]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-eth-balance con-db {:contract_address contract-address
-                               :balance          balance})))
+                                   :balance          balance})))
 
 (defn update-token-balances
   [contract-address balances]
-    (jdbc/with-db-connection [con-db *db*]
+  (jdbc/with-db-connection [con-db *db*]
     (db/update-token-balances con-db {:contract_address contract-address
-                                      :token_balances   balances})))
+                                      :token_balances balances})))
+
+(defn update-usd-value
+  [contract-address usd-value]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-usd-value con-db {:contract_address contract-address
+                                 :usd_value usd-value})))
