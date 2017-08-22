@@ -26,7 +26,7 @@
    :submission (eth/event-sig->topic-id "Submission(uint256)")})
 
 (defn factory-contract-addr []
-  (env :contract-factory-addr "0xb1d6Bf03e99bB2e9c5eBE010ecB0fc910a1CD65b"))
+  (env :contract-factory-addr "0x47F56FD26EEeCda4FdF5DB5843De1fe75D2A64A6"))
 
 (defn create-new
   [owner1 owner2 required]
