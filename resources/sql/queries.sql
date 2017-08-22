@@ -342,7 +342,8 @@ WHERE contract_address = :contract_address;
 -- :name update-usd-value :! :n
 -- :doc updates issue with given USD value
 UPDATE issues
-SET value_usd = :usd_value
+SET value_usd = :usd_value,
+value_usd_updated = timezone('utc'::text, now())
 WHERE contract_address = :contract_address;
 
 
