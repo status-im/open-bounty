@@ -145,8 +145,23 @@
   "Query balance of given ERC20 token TLA for given address from ERC20 contract"
   [bounty-addr token]
   (let [token-address (get-token-address token)]
+
     (-> (eth/call token-address
                   (:balance-of method-ids)
                   bounty-addr)
         eth/hex->big-integer
         (convert-token-value token))))
+
+
+(defn token-balances
+  "Get a given bounty contract's token balances. Assumes contract's internal balances have been updated"
+  [bounty-addr]
+  (let [bounty-contract (load-bounty-contract bounty-addr)
+        token-addresses (map str (-> bounty-contract
+                                     (.getTokenList)
+                                     .get
+                                     .getValue))]
+    (into {}
+          (map (fn [addr] (let [tla (first (token-data/token-info-by-addr addr))]
+                           (assert tla)
+                           [tla {:balance (token-balance bounty-addr tla)}])) token-addresses))))
