@@ -150,6 +150,28 @@
    (let [scale (if (or (zero? x) (zero? y)) 1 (abs x))]
      (<= (abs (- x y)) (* scale epsilon)))))
 
+(defn update-bounty-token-balances
+  "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
+  [bounty-addr]
+  (doseq [[tla token-data] (token-data/as-map)]
+    (let [balance (multisig/token-balance bounty-addr tla)]
+      (println tla bounty-addr balance)
+      (when (> balance 0)
+        (do
+          (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
+          (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
+            (when (not= balance internal-balance)
+              (log/info "balances not in sync, calling watch")
+              (multisig/watch-token bounty-addr tla))))))))
+
+(defn update-contract-internal-balances
+  "It is required in our current smart contract to manually update it's internal balance when some tokens have been added."
+  []
+  (doseq [{bounty-address :contract_address}
+          (db-bounties/open-bounty-contracts)]
+    (println "bounty-address" bounty-address)
+    (update-bounty-token-balances bounty-address)))
+
 (defn update-balances
   []
   (doseq [{contract-address :contract_address
@@ -166,6 +188,7 @@
             token-balances (multisig/token-balances contract-address)]
         (log/debug "update-balances" balance-eth
                    balance-eth-str token-balances owner repo issue-number)
+
         (when (or
                (not (float= db-balance-eth balance-eth))
                (not= db-tokens token-balances))
@@ -187,22 +210,6 @@
                                  contract-address
                                  balance-eth
                                  balance-eth-str))))))
-
-
-(defn update-bounty-token-balances
-  "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
-  [bounty-addr]
-  (for [[tla token-data] (token-data/as-map)]
-    (let [balance (multisig/token-balance bounty-addr tla)]
-      (when (> balance 0)
-        (do
-          (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
-          (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
-            (when (not= balance internal-balance)
-              (log/info "balances not in sync, calling watch")
-              (multisig/watch-token bounty-addr tla))))))))
-
-
 
 (defn get-bounty-funds
   "Get funds in given bounty contract.
@@ -229,6 +236,7 @@
     (update-confirm-hash)
     (update-payout-receipt)
     (self-sign-bounty)
+    (update-contract-internal-balances)
     (update-balances)
     (log/debug "run-periodic-tasks done")))
 
