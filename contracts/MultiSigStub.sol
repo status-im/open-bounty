@@ -218,7 +218,7 @@ contract MultiSigStub {
         private 
         returns(bytes32 mResult) 
     {
-        address target = 0xcAFE992Df476564894C47999B5F81F7a785572c8; //Multinetwork
+        address target = 0xc0FFeEE61948d8993864a73a099c0E38D887d3F4; //Multinetwork
         mResult = _malloc(32);
         bool failed;
 
