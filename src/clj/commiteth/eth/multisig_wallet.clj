@@ -61,7 +61,7 @@
         correct-topic? (fn [topic]
                          (= topic topic-id))
         has-correct-event? #(some correct-topic?
-                                       (:topics %))
+                                  (:topics %))
         event     (first (filter has-correct-event? logs))]
     (:data event)))
 
@@ -157,11 +157,14 @@
   "Get a given bounty contract's token balances. Assumes contract's internal balances have been updated"
   [bounty-addr]
   (let [bounty-contract (load-bounty-contract bounty-addr)
-        token-addresses (map str (-> bounty-contract
-                                     (.getTokenList)
-                                     .get
-                                     .getValue))]
-    (into {}
-          (map (fn [addr] (let [tla (first (token-data/token-info-by-addr addr))]
-                           (assert tla)
-                           [tla (token-balance bounty-addr tla)])) token-addresses))))
+        token-addresses (-> bounty-contract
+                            (.getTokenList)
+                            .get)]
+    (if token-addresses
+      (let [addrs (map str
+                       (.getValue token-addresses))]
+        (into {}
+              (map (fn [addr] (let [tla (first (token-data/token-info-by-addr addr))]
+                               (assert tla)
+                               [tla (token-balance bounty-addr tla)])) addrs)))
+      {})))

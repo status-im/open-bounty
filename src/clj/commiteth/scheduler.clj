@@ -49,11 +49,11 @@
 
 (defn deploy-contract [owner-address issue-id]
   (let [transaction-hash (multisig/deploy-multisig owner-address)]
-      (if (nil? transaction-hash)
-        (log/error "Failed to deploy contract to" owner-address)
-        (log/info "Contract deployed, transaction-hash:"
-                  transaction-hash ))
-      (issues/update-transaction-hash issue-id transaction-hash)))
+    (if (nil? transaction-hash)
+      (log/error "Failed to deploy contract to" owner-address)
+      (log/info "Contract deployed, transaction-hash:"
+                transaction-hash ))
+    (issues/update-transaction-hash issue-id transaction-hash)))
 
 
 (defn redeploy-failed-contracts
@@ -161,33 +161,32 @@
            db-tokens        :tokens
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
-      (let [current-balance-eth-str (eth/get-balance-eth contract-address 6)
-            current-balance-eth (read-string current-balance-eth-str)
-            current-token-balances (multisig/token-balances contract-address)]
-        (log/debug "update-balances" current-balance-eth
-                   current-balance-eth-str owner repo issue-number)
+      (let [balance-eth-str (eth/get-balance-eth contract-address 6)
+            balance-eth (read-string balance-eth-str)
+            token-balances (multisig/token-balances contract-address)]
+        (log/debug "update-balances" balance-eth
+                   balance-eth-str token-balances owner repo issue-number)
         (when (or
-               (not (float= db-balance-eth current-balance-eth))
-               (not= db-tokens current-token-balances))
+               (not (float= db-balance-eth balance-eth))
+               (not= db-tokens token-balances))
           (log/debug "balances differ")
-          (-> contract-address
-              (issues/update-eth-balance current-balance-eth)
-              (issues/update-token-balances current-token-balances))
+          (issues/update-eth-balance contract-address balance-eth)
+          (issues/update-token-balances contract-address token-balances)
           ;; TODO: comment and comment image will show tokens and USD value
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
                                                 issue-number
                                                 contract-address
-                                                current-balance-eth
-                                                current-balance-eth-str)
+                                                balance-eth
+                                                balance-eth-str)
           (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number
                                  contract-address
-                                 current-balance-eth
-                                 current-balance-eth-str))))))
+                                 balance-eth
+                                 balance-eth-str))))))
 
 
 (defn update-bounty-token-balances
