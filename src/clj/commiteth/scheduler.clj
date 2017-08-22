@@ -189,10 +189,10 @@
     (let [balance (multisig/token-balance bounty-addr tla)]
       (when (> balance 0)
         (do
-          (println "bounty at" bounty-addr "has" balance "of tla" tla)
+          (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
           (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
             (when (not= balance internal-balance)
-              (println "balances not in sync, calling watch")
+              (log/info "balances not in sync, calling watch")
               (multisig/watch-token bounty-addr tla))))))))
 
 

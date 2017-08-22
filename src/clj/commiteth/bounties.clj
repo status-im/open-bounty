@@ -5,7 +5,7 @@
             [commiteth.db.comment-images :as comment-images]
             [commiteth.eth.core :as eth]
             [commiteth.github.core :as github]
-            [commiteth.eth.multisig-wallet :as wallet]
+            [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.util.png-rendering :as png-rendering]
             [clojure.tools.logging :as log]))
 
@@ -38,7 +38,7 @@
                (issues/update-comment-id issue-id))
           (log/debug "Posting dep")
           (log/debug "deploying contract to " owner-address)
-          (let [transaction-hash (wallet/deploy-multisig owner-address)]
+          (let [transaction-hash (multisig/deploy-multisig owner-address)]
             (if (nil? transaction-hash)
               (log/error "Failed to deploy contract to" owner-address)
               (log/info "Contract deployed, transaction-hash:"

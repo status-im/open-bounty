@@ -56,29 +56,26 @@
                "0x0"
                "0x0"))
 
+(defn find-event-in-tx [tx-receipt topic-id]
+  (let [logs (:logs tx-receipt)
+        correct-topic? (fn [topic]
+                         (= topic topic-id))
+        has-correct-event? #(some correct-topic?
+                                       (:topics %))
+        event     (first (filter has-correct-event? logs))]
+    (:data event)))
+
+
 (defn find-confirmation-hash
-  [receipt]
-  (let [logs                   (:logs receipt)
-        confirmation-topic? (fn [topic]
-                              (= topic
-                                 (:submission topics)))
-        has-confirmation-event? #(some confirmation-topic?
-                                      (:topics %))
-        confirmation-event     (first (filter has-confirmation-event? logs))
-        confirmation-data      (:data confirmation-event)]
+  [tx-receipt]
+  (let [confirmation-data (find-event-in-tx tx-receipt (:submission topics))]
     (when confirmation-data
       (subs confirmation-data 2 66))))
 
+
 (defn find-created-multisig-address
   [tx-receipt]
-  (let [logs                   (:logs tx-receipt)
-        factory-topic? (fn [topic]
-                         (= topic
-                            (:factory-create topics)))
-        has-factory-event? #(some factory-topic?
-                                 (:topics %))
-        factory-event     (first (filter has-factory-event? logs))
-        factory-data      (:data factory-event)]
+  (let [factory-data (find-event-in-tx tx-receipt (:factory-create topics))]
     (when factory-data
       (str "0x" (subs factory-data 26)))))
 
@@ -117,16 +114,17 @@
 
 (defn load-bounty-contract [addr]
   (MultiSigTokenWallet/load addr
-                 (create-web3j)
-                 (creds)
-                 (eth/gas-price)
-                 (BigInteger/valueOf 500000)))
+    (create-web3j)
+    (creds)
+    (eth/gas-price)
+    (BigInteger/valueOf 500000)))
 
 (defn convert-token-value
   "Convert given value to decimal using given token's base"
   [value token]
   (let [token-details (token-data/token-info token)
         token-base (:base token-details)]
+    (assert (> token-base 0))
     (-> value
         (/ (Math/pow 10 token-base)))))
 
@@ -138,8 +136,7 @@
         token-address (get-token-address token)
         token-addr-web3j (Address. token-address)]
     (-> bounty-contract
-        (.tokenBalances
-         token-addr-web3j)
+        (.tokenBalances token-addr-web3j)
         .get
         .getValue
         (convert-token-value token))))

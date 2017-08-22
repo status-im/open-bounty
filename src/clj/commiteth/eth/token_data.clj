@@ -6,19 +6,23 @@
 
 (def token-data-atom (atom {}))
 
+(defn update-data []
+  (let [token-data
+        (if (env :on-testnet true)
+          (if-let [token-data (env :testnet-token-data)]
+            token-data
+            (token-reg/load-parity-tokenreg-data token-reg/STATUS-RINKEBY-ADDR))
+
+          (token-reg/load-parity-tokenreg-data token-reg/PARITY-MAINNET-ADDR))]
+    (reset! token-data-atom token-data)))
+
+
 (mount/defstate
   token-data
   :start
   (do
-    (log/info "token-data started")
-    (let [token-data
-          (if (env :on-testnet true)
-            (if-let [token-data (env :testnet-token-data)]
-              token-data
-              (token-reg/load-parity-tokenreg-data token-reg/STATUS-RINKEBY-ADDR))
-
-            (token-reg/load-parity-tokenreg-data token-reg/PARITY-MAINNET-ADDR))]
-      (reset! token-data-atom token-data)))
+    (update-data)
+    (log/info "token-data started"))
   :stop
   (log/info "token-data stopped"))
 
