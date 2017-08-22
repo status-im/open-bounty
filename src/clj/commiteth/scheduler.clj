@@ -44,7 +44,8 @@
                                  issue-number
                                  contract-address
                                  balance
-                                 balance-str))))))
+                                 balance-str
+                                 {}))))))
 
 
 (defn deploy-contract [owner-address issue-id]
@@ -86,6 +87,7 @@
            comment-id :comment_id
            issue-number :issue_number
            balance :balance
+           tokens :tokens
            winner-login :winner_login} (db-bounties/pending-bounties)
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
@@ -97,6 +99,7 @@
                                             comment-id
                                             contract-address
                                             (decimal->str balance)
+                                            tokens
                                             winner-login)))))
 
 (defn update-confirm-hash
@@ -121,6 +124,7 @@
            comment-id :comment_id
            issue-number :issue_number
            balance :balance
+           tokens :tokens
            payee-login :payee_login} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
@@ -131,6 +135,7 @@
                                         comment-id
                                         contract-address
                                         (decimal->str balance)
+                                        tokens
                                         payee-login))))
 
 
@@ -229,7 +234,8 @@
                                  issue-number
                                  contract-address
                                  balance-eth
-                                 balance-eth-str))))))
+                                 balance-eth-str
+                                 token-balances))))))
 
 
 (defn run-1-min-interval-tasks [time]
