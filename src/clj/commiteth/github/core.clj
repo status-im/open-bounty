@@ -207,7 +207,9 @@
                  "%s\n"
                  (network-text)
                  "To claim this bounty sign up at %s\n"
-                 "To fund it, send ETH or ERC20 tokens to the contract address.")
+                 (if (on-testnet?)
+                   "To fund it, send test ETH or test ERC20 tokens to the contract address."
+                   "To fund it, send ETH or ERC20 tokens to the contract address."))
             eth-balance contract-address image-url site-url)))
 
 
