@@ -6,6 +6,7 @@
             [commiteth.db.issues :as issues]
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
+            [commiteth.util.crypto-fiat-value :as fiat-util]
             [commiteth.util.util :refer [decimal->str]]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
@@ -194,6 +195,17 @@
             (when (not= balance internal-balance)
               (log/info "balances not in sync, calling watch")
               (multisig/watch-token bounty-addr tla))))))))
+
+
+
+(defn get-bounty-funds
+  "Get funds in given bounty contract.
+  Returns map of asset -> balance
+   + key total-usd -> current total USD value for all funds"
+  [bounty-addr]
+  (let [token-balances (multisig/token-balances bounty-addr)
+        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))]
+    (merge token-balances {:ETH eth-balance})))
 
 
 

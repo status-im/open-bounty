@@ -14,7 +14,7 @@
 
 (defn gas-price
   []
-  (-> (:gas-price env 2000000000)
+  (-> (:gas-price env 20000000000) ;; 20 gwei default
       str
       BigInteger.))
 

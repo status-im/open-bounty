@@ -1,5 +1,6 @@
 (ns commiteth.util.crypto-fiat-value
   (:require [clj-http.client :as http]
+            [clojure.string :as str]
             [clojure.data.json :as json]))
 
 
@@ -17,9 +18,10 @@
 
 
 (defn bounty-usd-value
-  "Get current USD value of a bounty. bounty is a map of token-name to value"
+  "Get current USD value of a bounty. bounty is a map of token-tla (keyword) to value"
   [bounty]
   (reduce + (map (fn [[token value]]
-                   (let [usd-price (get-token-usd-price token)]
+                   (let [tla (subs (str token) 1)
+                         usd-price (get-token-usd-price tla)]
                      (* usd-price value)))
                  bounty)))

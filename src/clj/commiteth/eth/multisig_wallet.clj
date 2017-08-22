@@ -164,4 +164,4 @@
     (into {}
           (map (fn [addr] (let [tla (first (token-data/token-info-by-addr addr))]
                            (assert tla)
-                           [tla {:balance (token-balance bounty-addr tla)}])) token-addresses))))
+                           [tla (token-balance bounty-addr tla)])) token-addresses))))
