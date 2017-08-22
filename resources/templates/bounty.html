@@ -11,7 +11,7 @@
         margin: 0px;
         padding: 1em;
         width: 1336px;
-        height: 300px;
+        height: {{ image-height }}px;
     }
 
     .commiteth-logo {
@@ -34,11 +34,28 @@
         top: 196px;
         left: 32px;
     }
-    .comment-balance {
+    .comment-eth-balance {
         color: #343434;
         position: fixed;
         top: 196px;
         left: 135px;
+      }
+
+    .token-list {
+      position: fixed;
+      top: 253px;
+      left: 32px;
+    }
+    .comment-token {
+      color: #a8aab1;
+      display: inline;
+      font-size: 48px;
+    }
+    .comment-token-balance {
+      color: #343434;
+      display:inline;
+      font-size: 48px;
+      left: 135px;
     }
 
     .qr-image {
@@ -64,7 +81,12 @@
     <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAABT1JREFUaAXdWmtMHFUUPmcWZEVRYrDSyqNYozb+sSkxgsvysLawJfpDa1ob44/+Mjb+MDH6h/hKjMbExBKNMekPTdQmjYkvFpXIcxtNRekfY0RSnr4oMUDpspSdOZ47eLcg9+7OsrvDyE3g7px7znfPN3PuuY8ZgC1SMFs89g4OFl6YWawlojK0YLsFVMrgpYB0Vbb6EDhEjA4wDL78k1PNtSMSOyMiu77qK79sYisBtSJQExH4JXDua4z6DNo33tLwregrbyMdlofP7EKIv7gUhyMAliEwaCNAGdlQoUnwBkPUCJi0iJR/HdkBcbMNIH7MIsrPyI8sGHM47ZEwjolUdvaFrLj5EY+B66TxZtccyqPSBzss5IWurgj3PWta8LmXSKz4ii9Ln5MO9p09o35zceIkE3hUGjiuETkHwAIiLLBN1oYQg3LWwmEEbJ8MBT+R/iQNrXh0/F1WdEYCccgA7AIDuyzw/VhzoGbuNKIpO8p1rX0iZeH+40y+PaUDiJ1885+fbGn4PqVuDhWURCo6IwEis5tDKklmwl85jz8u83gOfXQEvY7Izp6hYjM69zMHdakOgY2+9BVef2Sscc+sTsdt+bqsFV+ceyo5CXz7WKj+oJdIiJu25oncHokURefNMQ6pG5R3FLG7piW4381BrPRDIVzzRBYvmk/qScCUH/CwF0kIXgkiYs6wCJ5WkLVFaBjHR0LBC7r2zZYniFhLUwFeI9+ocogntZ8mDtR9pmrziixBBCy6X+cUovEqipnawyVBhDdCSiJMYP4Wf90pD3OwXbOJ3NYzWMJXd6mc5bVNf28jxlVtXpLZRJZil+4We0iVYxxW3Sq512T2opGzlXYW5w3gQKZOV31zpjJ+2bzDAPJlimWiYRl5MDyxr+78aiybCGelbbxJURbDZ/2mbHAgFAcSf00vvLccW35YqGdnKWyCxUBl4d4v/OA/OhK6Z15g26FFFm0TF6pSUlI4o5I7kU1PX3qJdyI2CSf6aekQtMZg6XVpYxPhzKQkwoNm9ofq6mWpnH5ND6Vvk47FFXybCB8kaAIrHdDN1V15IgDKpQezK+Y4T7InSeU8fpxKI7P2K/grRAyc1gHOzETFHLOhQsX5bZxITm/IOKURdvih4BmpZmctDiwtEcs0bmblP6RBOvVUbe0i6z/iWvo1EP7kUzt1Maw6bhhUNzqTjt537zhrir+cFTu0CvzXnAXNopDIaspZ71kEtokMN1aLueKcEpewvqGHkh4bKe1cFtpERJ/2mZSycyo6Hxs4rGzykDBBRBys6fzi8HqOpxrlolJn47Y8QcQoKIvwOFHPJwR3VnQOPOi2c+n0lyAy1lgV4+wl3jcoC4HVfmu4X7kVVhq4LEwQEf1eXeR7i9ddfyt9ICiLAZ06RJkvxZX4GQrXEPklELjIO8I3tZhETd+F+0+8QLTGTqvvYsO6AbxljkzFUSgaeYc4xLTLd14ENMej82crO3vt93cu3nhtV+ueiNTcEq8VEmQ6et/n34/J6xT1OR44Yi7q8hdeO7QD9s66efqifSLC6YxevdmsMcrH5AvIM6p9Kf9p1nWymWvdEpYb/n31ZuCJyebgp9ImKRGpJF6G8knLK4zvsWyFR6cO1n8o/HTk2ESo/jWfDx8Qp46SnDdqapN+OCIilMebgx2Q59vNZN5JltEksBs17z6rZD+OiQiDyf2B3ydD9U/wBxO7DcQP+D3R2tiXqC7VPJCGZFeOxohU/m/tpY9qMiKymljiMycTyvlLIf68ydrOK/+b3PrMabUv/+vf/wB8Edrv6oR/RwAAAABJRU5ErkJggg=="/>
     </div>
         <div class="comment-issue-url">{{issue-url}}</div>
-        <div class="comment-eth">ETH<div class="comment-balance">{{balance}}</div></div>
+        <div class="comment-eth">ETH<div class="comment-eth-balance">{{eth-balance}}</div></div>
+        <div class="token-list">
+        {% for token in tokens %}
+          <div class="token-list-item"><div class="comment-token">{{ token.tla }}<div class="comment-token-balance">&nbsp;{{ token.balance }}</div></div></div>
+          {% endfor %}
+        </div>
         <div class="qr-image">
         <img src="data:image/png;base64,{{qr-image}}"/>
         </div>

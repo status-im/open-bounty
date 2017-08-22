@@ -25,13 +25,23 @@
             :size [255 255])))
 
 
-(defn gen-comment-image [address balance issue-url]
+(defn token-map->list [tokens]
+  (mapv (fn [[tla balance]] {:tla (subs (str tla) 1)
+                            :balance balance})
+        tokens))
+
+(defn image-height [tokens]
+  (+ 300 (* 32 (count (keys tokens)))))
+
+(defn gen-comment-image [address balance-eth tokens issue-url]
   (let [qr-image  (String. (image->base64 (generate-qr-image address))
                            "ISO-8859-1")
         html (:body (render "bounty.html"
-                            {:qr-image  qr-image
-                             :balance   balance
-                             :address   address
+                            {:qr-image qr-image
+                             :eth-balance balance-eth
+                             :tokens (token-map->list tokens)
+                             :image-height (image-height tokens)
+                             :address address
                              :issue-url issue-url}))
         command (env :html2png-command "wkhtmltoimage")
         {out :out err :err exit :exit}

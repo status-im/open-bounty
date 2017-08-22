@@ -37,7 +37,8 @@
                                                 issue-number
                                                 contract-address
                                                 balance
-                                                balance-str)
+                                                balance-str
+                                                {})
           (github/update-comment owner
                                  repo
                                  comment-id
@@ -227,7 +228,8 @@
                                                 issue-number
                                                 contract-address
                                                 balance-eth
-                                                balance-eth-str)
+                                                balance-eth-str
+                                                token-balances)
           (github/update-comment owner
                                  repo
                                  comment-id
