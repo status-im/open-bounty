@@ -69,3 +69,8 @@
               balance)]
     (with-open [w (io/output-stream filename)]
       (.write w (:png_data (db/get-image-data issue-id hash))))))
+
+
+(comment
+  (with-open [w (io/output-stream "foo.png")]
+    (.write w (gen-comment-image "0xf00barbeeff00barbeeff00barbeeff00barbeef" "12.2" {:SNT 250 :GNO 100 :WTF 3452.42} "http://github.com/someorg/somerepo/issues/42"))))
