@@ -5,15 +5,15 @@
 
 
 (defn bounty-item [bounty]
-  (let [{avatar-url :repo_owner_avatar_url
-         owner :repo_owner
-         repo-name :repo_name
-         issue-title :issue_title
-         issue-number :issue_number
+  (let [{avatar-url :avatar-url
+         owner :repo-owner
+         repo-name :repo-name
+         issue-title :issue-title
+         issue-number :issue-number
          updated :updated
          tokens :tokens
          balance-eth :balance-eth
-         value-usd :value_usd} bounty
+         value-usd :value-usd} bounty
         full-repo (str owner "/" repo-name)
         issue-link [:a
                     {:href (issue-url owner repo-name issue-number)}
