@@ -115,7 +115,7 @@
         url-base (:server-address env)]
     (log/debug "url-base" url-base)
     (filter (fn [{{url :url} :config}] (and url (str/starts-with? url url-base)))
-         hooks)))
+            hooks)))
 
 
 (defn webhook-exists?
@@ -191,10 +191,10 @@
 (defn token-balances-text [token-balances]
   (when-not (empty? token-balances)
     (str "Tokens: "
-         (str/join "\n\t" (map (fn [[tla balance]] (format "%s: %.2f"
-                                                          (subs (str tla) 1)
-                                                          (float balance)))
-                               token-balances))
+         (str/join " " (map (fn [[tla balance]] (format "%s: %.2f"
+                                                       (subs (str tla) 1)
+                                                       (float balance)))
+                            token-balances))
          "\n")))
 
 (defn generate-open-comment
@@ -208,8 +208,8 @@
                  (network-text)
                  "To claim this bounty sign up at %s\n"
                  (if (on-testnet?)
-                   "To fund it, send test ETH or test ERC20 tokens to the contract address."
-                   "To fund it, send ETH or ERC20 tokens to the contract address."))
+                   "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
+                   "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
             eth-balance contract-address image-url site-url)))
 
 
