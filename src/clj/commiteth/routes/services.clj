@@ -15,7 +15,8 @@
             [clojure.tools.logging :as log]
             [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
-            [commiteth.util.util :refer [decimal->str]]
+            [commiteth.util.util :refer [usd-decimal->str
+                                         eth-decimal->str]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]))
@@ -112,11 +113,11 @@
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
     (into {}
           (for [ob owner-bounties
-                :let [b (update ob :balance decimal->str)]]
+                :let [b (update ob :value_usd usd-decimal->str)]]
             [(:issue_id b)
              (conj b
                    (let [claims (map
-                                 #(update % :balance decimal->str)
+                                 #(update % :value_usd usd-decimal->str)
                                  (bounties-db/bounty-claims (:issue_id b)))]
                      {:claims claims}))]))))
 
@@ -124,26 +125,40 @@
 (defn top-hunters []
   (let [renames {:user_name :display-name
                  :avatar_url :avatar-url
-                 :total_eth :total-eth}]
+                 :total_usd :total-usd}]
     (map #(-> %
               (rename-keys renames)
-              (update :total-eth decimal->str))
+              (update :total-usd usd-decimal->str))
          (bounties-db/top-hunters))))
 
 
-(defn activity-feed []
-  (let [renames {:user_name :display-name
+(defn prettify-bounty-items [bounty-items]
+    (let [renames {:user_name :display-name
                  :user_avatar_url :avatar-url
                  :issue_title :issue-title
                  :type :item-type
                  :repo_name :repo-name
                  :repo_owner :repo-owner
-                 :issue_number :issue-number}
-        activity-items (bounties-db/bounty-activity)]
+                 :issue_number :issue-number
+                 :value_usd :value-usd
+                 :balance_eth :balance-eth}]
     (map #(-> %
               (rename-keys renames)
-              (update :balance decimal->str))
-         activity-items)))
+              (update :value-usd usd-decimal->str)
+              (update :balance-eth eth-decimal->str)
+              (update :tokens (fn [tokens]
+                                (into {}
+                                      (map (fn [[tla balance]]
+                                             [tla (format "%.2f" balance)])
+                                           tokens)))))
+         bounty-items)))
+
+(defn activity-feed []
+  (prettify-bounty-items (bounties-db/bounty-activity)))
+
+(defn open-bounties []
+  (prettify-bounty-items (bounties-db/open-bounties)))
+
 
 
 (defn current-user-token [user]
@@ -173,8 +188,7 @@
                 (ok (activity-feed)))
            (GET "/open-bounties" []
                 (log/debug "/open-bounties")
-                (ok (map #(update % :balance decimal->str)
-                         (bounties-db/open-bounties))))
+                (ok (open-bounties)))
            (GET "/usage-metrics" []
                 :query-params [token :- String]
                 :auth-rules status-team-member?

@@ -5,14 +5,15 @@
 
 
 (defn bounty-item [bounty]
-  (println bounty)
   (let [{avatar-url :repo_owner_avatar_url
          owner :repo_owner
          repo-name :repo_name
          issue-title :issue_title
          issue-number :issue_number
          updated :updated
-         balance :balance} bounty
+         tokens :tokens
+         balance-eth :balance-eth
+         value-usd :value_usd} bounty
         full-repo (str owner "/" repo-name)
         issue-link [:a
                     {:href (issue-url owner repo-name issue-number)}
@@ -25,7 +26,9 @@
       [:div.description
        issue-link]
       [:div.footer-row
-       [:div.balance-badge (str "ETH " balance )]
+       (for [[tla balance] (merge tokens {:ETH balance-eth})]
+         [:div.balance-badge
+          (str (subs (str tla) 1) " " balance)])
        [:div.time (moment-timestamp updated)]]]]))
 
 (defn bounties-list [open-bounties]

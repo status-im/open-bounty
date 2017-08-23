@@ -6,7 +6,7 @@
 
 
 (defn item-description [{:keys [display-name
-                                balance
+                                value-usd
                                 issue-title
                                 item-type
                                 repo-owner
@@ -17,19 +17,22 @@
                     issue-title]]
     (case item-type
       "new-bounty" [:div "New bounty opened for issue " issue-link]
-      "claim-payout" [:div "Received ETH " balance
+      "claim-payout" [:div "Received USD " value-usd
                       " for " issue-link]
       "open-claim" [:div "Submitted a claim for " issue-link]
-      "balance-update" [:div issue-link " bounty increased to ETH " balance]
+      "balance-update" [:div issue-link " bounty increased to USD " value-usd]
       "")))
 
 
 (defn activity-item [{:keys [avatar-url
                              display-name
                              updated
-                             balance
+                             value-usd
+                             balance-eth
                              issue-title
-                             item-type] :as  item}]
+                             item-type
+                             tokens] :as item}]
+  (println item)
   [:div.item.activity-item
    [:div.ui.mini.circular.image
     [:img {:src avatar-url}]]
@@ -39,7 +42,9 @@
      [item-description item]]
     [:div.footer-row
      (when-not (= item-type "new-bounty")
-       [:div.balance-badge (str "ETH " balance )])
+       (for [[tla balance] (merge tokens {:ETH balance-eth})]
+         [:div.balance-badge
+          (str (subs (str tla) 1) " " balance)]))
      [:div.time (moment-timestamp updated)]]]])
 
 

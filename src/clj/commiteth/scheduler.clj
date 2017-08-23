@@ -7,7 +7,7 @@
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
             [commiteth.util.crypto-fiat-value :as fiat-util]
-            [commiteth.util.util :refer [decimal->str]]
+            [commiteth.util.util :refer [eth-decimal->str]]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
             [clj-time.core :as t]
@@ -29,23 +29,23 @@
                repo         :repo
                comment-id   :comment_id
                issue-number :issue_number} issue
-              balance-str (eth/get-balance-eth contract-address 6)
-              balance (read-string balance-str)]
+              balance-eth-str (eth/get-balance-eth contract-address 6)
+              balance-eth (read-string balance-eth-str)]
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
                                                 issue-number
                                                 contract-address
-                                                balance
-                                                balance-str
+                                                balance-eth
+                                                balance-eth-str
                                                 {})
           (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number
                                  contract-address
-                                 balance
-                                 balance-str
+                                 balance-eth
+                                 balance-eth-str
                                  {}))))))
 
 
@@ -87,7 +87,7 @@
            owner :owner
            comment-id :comment_id
            issue-number :issue_number
-           balance :balance
+           balance-eth :balance_eth
            tokens :tokens
            winner-login :winner_login} (db-bounties/pending-bounties)
           :let [value (eth/get-balance-hex contract-address)]]
@@ -99,7 +99,7 @@
                                             repo
                                             comment-id
                                             contract-address
-                                            (decimal->str balance)
+                                            (eth-decimal->str balance-eth)
                                             tokens
                                             winner-login)))))
 
@@ -124,7 +124,7 @@
            owner :owner
            comment-id :comment_id
            issue-number :issue_number
-           balance :balance
+           balance-eth :balance_eth
            tokens :tokens
            payee-login :payee_login} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
@@ -135,7 +135,7 @@
                                         repo
                                         comment-id
                                         contract-address
-                                        (decimal->str balance)
+                                        (eth-decimal->str balance-eth)
                                         tokens
                                         payee-login))))
 
@@ -205,7 +205,7 @@
            repo             :repo
            comment-id       :comment_id
            issue-id         :issue_id
-           db-balance-eth   :balance
+           db-balance-eth   :balance_eth
            db-tokens        :tokens
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id

@@ -130,7 +130,7 @@
                                [:img {:src (:avatar-url hunter)}]]
                               [:div.content
                                [:div.header (:display-name hunter)]
-                               [:div.description (str "ETH " (:total-eth hunter))]]])
+                               [:div.description (str "USD " (:total-usd hunter))]]])
                            @top-hunters))))))
 
 (defn page []

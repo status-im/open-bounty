@@ -61,12 +61,12 @@
   (let [{owner :owner
          repo :repo
          issue-id :issue_id
-         balance :balance} (db-bounties/get-bounty owner repo issue-number)
+         balance-eth :balance_eth} (db-bounties/get-bounty owner repo issue-number)
         hash (github/github-comment-hash
               owner
               repo
               issue-number
-              balance)]
+              balance-eth)]
     (with-open [w (io/output-stream filename)]
       (.write w (:png_data (db/get-image-data issue-id hash))))))
 

@@ -64,7 +64,7 @@
 
   :plugins [[lein-cprop "1.0.1"]
             [migratus-lein "0.4.1"]
-            [lein-cljsbuild "1.1.3"]
+            [lein-cljsbuild "1.1.7"]
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
             [lein-shell "0.5.0"]

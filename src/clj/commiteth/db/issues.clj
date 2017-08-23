@@ -65,10 +65,10 @@
     (db/list-failed-deployments con-db)))
 
 (defn update-eth-balance
-  [contract-address balance]
+  [contract-address balance-eth]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-eth-balance con-db {:contract_address contract-address
-                                   :balance          balance})))
+                                   :balance_eth balance-eth})))
 
 (defn update-token-balances
   [contract-address balances]
