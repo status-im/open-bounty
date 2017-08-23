@@ -19,7 +19,8 @@
               :get-token-list "getTokenList()"
               :create "create(address[],uint256)"
               :watch "watch(address)"
-              :balance-of "balanceOf(address)"})))
+              :balance-of "balanceOf(address)"
+              :transfer "transfer(address,uint256)"})))
 
 (def topics
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
@@ -120,7 +121,7 @@
     (BigInteger/valueOf 500000)))
 
 (defn convert-token-value
-  "Convert given value to decimal using given token's base"
+  "Convert given value to decimal using given token's base."
   [value token]
   (let [token-details (token-data/token-info token)
         token-base (:base token-details)]
@@ -130,7 +131,8 @@
 
 
 (defn token-balance-in-bounty
-  "Query (internal) ERC20 token balance from bounty contract for given token TLA"
+  "Query (internal) ERC20 token balance from bounty contract for given
+  token TLA."
   [bounty-addr token]
   (let [bounty-contract (load-bounty-contract bounty-addr)
         token-address (get-token-address token)
@@ -142,7 +144,8 @@
         (convert-token-value token))))
 
 (defn token-balance
-  "Query balance of given ERC20 token TLA for given address from ERC20 contract"
+  "Query balance of given ERC20 token TLA for given address from ERC20
+  contract."
   [bounty-addr token]
   (let [token-address (get-token-address token)]
 
@@ -154,7 +157,8 @@
 
 
 (defn token-balances
-  "Get a given bounty contract's token balances. Assumes contract's internal balances have been updated"
+  "Get a given bounty contract's token balances. Assumes contract's
+  internal balances have been updated."
   [bounty-addr]
   (let [bounty-contract (load-bounty-contract bounty-addr)
         token-addresses (-> bounty-contract
@@ -168,3 +172,16 @@
                                (assert tla)
                                [tla (token-balance bounty-addr tla)])) addrs)))
       {})))
+
+(defn transfer-tokens
+  "Transfer mount of given ERC20 token from from-addr to
+  to-addr. Connected geth needs to have keys for the account and
+  passphrase needs to be supplied. Returns transaction ID."
+  [from-addr from-passphrase token to-addr amount]
+  (let [token-addr (get-token-address token)]
+    (eth/execute-using-addr from-addr
+                            from-passphrase
+                            token-addr
+                            (method-ids :transfer)
+                            to-addr
+                            amount)))

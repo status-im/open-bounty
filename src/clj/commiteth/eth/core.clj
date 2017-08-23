@@ -30,6 +30,7 @@
         response (:body @(post (eth-rpc-url) options))
         result   (json/read-str response :key-fn keyword)]
     (log/debug body "\n" result)
+
     (if (= (:id result) request-id)
       (:result result)
       (do
@@ -57,6 +58,11 @@
   [wei]
   (/ wei 1000000000000000000))
 
+(defn eth->wei
+  [eth]
+  (biginteger (* eth 1000000000000000000)))
+
+
 (defn hex->eth
   [hex digits]
   (->> hex hex->big-integer from-wei double (format (str "%." digits "f"))))
@@ -74,6 +80,7 @@
   (hex->eth (get-balance-hex account) digits))
 
 (defn send-transaction
+  "Send transaction using default commiteth bot account."
   [from to value & [params]]
   (let [args (merge params
                     {:from  from
@@ -90,6 +97,25 @@
         (merge args {:to to})
         args)
       (eth-password)])))
+
+(defn send-transaction-using-from-account
+  "Send transaction using account address in parameter from. Assumes
+  account has been unlocked."
+  [from to value & [params]]
+  (let [args (merge params
+                    {:from  from
+                     :value value}
+                    (when-not (nil? (gas-price))
+                      {:gasPrice (integer->hex (gas-price))})
+                    (when-not (contains? params :gas)
+                      {:gas
+                       (estimate-gas from to value params)}))]
+    (log/debug "args:" args)
+    (eth-rpc
+     "eth_sendTransaction"
+     [(if-not (nil? to)
+        (merge args {:to to})
+        args)])))
 
 (defn get-transaction-receipt
   [hash]
@@ -116,6 +142,28 @@
   (let [data (apply format-call-params method-id params)
         value (format "0x%x" 0)]
     (send-transaction from contract value {:data data})))
+
+(defn execute-using-addr
+  [from-addr from-passphrase contract method-id & params]
+  (eth-rpc "personal_unlockAccount" [from-addr from-passphrase 30])
+  (let [data (apply format-call-params method-id params)
+        value (format "0x%x" 0)]
+    (send-transaction-using-from-account from-addr
+                                         contract
+                                         value
+                                         {:data data})))
+
+(defn transfer-eth
+  "Transfer amount-wei of ETH from from-addr to to-addr."
+  [from-addr from-passphrase to-addr amount-wei]
+  (eth-rpc "personal_unlockAccount" [from-addr from-passphrase 30])
+  (let [data "0x"
+        value (integer->hex amount-wei)]
+    (println "value" value)
+    (send-transaction-using-from-account from-addr
+                                         to-addr
+                                         value
+                                         {:data data})))
 
 
 (defn hex-ch->num
