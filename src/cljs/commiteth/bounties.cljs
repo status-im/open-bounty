@@ -24,7 +24,8 @@
      [:div.content
       [:div.header.display-name full-repo]
       [:div.description
-       issue-link]
+       issue-link
+       (str " (USD " value-usd ")")]
       [:div.footer-row
        (for [[tla balance] (merge tokens {:ETH balance-eth})]
          [:div.balance-badge
