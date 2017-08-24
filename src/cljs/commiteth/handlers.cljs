@@ -347,10 +347,13 @@
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
    (let [send-transaction-fn (aget js/web3 "eth" "sendTransaction")
+         confirm-transaction-methodid "0xc01a8c84"
+         ;; confirmTransaction(uint256)
          payload {:from  owner-address
                   :to    contract-address
                   :value 0
-                  :data  (str "0xc01a8c84" confirm-hash)}]
+                  :data  (str confirm-transaction-methodid
+                              confirm-hash)}]
      (try
        (apply send-transaction-fn [(clj->js payload)
                                    (send-transaction-callback issue-id)])
