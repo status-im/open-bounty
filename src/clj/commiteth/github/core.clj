@@ -200,7 +200,7 @@
 (defn contract-addr-text [addr]
   (let [url-base (if (on-testnet?) "https://rinkeby.etherscan.io"
                      "https://etherscan.io")]
-    (str "[" addr "](" url-base "/address/" addr ")\n")))
+    (str "Contract address: [" addr "](" url-base "/address/" addr ")\n")))
 
 (defn generate-open-comment
   [owner repo issue-number contract-address eth-balance balance-str tokens]
