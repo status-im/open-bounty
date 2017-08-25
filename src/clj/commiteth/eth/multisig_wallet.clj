@@ -168,9 +168,9 @@
       (let [addrs (map str
                        (.getValue token-addresses))]
         (into {}
-              (map (fn [addr] (let [tla (first (token-data/token-info-by-addr addr))]
-                               (assert tla)
-                               [tla (token-balance bounty-addr tla)])) addrs)))
+              (map (fn [addr] (if-let [info (token-data/token-info-by-addr addr)]
+                               (let [tla (first info)]
+                                 [tla (token-balance bounty-addr tla)]))) addrs)))
       {})))
 
 (defn transfer-tokens
