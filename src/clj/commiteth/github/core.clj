@@ -197,13 +197,18 @@
                             token-balances))
          "\n")))
 
+(defn contract-addr-text [addr]
+  (let [url-base (if (on-testnet?) "https://rinkeby.etherscan.io"
+                     "https://etherscan.io")]
+    (str "[" addr "](" url-base "/address/" addr ")\n")))
+
 (defn generate-open-comment
   [owner repo issue-number contract-address eth-balance balance-str tokens]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance))
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s ETH\n"
                  (token-balances-text tokens)
-                 "Contract address: %s\n"
+                 (contract-addr-text contract-address)
                  "%s\n"
                  (network-text)
                  "To claim this bounty sign up at %s\n"
@@ -217,7 +222,7 @@
   [contract-address eth-balance-str tokens winner-login]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
-               "Contract address: %s\n"
+               (contract-addr-text contract-address)
                (network-text)
                "Status: pending maintainer confirmation\n"
                "Winner: %s\n")
@@ -227,7 +232,7 @@
   [contract-address eth-balance-str tokens payee-login]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
-               "Contract address: %s\n"
+               (contract-addr-text contract-address)
                (network-text)
                "Paid to: %s\n")
           eth-balance-str contract-address payee-login))
