@@ -32,7 +32,6 @@
                              issue-title
                              item-type
                              tokens] :as item}]
-  (println item)
   [:div.item.activity-item
    [:div.ui.mini.circular.image
     [:img {:src avatar-url}]]
@@ -43,6 +42,7 @@
     [:div.footer-row
      (when-not (= item-type "new-bounty")
        (for [[tla balance] (merge tokens {:ETH balance-eth})]
+         ^{:key (str display-name tla)}
          [:div.balance-badge
           (str (subs (str tla) 1) " " balance)]))
      [:div.time (moment-timestamp updated)]]]])
@@ -55,7 +55,7 @@
          [:div.ui.text "No data"]
          (into [:div.ui.items]
                (for [item activity-items]
-                 [activity-item item])))]  )
+                 ^{:key item} [activity-item item])))]  )
 
 (defn activity-page []
   (let [activity-items (rf/subscribe [:activity-feed])
