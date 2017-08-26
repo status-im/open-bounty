@@ -105,14 +105,14 @@
                                             winner-login)))))
 
 (defn update-confirm-hash
-  "Gets transaction receipt for each pending payout and updates confirm_hash"
+  "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
   []
   (doseq [{issue-id     :issue_id
            execute-hash :execute_hash} (db-bounties/pending-payouts)]
     (log/info "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
-      (when-let [confirm-hash (multisig/find-confirmation-hash receipt)]
+      (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
         (log/info "confirm hash:" confirm-hash)
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 

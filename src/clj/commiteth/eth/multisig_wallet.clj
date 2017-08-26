@@ -24,7 +24,8 @@
 
 (def topics
   {:factory-create (eth/event-sig->topic-id "Create(address,address)")
-   :submission (eth/event-sig->topic-id "Submission(uint256)")})
+   :submission (eth/event-sig->topic-id "Submission(uint256)")
+   :confirmation (eth/event-sig->topic-id "Confirmation(address,uint256)")})
 
 (defn factory-contract-addr []
   (env :contract-factory-addr "0x47F56FD26EEeCda4FdF5DB5843De1fe75D2A64A6"))
@@ -41,49 +42,50 @@
                owner2))
 
 (defn deploy-multisig
+  "Deploy a new multisig contract to the blockchain with commiteth bot
+  and given owner as owners."
   [owner]
   (create-new (eth/eth-account) owner 2))
 
-
-(defn execute
-  [contract to value]
-  (log/debug "multisig.execute(contract, to, value)" contract to value)
-  (eth/execute (eth/eth-account)
-               contract
-               (:submit-transaction method-ids)
-               to
-               value
-               "0x60"
-               "0x0"
-               "0x0"))
-
-(defn find-event-in-tx [tx-receipt topic-id]
+(defn find-event-in-tx-receipt [tx-receipt topic-id]
   (let [logs (:logs tx-receipt)
         correct-topic? (fn [topic]
                          (= topic topic-id))
         has-correct-event? #(some correct-topic?
                                   (:topics %))
-        event     (first (filter has-correct-event? logs))]
-    (:data event)))
+        log-entry     (first (filter has-correct-event? logs))]
+    log-entry))
 
+(defn addr-from-topic [topic]
+  (assert (= 66 (count topic)))
+  (str "0x" (subs topic 26)))
 
-(defn find-confirmation-hash
+(defn find-confirmation-tx-id
   [tx-receipt]
-  (let [confirmation-data (find-event-in-tx tx-receipt (:submission topics))]
-    (when confirmation-data
-      (subs confirmation-data 2 66))))
+  (let [confirmation-event (find-event-in-tx-receipt
+                            tx-receipt
+                            (:confirmation topics))]
+    (log/debug "confirmation-event" confirmation-event)
+    (when-let [topics (:topics confirmation-event)]
+      (let [ [_ addr-raw tx-id] topics
+            address (addr-from-topic addr-raw)]
+        (log/info "event: Confirmation(_sender=" address ", _transactionId=" tx-id ")")
+        tx-id))))
 
 
 (defn find-created-multisig-address
   [tx-receipt]
-  (let [factory-data (find-event-in-tx tx-receipt (:factory-create topics))]
+  (let [factory-data (-> (find-event-in-tx-receipt
+                          tx-receipt
+                          (:factory-create topics))
+                         :data)]
     (when factory-data
-      (str "0x" (subs factory-data 26)))))
+      (addr-from-topic factory-data))))
 
 
-(defn send-all ;; TODO: not tested
+(defn send-all
   [contract to]
-  (log/debug "multisig.send-all(contract, to)" contract to)
+  (log/debug "multisig/send-all " contract to)
   (let [params (eth/format-call-params
                 (:withdraw-everything method-ids)
                 to)]
@@ -92,8 +94,8 @@
                  (:submit-transaction method-ids)
                  contract
                  0
-                 "0x60"
-                 "0x24"
+                 "0x60" ;; TODO: document these
+                 "0x24" ;;  or refactor out
                  params)))
 
 
@@ -104,7 +106,7 @@
 
 (defn watch-token
   [bounty-addr token]
-  (log/debug "multisig.watch-token(contract, token)" bounty-addr token)
+  (log/debug "multisig/watch-token" bounty-addr token)
   (let [token-address (get-token-address token)]
     (assert token-address)
     (eth/execute (eth/eth-account)
