@@ -94,6 +94,7 @@
     (if (empty? payout-address)
       (log/error "Cannot sign pending bounty - winner has no payout address")
       (let [execute-hash (multisig/send-all contract-address payout-address)]
+        (log/info "Payout self-signed, called sign-all(" contract-address payout-address ") tx:" execute-hash)
         (db-bounties/update-execute-hash issue-id execute-hash)
         (github/update-merged-issue-comment owner
                                             repo
@@ -108,10 +109,11 @@
   []
   (doseq [{issue-id     :issue_id
            execute-hash :execute_hash} (db-bounties/pending-payouts)]
-    (log/debug "pending payout:" execute-hash)
+    (log/info "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
       (when-let [confirm-hash (multisig/find-confirmation-hash receipt)]
+        (log/info "confirm hash:" confirm-hash)
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
 (defn update-payout-receipt
@@ -240,26 +242,38 @@
                                  token-balances))))))
 
 
+(defn wrap-in-try-catch [func]
+  (try
+    (catch Throwable t
+      (log/error t))))
+
+(defn run-tasks [tasks]
+  (doall
+   (map (fn [func] (wrap-in-try-catch (func)))
+        tasks)))
+
 (defn run-1-min-interval-tasks [time]
   (do
     (log/debug "run-1-min-interval-tasks" time)
     ;; TODO: disabled for now. looks like it may cause extraneus
     ;; contract deployments and costs
-    #_(redeploy-failed-contracts)
-    (deploy-pending-contracts)
-    (update-issue-contract-address)
-    (update-confirm-hash)
-    (update-payout-receipt)
-    (self-sign-bounty)
-    (update-contract-internal-balances)
-    (update-balances)
+    (run-tasks
+     [;;redeploy-failed-contracts
+      deploy-pending-contracts
+      update-issue-contract-address
+      update-confirm-hash
+      update-payout-receipt
+      self-sign-bounty
+      update-contract-internal-balances
+      update-balances])
     (log/debug "run-1-min-interval-tasks done")))
 
 
 (defn run-10-min-interval-tasks [time]
   (do
     (log/debug "run-1-min-interval-tasks" time)
-    (update-open-issue-usd-values)
+    (run-tasks
+     [update-open-issue-usd-values])
     (log/debug "run-10-min-interval-tasks done")))
 
 
