@@ -215,7 +215,7 @@
                  (if (on-testnet?)
                    "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
-            eth-balance contract-address image-url site-url)))
+            eth-balance image-url site-url)))
 
 
 (defn generate-merged-comment
@@ -226,7 +226,7 @@
                (network-text)
                "Status: pending maintainer confirmation\n"
                "Winner: %s\n")
-          eth-balance-str contract-address winner-login))
+          eth-balance-str winner-login))
 
 (defn generate-paid-comment
   [contract-address eth-balance-str tokens payee-login]
@@ -235,7 +235,7 @@
                (contract-addr-text contract-address)
                (network-text)
                "Paid to: %s\n")
-          eth-balance-str contract-address payee-login))
+          eth-balance-str payee-login))
 
 
 (defn post-deploying-comment
