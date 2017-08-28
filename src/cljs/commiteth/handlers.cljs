@@ -349,7 +349,7 @@
       (dispatch [:save-payout-hash issue-id payout-hash]))))
 
 (defn sig->method-id [sig]
-  (let [sha3 (.-sha3 js/web3)]
+  (let [sha3 web3/sha3]
     (apply str (take 10 (sha3 sig)))))
 
 (defn strip-0x [x]
