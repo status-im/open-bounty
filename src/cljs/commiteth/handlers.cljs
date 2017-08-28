@@ -7,6 +7,8 @@
                                    inject-cofx]]
             [ajax.core :refer [GET POST]]
             [cuerdas.core :as str]
+            [cljs-web3.core :as web3]
+            [cljs-web3.eth :as web3-eth]
             [akiroz.re-frame.storage
              :as rf-storage
              :refer [reg-co-fx!]]))
@@ -41,7 +43,15 @@
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-   {:db (merge db/default-db store)}))
+   (println (boolean (-> js/window .-web3)))
+   (let [injected-web3 (-> js/window .-web3)
+         web3 (if (boolean injected-web3)
+                (new (-> js/window .-Web3) (web3/current-provider injected-web3))
+                ;; TODO: put RPC URL in db
+                (web3/create-web3 "http://localhost:8545"))]
+     {:db (-> db/default-db
+              (merge {:web3 web3})
+              (merge store))})))
 
 (reg-event-db
  :assoc-in
@@ -351,8 +361,8 @@
                       owner-address    :owner_address
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
-   (let [web3-eth (-> js/web3 .-eth)
-         bignum (-> js/web3 .-BigNumber)
+   (let [web3 (:web3 db)
+         bignum (-> web3 .-BigNumber)
          confirm-method-id (sig->method-id "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
          data (str confirm-method-id
@@ -365,8 +375,8 @@
                   :data data}]
      (println "data:" data)
      (try
-       (.sendTransaction web3-eth (clj->js payload)
-                         (send-transaction-callback issue-id))
+       (web3-eth/send-transaction! web3 (clj->js payload)
+                                  (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)

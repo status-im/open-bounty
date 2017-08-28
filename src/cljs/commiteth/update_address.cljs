@@ -2,19 +2,18 @@
   (:require [re-frame.core :as rf]
             [commiteth.common :refer [input dropdown]]
             [reagent.core :as r]
-            [reagent.crypt :as crypt]))
+            [reagent.crypt :as crypt]
+            [cljs-web3.eth :as web3-eth]))
 
 
 (defn update-address-page []
-  (let [user (rf/subscribe [:user])
+  (let [db (rf/subscribe [:db])
+        user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))]
     (fn []
-      (let [web3 (.-web3 js/window)
-            web3-accounts (vec (when-not (nil? web3) (-> web3
-                                                         .-eth
-                                                         .-accounts
-                                                         js->clj)))]
+      (let [web3 (:web3 @db)
+            web3-accounts (web3-eth/accounts web3)]
         (println "web3-accounts" web3-accounts)
         [:div.ui.container.grid
          [:div.ui.form.sixteen.wide.column

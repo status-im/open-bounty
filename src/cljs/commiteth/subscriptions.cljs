@@ -2,6 +2,10 @@
   (:require [re-frame.core :refer [reg-sub]]))
 
 (reg-sub
+ :db
+ (fn [db _] db))
+
+(reg-sub
   :page
   (fn [db _]
     (:page db)))
