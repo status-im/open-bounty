@@ -200,14 +200,30 @@
       (mapv #(.toString %) (.getValue owner-addresses))
       [])))
 
+(defn uint256 [x]
+  (org.web3j.abi.datatypes.generated.Uint256. x))
+
 (defn is-confirmed?
   "Returns true if given internal transaction is confirmed in bounty
   contract."
   [bounty-addr tx-id]
   (let [bounty-contract (load-bounty-contract bounty-addr)
-        tx-id-web3j (org.web3j.abi.datatypes.generated.Uint256. tx-id)
+        tx-id-web3j (uint256 tx-id)
         ret (-> bounty-contract
                 (.isConfirmed tx-id-web3j)
                 .get)]
     (assert ret)
     (.getValue ret)))
+
+(defn execute-tx
+  "Execute internal transaction inside contract, identified by
+  tx-id. Returns transaction ID. Synchronous, blocks until transaction
+  is mined."
+  [bounty-addr tx-id]
+  (let [bounty-contract (load-bounty-contract bounty-addr)
+        tx-id-web3j (uint256 tx-id)
+        ret (-> bounty-contract
+                (.executeTransaction tx-id-web3j)
+                .get)]
+    (assert ret)
+    (.getTransactionHash ret)))
