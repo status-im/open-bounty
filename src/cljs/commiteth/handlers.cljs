@@ -338,7 +338,12 @@
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
 
+(defn sig->method-id [sig]
+  (let [sha3 (.-sha3 js/web3)]
+    (apply str (take 10 (sha3 sig)))))
 
+(defn strip-0x [x]
+  (str/replace x #"^0x" ""))
 
 (reg-event-fx
  :confirm-payout
@@ -346,17 +351,22 @@
                       owner-address    :owner_address
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
-   (let [send-transaction-fn (aget js/web3 "eth" "sendTransaction")
-         confirm-transaction-methodid "0xc01a8c84"
-         ;; confirmTransaction(uint256)
+   (let [web3-eth (-> js/web3 .-eth)
+         bignum (-> js/web3 .-BigNumber)
+         confirm-method-id (sig->method-id "confirmTransaction(uint256)")
+         confirm-id (strip-0x confirm-hash)
+         data (str confirm-method-id
+                   confirm-id)
          payload {:from  owner-address
                   :to    contract-address
+                  :gas   (bignum. "200000")
+                  :gasPrice (bignum. "20000000000")
                   :value 0
-                  :data  (str confirm-transaction-methodid
-                              confirm-hash)}]
+                  :data data}]
+     (println "data:" data)
      (try
-       (apply send-transaction-fn [(clj->js payload)
-                                   (send-transaction-callback issue-id)])
+       (.sendTransaction web3-eth (clj->js payload)
+                         (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
