@@ -6,7 +6,8 @@
             [clojure.tools.logging :as log]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
-            abi.datatypes.Address]
+            abi.datatypes.Address
+            abi.datatypes.generated.Uint256]
            [commiteth.eth.contracts MultiSigTokenWallet]))
 
 (def method-ids
@@ -187,3 +188,26 @@
                             (method-ids :transfer)
                             to-addr
                             amount)))
+
+(defn get-owners
+  "Return vector of multisig owner addresses."
+  [bounty-addr]
+  (let [bounty-contract (load-bounty-contract bounty-addr)
+        owner-addresses (-> bounty-contract
+                            (.getOwners)
+                            .get)]
+    (if owner-addresses
+      (mapv #(.toString %) (.getValue owner-addresses))
+      [])))
+
+(defn is-confirmed?
+  "Returns true if given internal transaction is confirmed in bounty
+  contract."
+  [bounty-addr tx-id]
+  (let [bounty-contract (load-bounty-contract bounty-addr)
+        tx-id-web3j (org.web3j.abi.datatypes.generated.Uint256. tx-id)
+        ret (-> bounty-contract
+                (.isConfirmed tx-id-web3j)
+                .get)]
+    (assert ret)
+    (.getValue ret)))
