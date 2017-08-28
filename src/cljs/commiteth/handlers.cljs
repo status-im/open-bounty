@@ -361,21 +361,21 @@
                       owner-address    :owner_address
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
-   (let [web3 (:web3 db)
-         bignum (-> web3 .-BigNumber)
+   (let [Web3 (:web3 db)
          confirm-method-id (sig->method-id "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
+         bignum (fn [x] (web3/to-bignumber Web3 x))
          data (str confirm-method-id
                    confirm-id)
          payload {:from  owner-address
                   :to    contract-address
-                  :gas   (bignum. "200000")
-                  :gasPrice (bignum. "20000000000")
+                  :gas   (bignum "200000")
+                  :gas-price (bignum "20000000000")
                   :value 0
                   :data data}]
      (println "data:" data)
      (try
-       (web3-eth/send-transaction! web3 (clj->js payload)
+       (web3-eth/send-transaction! Web3 payload
                                   (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
