@@ -364,7 +364,7 @@
    (let [Web3 (:web3 db)
          confirm-method-id (sig->method-id "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
-         bignum (fn [x] (web3/to-bignumber Web3 x))
+         bignum (fn [x] (web3/to-big-number Web3 x))
          data (str confirm-method-id
                    confirm-id)
          payload {:from  owner-address
