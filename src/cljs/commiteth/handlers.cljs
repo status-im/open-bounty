@@ -45,13 +45,13 @@
  (fn [{:keys [db store]} [_]]
    (println (boolean (-> js/window .-web3)))
    (let [injected-web3 (-> js/window .-web3)
-         web3 (if (boolean injected-web3)
+         Web3 (if (boolean injected-web3)
                 (new (-> js/window .-Web3) (web3/current-provider injected-web3))
                 ;; TODO: put RPC URL in db
                 (web3/create-web3 "http://localhost:8545"))]
      {:db (-> db/default-db
-              (merge {:web3 web3})
-              (merge store))})))
+              (merge store)
+              (merge {:web3 Web3}))})))
 
 (reg-event-db
  :assoc-in
@@ -364,13 +364,12 @@
    (let [Web3 (:web3 db)
          confirm-method-id (sig->method-id "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
-         bignum (fn [x] (web3/to-big-number Web3 x))
          data (str confirm-method-id
                    confirm-id)
          payload {:from  owner-address
                   :to    contract-address
-                  :gas   (bignum "200000")
-                  :gas-price (bignum "20000000000")
+                  :gas   200000
+                  :gas-price 8000000000
                   :value 0
                   :data data}]
      (println "data:" data)
