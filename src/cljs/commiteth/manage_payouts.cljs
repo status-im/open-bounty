@@ -38,7 +38,8 @@
                  {}
                  {:disabled true})
                {:on-click #(rf/dispatch [:confirm-payout claim])}
-               (when (or confirming? bot-confirm-unmined?)
+               (when (and (or confirming? bot-confirm-unmined?)
+                          merged?)
                  {:class "busy loading" :disabled true}))
         (if paid?
           "Signed off"
