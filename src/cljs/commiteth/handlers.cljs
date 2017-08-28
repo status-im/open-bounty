@@ -43,12 +43,21 @@
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-   (println (boolean (-> js/window .-web3)))
    (let [injected-web3 (-> js/window .-web3)
+         injected-web3-ctor (aget js/window "Web3")
          Web3 (if (boolean injected-web3)
-                (new (-> js/window .-Web3) (web3/current-provider injected-web3))
-                ;; TODO: put RPC URL in db
-                (web3/create-web3 "http://localhost:8545"))]
+                (if (boolean injected-web3-ctor)
+                  (do
+                    (println "Using injected Web3 constructor with current provider")
+                    (new injected-web3-ctor (web3/current-provider injected-web3))) ;; mist >= 0.9.0, metamask
+                  (do
+                    (println "Using injected web3")
+                    injected-web3) ;; older mist
+                  )
+                (do
+                  (println  "Falling back to default web3 HTTP URL")
+                  ;; TODO: put RPC URL in db
+                  (web3/create-web3 "http://localhost:8545")))]
      {:db (-> db/default-db
               (merge store)
               (merge {:web3 Web3}))})))
