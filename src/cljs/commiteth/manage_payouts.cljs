@@ -70,7 +70,7 @@
          (when (nil? web3)
            [:div.ui.warning.message
             [:i.warning.icon]
-            "To sign off claims, please view Commiteth in Status, Mist or Metamask"])
+            "To sign off claims, please view CommitETH in Status, Mist or Metamask"])
          [:h3 "New claims"]
          [claim-list unpaid-bounties]
          [:h3 "Old claims"]
