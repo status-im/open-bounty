@@ -13,7 +13,8 @@
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))]
     (fn []
       (let [web3 (:web3 @db)
-            web3-accounts (web3-eth/accounts web3)]
+            web3-accounts (when web3
+                            (web3-eth/accounts web3))]
         (println "web3-accounts" web3-accounts)
         [:div.ui.container.grid
          [:div.ui.form.sixteen.wide.column

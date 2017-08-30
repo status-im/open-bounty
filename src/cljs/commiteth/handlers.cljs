@@ -43,24 +43,19 @@
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-   (let [injected-web3 (-> js/window .-web3)
-         injected-web3-ctor (aget js/window "Web3")
-         Web3 (if (boolean injected-web3)
-                (if (boolean injected-web3-ctor)
-                  (do
-                    (println "Using injected Web3 constructor with current provider")
-                    (new injected-web3-ctor (web3/current-provider injected-web3))) ;; mist >= 0.9.0, metamask
-                  (do
-                    (println "Using injected web3")
-                    injected-web3) ;; older mist
-                  )
+     {:db (merge db/default-db store)}))
+
+
+(reg-event-fx
+ :initialize-web3
+ (fn [{:keys [db]} [_]]
+      (let [injected-web3 (-> js/window .-web3)
+            w3 (when (boolean injected-web3)
                 (do
-                  (println  "Falling back to default web3 HTTP URL")
-                  ;; TODO: put RPC URL in db
-                  (web3/create-web3 "http://localhost:8545")))]
-     {:db (-> db/default-db
-              (merge store)
-              (merge {:web3 Web3}))})))
+                  (println "Using injected Web3 constructor with current provider")
+                  (new (aget js/window "web3" "constructor") (web3/current-provider injected-web3))))]
+     (println "web3" w3)
+     {:db (merge db {:web3 w3})})))
 
 (reg-event-db
  :assoc-in
@@ -357,8 +352,9 @@
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
 
-(defn sig->method-id [sig]
-  (let [sha3 web3/sha3]
+(defn sig->method-id [w3 sig]
+  (println "sig->method-id" w3 sig)
+  (let [sha3 (fn [x] (web3/sha3 w3 x))]
     (apply str (take 10 (sha3 sig)))))
 
 (defn strip-0x [x]
@@ -370,8 +366,9 @@
                       owner-address    :owner_address
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
-   (let [Web3 (:web3 db)
-         confirm-method-id (sig->method-id "confirmTransaction(uint256)")
+   (println (:web3 db))
+   (let [w3 (:web3 db)
+         confirm-method-id (sig->method-id w3 "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
          data (str confirm-method-id
                    confirm-id)
@@ -383,7 +380,7 @@
                   :data data}]
      (println "data:" data)
      (try
-       (web3-eth/send-transaction! Web3 payload
+       (web3-eth/send-transaction! w3 payload
                                   (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e

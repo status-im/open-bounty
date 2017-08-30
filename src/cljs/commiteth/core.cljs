@@ -210,6 +210,7 @@
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
+  (rf/dispatch [:initialize-web3])
   (when config/debug?
     (enable-re-frisk!))
   (load-interceptors!)
