@@ -208,7 +208,8 @@
   contract."
   [bounty-addr tx-id]
   (let [bounty-contract (load-bounty-contract bounty-addr)
-        tx-id-web3j (uint256 tx-id)
+        tx-id-numeric (read-string tx-id)
+        tx-id-web3j (uint256 tx-id-numeric)
         ret (-> bounty-contract
                 (.isConfirmed tx-id-web3j)
                 .get)]
@@ -221,7 +222,8 @@
   is mined."
   [bounty-addr tx-id]
   (let [bounty-contract (load-bounty-contract bounty-addr)
-        tx-id-web3j (uint256 tx-id)
+        tx-id-numeric (read-string tx-id)
+        tx-id-web3j (uint256 tx-id-numeric)
         ret (-> bounty-contract
                 (.executeTransaction tx-id-web3j)
                 .get)]

@@ -294,6 +294,7 @@ SELECT
   i.value_usd        AS value_usd,
   u.address          AS payout_address,
   u.login           AS payee_login,
+  i.confirm_hash    AS confirm_hash,
   i.payout_hash     AS payout_hash
 FROM issues i, pull_requests p, users u, repositories r
 WHERE

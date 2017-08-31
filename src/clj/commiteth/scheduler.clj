@@ -128,19 +128,31 @@
            issue-number :issue_number
            balance-eth :balance_eth
            tokens :tokens
+           confirm-id :confirm-hash
            payee-login :payee_login} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
     (when-let [receipt (eth/get-transaction-receipt payout-hash)]
-      (log/info "payout receipt for issue #" issue-id ": " receipt)
-      (db-bounties/update-payout-receipt issue-id receipt)
-      (github/update-paid-issue-comment owner
-                                        repo
-                                        comment-id
-                                        contract-address
-                                        (eth-decimal->str balance-eth)
-                                        tokens
-                                        payee-login))))
+      (let [tokens (multisig/token-balances contract-address)
+            eth-balance (eth/get-balance-wei contract-address)]
+        (if (or
+             (some #(> (second %) 0.0) tokens)
+             (> eth-balance 0))
+          (log/info "Contract still has funds")
+          (when (multisig/is-confirmed? contract-address confirm-id)
+            (log/info "Detected bounty with funds and confirmed payout, calling executeTransaction")
+            (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
+              (log/info "execute tx:" execute-tx-hash))))
 
+        (do
+          (log/info "Payout has succeeded, saving payout receipt for issue #" issue-id ": " receipt)
+          (db-bounties/update-payout-receipt issue-id receipt)
+          (github/update-paid-issue-comment owner
+                                            repo
+                                            comment-id
+                                            contract-address
+                                            (eth-decimal->str balance-eth)
+                                            tokens
+                                            payee-login))))))
 
 (defn abs
   "(abs n) is the absolute value of n"
@@ -223,7 +235,6 @@
           (log/debug "balances differ")
           (issues/update-eth-balance contract-address balance-eth)
           (issues/update-token-balances contract-address token-balances)
-          ;; TODO: comment and comment image will show tokens and USD value
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
