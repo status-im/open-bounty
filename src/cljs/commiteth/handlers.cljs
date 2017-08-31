@@ -344,6 +344,7 @@
 (defn send-transaction-callback
   [issue-id]
   (fn [error payout-hash]
+    (println "send-transaction-callback" error payout-hash)
     (when error
       (dispatch [:set-flash-message
                  :error
@@ -354,7 +355,7 @@
 
 (defn sig->method-id [w3 sig]
   (println "sig->method-id" w3 sig)
-  (let [sha3 (fn [x] (web3/sha3 w3 x))]
+  (let [sha3 (fn [x] (web3/sha3 x w3))]
     (apply str (take 10 (sha3 sig)))))
 
 (defn strip-0x [x]
@@ -374,18 +375,18 @@
                    confirm-id)
          payload {:from  owner-address
                   :to    contract-address
-                  :gas   200000
-                  :gas-price 8000000000
+                  :gas   180000
+                  :gas-price 20000000000
                   :value 0
                   :data data}]
      (println "data:" data)
      (try
        (web3-eth/send-transaction! w3 payload
-                                  (send-transaction-callback issue-id))
+                                   (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
-          :dispatch-n [[:payout-confirm-failed issue-id]
+          :dispatch-n [[:payout-confirm-failed issue-id e]
                        [:set-flash-message
                         :error
                         (str "Failed to send transaction" e)]]})))))
@@ -400,8 +401,8 @@
 
 (reg-event-db
  :payout-confirm-failed
- (fn [db [_ issue-id]]
-   (println "payout-confirm-failed" issue-id)
+ (fn [db [_ issue-id e]]
+   (println "payout-confirm-failed" issue-id e)
    (-> db
        (dissoc-in [:owner-bounties issue-id :confirming?])
        (assoc-in [:owner-bounties issue-id :confirm-failed?] true))))
