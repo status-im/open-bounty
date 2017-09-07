@@ -28,6 +28,14 @@ sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
 sudo -u postgres createdb commiteth
 ```
 
+### solc
+
+Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
+
+### web3j
+
+Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
+
 ## Running
 
 Launch following commands each in its own shell:
