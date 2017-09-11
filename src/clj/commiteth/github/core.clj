@@ -5,7 +5,8 @@
              [oauth :as oauth]
              [users :as users]
              [repos :as repos]
-             [issues :as issues]]
+             [issues :as issues]
+             [orgs :as orgs]]
             [ring.util.codec :as codec]
             [clj-http.client :as http]
             [commiteth.config :refer [env]]
@@ -106,8 +107,12 @@
 
 (defn status-team-member?
   [token]
-  (let [user-teams (map :name (users/my-teams (auth-params token)))]
-    (true? (some #(= "Status" %) user-teams))))
+  (let [user-login (:login (users/me (auth-params token)))
+        user-teams (map :name (users/my-teams (auth-params token)))
+        status-org-members (map :login (orgs/members "status-im" (self-auth-params)))]
+    (or
+     (true? (some #(= "Status" %) user-teams))
+     (true? (some #(= user-login %) status-org-members)))))
 
 (defn our-webhooks
   [owner repo token]
