@@ -50,11 +50,15 @@
     (bounties/add-bounty-for-issue repo-name repo-id issue)))
 
 (defn handle-issue-closed
-  ;; TODO: does not work in case the issue is closed on github web ui
   [{{{owner :login} :owner repo :name}   :repository
     {issue-id :id issue-number :number} :issue}]
   (log/debug "handle-issue-closed" owner repo issue-number issue-id)
-  (when-let [commit-sha (find-commit-sha owner repo issue-number ["referenced" "closed"])]
+
+  (when (issues/is-bounty-issue? issue-id)
+    (log/debug "Updating issue status to closed")
+    (issues/update-open-status issue-id false))
+
+  #_(when-let [commit-sha (find-commit-sha owner repo issue-number ["referenced" "closed"])]
     (log/debug (format "Issue %s/%s/%s closed with commit %s"
                        owner repo issue-number commit-sha))
     (log/info "NOT considering event as bounty winner")

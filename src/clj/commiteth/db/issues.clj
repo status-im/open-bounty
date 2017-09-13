@@ -81,3 +81,15 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/update-usd-value con-db {:contract_address contract-address
                                  :usd_value usd-value})))
+
+(defn update-open-status
+  [issue-id is-open]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-issue-open con-db {:issue_id issue-id
+                                  :is_open is-open})))
+
+(defn is-bounty-issue?
+  [issue-id]
+  (let [res (jdbc/with-db-connection [con-db *db*]
+              (db/issue-exists con-db {:issue_id issue-id}))]
+    res))

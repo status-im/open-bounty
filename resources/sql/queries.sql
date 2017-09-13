@@ -350,6 +350,20 @@ value_usd_updated = timezone('utc'::text, now())
 WHERE contract_address = :contract_address;
 
 
+-- :name update-issue-open :! :n
+-- :doc updates issue's open status
+UPDATE issues
+SET is_open = :is_open
+WHERE issue_id = :issue_id;
+
+
+-- :name issue-exists :1
+-- :doc updates issue's open status
+SELECT exists(SELECT 1
+  FROM issues
+  WHERE issue_id = :issue_id);
+
+
 -- :name open-bounties :? :*
 -- :doc all bounty issues for given owner
 SELECT
