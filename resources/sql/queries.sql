@@ -358,7 +358,7 @@ WHERE issue_id = :issue_id;
 
 
 -- :name issue-exists :1
--- :doc updates issue's open status
+-- :doc returns true if given issue exists
 SELECT exists(SELECT 1
   FROM issues
   WHERE issue_id = :issue_id);

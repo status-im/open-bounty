@@ -92,4 +92,7 @@
   [issue-id]
   (let [res (jdbc/with-db-connection [con-db *db*]
               (db/issue-exists con-db {:issue_id issue-id}))]
-    res))
+    (-> res
+        first
+        :exists
+        boolean)))
