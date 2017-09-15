@@ -11,6 +11,7 @@
             [clojure.tools.logging :as log]
             [mount.core :as mount]
             [clj-time.core :as t]
+            [clj-time.coerce :as time-coerce]
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]))
 
@@ -116,6 +117,15 @@
         (log/info "confirm hash:" confirm-hash)
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
+
+(defn older-than-3h?
+  [timestamp]
+  (let [now (t/now)
+        ts (time-coerce/from-date timestamp)
+        diff (t/in-hours (t/interval ts now))]
+    (println "hour diff:" diff)
+    (> diff 3)))
+
 (defn update-payout-receipt
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
@@ -129,30 +139,35 @@
            balance-eth :balance_eth
            tokens :tokens
            confirm-id :confirm-hash
-           payee-login :payee_login} (db-bounties/confirmed-payouts)]
+           payee-login :payee_login
+           updated :updated} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
-    (when-let [receipt (eth/get-transaction-receipt payout-hash)]
+    (if-let [receipt (eth/get-transaction-receipt payout-hash)]
       (let [tokens (multisig/token-balances contract-address)
             eth-balance (eth/get-balance-wei contract-address)]
         (if (or
              (some #(> (second %) 0.0) tokens)
              (> eth-balance 0))
-          (log/info "Contract still has funds")
-          (when (multisig/is-confirmed? contract-address confirm-id)
-            (log/info "Detected bounty with funds and confirmed payout, calling executeTransaction")
-            (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
-              (log/info "execute tx:" execute-tx-hash))))
+          (do
+            (log/info "Contract still has funds")
+            (when (multisig/is-confirmed? contract-address confirm-id)
+              (log/info "Detected bounty with funds and confirmed payout, calling executeTransaction")
+              (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
+                (log/info "execute tx:" execute-tx-hash))))
 
-        (do
-          (log/info "Payout has succeeded, saving payout receipt for issue #" issue-id ": " receipt)
-          (db-bounties/update-payout-receipt issue-id receipt)
-          (github/update-paid-issue-comment owner
-                                            repo
-                                            comment-id
-                                            contract-address
-                                            (eth-decimal->str balance-eth)
-                                            tokens
-                                            payee-login))))))
+          (do
+            (log/info "Payout has succeeded, saving payout receipt for issue #" issue-id ": " receipt)
+            (db-bounties/update-payout-receipt issue-id receipt)
+            (github/update-paid-issue-comment owner
+                                              repo
+                                              comment-id
+                                              contract-address
+                                              (eth-decimal->str balance-eth)
+                                              tokens
+                                              payee-login))))
+      (when (older-than-3h? updated)
+        (log/info "Resetting payout hash for issue" issue-id "as it has not been mined in 3h")
+        (db-bounties/reset-payout-hash issue-id)))))
 
 (defn abs
   "(abs n) is the absolute value of n"

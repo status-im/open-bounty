@@ -295,7 +295,8 @@ SELECT
   u.address          AS payout_address,
   u.login           AS payee_login,
   i.confirm_hash    AS confirm_hash,
-  i.payout_hash     AS payout_hash
+  i.payout_hash     AS payout_hash,
+  i.updated         AS updated
 FROM issues i, pull_requests p, users u, repositories r
 WHERE
 p.issue_id = i.issue_id
@@ -325,6 +326,13 @@ UPDATE issues
 SET payout_hash = :payout_hash,
 updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
+
+-- :name reset-payout-hash :! :n
+-- :doc sets issue's payout transaction hash to NULL
+UPDATE issues
+SET payout_hash = NULL
+WHERE issue_id = :issue_id;
+
 
 -- :name update-payout-receipt :! :n
 -- :doc updates issue with payout transaction receipt
