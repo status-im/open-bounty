@@ -39,13 +39,16 @@ Before you can create bounties, you need to have administrative access to one or
 
 
 ### Funding bounties
-TODO
+
+The Github comment has a QR code as an image containing the bounty contract address. The address is also on the comment as text. Use any ethereum wallet to send ETH and/or supported ERC20 tokens to this address. After a small delay (max 5 minutes), the activity feed should show that the related bounty issue's balance increased and comment should be updated.
 
 ### Submitting claims
-TODO
+
+Open a pull request against the target repository with `Fixes: #NN` in the comment where `NN` is the issue number of the bountied Github issue. After the PR has been opened, the activity feed should show an item indicating the your username has opened a claim for the related bounty issue. The repository admin should also see the claim under `Open claims` in the `Manage payouts` view.
 
 ### Managing payouts
-TODO
+
+Repository admins see a listing of all open claims and bounties that have already been paid out. The `open claims` listing includes unmerged claim pull requests and merged pull requests. Once a claim pull request has been merged, it is selected as the winning claim. The repository admin will still need to sign off the payout with his connected Ethereum wallet. This is done with the `Sign off` button. Once the payout transaction has been mined, the activity feed view will show that the claimer received the bounty funds. All tokens and ETH will be transferred to the claimer's Ethereum address.
 
 ### Reporting bugs
 
