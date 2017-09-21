@@ -189,7 +189,7 @@
 
 (defn network-text []
   (str "Network: " (if (on-testnet?)
-                     "Testnet (Rinkeby)"
+                     "Testnet (Ropsten)"
                      "Mainnet")
        "\n"))
 
@@ -203,7 +203,7 @@
          "\n")))
 
 (defn contract-addr-text [addr]
-  (let [url-base (if (on-testnet?) "https://rinkeby.etherscan.io"
+  (let [url-base (if (on-testnet?) "https://ropsten.etherscan.io"
                      "https://etherscan.io")]
     (str "Contract address: [" addr "](" url-base "/address/" addr ")\n")))
 

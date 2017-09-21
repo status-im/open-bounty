@@ -10,7 +10,7 @@ https://commiteth.com
 The `master` branch is automatically deployed here.
 
 
-Live testnet (Rinkeby) version:
+Live testnet (Ropsten) version:
 https://commiteth.com:444
 The `develop` branch is automatically deployed here.
 

@@ -1,12 +1,12 @@
 # Testing CommitETH
 
-We have a continuously deployed version tracking the `development` branch live at https://commiteth.com:444. It uses the [Rinkeby](https://rinkeby.io/) Ethereum testnet. Any one is welcome to use it and your help with testing CommitETH is greatly appreciated!
+We have a continuously deployed version tracking the `development` branch live at https://commiteth.com:444. It uses the [Ropsten](https://ropsten.io/) Ethereum testnet. Any one is welcome to use it and your help with testing CommitETH is greatly appreciated!
 
 ### General
 
 For testing you will need:
 * a web browser (Chrome is known to work, testing with others appreciated)
-* an Ethereum account on the Rinkeby testnet
+* an Ethereum account on the Ropsten testnet
 * a Github account with administrative access to one or more repositories
 * for approving bounty payouts you will additionally need access to an Ethereum wallet. So far, Mist and [MetaMask](https://metamask.io/) have been used, but anything that provides the web3 javascript interface should work.
 
