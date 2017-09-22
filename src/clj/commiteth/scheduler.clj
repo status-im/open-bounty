@@ -218,14 +218,19 @@
                {:ETH eth-balance})]
     (merge all-funds {:total-usd (fiat-util/bounty-usd-value all-funds)})))
 
+
+(defn update-issue-usd-value
+  [bounty-addr]
+  (let [funds (get-bounty-funds bounty-addr)]
+      (issues/update-usd-value bounty-addr
+                               (:total-usd funds))))
+
 (defn update-open-issue-usd-values
   "Sum up current USD values of all crypto assets in a bounty and store to DB"
   []
   (doseq [{bounty-addr :contract_address}
           (db-bounties/open-bounty-contracts)]
-    (let [funds (get-bounty-funds bounty-addr)]
-      (issues/update-usd-value bounty-addr
-                               (:total-usd funds)))))
+    (update-issue-usd-value bounty-addr)))
 
 (defn update-balances
   []
@@ -265,7 +270,8 @@
                                  contract-address
                                  balance-eth
                                  balance-eth-str
-                                 token-balances))))))
+                                 token-balances)
+          (update-issue-usd-value contract-address))))))
 
 
 (defn wrap-in-try-catch [func]
