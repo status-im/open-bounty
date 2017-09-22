@@ -119,7 +119,7 @@
                       {:gas
                        (estimate-gas from to value params)}))]
     (log/debug "args:" args)
-    #_(eth-rpc
+    (eth-rpc
      "personal_sendTransaction"
      [(if-not (nil? to)
         (merge args {:to to})
