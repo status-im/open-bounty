@@ -95,6 +95,7 @@
     (eth/execute (eth/eth-account)
                  contract
                  (:submit-transaction method-ids)
+                 nil
                  contract
                  0
                  "0x60" ;; TODO: document these
@@ -115,6 +116,7 @@
     (eth/execute (eth/eth-account)
                  bounty-addr
                  (:watch method-ids)
+                 nil
                  token-address)))
 
 
