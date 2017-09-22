@@ -138,7 +138,7 @@
            issue-number :issue_number
            balance-eth :balance_eth
            tokens :tokens
-           confirm-id :confirm-hash
+           confirm-id :confirm_hash
            payee-login :payee_login
            updated :updated} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
