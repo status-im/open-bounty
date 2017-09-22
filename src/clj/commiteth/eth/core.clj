@@ -11,6 +11,7 @@
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
 (defn eth-password [] (:eth-password env))
+(defn gas-estimate-factor [] (env :gas-estimate-factor 1.0))
 
 (defn gas-price
   []
@@ -39,12 +40,6 @@
         (when-let [error (:error result)]
           (log/error "Method: " method ", error: " error))))))
 
-(defn estimate-gas
-  [from to value & [params]]
-  (eth-rpc "eth_estimateGas" [(merge params {:from  from
-                                             :to    to
-                                             :value value})]))
-
 (defn hex->big-integer
   [hex]
   (new BigInteger (subs hex 2) 16))
@@ -53,6 +48,39 @@
   "Convert integer to 0x prefixed hex string. Works with native ints and BigInteger"
   [n]
   (str "0x" (.toString (BigInteger. (str n)) 16)))
+
+
+(defn strip-decimal
+  [s]
+  (str/replace s #"\..*" ""))
+
+
+(defn adjust-gas-estimate
+  "Multiply given estimate by factor"
+  [gas]
+  (let [factor (gas-estimate-factor)]
+    (if (= 1.0 factor)
+      gas
+      (let [adjust (fn [x] (+ x (* factor x)))]
+        (-> gas
+            hex->big-integer
+            adjust
+            strip-decimal
+            read-string
+            integer->hex)))))
+
+(defn estimate-gas
+  [from to value & [params]]
+  (let [geth-estimate (eth-rpc
+                       "eth_estimateGas" [(merge params {:from  from
+                                                         :to    to
+                                                         :value value})])
+        adjusted-gas (adjust-gas-estimate geth-estimate)]
+
+    (log/debug "estimated gas (geth):" geth-estimate)
+    (log/debug "bumped estimate:" adjusted-gas)
+    adjusted-gas))
+
 
 (defn from-wei
   [wei]
@@ -138,10 +166,13 @@
     (eth-rpc "eth_call" [{:to contract :data data} "latest"])))
 
 (defn execute
-  [from contract method-id & params]
+  [from contract method-id gas-limit & params]
   (let [data (apply format-call-params method-id params)
         value (format "0x%x" 0)]
-    (send-transaction from contract value {:data data})))
+    (send-transaction from contract value (merge
+                                           {:data data}
+                                           (when gas-limit
+                                             {:gas gas-limit})))))
 
 (defn execute-using-addr
   [from-addr from-passphrase contract method-id & params]
@@ -159,7 +190,6 @@
   (eth-rpc "personal_unlockAccount" [from-addr from-passphrase 30])
   (let [data "0x"
         value (integer->hex amount-wei)]
-    (println "value" value)
     (send-transaction-using-from-account from-addr
                                          to-addr
                                          value

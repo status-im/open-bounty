@@ -36,11 +36,13 @@
   (eth/execute (eth/eth-account)
                (factory-contract-addr)
                (:create method-ids)
+               (eth/integer->hex 827000) ;; gas-limit
                0x40
                0x2
                required
                owner1
                owner2))
+
 
 (defn deploy-multisig
   "Deploy a new multisig contract to the blockchain with commiteth bot
