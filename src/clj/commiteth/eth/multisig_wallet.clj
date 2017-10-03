@@ -36,7 +36,7 @@
   (eth/execute (eth/eth-account)
                (factory-contract-addr)
                (:create method-ids)
-               (eth/integer->hex 827000) ;; gas-limit
+               (eth/integer->hex 865000) ;; gas-limit
                0x40
                0x2
                required
