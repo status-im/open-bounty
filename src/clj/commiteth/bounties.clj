@@ -31,18 +31,20 @@
         (log/error "Unable to deploy bounty contract because"
                    "repo owner has no Ethereum addres")
         (do
-          (->> (github/post-deploying-comment owner
-                                              repo
-                                              issue-number)
-               :id
-               (issues/update-comment-id issue-id))
-          (log/debug "Posting dep")
           (log/debug "deploying contract to " owner-address)
           (let [transaction-hash (eth/deploy-contract owner-address)]
             (if (nil? transaction-hash)
               (log/error "Failed to deploy contract to" owner-address)
-              (log/info "Contract deployed, transaction-hash:"
-                        transaction-hash ))
+              (do
+                (log/info "Contract deployed, transaction-hash:"
+                          transaction-hash)
+                (->> (github/post-deploying-comment owner
+                                              repo
+                                              issue-number
+                                              transaction-hash)
+                     :id
+                     (issues/update-comment-id issue-id)))
+)
             (issues/update-transaction-hash issue-id transaction-hash))))
       (log/debug "Issue already exists in DB, ignoring"))))
 
