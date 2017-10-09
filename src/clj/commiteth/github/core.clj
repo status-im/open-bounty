@@ -182,10 +182,21 @@
   [alt src]
   (str "!" (md-url alt src)))
 
+(defn etherscan-tx-url [tx-id]
+   (str "https://"
+          (when (on-testnet?) "ropsten.")
+          "etherscan.io/tx/" tx-id))
 
 (defn generate-deploying-comment
-  [owner repo issue-number]
-  (md-image "Contract deploying" (str (server-address) "/img/deploying_contract.png")))
+  [owner repo issue-number tx-id]
+  (let [deploying-image (md-image
+                         "Contract deploying"
+                         (str (server-address) "/img/deploying_contract.png"))
+        tx-link (md-url tx-id (etherscan-tx-url tx-id))]
+    (format (str "%s\n"
+                 "Transaction: %s\n")
+            deploying-image
+            tx-link)))
 
 (defn network-text []
   (str "Network: " (if (on-testnet?)
@@ -244,8 +255,8 @@
 
 
 (defn post-deploying-comment
-  [owner repo issue-number]
-  (let [comment (generate-deploying-comment owner repo issue-number)]
+  [owner repo issue-number tx-id]
+  (let [comment (generate-deploying-comment owner repo issue-number tx-id)]
     (log/debug "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
     (issues/create-comment owner repo issue-number comment (self-auth-params))))
 
