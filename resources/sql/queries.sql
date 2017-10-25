@@ -522,7 +522,7 @@ AND comment_hash = :hash;
 SELECT
 u.id AS user_id,
 u.login AS login,
-u.name AS user_name,
+coalesce(u.name, u.login) AS user_name,
 u.avatar_url AS avatar_url,
 SUM(i.value_usd) AS total_usd
 FROM issues i, users u, pull_requests pr
