@@ -15,9 +15,14 @@
   (env :eth-password))
 
 (defn creds []
-  (WalletUtils/loadCredentials
-   (wallet-password)
-   (wallet-file-path)))
+  (let [password  (wallet-password)
+        file-path (wallet-file-path)]
+    (if (and password file-path)
+      (WalletUtils/loadCredentials
+       password
+       file-path)
+      (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
+                      {:password password :file-path file-path})))))
 
 (defn create-web3j []
   (Web3j/build (HttpService. (eth/eth-rpc-url))))

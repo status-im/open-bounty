@@ -1,6 +1,26 @@
-{:dev               true
- :port              3000
+{:dev                    true
+ :port                   3000
  ;; when :nrepl-port is set the application starts the nREPL server on load
- :nrepl-port        7000
- :jdbc-database-url "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
- :server-address    "http://localhost:3000"}
+ :nrepl-port             7000
+ :jdbc-database-url      "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
+ ;; this needs to resolve to your local machine from the public internet
+ :server-address         "http://PUBLIC-DNS:3000"
+
+ ;; eth address of bot account
+ :eth-account            "0x.."
+ :eth-password           "XXX"
+
+ ;; RPC URL to ethereum node to be used
+ :eth-rpc-url            "http://localhost:8547"
+ :eth-wallet-file        "/some/location"
+
+ ;; commiteth-test-tpatja
+ :github-client-id       "CLIENT ID"
+ :github-client-secret   "CLIENT SECRET"
+
+ ;; github username + password for bot account
+ :github-user            "commiteth"
+ :github-password        "XXX"
+ :on-testnet             true}
+
+

@@ -38,12 +38,33 @@ Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required an
 
 ## Running
 
+Make sure `env/dev/resources/config.edn` is correctly populated.
+
+Lauch a local geth node with the bot account unlocked:
+
+```
+#!/bin/bash
+geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port 50100 --ipcpath ~/.ropsten/geth.ipc --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi db,eth,net,web3,personal --rpccorsdomain""https://wallet.ethereum.or"" --unlock""YOUR_ADDR"" --password <(echo""YOUR_PASSWD"")
+```
+
 Launch following commands each in its own shell:
 
 ```
 lein run
 lein figwheel
 lein less auto
+```
+
+_NOTE_
+
+Due to a current limitation you will have to do the following to have `lein run` work:
+
+```
+lein build-contracts
+lein jar
+lein repl # this will fail
+cp -r target/classes/commiteth target/base+system+user+dev/classes
+lein run
 ```
 
 ## Uberjar build
