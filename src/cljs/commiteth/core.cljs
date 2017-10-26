@@ -26,16 +26,19 @@
   (let [flash-message (rf/subscribe [:flash-message])]
     (fn []
       (when-let [[type message] @flash-message]
-          [:div.flash-message {:class (name type)}
-           [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
-           [:p message]]))))
+        (do
+          (println "flash-message-pane" type message)
+          [:div.ui.active.modal
+           [:div.flash-message {:class (name type)}
+            [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
+            [:p message]]])))))
 
 (def user-dropdown-open? (r/atom false))
 
 (defn user-dropdown [user items]
   (let [menu (if @user-dropdown-open?
-                  [:div.ui.menu.transition.visible]
-                  [:div.ui.menu])
+                  [:div.ui.menu.transition.visible {:tab-index 0}]
+                  [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.left.item.dropdown
      {:on-click #(swap! user-dropdown-open? not)}
@@ -70,8 +73,8 @@
   (let [user (rf/subscribe [:user])
         current-page (rf/subscribe [:page])]
     (fn []
-      (let [tabs (apply conj [[:activity "Activity"]
-                              [:bounties "Open bounties"]]
+      (let [tabs (apply conj [[:bounties "Bounties"]
+                              [:activity "Activity"]]
                         (when @user
                           [[:repos "Repositories"]
                            [:manage-payouts "Manage Payouts"]
@@ -91,22 +94,21 @@
     (fn []
       [:div.vertical.segment.commiteth-header
        [:div.ui.grid.container
-        [:div.twelve.wide.column
-         [:div.ui.image.lef.aligned
-          [svg/app-logo]]]
         [:div.four.wide.column
-         (if @flash-message
-           [flash-message-pane]
-           [user-component @user])]
-        (when-not @user
-          [:div.ui.text.content
-           [:div.ui.divider.hidden]
-           [:h2.ui.header (if (config/on-testnet?)
-                            "Commit ETH (Testnet)"
-                            "Commit ETH")]
-           [:h2.ui.subheader "Earn ETH by committing to open source projects"]
-           [:div.ui.divider.hidden]])
-        [tabs]]])))
+         [:div.ui.grid
+          [:div.ui.four.wide.column
+           [:div.ui.circular.image.status-logo
+            [svg/status-logo]]]
+          [:div.ui.twelve.wide.column.left.aligned
+           [:div.logo-header "Status"]
+           [:div.logo-subheader "Open Bounty"]]]]
+        [:div.eight.wide.column
+         [tabs]]
+        [:div.four.wide.column
+         [user-component @user]]
+        (when @flash-message
+          [flash-message-pane])]])))
+
 
 (def pages
   {:activity #'activity-page
@@ -147,7 +149,6 @@
          [:div.ui.container
           [:h3 "Top hunters"]
           [top-hunters]]]]
-       [:div.ui.divider]
        [:div.commiteth-footer "Built by " [:a {:href "https://status.im"} "Status"]
         (when-not (= "unknown" version)
           [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]]]]))

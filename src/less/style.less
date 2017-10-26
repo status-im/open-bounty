@@ -13,8 +13,8 @@
 
 
 .ui.button {
-    color: #2f3f44;
-    background-color: #b0f1ee;
+    color: #fff;
+    background-color: #57a7ed;
     white-space: nowrap;
     padding: 0.9em 1.2em 0.9em;
     &:hover {
@@ -30,12 +30,12 @@
     }
 }
 .ui.small.button {
-    font-size: 15px!important;
+    font-size: 13px!important;
 }
 
 
 .commiteth-header {
-    background-color: #2f3f44!important;
+    background-color: #57a7ed!important;
     border-radius: 0em;
     padding-top: 1.5em;
 }
@@ -43,6 +43,31 @@
 .commiteth-tabs {
     padding-top: 1.8em;
 }
+
+.status-logo {
+    width: 42px;
+	height: 42px;
+	object-fit: contain;
+	box-shadow: 0 2px 4px 0 rgba(22, 51, 81, 0.14);
+}
+
+.logo-header {
+    color: #fff;
+    font-family: PostGrotesk;
+	font-size: 21px;
+	font-weight: 500;
+	text-align: left;
+}
+
+.logo-subheader {
+    color: #fff;
+    opacity: 0.4;
+    font-family: PostGrotesk;
+	font-size: 15px;
+	line-height: 1.0;
+	text-align: left;
+}
+
 
 .top-hunters {
     .header {
@@ -77,9 +102,6 @@
     font-weight: normal;
 }
 
-.ui.card a {
-    color: #848e91;
-}
 
 .user-component {
     margin-top: 0px!important;
@@ -92,13 +114,16 @@
     }
 }
 
-.ui.dropdown .item {
-    color: #fff!important;
-    opacity: 0.98;
+.ui.dropdown {
+    .item {
+        color: #fff!important;
+    }
 }
 
-.ui.menu .ui.dropdown .menu>.item:hover, .ui.menu .ui.dropdown .menu>.selected.item {
-    background-color: #fff!important;
+.ui.menu .ui.dropdown  {
+    .menu> {
+        background-color: #1e3751;
+    }
 }
 
 .ui.input.address-input {
@@ -111,42 +136,45 @@
     color: #e7e7e7;
     background-color: yellow!important;
 }
+
 .ui.menu.transition.visible {
     font-family: 'postgrotesk';
     font-size: 1em;
     border-radius: 8px;
     border: none;
     padding: .5em;
+    overflow: visible!important;
     .item>a {
-        &:hover {
-            color:#1bb5c1;
-        }
-        color: #474951;
+        // &:hover {
+        //     color:#1bb5c1;
+        // }
+        color: #fff;
     }
 }
 
 .logout-link {
-    color: #e96868!important;
+    color: #fff!important;
 }
 
 .ui.attached.tabular {
-    background-color: #2f3f44;
+    background-color: #57a7ed;
     border-bottom: none;
+    height: 80%;
     .ui.item {
-        padding: 1em;
+        padding: 0.6em;
         color: #fff;
-        opacity: 0.98;
         cursor: pointer;
         font-family: 'postgrotesk';
-        font-size: 16px;
+        font-size: 15px;
         font-weight: normal;
     }
     .ui.item.active {
-        border-radius: .8rem .8rem 0 0!important;
-        color: #b0f1ee;
+        border-radius: 8px!important;
+        border-width: 0;
+        color: #fff;
         background-color: fade(#fff, 10%);
-        border-width: 0em;
         cursor: default;
+        height: 80%;
     }
 }
 
@@ -159,16 +187,17 @@
 }
 
 .repo-label {
-    color: #1bb5c1;
+    color: #42505c;
     font-family: 'postgrotesk-medium';
-    font-size: 16px;
+    font-size: 18px;
+    a { color: #42505c; }
 }
 
 .repo-description {
-    color: #474951;
+    color: #8d99a4;
     font-size: 15px;
     font-weight: normal;
-    line-height: 24px;
+    line-height: 22px;
     margin-top: 16px;
     margin-bottom: 16px;
 }
@@ -182,6 +211,7 @@
     a {
         padding: 1em;
         font-size: 15px;
+        color: #42505c;
     }
     .remove-link:hover {
         color: #e96868;
@@ -189,8 +219,8 @@
 }
 
 .ui.button.repo-added-button {
-    color: white;
-    background-color: #61deb0;
+    color: #42505c;
+    background-color: #eaecee;
     cursor: default;
 }
 
@@ -200,6 +230,7 @@
 }
 
 .activity-item {
+    background-color: #fff!important;
     .left-column {
         margin: 0;
         padding-left: 12px;
@@ -251,9 +282,6 @@
 
     h3 {
         color: #474951;
-    }
-    a:not(.ui) {
-        color: #1bb5c1;
     }
     .label {
         background-color: #61deb0;
@@ -331,7 +359,7 @@
 }
 
 .commiteth-footer {
-    color: #a8aab1;
+    background-color: #4a5c69;
     line-height: 1.8em;
     a {
         &:hover {
@@ -339,6 +367,7 @@
         }
         color: #a8aab1!important;
     }
+    &.group-title { color: #fff; opacity: 0.6; }
 }
 
 
@@ -352,6 +381,11 @@
     }
 }
 
+
 .ui {
     font-family: 'postgrotesk'!important;
+}
+
+body {
+    background-color: #eaecee;
 }

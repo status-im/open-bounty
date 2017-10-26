@@ -9,15 +9,15 @@
         button (if enabled
                  [:div.ui.button.small.repo-added-button (add-busy-styles {})
                   [:i.icon.check]
-                  "Added"]
+                  "ADDED"]
                  [:div.ui.button.small
                   (add-busy-styles {:on-click on-click})
-                  "Add"])]
+                  "ADD"])]
 
     [:div.ui.two.column.container
      button
      (when enabled
-       [:a.ui.item.remove-link {:on-click on-click} "Remove"])]))
+       [:a.ui.item.remove-link {:on-click on-click} "REMOVE"])]))
 
 
 (defn repo-card [repo]
