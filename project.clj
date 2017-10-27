@@ -3,15 +3,15 @@
   :url "https://commiteth.com"
   :dependencies [[metosin/compojure-api "1.1.11"
                   :exclusions [joda-time]]
-                 [re-frame "0.10.1"]
-                 [cljs-ajax "0.6.0"]
+                 [re-frame "0.10.2"]
+                 [cljs-ajax "0.7.2"]
                  [secretary "1.2.3"]
                  [reagent-utils "0.2.1"]
                  [reagent "0.7.0"]
-                 [org.clojure/clojurescript "1.9.908"]
+                 [org.clojure/clojurescript "1.9.946"]
                  [org.clojure/clojure "1.8.0"]
-                 [selmer "1.11.0"]
-                 [markdown-clj "0.9.99"]
+                 [selmer "1.11.1"]
+                 [markdown-clj "1.0.1"]
                  [ring-middleware-format "0.7.2"]
                  [ring/ring-core "1.6.2"]
                  [ring/ring-json "0.4.0"]
@@ -27,15 +27,15 @@
                  [cprop "0.1.11"]
                  [org.clojure/tools.cli "0.3.5"]
                  [luminus-nrepl "0.1.4"]
-                 [buddy/buddy-auth "2.0.0"]
-                 [luminus-migrations "0.4.0"]
-                 [conman "0.6.7"]
+                 [buddy/buddy-auth "2.1.0"]
+                 [luminus-migrations "0.4.2"]
+                 [conman "0.7.0"]
                  [org.postgresql/postgresql "42.1.4"]
-                 [luminus-immutant "0.2.3"]
+                 [luminus-immutant "0.2.4"]
                  [clj.qrgen "0.4.0"]
-                 [digest "1.4.5"]
+                 [digest "1.4.6"]
                  [tentacles "0.5.1"]
-                 [re-frisk "0.4.5"]
+                 [re-frisk "0.5.0"]
                  [bk/ring-gzip "0.2.1"]
                  [crypto-random "1.2.0"]
                  [crypto-equality "1.0.0"]
@@ -49,8 +49,8 @@
                  [com.andrewmcveigh/cljs-time "0.5.1"]
                  [akiroz.re-frame/storage "0.1.2"]
                  [cljsjs/chartjs "2.6.0-0"]
-                 [org.web3j/core "2.3.0"]
-                 [cljs-web3 "0.19.0-0-2"]]
+                 [org.web3j/core "2.3.1"]
+                 [cljs-web3 "0.19.0-0-7"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
@@ -121,16 +121,16 @@
    :dev   {:dependencies   [[prone "1.1.4"]
                             [ring/ring-mock "0.3.1"]
                             [ring/ring-devel "1.6.2"]
-                            [pjstadig/humane-test-output "0.8.2"]
-                            [doo "0.1.7"]
-                            [binaryage/devtools "0.9.4"]
-                            [figwheel-sidecar "0.5.13"]
+                            [pjstadig/humane-test-output "0.8.3"]
+                            [doo "0.1.8"]
+                            [binaryage/devtools "0.9.7"]
+                            [figwheel-sidecar "0.5.14"]
                             [org.clojure/tools.nrepl "0.2.13"]
                             [com.cemerick/piggieback "0.2.2"]
-                            [sablono "0.8.0"]]
+                            [sablono "0.8.1"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
                             [lein-doo "0.1.7"]
-                            [lein-figwheel "0.5.10"]]
+                            [lein-figwheel "0.5.14"]]
            :cljsbuild
            {:builds
             [{:id "app"
@@ -152,7 +152,7 @@
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
    :test  {:resource-paths ["env/dev/resources" "env/test/resources"]
-           :dependencies   [[devcards "0.2.3"]]
+           :dependencies   [[devcards "0.2.4"]]
            :cljsbuild
            {:builds
             {:test
