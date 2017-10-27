@@ -90,11 +90,14 @@
     (fn []
       (println "gh-admin-token" @gh-admin-token)
       (if (empty? @gh-admin-token)
-        [:div.ui.container
-         [:div.ui.warning.message
-          [:i.warning.icon]
-          "To set bounties for your repositories or for organizations' repositories where you have access, you need to grant Commit ETH the required permissions"]
-         [:a.ui.button.small {:href js/authorizeUrlAdmin} "Enable"]]
+        [:div.ui.container.enable-github-account
+         [:div.ui.center.aligned.segment.enable-github-account-title
+          "Work on bounties that suit you"]
+         [:div.ui.center.aligned.segment.enable-github-account-description
+          [:p
+           "Not all projects are created equally.  Choose the bounties that excite you, match your skill set or fit in with your schedule. No strings attached.  Enable your GitHub repositories to get started."]]
+         [:div.ui.center.aligned.segment
+          [:a.ui.button.small {:href js/authorizeUrlAdmin} "ENABLE GITHUB ACCOUNT"]]]
         (do
           (rf/dispatch [:load-user-repos])
           [repos-page-token-ok])))))
