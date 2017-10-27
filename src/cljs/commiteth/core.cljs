@@ -37,7 +37,7 @@
 
 (defn user-dropdown [user items]
   (let [menu (if @user-dropdown-open?
-                  [:div.ui.menu.transition.visible {:tab-index 0}]
+                  [:div.ui.menu.transition.visible]
                   [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.left.item.dropdown
