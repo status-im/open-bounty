@@ -67,7 +67,7 @@
          [:div.item
           [user-dropdown @user [[:update-address "Update address" {}]
                                 ["/logout" "Sign out" {:class "logout-link"}]]]]]
-        [:a.ui.button.small {:href js/authorizeUrl} "LOG IN \u2192"]))))
+        [:a.ui.button.small.login-button {:href js/authorizeUrl} "LOG IN \u2192"]))))
 
 (defn tabs []
   (let [user (rf/subscribe [:user])

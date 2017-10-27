@@ -10,7 +10,7 @@
                  [:div.ui.button.small.repo-added-button (add-busy-styles {})
                   [:i.icon.check]
                   "ADDED"]
-                 [:div.ui.button.small
+                 [:div.ui.button.small.add-repo-button
                   (add-busy-styles {:on-click on-click})
                   "ADD"])]
 
