@@ -14,8 +14,8 @@
              :refer [reg-co-fx!]]))
 
 
-(rf-storage/reg-co-fx! :commiteth {:fx :store
-                                   :cofx :store})
+(rf-storage/reg-co-fx! :commiteth-sob {:fx :store
+                                       :cofx :store})
 
 (reg-fx
  :http

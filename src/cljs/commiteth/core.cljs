@@ -65,8 +65,8 @@
       (if @user
         [:div.ui.text.menu.user-component
          [:div.item
-          [user-dropdown @user [[:update-address "Update address" {}]
-                                ["/logout" "Sign out" {:class "logout-link"}]]]]]
+          [user-dropdown @user [[:update-address "My Payment Details" {}]
+                                ["/logout" "Sign Out" {:class "logout-link"}]]]]]
         [:a.ui.button.small.login-button {:href js/authorizeUrl} "LOG IN \u2192"]))))
 
 (defn tabs []
