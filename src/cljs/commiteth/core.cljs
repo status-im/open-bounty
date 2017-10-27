@@ -148,7 +148,8 @@
        [:div.ui.vertical.segment
         [:div.ui.container
          [:div.ui.grid.stackable
-          [:div.ten.wide.computer.sixteen.wide.tablet.column
+          [:div {:class (str (if (show-top-hunters?) "ten" "sixteen")
+                             " wide computer sixteen wide tablet column")}
            [:div.ui.container
             [(pages @current-page)]]]
           (when (show-top-hunters?)
