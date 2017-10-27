@@ -67,13 +67,13 @@
          [:div.item
           [user-dropdown @user [[:update-address "Update address" {}]
                                 ["/logout" "Sign out" {:class "logout-link"}]]]]]
-        [:a.ui.button.small {:href js/authorizeUrl} "Sign in"]))))
+        [:a.ui.button.small {:href js/authorizeUrl} "LOG IN ->"]))))
 
 (defn tabs []
   (let [user (rf/subscribe [:user])
         current-page (rf/subscribe [:page])]
     (fn []
-      (let [tabs (apply conj [[:bounties "Bounties"]
+      (let [tabs (apply conj [[:bounties (str (when-not @user "Open ") "Bounties")]
                               [:activity "Activity"]]
                         (when @user
                           [[:repos "Repositories"]
@@ -124,39 +124,45 @@
     (fn []
       (if (empty? @top-hunters)
         [:div.ui.text "No data"]
-        (into [:div.ui.items.top-hunters]
+        (into [:div.ui.items]
               (map-indexed (fn [idx hunter]
                              [:div.item
-                              [:div.leader-ordinal (str (inc idx))]
-                              [:div.ui..mini.circular.image
+                              [:div.ui.mini.circular.image
                                [:img {:src (:avatar-url hunter)}]]
-                              [:div.content
-                               [:div.header (:display-name hunter)]
-                               [:div.description (str "USD " (:total-usd hunter))]]])
+                              [:div.leader-ordinal (str (inc idx) ".")]
+                              [:div.header.leader-name (:display-name hunter)]
+                              [:div.leader-amount (str "$" (:total-usd hunter))]])
                            @top-hunters))))))
 
+(defn footer []
+  [:div.commiteth-footer "Built by " [:a {:href "https://status.im"} "Status"]
+   (when-not (= "unknown" version)
+          [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])])
+
 (defn page []
-  (fn []
-    [:div.ui.pusher
-     [page-header]
-     [:div.ui.vertical.segment
-      [:div.ui.container
-       [:div.ui.grid.stackable
-        [:div.ten.wide.computer.sixteen.wide.tablet.column
-         [:div.ui.container
-          [(pages @(rf/subscribe [:page]))]]]
-        [:div.six.wide.column.computer.only
-         [:div.ui.container
-          [:h3 "Top hunters"]
-          [top-hunters]]]]
-       [:div.commiteth-footer "Built by " [:a {:href "https://status.im"} "Status"]
-        (when-not (= "unknown" version)
-          [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]]]]))
+  (let [current-page (rf/subscribe [:page])
+        show-top-hunters? #(contains? #{:bounties :activity} @current-page)]
+    (fn []
+      [:div.ui.pusher
+       [page-header]
+       [:div.ui.vertical.segment
+        [:div.ui.container
+         [:div.ui.grid.stackable
+          [:div.ten.wide.computer.sixteen.wide.tablet.column
+           [:div.ui.container
+            [(pages @current-page)]]]
+          (when (show-top-hunters?)
+            [:div.six.wide.column.computer.only
+             [:div.ui.container.top-hunters
+              [:h3.top-hunters-header "Top hunters"]
+              [:div.top-hunters-subheader "All time"]
+              [top-hunters]]])]
+         [footer]]]])))
 
 (secretary/set-config! :prefix "#")
 
 (secretary/defroute "/" []
-  (rf/dispatch [:set-active-page :activity]))
+  (rf/dispatch [:set-active-page :bounties]))
 
 (secretary/defroute "/repos" []
   (if js/user

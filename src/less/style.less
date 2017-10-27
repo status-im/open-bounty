@@ -18,7 +18,6 @@
     white-space: nowrap;
     padding: 0.9em 1.2em 0.9em;
     &:hover {
-        background-color: #bdf8f5;
     }
     &:active,&:focus {
         background-color: #97ebe7;
@@ -31,8 +30,9 @@
 }
 .ui.small.button {
     font-size: 13px!important;
+    background-color: rgba(255,255,255,0.2);
+    color: #fff!important;
 }
-
 
 .commiteth-header {
     background-color: #57a7ed!important;
@@ -68,23 +68,40 @@
 	text-align: left;
 }
 
+.top-hunters-header {
+    margin-bottom: 0;
+}
+
+.top-hunters-subheader {
+    margin-top: 0;
+    color: #8d99a4;
+}
+
+.test {
+    background-color: #f00;
+}
 
 .top-hunters {
-    .header {
-        color: #474951!important;
-        font-size: 1.1em!important;
-        opacity: .98!important;
-    }
-    .description {
-        color: #a8aab1!important;
-    }
+    background-color: #fff;
+    transform: translate(0, -30px);
+    border-radius: 10px;
+    padding: 10px;
     .leader-ordinal {
-        font-size: 1.5em;
+        font-size: 15px;
         float: none;
         margin-top: 8px;
+        margin-left: 15px;
         margin-right: 15px;
-        color: #a8aab1;
-        opacity: .45;
+        color: #57a7ed;
+    }
+    .leader-name {
+        margin-top: 8px;
+    }
+    .leader-amount {
+        margin-top: 8px;
+        margin-left: 15px;
+        text-align: right;
+        color: #8d99a4;
     }
 }
 
@@ -143,12 +160,9 @@
     border-radius: 8px;
     border: none;
     padding: .5em;
-    overflow: visible!important;
     .item>a {
-        // &:hover {
-        //     color:#1bb5c1;
-        // }
         color: #fff;
+        pointer: default;
     }
 }
 
