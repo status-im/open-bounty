@@ -552,6 +552,16 @@ FROM activity_feed_view
 ORDER BY updated DESC
 LIMIT 100;
 
+-- :name get-new-users-for-welcome-email :? :*
+-- :doc users who have not been sent a welcome email
+SELECT
+ id,
+ login,
+ email,
+ name
+FROM users
+WHERE welcome_email_sent = 0;
+
 
 -- :name usage-metrics-by-day :? :*
 -- :doc data for usage metrics chart
