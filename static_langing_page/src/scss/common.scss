@@ -1,0 +1,69 @@
+@import "reset";
+@import "formReset";
+@import "colors";
+@import "fonts";
+
+body {
+  background-color: #f2f5f8;
+  font-family: $PostGroteskBook;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 25px;
+  color: $colorDark;
+  text-rendering: optimizeLegibility;
+   -webkit-font-smoothing: antialiased;
+}
+
+body.popup-open {
+  overflow: hidden;
+}
+
+a {
+  color: $colorDark;
+  text-decoration: none;
+  transition: opacity .2s ease;
+}
+
+.button {
+  display: block;
+  height: 44px;
+  line-height: 43px;
+  padding: 0 20px;
+
+  font-family: $PostGroteskMedium;
+  font-size: 13px;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 1px;
+
+  color: $colorWhite;
+  background-color: #57a7ed;
+  border-radius: 8px;
+
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: transform .1s ease, box-shadow .2s ease, background-color .2s ease;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.button:active {
+  transform: translate3d(0, 0, 0) scale(.99);
+}
+
+.button:disabled,
+.button.button--disabled {
+  color: rgba(255, 255, 255, .4);
+  background-color: #57a7ed;
+  cursor: default;
+}
+
+.button:hover {
+  background-color: #57a7ed
+}
+
+.button.button--disabled:hover,
+.button:disabled:hover {
+  cursor: default;
+  color: rgba(255, 255, 255, .4);
+  background-color: #57a7ed;
+}
