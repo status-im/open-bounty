@@ -135,9 +135,47 @@
                            @top-hunters))))))
 
 (defn footer []
-  [:div.commiteth-footer "Built by " [:a {:href "https://status.im"} "Status"]
-   (when-not (= "unknown" version)
-          [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])])
+  (let [social-links [["icon-fb" "Facebook" "https://www.facebook.com/ethstatus"]
+                      ["icon-tw" "Twitter" "https://twitter.com/ethstatus"]
+                      ["icon-gh" "Github" "https://github.com/status-im"]
+                      ["icon-rd" "Reddit" "https://www.reddit.com/r/statusim/"]
+                      ["icon-yt" "YouTube" "https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/"]]]
+    [:div.commiteth-footer
+     [:div.commiteth-footer-inner
+      [:div.commiteth-footer-logo-container
+       [:div
+        (svg/status-logo-footer)]
+       [:div.commiteth-footer-status-addr
+        "Status Research & Development GmbH
+Baarerstrasse 10
+Zug, Switzerland"]]
+      [:div.commiteth-footer-table
+       [:div.commiteth-footer-table__column
+        [:h4.commiteth-footer-header "Social networks"]
+        [:ul.commiteth-footer-list
+         (for [[svg caption url] social-links]
+           [:li.commiteth-footer-link
+            [:a {:href url}
+             [:div.commiteth-footer-icon
+              {:style {"background-image" (str "url(/img/" svg ".svg)")}}]
+             [:span.commiteth-footer-link-label caption]]])]]
+       [:div.commiteth-footer-table__column
+        [:h4.commiteth-footer-header "Community"]
+        [:ul.commiteth-footer-list
+         [:li.commiteth-footer-link
+            [:a {:href "https://wiki.status.im/"}
+             "Wiki"]]
+         [:li.commiteth-footer-link
+            [:a {:href "https://status.im/jobs.html"}
+             "Jobs"]]]]
+       [:div.commiteth-footer-table__column
+        [:h4.commiteth-footer-header "Language"]
+        [:ul.commiteth-footer-list
+         [:li.commiteth-footer-link
+          [:select.commiteth-language-switcher {:name "lang"}
+           [:option {:value "en"} "English"]]]]]]]
+     (when-not (= "unknown" version)
+       [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]))
 
 (defn page []
   (let [current-page (rf/subscribe [:page])
@@ -157,8 +195,8 @@
              [:div.ui.container.top-hunters
               [:h3.top-hunters-header "Top hunters"]
               [:div.top-hunters-subheader "All time"]
-              [top-hunters]]])]
-         [footer]]]])))
+              [top-hunters]]])]]
+        [footer]]])))
 
 (secretary/set-config! :prefix "#")
 
