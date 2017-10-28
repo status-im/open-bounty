@@ -1,0 +1,140 @@
+.logos {
+  width: 1280px;
+  display: flex;
+  position: relative;
+  padding: 0 0 24px 0;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logo-header {
+  font-size: 15px;
+  color: #97A4AD;
+  text-align: center;
+  position: absolute;
+  top: 12px;
+  width: 100%;
+  left: 0;
+  display: none;
+}
+
+.media-logo {
+  display: block;
+  background-size: 100%;
+  opacity: .8;
+  transform: scale(.88);
+  transition: opacity .2s ease;
+  flex-shrink: 0;
+}
+
+.media-logo:hover {
+  opacity: 1
+}
+
+.media-logo--coindesk {
+  width: 156px;
+  height: 42px;
+  background-image: url(../img/new-site/logo-coindesk.png);
+}
+
+.media-logo--nasdaq {
+  margin-top: -4px;
+  width: 156px;
+  height: 45px;
+  background-image: url(../img/new-site/logo-nasdaq.png);
+}
+
+.media-logo--cointelegraph {
+  width: 263px;
+  height: 55px;
+  background-image: url(../img/new-site/logo-cointelegraph.png);
+}
+
+.media-logo--yahoo {
+  width: 103px;
+  height: 35px;
+  background-image: url(../img/new-site/logo-yahoo.png);
+}
+
+.media-logo--ethnews {
+  width: 163px;
+  height: 33px;
+  background-image: url(../img/new-site/logo-ethnews.png);
+}
+
+.media-logo--etherreview {
+  width: 113px;
+  height: 52px;
+  background-image: url(../img/new-site/logo-etherreview.png);
+}
+
+
+@media (max-width: 1280px) {
+
+  .logos {
+    width: 100%;
+    padding: 0 24px 24px 24px;
+  }
+
+
+}
+
+
+@media (max-width: 840px) {
+
+  .logos {
+    width: 100%;
+    background-color: #FFF;
+    padding: 34px 0 16px 0;
+    border-bottom: 1px solid #EBEDF0;
+    justify-content: center;
+  }
+
+  .slide--one--finished .logos {
+    background-color: transparent;
+    margin-top: 32px;
+  }
+
+
+  .logo-header {
+    display: block;
+  }
+
+  .media-logo {
+    opacity: 1;
+    margin: 16px;
+  }
+
+  .media-logo--nasdaq {
+    width: 107px;
+    height: 30px;
+  }
+
+  .media-logo--coindesk {
+    width: 101px;
+    height: 27px;
+  }
+
+  .media-logo--cointelegraph {
+    width: 171px;
+    height: 37px;
+  }
+
+  .media-logo--yahoo {
+    width: 67px;
+    height: 23px;
+  }
+
+  .media-logo--ethnews {
+    width: 106px;
+    height: 21px;
+  }
+
+  .media-logo--etherreview {
+    width: 73px;
+    height: 34px;
+
+  }
+
+}

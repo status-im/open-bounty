@@ -1,0 +1,100 @@
+.actions {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: space-evenly;
+}
+
+@media (min-width: 640px) {
+  .actions {
+    flex-direction: row;
+  }
+}
+
+.action {
+  flex-basis: 0;
+  flex-grow: 1;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+.actions {
+    margin-top: 64px;
+  }
+}
+
+.action h1 {
+  font-family: $PostGroteskMedium;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 7px;
+  line-height: 1.15;
+  letter-spacing: 1.1px;
+  text-align: center;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.action h2 {
+  font-family: $PostGroteskMedium;
+  font-size: 25px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  line-height: 1.36;
+  text-align: center;
+  color: #ffffff;
+}
+
+.action p {
+  opacity: 0.6;
+  font-family: $PostGroteskMedium;
+  font-size: 18px;
+  line-height: 1.39;
+  margin: 0 auto 26px;
+  max-width: 400px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.action button {
+    width: 240px;
+    height: 45px;
+    object-fit: contain;
+    border-radius: 8px;
+    background-color: #1e3751;
+    box-shadow: 0 2px 4px 0 rgba(22, 51, 81, 0.14);
+    font-family: $PostGroteskMedium;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: 1px;
+    text-align: center;
+    text-transform: uppercase;
+    color: #ffffff;
+    transition: opacity .2s ease;
+}
+
+.action button:hover {
+    opacity: 0.5;
+    cursor: pointer;
+  }
+
+.logo-developers {
+  width: 148px;
+  height: 159px;
+  object-fit: contain;
+}
+
+.logo-organisations {
+  width: 168px;
+  height: 124px;
+  object-fit: contain;
+  padding-top: 35px;
+}
+
+@media (min-width: 640px) {
+  .logo-organisations {
+    padding-top: 35px;
+  }
+}
