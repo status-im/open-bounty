@@ -370,8 +370,12 @@
 }
 
 .activity-item {
-    .display-name,.description {
+    .display-name {
         color: #474951!important;
+        font-family: "PostGrotesk-Medium";
+    }
+    .description {
+        font-family: "PostGrotesk-Book";
     }
 }
 
@@ -390,9 +394,12 @@
 }
 
 .balance-badge {
-    color: #fff;
-    background-color: #61deb0;
-    font-size: 0.9em;
+    color: #57a7ed;
+    background-color: rgba(87,167,237,.2);
+    font-family: "PostGrotesk-Medium";
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.15;
     width: auto;
     min-width: 0;
     height: auto;
@@ -400,8 +407,13 @@
     line-height: 2em;
     display: table;
     padding: 0 .5em 0;
-    letter-spacing: .04em;
-    border-radius: 2px;
+    letter-spacing: 1px;
+    border-radius: 8px;
+
+    &.token {
+        color: #4360df;
+        background-color: rgba(67,96,223,.2);
+    }
 }
 .fork-span {
     padding-left: .5em;

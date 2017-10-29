@@ -27,9 +27,10 @@
        issue-link
        (str " (USD " value-usd ")")]
       [:div.footer-row
-       (for [[tla balance] (merge tokens {:ETH balance-eth})]
+       [:div.balance-badge "ETH " balance-eth]
+       (for [[tla balance] tokens]
          ^{:key (random-uuid)}
-         [:div.balance-badge
+         [:div.balance-badge.token
           (str (subs (str tla) 1) " " balance)])
        [:div.time (moment-timestamp updated)]]]]))
 
