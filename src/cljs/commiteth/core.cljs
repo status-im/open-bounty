@@ -154,10 +154,11 @@ Zug, Switzerland"]]
         [:h4.commiteth-footer-header "Social networks"]
         [:ul.commiteth-footer-list
          (for [[svg caption url] social-links]
+           ^{:key (random-uuid)}
            [:li.commiteth-footer-link
             [:a {:href url}
              [:div.commiteth-footer-icon
-              {:style {"background-image" (str "url(/img/" svg ".svg)")}}]
+              {:style {:background-image (str "url(/img/" svg ".svg)")}}]
              [:span.commiteth-footer-link-label caption]]])]]
        [:div.commiteth-footer-table__column
         [:h4.commiteth-footer-header "Community"]

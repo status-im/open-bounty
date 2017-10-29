@@ -42,7 +42,7 @@
     [:div.footer-row
      (when-not (= item-type "new-bounty")
        (for [[tla balance] (merge tokens {:ETH balance-eth})]
-         ^{:key (str display-name tla)}
+         ^{:key (random-uuid)}
          [:div.balance-badge
           (str (subs (str tla) 1) " " balance)]))
      [:div.time (moment-timestamp updated)]]]])

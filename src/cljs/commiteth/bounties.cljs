@@ -28,6 +28,7 @@
        (str " (USD " value-usd ")")]
       [:div.footer-row
        (for [[tla balance] (merge tokens {:ETH balance-eth})]
+         ^{:key (random-uuid)}
          [:div.balance-badge
           (str (subs (str tla) 1) " " balance)])
        [:div.time (moment-timestamp updated)]]]]))
