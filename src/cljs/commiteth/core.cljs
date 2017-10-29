@@ -143,12 +143,14 @@
     [:div.commiteth-footer
      [:div.commiteth-footer-inner
       [:div.commiteth-footer-logo-container
-       [:div
-        (svg/status-logo-footer)]
-       [:div.commiteth-footer-status-addr
-        "Status Research & Development GmbH
-Baarerstrasse 10
-Zug, Switzerland"]]
+       [:div.commiteth-footer-logo-container-inner
+        [:div (svg/status-logo-footer)]
+        [:div.commiteth-footer-status-addr
+         "Status Research & Development GmbH"
+         [:br]
+         "Baarerstrasse 10"
+         [:br]
+         "Zug, Switzerland"]]]
       [:div.commiteth-footer-table
        [:div.commiteth-footer-table__column
         [:h4.commiteth-footer-header "Social networks"]

@@ -438,6 +438,7 @@
     justify-content: center;
     margin-top: 20px;
 }
+
 .commiteth-footer-inner {
     display: flex;
     justify-content: space-between;
@@ -446,6 +447,11 @@
 
 .commiteth-footer-table {
     display: flex;
+}
+
+.commiteth-footer-list {
+    margin: 0;
+    padding: 0;
 }
 
 .commiteth-footer-table__column {
@@ -470,17 +476,28 @@
 }
 
 .commiteth-footer-logo-container {
-    width: 26%;
-    padding: 65px 75px 0 10px;
+    width: 280px;
+    display: flex;
+}
+
+.commiteth-footer-logo-container-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 65px 0 75px 0;
 }
 
 
-.commiteth-footer-link a {
-    color: #fff;
+.commiteth-footer-link {
     height: 32px;
     line-height: 32px;
     font-size: 16px;
     margin: 0 0 15px 0;
+    a {
+        color: #fff;
+        display: flex;
+        align-items: center;
+    }
 }
 
 .commiteth-footer-link-label {
@@ -501,13 +518,9 @@
 
 .commiteth-footer-status-addr {
     color: #fff;
-    opacity: 0.4;
-    width: 168px;
-    line-height: 1.67;
-	text-align: left;
-    height: 50px;
-    padding-top: 30px;
-    padding-bottom: 30px;
+    opacity: 0.5;
+    padding: 20px 0 0 0;
+    line-height: 20px;
 }
 
 .commiteth-footer-icon {
