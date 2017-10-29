@@ -153,7 +153,7 @@
          "Zug, Switzerland"]]]
       [:div.commiteth-footer-table
        [:div.commiteth-footer-table__column
-        [:h4.commiteth-footer-header "Social networks"]
+        [:div.commiteth-footer-header "Social networks"]
         [:ul.commiteth-footer-list
          (for [[svg caption url] social-links]
            ^{:key (random-uuid)}
@@ -163,7 +163,7 @@
               {:style {:background-image (str "url(/img/" svg ".svg)")}}]
              [:span.commiteth-footer-link-label caption]]])]]
        [:div.commiteth-footer-table__column
-        [:h4.commiteth-footer-header "Community"]
+        [:div.commiteth-footer-header "Community"]
         [:ul.commiteth-footer-list
          [:li.commiteth-footer-link
             [:a {:href "https://wiki.status.im/"}
@@ -172,7 +172,7 @@
             [:a {:href "https://status.im/jobs.html"}
              "Jobs"]]]]
        [:div.commiteth-footer-table__column
-        [:h4.commiteth-footer-header "Language"]
+        [:div.commiteth-footer-header "Language"]
         [:ul.commiteth-footer-list
          [:li.commiteth-footer-link
           [:select.commiteth-language-switcher {:name "lang"}
