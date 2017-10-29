@@ -11,7 +11,7 @@ The `master` branch is automatically deployed here.
 
 
 Live testnet (Ropsten) version:
-https://commiteth.com:444
+https://openbounty.status.im:444
 The `develop` branch is automatically deployed here.
 
 
