@@ -34,7 +34,7 @@
        [:div.time (moment-timestamp updated)]]]]))
 
 (defn bounties-list [open-bounties]
-  [:div.ui.container
+  [:div.ui.container.activity-container
    (if (empty? open-bounties)
      [:div.ui.text "No data"]
      (into [:div.ui.items]

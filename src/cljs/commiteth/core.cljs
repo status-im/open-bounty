@@ -80,7 +80,7 @@
                            [:manage-payouts "Manage Payouts"]
                            (when (:status-team-member? @user)
                              [:usage-metrics "Usage metrics"])]))]
-        (into [:div.ui.attached.tabular.menu.tiny.commiteth-tabs]
+        (into [:div.ui.attached.tabular.menu.tiny]
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
                                          (when (= @current-page page) " active"))
@@ -102,9 +102,9 @@
           [:div.ui.twelve.wide.column.left.aligned
            [:div.logo-header "Status"]
            [:div.logo-subheader "Open Bounty"]]]]
-        [:div.eight.wide.column
+        [:div.eight.wide.column.middle.aligned
          [tabs]]
-        [:div.four.wide.column
+        [:div.four.wide.column.middle.aligned
          [user-component @user]]
         (when @flash-message
           [flash-message-pane])]])))

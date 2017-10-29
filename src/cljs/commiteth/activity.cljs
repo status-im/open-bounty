@@ -50,12 +50,12 @@
 
 
 (defn activity-list [activity-items]
-      [:div.ui.container
-       (if (empty? activity-items)
-         [:div.ui.text "No data"]
-         (into [:div.ui.items]
-               (for [item activity-items]
-                 ^{:key item} [activity-item item])))]  )
+  [:div.ui.container.activity-container
+   (if (empty? activity-items)
+     [:div.ui.text "No data"]
+     (into [:div.ui.items]
+           (for [item activity-items]
+             ^{:key item} [activity-item item])))]  )
 
 (defn activity-page []
   (let [activity-items (rf/subscribe [:activity-feed])
