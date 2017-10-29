@@ -1,14 +1,16 @@
 
 @font-face {
-    font-family: 'postgrotesk';
-    src: url('/fonts/PostGrotesk-Book.woff') format('woff');
-    font-weight: normal;
+    font-family: PostGrotesk-Book;
+    src: url(/fonts/PostGrotesk-Book.woff) format("woff");
+    font-weight: 400;
+    font-style: normal;
 }
 
 @font-face {
-    font-family: 'postgrotesk-medium';
-    src: url('/fonts/PostGrotesk-Medium.woff') format('woff');
-    font-weight: normal;
+    font-family: PostGrotesk-Medium;
+    src: url(/fonts/PostGrotesk-Medium.woff) format("woff");
+    font-weight: 400;
+    font-style: normal;
 }
 
 
@@ -59,7 +61,7 @@
 
 .logo-header {
     color: #fff;
-    font-family: PostGrotesk;
+    font-family: "PostGrotesk-Medium";
 	font-size: 21px;
 	font-weight: 500;
 	text-align: left;
@@ -68,7 +70,7 @@
 .logo-subheader {
     color: #fff;
     opacity: 0.4;
-    font-family: PostGrotesk;
+    font-family: "PostGrotesk-book";
 	font-size: 15px;
 	line-height: 1.0;
 	text-align: left;
@@ -93,6 +95,7 @@
     border-radius: 10px;
     padding: 10px;
     .leader-ordinal {
+        font-family: "PostGrotesk-Medium";
         font-size: 15px;
         float: none;
         margin-top: 8px;
@@ -101,7 +104,11 @@
         color: #57a7ed;
     }
     .leader-name {
+        font-family: "PostGrotesk-Medium";
         margin-top: 8px;
+        font-weight: 500;
+        font-size: 15px;
+        color: #42505c;
     }
     .leader-amount {
         margin-top: 8px;
@@ -161,7 +168,7 @@
 }
 
 .ui.menu.transition.visible {
-    font-family: 'postgrotesk';
+    font-family: "PostGrotesk-Book";
     font-size: 1em;
     border-radius: 8px;
     border: none;
@@ -186,7 +193,7 @@
         padding: 0.6em;
         color: #fff;
         cursor: pointer;
-        font-family: 'postgrotesk';
+        font-family: "PostGrotesk-Medium" !important;
         font-size: 15px;
         font-weight: normal;
     }
@@ -227,7 +234,7 @@
 
 .enable-github-account-title {
     color: #42505c;
-    font-family: 'postgrotesk-medium';
+    font-family: "PostGrotesk-Medium";
     font-size: 25px;
     font-weight: 500;
 	line-height: 1.36;
@@ -241,7 +248,7 @@
         margin-left: 180px;
         margin-right: 180px;
         line-height: 1.39;
-        font-family: 'postgrotesk';
+        font-family: "PostGrotesk-Book";
         font-size: 18px;
         text-align: center;
     }
@@ -249,7 +256,7 @@
 
 .repo-label {
     color: #42505c;
-    font-family: 'postgrotesk-medium';
+    font-family: "PostGrotesk-Medium";
     font-size: 18px;
     a { color: #42505c; }
 }
@@ -267,7 +274,7 @@
     display: inline-block;
     vertical-align: bottom;
     padding: 0em 1em 0em;
-    font-family: 'postgrotesk';
+    font-family: "PostGrotesk-Book";
     font-size: 15px;
     a {
         padding: 1em;
@@ -317,7 +324,7 @@
 
     .content {
         padding: .7em 0 1em;
-        font-family: 'postgrotesk';
+        font-family: "PostGrotesk-Book";
         line-height: 2em;
         min-width: 160px!important;
         .header {
@@ -563,9 +570,13 @@
 
 
 .ui {
-    font-family: 'postgrotesk'!important;
+    font-family: "PostGrotesk-Book" !important;
+    font-weight: 400;
+    font-style: normal;
 }
 
 body {
     background-color: #eaecee;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
 }
