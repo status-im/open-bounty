@@ -292,6 +292,103 @@
     cursor: default;
 }
 
+.open-bounties-container {
+    background-color: #fff;
+    border-radius: 10px;
+    transform: translateY(-45px);
+    padding: 24px;
+    .open-bounties-header {
+        font-family: "PostGrotesk-Medium";
+        font-size: 21px;
+        font-weight: 500;
+        color: #42505c;
+    }
+}
+
+.open-bounty-item {
+    background-color: #fff;
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+
+    .left-column {
+        margin: 0;
+        padding-left: 12px;
+        padding-top: 12px;
+        width: 100px!important;
+        .ui.image {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            margin: 0;
+            padding: 0;
+            top: 0;
+            left: 0;
+        }
+    }
+    .time {
+        color: #42505c !important;
+        opacity: 0.9 !important;
+        font-family: "PostGrotesk-Book";
+        font-size: 15px;
+    }
+
+
+    border-bottom: #eaecee 1px solid !important;
+    padding: 0.8em 1em 1.1em!important;
+    margin: 1em;
+
+    .open-bounty-item-content {
+        width: 80%;
+        padding: .7em 0 1em;
+        font-family: "PostGrotesk-Book";
+        line-height: 2em;
+        min-width: 160px!important;
+        .header a {
+            font-family: "PostGrotesk-Medium" !important;
+            font-size: 18px !important;
+	        font-weight: 500 !important;
+	        line-height: 1.67 !important;
+	        text-align: left !important;
+	        color: #42505c !important;
+
+        }
+    }
+
+    .open-bounty-item-icon {
+        align: right;
+        padding-top: 30px;
+        width: 56px;
+    }
+
+}
+
+.bounty-item-row {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+    width: 80%;
+
+}
+.bounty-repo-label a {
+    margin: auto;
+	font-family: "PostGrotesk-Book";
+	font-size: 15px;
+	color: #8d99a4;
+}
+
+.usd-value-label {
+    padding-left: 5px;
+    font-size: 15px;
+    color: #8d99a4;
+}
+
+.usd-balance-label {
+    font-size: 15px;
+    color: #42505c;
+}
+
+
 
 .activity-item-container {
     padding: 1em;
@@ -406,7 +503,7 @@
     min-height: 0;
     line-height: 2em;
     display: table;
-    padding: 0 .5em 0;
+    padding: 0 10px 0;
     letter-spacing: 1px;
     border-radius: 8px;
 
