@@ -23,7 +23,7 @@
                               :on-testnet? (env :on-testnet)}))
 
 (defn landing-page []
-  (layout/render "index.html"))
+  (layout/render "index.html" {:authorize-url (github/signup-authorize-url)}))
 
 (defroutes home-routes
   (GET "/app" {{user :identity} :session}
