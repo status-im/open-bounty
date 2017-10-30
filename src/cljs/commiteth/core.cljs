@@ -169,6 +169,9 @@
           [:a {:href "https://wiki.status.im/"}
            "Wiki"]]
          [:li.commiteth-footer-link
+          [:a {:href "https://status.im/privacy-policy.html"}
+           "Privacy policy"]]
+         [:li.commiteth-footer-link
           [:a {:href "https://status.im/jobs.html"}
            "Jobs"]]]]
        [:div.commiteth-footer-table__column
