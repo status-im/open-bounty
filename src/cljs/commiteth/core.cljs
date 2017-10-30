@@ -166,11 +166,11 @@
         [:div.commiteth-footer-header "Community"]
         [:ul.commiteth-footer-list
          [:li.commiteth-footer-link
-            [:a {:href "https://wiki.status.im/"}
-             "Wiki"]]
+          [:a {:href "https://wiki.status.im/"}
+           "Wiki"]]
          [:li.commiteth-footer-link
-            [:a {:href "https://status.im/jobs.html"}
-             "Jobs"]]]]
+          [:a {:href "https://status.im/jobs.html"}
+           "Jobs"]]]]
        [:div.commiteth-footer-table__column
         [:div.commiteth-footer-header "Language"]
         [:ul.commiteth-footer-list
@@ -185,10 +185,9 @@
         show-top-hunters? #(contains? #{:bounties :activity} @current-page)]
     (fn []
       [:div.ui.pusher
-       [:div.vertical.commiteth-background.wide]
        [page-header]
        [:div.ui.vertical.segment
-        [:div.ui.container.page
+        [:div.ui.container
          [:div.ui.grid.stackable
           [:div {:class (str (if (show-top-hunters?) "ten" "sixteen")
                              " wide computer sixteen wide tablet column")}
