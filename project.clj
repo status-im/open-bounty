@@ -116,8 +116,10 @@
                    :uberjar-name   "commiteth.jar"
                    :source-paths   ["env/prod/clj"]
                    :resource-paths ["env/prod/resources"]}
-
-
+   ;; :precomp profile allows to compile classes from commiteth.eth.contracts
+   ;; namespace before compiling clojure code. Otherwise ClassNotFound exception
+   ;; will be thrown
+   :precomp {:target-path "target/base+system+user+dev/" }
    :dev   {:dependencies   [[prone "1.1.4"]
                             [ring/ring-mock "0.3.1"]
                             [ring/ring-devel "1.6.2"]
@@ -144,6 +146,7 @@
                :optimizations :none
                :pretty-print  true}}]}
 
+           :prep-tasks     ["build-contracts" ["with-profile" "precomp" "javac"]]
            :doo            {:build "test"}
            :source-paths   ["env/dev/clj" "test/clj"]
            :resource-paths ["env/dev/resources"]
