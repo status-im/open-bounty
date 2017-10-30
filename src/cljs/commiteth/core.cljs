@@ -137,9 +137,10 @@
 (defn footer []
   (let [social-links [["icon-fb" "Facebook" "https://www.facebook.com/ethstatus"]
                       ["icon-tw" "Twitter" "https://twitter.com/ethstatus"]
+                      ["icon-rt" "Riot" "https://chat.status.im/#/register"]
                       ["icon-gh" "Github" "https://github.com/status-im"]
                       ["icon-rd" "Reddit" "https://www.reddit.com/r/statusim/"]
-                      ["icon-yt" "YouTube" "https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/"]]]
+                      #_["icon-yt" "YouTube" "https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/"]]]
     [:div.commiteth-footer
      [:div.commiteth-footer-inner
       [:div.commiteth-footer-logo-container
@@ -168,9 +169,6 @@
          [:li.commiteth-footer-link
           [:a {:href "https://wiki.status.im/"}
            "Wiki"]]
-         [:li.commiteth-footer-link
-          [:a {:href "https://chat.status.im/#/register"}
-           "Riot"]]
          [:li.commiteth-footer-link
           [:a {:href "https://status.im/privacy-policy.html"}
            "Privacy policy"]]

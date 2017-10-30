@@ -1780,6 +1780,10 @@ li.social-link a {
 .footer-link--yt .footer-icon {
   background-image: url(../img/new-site/icon_yt.svg); }
 
+.footer-link--rt .footer-icon {
+  background-image: url(../img/new-site/icon_rt.svg);
+}
+
 .footer-link a {
   color: white; }
 
