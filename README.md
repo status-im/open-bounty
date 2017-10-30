@@ -134,7 +134,12 @@ Open http://localhost:3449/cards.html
 
 ### Update landing page
 
-Landing page is static and different CSS and JS due to time constraints. Update `static_landing_page` and then copy `dest` dir to `resources/public` and `index.html` to `resources/templates/` . Also need to put `assets` inside `resources/public.`
+Landing page is static and different CSS and JS due to time constraints.
+
+- Build CSS with Gulp (see `static_landing_page/README.md`
+- Make changes and `./build-landing-page.sh`
+
+This copies over necessary artifacts to `resources` dir.
 
 ## License
 
