@@ -2,8 +2,7 @@
   (:require [commiteth.layout :as layout]
             [commiteth.github.core :as github]
             [compojure.core :refer [defroutes GET]]
-            [ring.util.response :refer [redirect]]
-            [ring.util.http-response :refer [ok header]]
+            [ring.util.http-response :refer [ok header found]]
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]))
@@ -23,9 +22,14 @@
                               :commiteth-version version
                               :on-testnet? (env :on-testnet)}))
 
+(defn landing-page []
+  (layout/render "index.html"))
+
 (defroutes home-routes
-  (GET "/" {{user :identity} :session}
+  (GET "/app" {{user :identity} :session}
        (home-page user))
+  (GET "/" {session :session}
+       (landing-page))
   (GET "/logout" {session :session}
-       (assoc (redirect (str (env :server-address) "/"))
+       (assoc (found (str (env :server-address) "/"))
               :session nil)))

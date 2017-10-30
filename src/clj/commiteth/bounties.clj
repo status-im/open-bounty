@@ -5,7 +5,7 @@
             [commiteth.db.comment-images :as comment-images]
             [commiteth.eth.core :as eth]
             [commiteth.github.core :as github]
-            [commiteth.eth.core :as eth]
+            [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.util.png-rendering :as png-rendering]
             [clojure.tools.logging :as log]))
 
@@ -32,7 +32,7 @@
                    "repo owner has no Ethereum addres")
         (do
           (log/debug "deploying contract to " owner-address)
-          (let [transaction-hash (eth/deploy-contract owner-address)]
+          (let [transaction-hash (multisig/deploy-multisig owner-address)]
             (if (nil? transaction-hash)
               (log/error "Failed to deploy contract to" owner-address)
               (do
@@ -61,15 +61,16 @@
      (map (partial add-bounty-for-issue repo repo-id) bounty-issues))))
 
 
-(defn update-bounty-comment-image [issue-id owner repo issue-number contract-address balance balance-str]
-  (let [hash (github/github-comment-hash owner repo issue-number balance)
+(defn update-bounty-comment-image [issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens]
+  (let [hash (github/github-comment-hash owner repo issue-number eth-balance)
         issue-url (str owner "/" repo "/issues/" (str issue-number))
         png-data (png-rendering/gen-comment-image
                   contract-address
-                  balance-str
+                  eth-balance-str
+                  tokens
                   issue-url)]
     (log/debug "update-bounty-comment-image" issue-id owner repo issue-number)
-    (log/debug contract-address balance-str)
+    (log/debug contract-address eth-balance-str)
     (log/debug "hash" hash)
 
     (if png-data

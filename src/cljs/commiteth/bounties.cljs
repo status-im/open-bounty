@@ -5,31 +5,42 @@
 
 
 (defn bounty-item [bounty]
-  (println bounty)
   (let [{avatar-url :repo_owner_avatar_url
-         owner :repo_owner
-         repo-name :repo_name
-         issue-title :issue_title
-         issue-number :issue_number
+         owner :repo-owner
+         repo-name :repo-name
+         issue-title :issue-title
+         issue-number :issue-number
          updated :updated
-         balance :balance} bounty
+         tokens :tokens
+         balance-eth :balance-eth
+         value-usd :value-usd} bounty
         full-repo (str owner "/" repo-name)
+        repo-url (str "https://github.com/" full-repo)
+        repo-link [:a {:href repo-url} full-repo]
         issue-link [:a
                     {:href (issue-url owner repo-name issue-number)}
                     issue-title]]
-    [:div.item.activity-item
-     [:div.ui.mini.circular.image
-      [:img {:src avatar-url}]]
-     [:div.content
-      [:div.header.display-name full-repo]
-      [:div.description
-       issue-link]
+    [:div.open-bounty-item
+     [:div.open-bounty-item-content
+      [:div.header issue-link]
+      [:div.bounty-item-row
+       [:div.time (moment-timestamp updated)]
+       [:span.bounty-repo-label repo-link]]
+
       [:div.footer-row
-       [:div.balance-badge (str "ETH " balance )]
-       [:div.time (moment-timestamp updated)]]]]))
+       [:div.balance-badge "ETH " balance-eth]
+       (for [[tla balance] tokens]
+         ^{:key (random-uuid)}
+         [:div.balance-badge.token
+          (str (subs (str tla) 1) " " balance)])
+       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]]]
+     [:div.open-bounty-item-icon
+      [:div.ui.tiny.circular.image
+       [:img {:src avatar-url}]]]]))
 
 (defn bounties-list [open-bounties]
-  [:div.ui.container
+  [:div.ui.container.open-bounties-container
+   [:div.open-bounties-header "Bounties"]
    (if (empty? open-bounties)
      [:div.ui.text "No data"]
      (into [:div.ui.items]

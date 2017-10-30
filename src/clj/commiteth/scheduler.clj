@@ -1,14 +1,17 @@
 (ns commiteth.scheduler
   (:require [commiteth.eth.core :as eth]
-            [commiteth.eth.multisig-wallet :as wallet]
+            [commiteth.eth.multisig-wallet :as multisig]
+            [commiteth.eth.token-data :as token-data]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
-            [commiteth.util.util :refer [decimal->str]]
+            [commiteth.util.crypto-fiat-value :as fiat-util]
+            [commiteth.util.util :refer [eth-decimal->str]]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
             [clj-time.core :as t]
+            [clj-time.coerce :as time-coerce]
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]))
 
@@ -21,37 +24,39 @@
     (log/debug "pending deployment:" transaction-hash)
     (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
       (log/info "transaction receipt for issue #" issue-id ": " receipt)
-      (when-let [contract-address (:contractAddress receipt)]
+      (when-let [contract-address (multisig/find-created-multisig-address receipt)]
         (let [issue   (issues/update-contract-address issue-id contract-address)
               {owner        :owner
                repo         :repo
                comment-id   :comment_id
                issue-number :issue_number} issue
-              balance-str (eth/get-balance-eth contract-address 8)
-              balance (read-string balance-str)]
+              balance-eth-str (eth/get-balance-eth contract-address 6)
+              balance-eth (read-string balance-eth-str)]
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
                                                 issue-number
                                                 contract-address
-                                                balance
-                                                balance-str)
+                                                balance-eth
+                                                balance-eth-str
+                                                {})
           (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number
                                  contract-address
-                                 balance
-                                 balance-str))))))
+                                 balance-eth
+                                 balance-eth-str
+                                 {}))))))
 
 
 (defn deploy-contract [owner-address issue-id]
-  (let [transaction-hash (eth/deploy-contract owner-address)]
-      (if (nil? transaction-hash)
-        (log/error "Failed to deploy contract to" owner-address)
-        (log/info "Contract deployed, transaction-hash:"
-                  transaction-hash ))
-      (issues/update-transaction-hash issue-id transaction-hash)))
+  (let [transaction-hash (multisig/deploy-multisig owner-address)]
+    (if (nil? transaction-hash)
+      (log/error "Failed to deploy contract to" owner-address)
+      (log/info "Contract deployed, transaction-hash:"
+                transaction-hash ))
+    (issues/update-transaction-hash issue-id transaction-hash)))
 
 
 (defn redeploy-failed-contracts
@@ -83,30 +88,43 @@
            owner :owner
            comment-id :comment_id
            issue-number :issue_number
-           balance :balance
+           balance-eth :balance_eth
+           tokens :tokens
            winner-login :winner_login} (db-bounties/pending-bounties)
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
       (log/error "Cannot sign pending bounty - winner has no payout address")
-      (let [execute-hash (wallet/execute contract-address payout-address value)]
+      (let [execute-hash (multisig/send-all contract-address payout-address)]
+        (log/info "Payout self-signed, called sign-all(" contract-address payout-address ") tx:" execute-hash)
         (db-bounties/update-execute-hash issue-id execute-hash)
         (github/update-merged-issue-comment owner
                                             repo
                                             comment-id
                                             contract-address
-                                            (decimal->str balance)
+                                            (eth-decimal->str balance-eth)
+                                            tokens
                                             winner-login)))))
 
 (defn update-confirm-hash
-  "Gets transaction receipt for each pending payout and updates confirm_hash"
+  "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
   []
   (doseq [{issue-id     :issue_id
            execute-hash :execute_hash} (db-bounties/pending-payouts)]
-    (log/debug "pending payout:" execute-hash)
+    (log/info "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
-      (when-let [confirm-hash (wallet/find-confirmation-hash receipt)]
+      (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
+        (log/info "confirm hash:" confirm-hash)
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
+
+
+(defn older-than-3h?
+  [timestamp]
+  (let [now (t/now)
+        ts (time-coerce/from-date timestamp)
+        diff (t/in-hours (t/interval ts now))]
+    (println "hour diff:" diff)
+    (> diff 3)))
 
 (defn update-payout-receipt
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
@@ -118,19 +136,38 @@
            owner :owner
            comment-id :comment_id
            issue-number :issue_number
-           balance :balance
-           payee-login :payee_login} (db-bounties/confirmed-payouts)]
+           balance-eth :balance_eth
+           tokens :tokens
+           confirm-id :confirm_hash
+           payee-login :payee_login
+           updated :updated} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
-    (when-let [receipt (eth/get-transaction-receipt payout-hash)]
-      (log/info "payout receipt for issue #" issue-id ": " receipt)
-      (db-bounties/update-payout-receipt issue-id receipt)
-      (github/update-paid-issue-comment owner
-                                        repo
-                                        comment-id
-                                        contract-address
-                                        (decimal->str balance)
-                                        payee-login))))
+    (if-let [receipt (eth/get-transaction-receipt payout-hash)]
+      (let [tokens (multisig/token-balances contract-address)
+            eth-balance (eth/get-balance-wei contract-address)]
+        (if (or
+             (some #(> (second %) 0.0) tokens)
+             (> eth-balance 0))
+          (do
+            (log/info "Contract still has funds")
+            (when (multisig/is-confirmed? contract-address confirm-id)
+              (log/info "Detected bounty with funds and confirmed payout, calling executeTransaction")
+              (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
+                (log/info "execute tx:" execute-tx-hash))))
 
+          (do
+            (log/info "Payout has succeeded, saving payout receipt for issue #" issue-id ": " receipt)
+            (db-bounties/update-payout-receipt issue-id receipt)
+            (github/update-paid-issue-comment owner
+                                              repo
+                                              comment-id
+                                              contract-address
+                                              (eth-decimal->str balance-eth)
+                                              tokens
+                                              payee-login))))
+      (when (older-than-3h? updated)
+        (log/info "Resetting payout hash for issue" issue-id "as it has not been mined in 3h")
+        (db-bounties/reset-payout-hash issue-id)))))
 
 (defn abs
   "(abs n) is the absolute value of n"
@@ -148,6 +185,53 @@
    (let [scale (if (or (zero? x) (zero? y)) 1 (abs x))]
      (<= (abs (- x y)) (* scale epsilon)))))
 
+(defn update-bounty-token-balances
+  "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
+  [bounty-addr]
+  (doseq [[tla token-data] (token-data/as-map)]
+    (let [balance (multisig/token-balance bounty-addr tla)]
+      (when (> balance 0)
+        (do
+          (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
+          (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
+            (when (not= balance internal-balance)
+              (log/info "balances not in sync, calling watch")
+              (multisig/watch-token bounty-addr tla))))))))
+
+(defn update-contract-internal-balances
+  "It is required in our current smart contract to manually update it's internal balance when some tokens have been added."
+  []
+  (doseq [{bounty-address :contract_address}
+          (db-bounties/open-bounty-contracts)]
+    (update-bounty-token-balances bounty-address)))
+
+
+(defn get-bounty-funds
+  "Get funds in given bounty contract.
+  Returns map of asset -> balance
+   + key total-usd -> current total USD value for all funds"
+  [bounty-addr]
+  (let [token-balances (multisig/token-balances bounty-addr)
+        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))
+        all-funds
+        (merge token-balances
+               {:ETH eth-balance})]
+    (merge all-funds {:total-usd (fiat-util/bounty-usd-value all-funds)})))
+
+
+(defn update-issue-usd-value
+  [bounty-addr]
+  (let [funds (get-bounty-funds bounty-addr)]
+      (issues/update-usd-value bounty-addr
+                               (:total-usd funds))))
+
+(defn update-open-issue-usd-values
+  "Sum up current USD values of all crypto assets in a bounty and store to DB"
+  []
+  (doseq [{bounty-addr :contract_address}
+          (db-bounties/open-bounty-contracts)]
+    (update-issue-usd-value bounty-addr)))
+
 (defn update-balances
   []
   (doseq [{contract-address :contract_address
@@ -155,59 +239,95 @@
            repo             :repo
            comment-id       :comment_id
            issue-id         :issue_id
-           old-balance      :balance
+           db-balance-eth   :balance_eth
+           db-tokens        :tokens
            issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
     (when comment-id
-      (let [current-balance-eth-str (eth/get-balance-eth contract-address 8)
-            current-balance-eth (read-string current-balance-eth-str)]
-        (log/debug "update-balances" current-balance-eth
-                   current-balance-eth-str owner repo issue-number)
-        (when-not (float= old-balance current-balance-eth)
+      (let [balance-eth-str (eth/get-balance-eth contract-address 6)
+            balance-eth (read-string balance-eth-str)
+            token-balances (multisig/token-balances contract-address)]
+        (log/debug "update-balances" balance-eth
+                   balance-eth-str token-balances owner repo issue-number)
+
+        (when (or
+               (not (float= db-balance-eth balance-eth))
+               (not= db-tokens token-balances))
           (log/debug "balances differ")
-          (issues/update-balance contract-address current-balance-eth)
+          (issues/update-eth-balance contract-address balance-eth)
+          (issues/update-token-balances contract-address token-balances)
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
                                                 issue-number
                                                 contract-address
-                                                current-balance-eth
-                                                current-balance-eth-str)
+                                                balance-eth
+                                                balance-eth-str
+                                                token-balances)
           (github/update-comment owner
                                  repo
                                  comment-id
                                  issue-number
                                  contract-address
-                                 current-balance-eth
-                                 current-balance-eth-str))))))
+                                 balance-eth
+                                 balance-eth-str
+                                 token-balances)
+          (update-issue-usd-value contract-address))))))
 
 
-(defn run-periodic-tasks [time]
+(defn wrap-in-try-catch [func]
+  (try
+    (catch Throwable t
+      (log/error t))))
+
+(defn run-tasks [tasks]
+  (doall
+   (map (fn [func] (wrap-in-try-catch (func)))
+        tasks)))
+
+(defn run-1-min-interval-tasks [time]
   (do
-    (log/debug "run-periodic-tasks" time)
+    (log/debug "run-1-min-interval-tasks" time)
     ;; TODO: disabled for now. looks like it may cause extraneus
     ;; contract deployments and costs
-    #_(redeploy-failed-contracts)
-    (deploy-pending-contracts)
-    (update-issue-contract-address)
-    (update-confirm-hash)
-    (update-payout-receipt)
-    (self-sign-bounty)
-    (update-balances)
-    (log/debug "run-periodic-tasks done")))
+    (run-tasks
+     [;;redeploy-failed-contracts
+      deploy-pending-contracts
+      update-issue-contract-address
+      update-confirm-hash
+      update-payout-receipt
+      self-sign-bounty
+      update-contract-internal-balances
+      update-balances])
+    (log/debug "run-1-min-interval-tasks done")))
+
+
+(defn run-10-min-interval-tasks [time]
+  (do
+    (log/debug "run-1-min-interval-tasks" time)
+    (run-tasks
+     [update-open-issue-usd-values])
+    (log/debug "run-10-min-interval-tasks done")))
 
 
 (mount/defstate scheduler
   :start (let [every-minute (rest
                              (periodic-seq (t/now)
                                            (t/minutes 1)))
+               every-10-minutes (rest
+                                 (periodic-seq (t/now)
+                                               (t/minutes 10)))
+               error-handler (fn [e]
+                               (log/error "Scheduled task failed" e)
+                               (throw e))
                stop-fn (chime-at every-minute
-                                 run-periodic-tasks
-                                 {:error-handler (fn [e]
-                                                   (log/error "Scheduled task failed" e)
-                                                   (throw e))})]
+                                 run-1-min-interval-tasks
+                                 {:error-handler error-handler})
+               stop-fn2 (chime-at every-10-minutes
+                                  run-10-min-interval-tasks
+                                  {:error-handler error-handler})]
            (log/info "started scheduler")
            (bounties/update-bounty-issue-titles)
-           stop-fn)
+           (fn [] (do (stop-fn) (stop-fn2))))
   :stop (do
           (log/info "stopping scheduler")
           (scheduler)))

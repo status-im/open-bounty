@@ -6,7 +6,7 @@
 
 
 (defn item-description [{:keys [display-name
-                                balance
+                                value-usd
                                 issue-title
                                 item-type
                                 repo-owner
@@ -17,19 +17,21 @@
                     issue-title]]
     (case item-type
       "new-bounty" [:div "New bounty opened for issue " issue-link]
-      "claim-payout" [:div "Received ETH " balance
+      "claim-payout" [:div "Received USD " value-usd
                       " for " issue-link]
       "open-claim" [:div "Submitted a claim for " issue-link]
-      "balance-update" [:div issue-link " bounty increased to ETH " balance]
+      "balance-update" [:div issue-link " bounty increased to USD " value-usd]
       "")))
 
 
 (defn activity-item [{:keys [avatar-url
                              display-name
                              updated
-                             balance
+                             value-usd
+                             balance-eth
                              issue-title
-                             item-type] :as  item}]
+                             item-type
+                             tokens] :as item}]
   [:div.item.activity-item
    [:div.ui.mini.circular.image
     [:img {:src avatar-url}]]
@@ -39,18 +41,23 @@
      [item-description item]]
     [:div.footer-row
      (when-not (= item-type "new-bounty")
-       [:div.balance-badge (str "ETH " balance )])
+       [:div
+        [:div.balance-badge "ETH " balance-eth]
+        (for [[tla balance] tokens]
+          ^{:key (random-uuid)}
+          [:div.balance-badge.token
+           (str (subs (str tla) 1) " " balance)])])
      [:div.time (moment-timestamp updated)]]]])
 
 
 
 (defn activity-list [activity-items]
-      [:div.ui.container
-       (if (empty? activity-items)
-         [:div.ui.text "No data"]
-         (into [:div.ui.items]
-               (for [item activity-items]
-                 [activity-item item])))]  )
+  [:div.ui.container.activity-container
+   (if (empty? activity-items)
+     [:div.ui.text "No data"]
+     (into [:div.ui.items]
+           (for [item activity-items]
+             ^{:key item} [activity-item item])))]  )
 
 (defn activity-page []
   (let [activity-items (rf/subscribe [:activity-feed])

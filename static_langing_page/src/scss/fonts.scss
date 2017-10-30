@@ -1,0 +1,19 @@
+@font-face {
+  font-family:PostGrotesk-Medium;
+  src:url(../../fonts/PostGrotesk-Medium.eot);
+  src:url(../../fonts/PostGrotesk-Medium.eot?#iefix) format('embedded-opentype'), url(../../fonts/PostGrotesk-Medium.woff)format('woff'), url(../../fonts/PostGrotesk-Medium.svg#PostGrotesk-Medium)format('svg');
+  font-weight:400;
+  font-style:normal;
+}
+
+@font-face {
+  font-family:PostGrotesk-Book;
+  src:url(../../fonts/PostGrotesk-Book.eot);
+  src:url(../../fonts/PostGrotesk-Book.eot?#iefix) format('embedded-opentype'), url(../../fonts/PostGrotesk-Book.woff)format('woff'), url(../../fonts/PostGrotesk-Book.svg#PostGrotesk-Book)format('svg');
+  font-weight:400;
+  font-style:normal;
+}
+
+
+$PostGroteskBook: "PostGrotesk-Book", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+$PostGroteskMedium: "PostGrotesk-Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;

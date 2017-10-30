@@ -17,7 +17,7 @@
   [issue-id commit-sha]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-commit-sha con-db {:issue_id issue-id
-                                 :commit_sha commit-sha})))
+                                  :commit_sha commit-sha})))
 
 (defn get-issue-titles
   []
@@ -26,7 +26,7 @@
 
 (defn update-issue-title
   [issue-id title]
-    (jdbc/with-db-connection [con-db *db*]
+  (jdbc/with-db-connection [con-db *db*]
     (db/update-issue-title con-db {:issue_id issue-id
                                    :title title})))
 
@@ -64,13 +64,35 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/list-failed-deployments con-db)))
 
-(defn get-balance
-  [contract-address]
+(defn update-eth-balance
+  [contract-address balance-eth]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-balance con-db {:contract_address contract-address})))
+    (db/update-eth-balance con-db {:contract_address contract-address
+                                   :balance_eth balance-eth})))
 
-(defn update-balance
-  [contract-address balance]
+(defn update-token-balances
+  [contract-address balances]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-balance con-db {:contract_address contract-address
-                               :balance          balance})))
+    (db/update-token-balances con-db {:contract_address contract-address
+                                      :token_balances balances})))
+
+(defn update-usd-value
+  [contract-address usd-value]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-usd-value con-db {:contract_address contract-address
+                                 :usd_value usd-value})))
+
+(defn update-open-status
+  [issue-id is-open]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-issue-open con-db {:issue_id issue-id
+                                  :is_open is-open})))
+
+(defn is-bounty-issue?
+  [issue-id]
+  (let [res (jdbc/with-db-connection [con-db *db*]
+              (db/issue-exists con-db {:issue_id issue-id}))]
+    (-> res
+        first
+        :exists
+        boolean)))

@@ -17,3 +17,4 @@ profiles.clj
 *.iml
 *.ipr
 *.log
+resources/contracts

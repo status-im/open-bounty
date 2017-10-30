@@ -26,16 +26,19 @@
   (let [flash-message (rf/subscribe [:flash-message])]
     (fn []
       (when-let [[type message] @flash-message]
-          [:div.flash-message {:class (name type)}
-           [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
-           [:p message]]))))
+        (do
+          (println "flash-message-pane" type message)
+          [:div.ui.active.modal
+           [:div.flash-message {:class (name type)}
+            [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
+            [:p message]]])))))
 
 (def user-dropdown-open? (r/atom false))
 
 (defn user-dropdown [user items]
   (let [menu (if @user-dropdown-open?
                   [:div.ui.menu.transition.visible]
-                  [:div.ui.menu])
+                  [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.left.item.dropdown
      {:on-click #(swap! user-dropdown-open? not)}
@@ -62,22 +65,22 @@
       (if @user
         [:div.ui.text.menu.user-component
          [:div.item
-          [user-dropdown @user [[:update-address "Update address" {}]
-                                ["/logout" "Sign out" {:class "logout-link"}]]]]]
-        [:a.ui.button.small {:href js/authorizeUrl} "Sign in"]))))
+          [user-dropdown @user [[:update-address "My Payment Details" {}]
+                                ["/logout" "Sign Out" {:class "logout-link"}]]]]]
+        [:a.ui.button.small.login-button {:href js/authorizeUrl} "LOG IN \u2192"]))))
 
 (defn tabs []
   (let [user (rf/subscribe [:user])
         current-page (rf/subscribe [:page])]
     (fn []
-      (let [tabs (apply conj [[:activity "Activity"]
-                              [:bounties "Open bounties"]]
+      (let [tabs (apply conj [[:bounties (str (when-not @user "Open ") "Bounties")]
+                              [:activity "Activity"]]
                         (when @user
                           [[:repos "Repositories"]
                            [:manage-payouts "Manage Payouts"]
                            (when (:status-team-member? @user)
                              [:usage-metrics "Usage metrics"])]))]
-        (into [:div.ui.attached.tabular.menu.tiny.commiteth-tabs]
+        (into [:div.ui.attached.tabular.menu.tiny]
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
                                          (when (= @current-page page) " active"))
@@ -91,22 +94,21 @@
     (fn []
       [:div.vertical.segment.commiteth-header
        [:div.ui.grid.container
-        [:div.twelve.wide.column
-         [:div.ui.image.lef.aligned
-          [svg/app-logo]]]
         [:div.four.wide.column
-         (if @flash-message
-           [flash-message-pane]
-           [user-component @user])]
-        (when-not @user
-          [:div.ui.text.content
-           [:div.ui.divider.hidden]
-           [:h2.ui.header (if (config/on-testnet?)
-                            "Commit ETH (Testnet)"
-                            "Commit ETH")]
-           [:h2.ui.subheader "Earn ETH by committing to open source projects"]
-           [:div.ui.divider.hidden]])
-        [tabs]]])))
+         [:div.ui.grid
+          [:div.ui.four.wide.column
+           [:div.ui.circular.image.status-logo
+            [svg/status-logo]]]
+          [:div.ui.twelve.wide.column.left.aligned
+           [:div.logo-header "Status"]
+           [:div.logo-subheader "Open Bounty"]]]]
+        [:div.eight.wide.column.middle.aligned
+         [tabs]]
+        [:div.four.wide.column.middle.aligned
+         [user-component @user]]
+        (when @flash-message
+          [flash-message-pane])]])))
+
 
 (def pages
   {:activity #'activity-page
@@ -122,40 +124,87 @@
     (fn []
       (if (empty? @top-hunters)
         [:div.ui.text "No data"]
-        (into [:div.ui.items.top-hunters]
+        (into [:div.ui.items]
               (map-indexed (fn [idx hunter]
                              [:div.item
-                              [:div.leader-ordinal (str (inc idx))]
-                              [:div.ui..mini.circular.image
+                              [:div.ui.mini.circular.image
                                [:img {:src (:avatar-url hunter)}]]
-                              [:div.content
-                               [:div.header (:display-name hunter)]
-                               [:div.description (str "ETH " (:total-eth hunter))]]])
+                              [:div.leader-ordinal (str (inc idx) ".")]
+                              [:div.header.leader-name (:display-name hunter)]
+                              [:div.leader-amount (str "$" (:total-usd hunter))]])
                            @top-hunters))))))
 
+(defn footer []
+  (let [social-links [["icon-fb" "Facebook" "https://www.facebook.com/ethstatus"]
+                      ["icon-tw" "Twitter" "https://twitter.com/ethstatus"]
+                      ["icon-gh" "Github" "https://github.com/status-im"]
+                      ["icon-rd" "Reddit" "https://www.reddit.com/r/statusim/"]
+                      ["icon-yt" "YouTube" "https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/"]]]
+    [:div.commiteth-footer
+     [:div.commiteth-footer-inner
+      [:div.commiteth-footer-logo-container
+       [:div.commiteth-footer-logo-container-inner
+        [:div (svg/status-logo-footer)]
+        [:div.commiteth-footer-status-addr
+         "Status Research & Development GmbH"
+         [:br]
+         "Baarerstrasse 10"
+         [:br]
+         "Zug, Switzerland"]]]
+      [:div.commiteth-footer-table
+       [:div.commiteth-footer-table__column
+        [:div.commiteth-footer-header "Social networks"]
+        [:ul.commiteth-footer-list
+         (for [[svg caption url] social-links]
+           ^{:key (random-uuid)}
+           [:li.commiteth-footer-link
+            [:a {:href url}
+             [:div.commiteth-footer-icon
+              {:style {:background-image (str "url(/img/" svg ".svg)")}}]
+             [:span.commiteth-footer-link-label caption]]])]]
+       [:div.commiteth-footer-table__column
+        [:div.commiteth-footer-header "Community"]
+        [:ul.commiteth-footer-list
+         [:li.commiteth-footer-link
+            [:a {:href "https://wiki.status.im/"}
+             "Wiki"]]
+         [:li.commiteth-footer-link
+            [:a {:href "https://status.im/jobs.html"}
+             "Jobs"]]]]
+       [:div.commiteth-footer-table__column
+        [:div.commiteth-footer-header "Language"]
+        [:ul.commiteth-footer-list
+         [:li.commiteth-footer-link
+          [:select.commiteth-language-switcher {:name "lang"}
+           [:option {:value "en"} "English"]]]]]]]
+     (when-not (= "unknown" version)
+       [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]))
+
 (defn page []
-  (fn []
-    [:div.ui.pusher
-     [page-header]
-     [:div.ui.vertical.segment
-      [:div.ui.container
-       [:div.ui.grid.stackable
-        [:div.ten.wide.computer.sixteen.wide.tablet.column
-         [:div.ui.container
-          [(pages @(rf/subscribe [:page]))]]]
-        [:div.six.wide.column.computer.only
-         [:div.ui.container
-          [:h3 "Top hunters"]
-          [top-hunters]]]]
-       [:div.ui.divider]
-       [:div.commiteth-footer "Built by " [:a {:href "https://status.im"} "Status"]
-        (when-not (= "unknown" version)
-          [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]]]]))
+  (let [current-page (rf/subscribe [:page])
+        show-top-hunters? #(contains? #{:bounties :activity} @current-page)]
+    (fn []
+      [:div.ui.pusher
+       [page-header]
+       [:div.ui.vertical.segment
+        [:div.ui.container
+         [:div.ui.grid.stackable
+          [:div {:class (str (if (show-top-hunters?) "ten" "sixteen")
+                             " wide computer sixteen wide tablet column")}
+           [:div.ui.container
+            [(pages @current-page)]]]
+          (when (show-top-hunters?)
+            [:div.six.wide.column.computer.only
+             [:div.ui.container.top-hunters
+              [:h3.top-hunters-header "Top hunters"]
+              [:div.top-hunters-subheader "All time"]
+              [top-hunters]]])]]
+        [footer]]])))
 
 (secretary/set-config! :prefix "#")
 
 (secretary/defroute "/" []
-  (rf/dispatch [:set-active-page :activity]))
+  (rf/dispatch [:set-active-page :bounties]))
 
 (secretary/defroute "/repos" []
   (if js/user
@@ -210,6 +259,7 @@
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
+  (rf/dispatch [:initialize-web3])
   (when config/debug?
     (enable-re-frisk!))
   (load-interceptors!)

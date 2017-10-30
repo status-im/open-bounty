@@ -37,3 +37,8 @@
   [repo-id]
   (jdbc/with-db-connection [con-db *db*]
     (db/get-repo-owner {:repo_id repo-id})))
+
+(defn get-new-users-for-welcome-email
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-new-users-for-welcome-email)))

@@ -55,6 +55,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/update-payout-hash con-db {:issue_id issue-id :payout_hash payout-hash})))
 
+(defn reset-payout-hash
+  [issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/reset-payout-hash con-db {:issue_id issue-id})))
+
 (defn update-payout-receipt
   [issue-id payout-receipt]
   (jdbc/with-db-connection [con-db *db*]

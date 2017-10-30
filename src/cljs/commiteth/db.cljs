@@ -1,7 +1,7 @@
 (ns commiteth.db)
 
 (def default-db
-  {:page             :activity
+  {:page             :bounties
    :user             nil
    :repos-loading?   false
    :repos            {}

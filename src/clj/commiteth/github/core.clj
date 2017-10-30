@@ -120,7 +120,7 @@
         url-base (:server-address env)]
     (log/debug "url-base" url-base)
     (filter (fn [{{url :url} :config}] (and url (str/starts-with? url url-base)))
-         hooks)))
+            hooks)))
 
 
 (defn webhook-exists?
@@ -200,39 +200,58 @@
 
 (defn network-text []
   (str "Network: " (if (on-testnet?)
-                     "Testnet (Rinkeby)"
+                     "Testnet (Ropsten)"
                      "Mainnet")
        "\n"))
 
+(defn token-balances-text [token-balances]
+  (when-not (empty? token-balances)
+    (str "Tokens: "
+         (str/join " " (map (fn [[tla balance]] (format "%s: %.2f"
+                                                       (subs (str tla) 1)
+                                                       (float balance)))
+                            token-balances))
+         "\n")))
+
+(defn contract-addr-text [addr]
+  (let [url-base (if (on-testnet?) "https://ropsten.etherscan.io"
+                     "https://etherscan.io")]
+    (str "Contract address: [" addr "](" url-base "/address/" addr ")\n")))
+
 (defn generate-open-comment
-  [owner repo issue-number contract-address balance balance-str]
-  (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number balance))
-        balance   (str balance-str " ETH")
+  [owner repo issue-number contract-address eth-balance balance-str tokens]
+  (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance))
         site-url  (md-url (server-address) (server-address))]
-    (format (str "Current balance: %s\n"
-                 "Contract address: %s\n"
+    (format (str "Current balance: %s ETH\n"
+                 (token-balances-text tokens)
+                 (contract-addr-text contract-address)
                  "%s\n"
                  (network-text)
-                 "To claim this bounty sign up at %s")
-            balance-str contract-address image-url site-url)))
+                 "To claim this bounty sign up at %s\n"
+                 (if (on-testnet?)
+                   "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
+                   "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
+            eth-balance image-url site-url)))
 
 
 (defn generate-merged-comment
-  [contract-address balance-str winner-login]
-  (format (str "Balance: %s\n"
-               "Contract address: %s\n"
+  [contract-address eth-balance-str tokens winner-login]
+  (format (str "Balance: %s ETH\n"
+               (token-balances-text tokens)
+               (contract-addr-text contract-address)
                (network-text)
                "Status: pending maintainer confirmation\n"
                "Winner: %s\n")
-          balance-str contract-address winner-login))
+          eth-balance-str winner-login))
 
 (defn generate-paid-comment
-  [contract-address balance-str payee-login]
-  (format (str "Balance: %s\n"
-               "Contract address: %s\n"
+  [contract-address eth-balance-str tokens payee-login]
+  (format (str "Balance: %s ETH\n"
+               (token-balances-text tokens)
+               (contract-addr-text contract-address)
                (network-text)
                "Paid to: %s\n")
-          balance-str contract-address payee-login))
+          eth-balance-str payee-login))
 
 
 (defn post-deploying-comment
@@ -261,8 +280,14 @@
 
 (defn update-comment
   "Update comment for an open bounty issue"
-  [owner repo comment-id issue-number contract-address balance balance-str]
-  (let [comment (generate-open-comment owner repo issue-number contract-address balance balance-str)]
+  [owner repo comment-id issue-number contract-address eth-balance eth-balance-str tokens]
+  (let [comment (generate-open-comment owner
+                                       repo
+                                       issue-number
+                                       contract-address
+                                       eth-balance
+                                       eth-balance-str
+                                       tokens)]
     (log/debug (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
@@ -273,8 +298,11 @@
 (defn update-merged-issue-comment
   "Update comment for a bounty issue with winning claim (waiting to be
   signed off by maintainer)"
-  [owner repo comment-id contract-address balance-str winner-login]
-  (let [comment (generate-merged-comment contract-address balance-str winner-login)]
+  [owner repo comment-id contract-address eth-balance-str tokens winner-login]
+  (let [comment (generate-merged-comment contract-address
+                                         eth-balance-str
+                                         tokens
+                                         winner-login)]
     (log/debug (str "Updating merged bounty issue (" owner "/" repo ")"
                     " comment#" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
@@ -284,8 +312,11 @@
 
 (defn update-paid-issue-comment
   "Update comment for a paid out bounty issue"
-  [owner repo comment-id contract-address balance-str payee-login]
-  (let [comment (generate-paid-comment contract-address balance-str payee-login)]
+  [owner repo comment-id contract-address eth-balance-str tokens payee-login]
+  (let [comment (generate-paid-comment contract-address
+                                       eth-balance-str
+                                       tokens
+                                       payee-login)]
     (log/debug (str "Updating paid bounty  (" owner "/" repo ")"
                     " comment#" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"

@@ -1,0 +1,263 @@
+body.body-page--sgt,
+.body-page--sgt .container-wrap {
+  background-color: #ffffff;
+}
+
+.calculator-wrap {
+  width: 800px;
+  padding: 140px 0 32px
+}
+
+.calculator {
+  display: flex;
+  flex-direction: column;
+
+  background-color: #7BB7ED;
+  background-image: linear-gradient(-202deg, #7BB7ED 0%, #3685C9 95%);
+  border-radius: 10px;
+
+  font-size: 15px;
+  color: #97A4AD;
+  padding: 56px 64px;
+
+
+  box-shadow: 0 3px 7px 0 rgba(175,192,202,0.41);
+}
+
+.calculator a {
+  color: #A5F3E0
+
+}
+
+.calculator__title {
+  font-family: $PostGroteskMedium;
+  font-size: 23px;
+  line-height: 35px;
+  padding: 0 0 8px 0;
+  color: #ffffff;
+}
+
+.calculator__body {
+  font-size: 24px;
+  line-height: 32px;
+  color: #ffffff;
+}
+
+.calculator__widget {
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  width: 100%;
+  padding: 32px 0 0 0;
+}
+
+.calculator__widget__equals {
+  position: absolute;
+  color: #ffffff;
+  font-size: 21px;
+  width: 16px;
+  height: 16px;
+  left: 50%;
+  top: 44px;
+  margin: 0 0 0 -8px;
+  text-align: center;
+}
+
+.calculator__widget__input-wrap,
+.calculator__widget__output-wrap {
+  flex-shrink: 0;
+  flex-grow: 0;
+  width: 46%;
+  position: relative;
+
+}
+
+.input__inner {
+  width: 100%;
+  border: none;
+  background-color: rgba(255, 255, 255, .2);
+  border-radius: 8px;
+}
+
+.input__inner.input__inner--disabled {
+  background-color: #A5F3E0;
+}
+
+.calculator__widget__input-wrap .input__inner {
+  //padding: 0 16px 0 0;
+}
+
+.calculator__widget__output-wrap .input__inner {
+  //padding: 0 0 0 16px;
+}
+
+.calculator__widget__input {
+  font-family: $PostGroteskBook;
+  background: transparent;
+  box-sizing: border-box;
+  width: 78%;
+  font-size: 18px;
+  color: #ffffff;
+  padding: 16px 0 15px 16px;
+}
+
+.calculator__widget__input--output {
+  color: #40907C;
+}
+
+.calculator__widget__input:disabled {
+  opacity: 1;
+  color: #40907C;
+  -webkit-text-fill-color:#40907C
+}
+
+
+.input-label {
+  font-family: $PostGroteskMedium;
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #ffffff;
+  letter-spacing: 1px;
+  position: absolute;
+  right: 16px;
+  top: 14px;
+}
+
+.calculator__widget__output-wrap .input-label {
+  color: #40907C;
+}
+
+.text-wrap {
+  width: 672px;
+  margin: 0 auto;
+  padding: 0px 0 56px 0;
+}
+
+.text-wrap h2 {
+  font-family: $PostGroteskMedium;
+  font-size: 24px;
+  padding: 32px 0 16px 0;
+}
+
+.text-wrap .text {
+  font-size: 18px;
+  line-height: 26px;
+  color: #70808D;
+}
+
+.text-wrap h5 {
+  font-family: $PostGroteskMedium;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #49555F;
+  margin: 0 0 0 0;
+}
+
+.text-wrap .text strong {
+  font-family: $PostGroteskMedium;
+  color: #49555F;
+}
+
+.text-wrap .text p {
+  padding: 0 0 24px 0;
+}
+
+.text-wrap .text .mono {
+  font-family: 'Roboto Mono', monospace;
+  color: #49555F;
+}
+
+.text-wrap .text p.mono {
+  font-family: 'Roboto Mono', monospace;
+  background-color: #F6F9FA;
+  border: 1px solid #E7ECEE;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin: 0 0 16px 0;
+}
+
+.text-wrap .text .note {
+  //font-family: $PostGroteskMedium;
+  //color: #49555F;
+
+  padding: 0;
+  padding-left: 24px;
+  border-left: 2px solid #E7ECEE;
+  margin: 8px 0 32px 0;
+}
+
+.text-wrap .text .note p{
+  padding: 0;
+  margin: 8px 0 32px 0;
+}
+
+.text-wrap a {
+  color: #57A7ED;
+}
+
+@media (max-width: 840px) {
+
+  .body-page--sgt .slide.slide--one {
+    background-color: #FFFFFF;
+  }
+
+  .calculator-wrap {
+    width: 100%;
+    padding: 160px 0 16px;
+  }
+
+  .calculator {
+    border-radius: 0;
+    padding: 32px 20px;
+  }
+
+  .calculator__body {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .calculator__widget {
+    flex-direction: column;
+  }
+
+  .calculator__widget__equals {
+    display: none;
+  }
+  .calculator__widget__input-wrap, .calculator__widget__output-wrap {
+    width: 100%;
+  }
+  .calculator__widget__input-wrap {
+    margin: 0 0 16px 0;
+  }
+
+  .text-wrap {
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .text-wrap h2 {
+    font-size: 20px;
+    padding: 24px 0 8px 0;
+  }
+
+  .text-wrap .text {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .text-wrap .text p {
+    padding: 0 0 16px 0;
+  }
+
+  .text-wrap .text p.mono {
+    overflow: auto;
+  }
+
+  .text-wrap .text .note {
+    padding: 0;
+    padding-left: 16px;
+  }
+
+}

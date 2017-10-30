@@ -15,14 +15,14 @@
                 (if-let [{address      :contract_address
                           repo         :repo
                           issue-id     :issue_id
-                          balance      :balance}
+                          balance-eth  :balance_eth}
                          (bounties/get-bounty owner
                                               repo
                                               (Integer/parseInt issue))]
                   (do
                     (log/debug "address:" address)
-                    (log/debug owner repo issue balance)
-                    (log/debug hash (github/github-comment-hash owner repo issue balance))
+                    (log/debug owner repo issue balance-eth)
+                    (log/debug hash (github/github-comment-hash owner repo issue balance-eth))
                     (if address
                       (if-let [{png-data :png_data}
                                (comment-images/get-image-data

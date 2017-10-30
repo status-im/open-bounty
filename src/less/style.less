@@ -1,24 +1,25 @@
 
 @font-face {
-    font-family: 'postgrotesk';
-    src: url('/fonts/PostGrotesk-Book.woff') format('woff');
-    font-weight: normal;
+    font-family: PostGrotesk-Book;
+    src: url(/fonts/PostGrotesk-Book.woff) format("woff");
+    font-weight: 400;
+    font-style: normal;
 }
 
 @font-face {
-    font-family: 'postgrotesk-medium';
-    src: url('/fonts/PostGrotesk-Medium.woff') format('woff');
-    font-weight: normal;
+    font-family: PostGrotesk-Medium;
+    src: url(/fonts/PostGrotesk-Medium.woff) format("woff");
+    font-weight: 400;
+    font-style: normal;
 }
 
 
 .ui.button {
-    color: #2f3f44;
-    background-color: #b0f1ee;
+    color: #fff;
+    background-color: #57a7ed;
     white-space: nowrap;
     padding: 0.9em 1.2em 0.9em;
     &:hover {
-        background-color: #bdf8f5;
     }
     &:active,&:focus {
         background-color: #97ebe7;
@@ -30,36 +31,90 @@
     }
 }
 .ui.small.button {
-    font-size: 15px!important;
+    font-size: 13px!important;
+    color: #fff!important;
+}
+
+.add-repo-button {
+    background-color: #57a7ed!important;
+}
+
+.login-button {
+    background-color: rgba(255,255,255,0.2)!important;
 }
 
 
 .commiteth-header {
-    background-color: #2f3f44!important;
+    background-color: #57a7ed!important;
     border-radius: 0em;
     padding-top: 1.5em;
+    padding-bottom: 2.5em;
 }
 
-.commiteth-tabs {
-    padding-top: 1.8em;
+
+.status-logo {
+    width: 42px;
+	height: 42px;
+	object-fit: contain;
+	box-shadow: 0 2px 4px 0 rgba(22, 51, 81, 0.14);
+}
+
+.logo-header {
+    color: #fff;
+    font-family: "PostGrotesk-Medium";
+	font-size: 21px;
+	font-weight: 500;
+	text-align: left;
+}
+
+.logo-subheader {
+    color: #fff;
+    opacity: 0.4;
+    font-family: "PostGrotesk-book";
+	font-size: 15px;
+	line-height: 1.0;
+	text-align: left;
+}
+
+.top-hunters-header {
+    margin-bottom: 0;
+}
+
+.top-hunters-subheader {
+    margin-top: 0;
+    color: #8d99a4;
+}
+
+.test {
+    background-color: #f00;
 }
 
 .top-hunters {
-    .header {
-        color: #474951!important;
-        font-size: 1.1em!important;
-        opacity: .98!important;
-    }
-    .description {
-        color: #a8aab1!important;
-    }
+    background-color: #fff;
+    transform: translate(0, -45px);
+    border-radius: 10px;
+    padding: 10px;
     .leader-ordinal {
-        font-size: 1.5em;
+        font-family: "PostGrotesk-Medium";
+        font-size: 15px;
         float: none;
         margin-top: 8px;
+        margin-left: 15px;
         margin-right: 15px;
-        color: #a8aab1;
-        opacity: .45;
+        color: #57a7ed;
+    }
+    .leader-name {
+        font-family: "PostGrotesk-Medium";
+        margin-top: 8px;
+        font-weight: 500;
+        font-size: 15px;
+        color: #42505c;
+    }
+    .leader-amount {
+        margin-top: 8px;
+        margin-left: 15px;
+        text-align: right;
+        color: #8d99a4;
     }
 }
 
@@ -77,9 +132,6 @@
     font-weight: normal;
 }
 
-.ui.card a {
-    color: #848e91;
-}
 
 .user-component {
     margin-top: 0px!important;
@@ -92,13 +144,16 @@
     }
 }
 
-.ui.dropdown .item {
-    color: #fff!important;
-    opacity: 0.98;
+.ui.dropdown {
+    .item {
+        color: #fff!important;
+    }
 }
 
-.ui.menu .ui.dropdown .menu>.item:hover, .ui.menu .ui.dropdown .menu>.selected.item {
-    background-color: #fff!important;
+.ui.menu .ui.dropdown  {
+    .menu> {
+        background-color: #1e3751;
+    }
 }
 
 .ui.input.address-input {
@@ -111,41 +166,42 @@
     color: #e7e7e7;
     background-color: yellow!important;
 }
+
 .ui.menu.transition.visible {
-    font-family: 'postgrotesk';
+    font-family: "PostGrotesk-Book";
     font-size: 1em;
     border-radius: 8px;
     border: none;
     padding: .5em;
+    z-index: 999;
+    transform: translate(100%, -100%);
     .item>a {
-        &:hover {
-            color:#1bb5c1;
-        }
-        color: #474951;
+        color: #fff;
+        pointer: default;
     }
 }
 
 .logout-link {
-    color: #e96868!important;
+    color: #fff!important;
 }
 
 .ui.attached.tabular {
-    background-color: #2f3f44;
+    background-color: #57a7ed;
     border-bottom: none;
+    height: 80%;
     .ui.item {
-        padding: 1em;
+        padding: 0.6em;
         color: #fff;
-        opacity: 0.98;
         cursor: pointer;
-        font-family: 'postgrotesk';
-        font-size: 16px;
+        font-family: "PostGrotesk-Medium" !important;
+        font-size: 15px;
         font-weight: normal;
     }
     .ui.item.active {
-        border-radius: .8rem .8rem 0 0!important;
-        color: #b0f1ee;
+        border-radius: 8px!important;
+        border-width: 0;
+        color: #fff;
         background-color: fade(#fff, 10%);
-        border-width: 0em;
         cursor: default;
     }
 }
@@ -158,17 +214,58 @@
     margin-bottom: 1.5em;
 }
 
+.enable-github-account {
+    border-radius: 10px;
+    background-color: #fff;
+    transform: translateY(-45px);
+    padding-top: 80px;
+    padding-bottom: 80px;
+    .center.aligned.segment { border: 0; }
+
+
+    .button {
+        font-size: 13px;
+        font-weight: 500;
+	    line-height: 1.15;
+	    letter-spacing: 1px;
+    }
+}
+
+
+.enable-github-account-title {
+    color: #42505c;
+    font-family: "PostGrotesk-Medium";
+    font-size: 25px;
+    font-weight: 500;
+	line-height: 1.36;
+    margin-bottom: 0!important;
+    padding-bottom: 0!important;
+}
+
+.enable-github-account-description {
+    p {
+        color: #8d99a4;
+        margin-left: 180px;
+        margin-right: 180px;
+        line-height: 1.39;
+        font-family: "PostGrotesk-Book";
+        font-size: 18px;
+        text-align: center;
+    }
+}
+
 .repo-label {
-    color: #1bb5c1;
-    font-family: 'postgrotesk-medium';
-    font-size: 16px;
+    color: #42505c;
+    font-family: "PostGrotesk-Medium";
+    font-size: 18px;
+    a { color: #42505c; }
 }
 
 .repo-description {
-    color: #474951;
+    color: #8d99a4;
     font-size: 15px;
     font-weight: normal;
-    line-height: 24px;
+    line-height: 22px;
     margin-top: 16px;
     margin-bottom: 16px;
 }
@@ -177,11 +274,12 @@
     display: inline-block;
     vertical-align: bottom;
     padding: 0em 1em 0em;
-    font-family: 'postgrotesk';
+    font-family: "PostGrotesk-Book";
     font-size: 15px;
     a {
         padding: 1em;
         font-size: 15px;
+        color: #42505c;
     }
     .remove-link:hover {
         color: #e96868;
@@ -189,10 +287,104 @@
 }
 
 .ui.button.repo-added-button {
-    color: white;
-    background-color: #61deb0;
+    color: #42505c;
+    background-color: #eaecee;
     cursor: default;
 }
+
+.open-bounties-container {
+    background-color: #fff;
+    border-radius: 10px;
+    transform: translateY(-45px);
+    padding: 24px;
+    .open-bounties-header {
+        font-family: "PostGrotesk-Medium";
+        font-size: 21px;
+        font-weight: 500;
+        color: #42505c;
+    }
+}
+
+.open-bounty-item {
+    background-color: #fff;
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+
+    .left-column {
+        margin: 0;
+        padding-left: 12px;
+        padding-top: 12px;
+        width: 100px!important;
+        .ui.image {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            margin: 0;
+            padding: 0;
+            top: 0;
+            left: 0;
+        }
+    }
+    .time {
+        color: #42505c !important;
+        opacity: 0.9 !important;
+        font-family: "PostGrotesk-Book";
+        font-size: 15px;
+    }
+
+    border-bottom: #eaecee 1px solid !important;
+
+    .open-bounty-item-content {
+        width: 80%;
+        padding: .7em 0 1em;
+        font-family: "PostGrotesk-Book";
+        line-height: 2em;
+        min-width: 160px!important;
+        .header a {
+            font-family: "PostGrotesk-Medium" !important;
+            font-size: 18px !important;
+	        font-weight: 500 !important;
+	        line-height: 1.67 !important;
+	        text-align: left !important;
+	        color: #42505c !important;
+
+        }
+    }
+
+    .open-bounty-item-icon {
+        align: right;
+        padding-top: 30px;
+        width: 56px;
+    }
+
+}
+
+.bounty-item-row {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+    width: 80%;
+
+}
+.bounty-repo-label a {
+    margin: auto;
+	font-family: "PostGrotesk-Book";
+	font-size: 15px;
+	color: #8d99a4;
+}
+
+.usd-value-label {
+    padding-left: 5px;
+    font-size: 15px;
+    color: #8d99a4;
+}
+
+.usd-balance-label {
+    font-size: 15px;
+    color: #42505c;
+}
+
 
 
 .activity-item-container {
@@ -200,6 +392,7 @@
 }
 
 .activity-item {
+    background-color: #fff!important;
     .left-column {
         margin: 0;
         padding-left: 12px;
@@ -225,7 +418,7 @@
 
     .content {
         padding: .7em 0 1em;
-        font-family: 'postgrotesk';
+        font-family: "PostGrotesk-Book";
         line-height: 2em;
         min-width: 160px!important;
         .header {
@@ -252,9 +445,6 @@
     h3 {
         color: #474951;
     }
-    a:not(.ui) {
-        color: #1bb5c1;
-    }
     .label {
         background-color: #61deb0;
         color: #fff;
@@ -274,10 +464,21 @@
 }
 
 .activity-item {
-    .display-name,.description {
+    .display-name {
         color: #474951!important;
+        font-family: "PostGrotesk-Medium";
+    }
+    .description {
+        font-family: "PostGrotesk-Book";
     }
 }
+
+.activity-container {
+    transform: translate(0, -45px);
+    border-radius: 10px;
+
+}
+
 .footer-row {
     padding: 1em 0 0;
     .balance-badge {
@@ -287,18 +488,26 @@
 }
 
 .balance-badge {
-    color: #fff;
-    background-color: #61deb0;
-    font-size: 0.9em;
+    color: #57a7ed;
+    background-color: rgba(87,167,237,.2);
+    font-family: "PostGrotesk-Medium";
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.15;
     width: auto;
     min-width: 0;
     height: auto;
     min-height: 0;
     line-height: 2em;
     display: table;
-    padding: 0 .5em 0;
-    letter-spacing: .04em;
-    border-radius: 2px;
+    padding: 0 10px 0;
+    letter-spacing: 1px;
+    border-radius: 8px;
+
+    &.token {
+        color: #4360df;
+        background-color: rgba(67,96,223,.2);
+    }
 }
 .fork-span {
     padding-left: .5em;
@@ -330,20 +539,138 @@
     }
 }
 
+
+
 .commiteth-footer {
-    color: #a8aab1;
-    line-height: 1.8em;
-    a {
-        &:hover {
-            color: #a8aab1!important;
-        }
-        color: #a8aab1!important;
-    }
+    background-color: #1e3751;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.commiteth-footer-inner {
+    display: flex;
+    justify-content: space-between;
+    width: 1080px;
+}
+
+.commiteth-footer-table {
+    display: flex;
+}
+
+.commiteth-footer-list {
+    margin: 0;
+    padding: 0;
+}
+
+.commiteth-footer-table__column {
+    box-sizing: border-box;
+    padding: 60px 40px;
+    li { display: list-item; }
+    ul { list-style: none; }
+}
+
+.commiteth-footer-column-header {
+    color: #fff;
+    font-size: 17px;
+    opacity: .5;
+}
+
+.commiteth-footer-header {
+    color: #fff;
+    opacity: .6;
+    font-size: 17px;
+    font-weight: 300px;
+    margin: 0 0 40px 0;
+    font-family: "PostGrotesk-Book";
+
+}
+
+.commiteth-footer-logo-container {
+    width: 280px;
+    display: flex;
+}
+
+.commiteth-footer-logo-container-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 65px 0 75px 0;
 }
 
 
+.commiteth-footer-link {
+    height: 32px;
+    line-height: 32px;
+    font-size: 15px;
+    margin: 0 0 15px 0;
+    font-family: "PostGrotesk-Book";
+    a {
+        color: #fff;
+        display: flex;
+        align-items: center;
+    }
+}
+
+.commiteth-footer-link-label {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+    text-align: left;
+}
+
+
+.commieteth-footer-social-container {
+    width: 40%;
+    padding: 65px 100px 75px 300px;
+}
+
+.commiteth-footer-status-addr {
+    color: #fff;
+    opacity: 0.5;
+    padding: 20px 0 0 0;
+    line-height: 20px;
+    font-family: "PostGrotesk-Book";
+    font-size: 15px;
+}
+
+.commiteth-footer-icon {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    margin: 0 15px 0 0;
+    background-repeat: no-repeat;
+    background-size: 24px;
+    background-position: center;
+}
+
+.commiteth-language-switcher {
+    color: white;
+    -webkit-appearance: none;
+    font-size: 16px;
+    line-height: 32px;
+    padding: 0 24px 0 0;
+    background-image: url(../img/icon_dropdown-white.svg);
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-color: #1e3751;
+    border: 0;
+}
+
 .version-footer {
+    bottom: 0;
     font-size: .8em;
+    color: #474951!important;
     a {
         &:hover {
             color: #474951!important;
@@ -352,6 +679,15 @@
     }
 }
 
+
 .ui {
-    font-family: 'postgrotesk'!important;
+    font-family: "PostGrotesk-Book" !important;
+    font-weight: 400;
+    font-style: normal;
+}
+
+body {
+    background-color: #eaecee;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
 }

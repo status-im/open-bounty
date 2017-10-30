@@ -7,13 +7,15 @@
                                    inject-cofx]]
             [ajax.core :refer [GET POST]]
             [cuerdas.core :as str]
+            [cljs-web3.core :as web3]
+            [cljs-web3.eth :as web3-eth]
             [akiroz.re-frame.storage
              :as rf-storage
              :refer [reg-co-fx!]]))
 
 
-(rf-storage/reg-co-fx! :commiteth {:fx :store
-                                   :cofx :store})
+(rf-storage/reg-co-fx! :commiteth-sob {:fx :store
+                                       :cofx :store})
 
 (reg-fx
  :http
@@ -41,7 +43,19 @@
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-   {:db (merge db/default-db store)}))
+     {:db (merge db/default-db store)}))
+
+
+(reg-event-fx
+ :initialize-web3
+ (fn [{:keys [db]} [_]]
+      (let [injected-web3 (-> js/window .-web3)
+            w3 (when (boolean injected-web3)
+                (do
+                  (println "Using injected Web3 constructor with current provider")
+                  (new (aget js/window "web3" "constructor") (web3/current-provider injected-web3))))]
+     (println "web3" w3)
+     {:db (merge db {:web3 w3})})))
 
 (reg-event-db
  :assoc-in
@@ -330,6 +344,7 @@
 (defn send-transaction-callback
   [issue-id]
   (fn [error payout-hash]
+    (println "send-transaction-callback" error payout-hash)
     (when error
       (dispatch [:set-flash-message
                  :error
@@ -338,7 +353,13 @@
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
 
+(defn sig->method-id [w3 sig]
+  (println "sig->method-id" w3 sig)
+  (let [sha3 (fn [x] (web3/sha3 x w3))]
+    (apply str (take 10 (sha3 sig)))))
 
+(defn strip-0x [x]
+  (str/replace x #"^0x" ""))
 
 (reg-event-fx
  :confirm-payout
@@ -346,18 +367,26 @@
                       owner-address    :owner_address
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
-   (let [send-transaction-fn (aget js/web3 "eth" "sendTransaction")
+   (println (:web3 db))
+   (let [w3 (:web3 db)
+         confirm-method-id (sig->method-id w3 "confirmTransaction(uint256)")
+         confirm-id (strip-0x confirm-hash)
+         data (str confirm-method-id
+                   confirm-id)
          payload {:from  owner-address
                   :to    contract-address
+                  :gas   180000
+                  :gas-price 20000000000
                   :value 0
-                  :data  (str "0x797af627" confirm-hash)}]
+                  :data data}]
+     (println "data:" data)
      (try
-       (apply send-transaction-fn [(clj->js payload)
-                                   (send-transaction-callback issue-id)])
+       (web3-eth/send-transaction! w3 payload
+                                   (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
-          :dispatch-n [[:payout-confirm-failed issue-id]
+          :dispatch-n [[:payout-confirm-failed issue-id e]
                        [:set-flash-message
                         :error
                         (str "Failed to send transaction" e)]]})))))
@@ -372,8 +401,8 @@
 
 (reg-event-db
  :payout-confirm-failed
- (fn [db [_ issue-id]]
-   (println "payout-confirm-failed" issue-id)
+ (fn [db [_ issue-id e]]
+   (println "payout-confirm-failed" issue-id e)
    (-> db
        (dissoc-in [:owner-bounties issue-id :confirming?])
        (assoc-in [:owner-bounties issue-id :confirm-failed?] true))))

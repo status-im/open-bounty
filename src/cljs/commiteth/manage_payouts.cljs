@@ -38,7 +38,8 @@
                  {}
                  {:disabled true})
                {:on-click #(rf/dispatch [:confirm-payout claim])}
-               (when (or confirming? bot-confirm-unmined?)
+               (when (and (or confirming? bot-confirm-unmined?)
+                          merged?)
                  {:class "busy loading" :disabled true}))
         (if paid?
           "Signed off"
@@ -69,7 +70,7 @@
          (when (nil? web3)
            [:div.ui.warning.message
             [:i.warning.icon]
-            "To sign off claims, please view Commiteth in Status, Mist or Metamask"])
+            "To sign off claims, please view CommitETH in Status, Mist or Metamask"])
          [:h3 "New claims"]
          [claim-list unpaid-bounties]
          [:h3 "Old claims"]

@@ -1,0 +1,42 @@
+@media (min-width: 640px) {
+  .container-wrap {
+    z-index: 2;
+    margin-bottom: 420px;
+  }
+}
+
+.container-wrap.container-wrap--not-fancy {
+  z-index: 2;
+  margin-bottom: 0px;
+}
+
+.container {
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+  background-color: #f2f5f8;
+}
+
+.container.container--page {
+  min-height: 500px;
+}
+
+.slides {
+  display: flex;
+  flex-direction: column;
+  background: #f2f5f8;
+}
+
+.slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.slide--hidden {
+  display: none;
+}
+
+.slide__inner {
+  position: relative;
+}
