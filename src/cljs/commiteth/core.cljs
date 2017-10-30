@@ -37,8 +37,8 @@
 
 (defn user-dropdown [user items]
   (let [menu (if @user-dropdown-open?
-                  [:div.ui.menu.transition.visible]
-                  [:div.ui.menu.transition.hidden])
+               [:div.ui.menu.transition.visible]
+               [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.left.item.dropdown
      {:on-click #(swap! user-dropdown-open? not)}
@@ -185,9 +185,10 @@
         show-top-hunters? #(contains? #{:bounties :activity} @current-page)]
     (fn []
       [:div.ui.pusher
+       [:div.vertical.commiteth-background.wide]
        [page-header]
        [:div.ui.vertical.segment
-        [:div.ui.container
+        [:div.ui.container.page
          [:div.ui.grid.stackable
           [:div {:class (str (if (show-top-hunters?) "ten" "sixteen")
                              " wide computer sixteen wide tablet column")}
