@@ -169,6 +169,9 @@
           [:a {:href "https://wiki.status.im/"}
            "Wiki"]]
          [:li.commiteth-footer-link
+          [:a {:href "https://chat.status.im/#/register"}
+           "Riot"]]
+         [:li.commiteth-footer-link
           [:a {:href "https://status.im/privacy-policy.html"}
            "Privacy policy"]]
          [:li.commiteth-footer-link
