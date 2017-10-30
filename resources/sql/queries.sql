@@ -395,7 +395,7 @@ WHERE
 r.repo_id = i.repo_id
 AND i.confirm_hash is null
 AND i.is_open = true
-ORDER BY value_usd desc, updated desc;
+ORDER BY updated desc;
 
 
 
