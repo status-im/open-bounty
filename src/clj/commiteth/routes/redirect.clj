@@ -48,8 +48,7 @@
               user (assoc (get-or-create-user access-token)
                           token-key access-token)]
           (when new-user?
-            ;; TODO: uncomment when hubspot workflow config finalized
-            #_(hubspot/create-hubspot-contact (:email user)
+            (hubspot/create-hubspot-contact (:email user)
                                               (:name user "")
                                               (:login user)))
           (assoc (found (str (env :server-address) "/"))
