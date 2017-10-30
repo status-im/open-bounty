@@ -132,6 +132,9 @@ lein with-profile test figwheel devcards
 
 Open http://localhost:3449/cards.html
 
+### Update landing page
+
+Landing page is static and different CSS and JS due to time constraints. Update `static_landing_page` and then copy `dest` dir to `resources/public` and `index.html` to `resources/templates/` . Also need to put `assets` inside `resources/public.`
 
 ## License
 

@@ -22,9 +22,14 @@
                               :commiteth-version version
                               :on-testnet? (env :on-testnet)}))
 
+(defn landing-page []
+  (layout/render "index.html"))
+
 (defroutes home-routes
-  (GET "/" {{user :identity} :session}
+  (GET "/app" {{user :identity} :session}
        (home-page user))
+  (GET "/" {session :session}
+       (landing-page))
   (GET "/logout" {session :session}
        (assoc (found (str (env :server-address) "/"))
               :session nil)))
