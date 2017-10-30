@@ -36,12 +36,12 @@
 (def user-dropdown-open? (r/atom false))
 
 (defn user-dropdown [user items]
-  (let [menu (if @user-dropdown-open?
+  (let [menu (if @(rf/subscribe [:user-dropdown-open?])
                [:div.ui.menu.transition.visible]
                [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.left.item.dropdown
-     {:on-click #(swap! user-dropdown-open? not)}
+     {:on-click #(rf/dispatch [:user-dropdown-open])}
      [:div.item
       [:img.ui.mini.circular.image {:src avatar-url}]]
      [:div.item

@@ -430,3 +430,18 @@
  :metrics-loaded
  (fn [db [_]]
    (dissoc db :metrics-loading?)))
+
+(defn close-dropdown []
+  (dispatch [:user-dropdown-close]))
+
+(reg-event-db
+ :user-dropdown-open
+ (fn [db [_]]
+   (.addEventListener js/window "click" close-dropdown)
+   (assoc db :user-dropdown-open? true)))
+
+(reg-event-db
+ :user-dropdown-close
+ (fn [db [_]]
+   (.removeEventListener js/window "click" close-dropdown)
+   (assoc db :user-dropdown-open? false)))
