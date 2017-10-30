@@ -5,18 +5,13 @@ Allows you to set bounties for Github issues, paid out in Ether.
 More information:
 http://wiki.status.im/proposals/commiteth/
 
-Live alpha version:
-https://commiteth.com
+Live beta version:
+https://openbounty.status.im
 The `master` branch is automatically deployed here.
 
 
-<<<<<<< HEAD
-Live testnet (Rinkeby) version:
-https://commiteth.com:444
-=======
 Live testnet (Ropsten) version:
 https://openbounty.status.im:444
->>>>>>> develop
 The `develop` branch is automatically deployed here.
 
 
