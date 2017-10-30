@@ -45,12 +45,21 @@
 
 
 .commiteth-header {
-    background-color: #57a7ed!important;
     border-radius: 0em;
     padding-top: 1.5em;
     padding-bottom: 2.5em;
+    z-index: 1;
 }
 
+.commiteth-background {
+    background-color: #57a7ed!important;
+    width: 100%;
+    height: 150px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -2;
+}
 
 .status-logo {
     width: 42px;
@@ -173,8 +182,7 @@
     border-radius: 8px;
     border: none;
     padding: .5em;
-    z-index: 999;
-    transform: translate(100%, -100%);
+    visibility: hidden;
     .item>a {
         color: #fff;
         pointer: default;
@@ -430,6 +438,10 @@
 
 }
 
+.ui.container.page {
+    z-index: -1;
+    position: relative;
+}
 
 .ui.cards>.card  {
     border: #e7e7e7 solid 0.1em;
