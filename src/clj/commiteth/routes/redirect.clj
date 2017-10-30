@@ -40,7 +40,7 @@
       (log/debug "github sign-in callback, response body:" body)
       (if (:error body)
         ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
-        (found (str (env :server-address) "/"))
+        (found (str (env :server-address) "/app"))
         (let [admin-token? (str/includes? scope "repo")
               token-key (if admin-token? :admin-token :token)
               gh-user (github/get-user access-token)
@@ -51,5 +51,5 @@
             (hubspot/create-hubspot-contact (:email user)
                                               (:name user "")
                                               (:login user)))
-          (assoc (found (str (env :server-address) "/"))
+          (assoc (found (str (env :server-address) "/app"))
                  :session {:identity user}))))))
