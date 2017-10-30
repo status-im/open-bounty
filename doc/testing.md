@@ -1,6 +1,6 @@
 # Testing CommitETH
 
-We have a continuously deployed version tracking the `development` branch live at https://commiteth.com:444. It uses the [Ropsten](https://ropsten.io/) Ethereum testnet. Any one is welcome to use it and your help with testing CommitETH is greatly appreciated!
+We have a continuously deployed version tracking the `develop` branch live at https://openbounty.status.im:444. It uses the [Ropsten](https://ropsten.io/) Ethereum testnet. Any one is welcome to use it and your help with testing CommitETH is greatly appreciated!
 
 ### General
 
@@ -14,25 +14,25 @@ The developers can be reached on the `#commiteth` channel in the [Status slack](
 
 ### Signing up
 
-* point your browser to https://commiteth.com:444 and click `Sign in`
+* point your browser to https://openbounty.status.im:444 and click `Sign in`
 * grant CommitETH read access to your public profile
 
-You should now see `Activity`, `Open bounties` and `Manage payouts` tabs. In the upper right hand corner, there should be a dropdown with `Update address` and `Logout`.
+You should now see `Bounties`, `Activity` and `Repositories` tabs. In the upper right hand corner, there should be a dropdown with `My Payment Details` and `Sign Out`.
 
 
 ### Connecting your wallet
 
 (instructions for Metamask)
-* install Metamask + configure your account
-* select `Update address` from the top-right dropdown and click `Update`
+* install Metamask and configure your account
+* select `My Payment Details` from the top-right dropdown, select the account you want to use from the selection list and click `Update`
 
 
 ### Creating bounty issues
 
 Before you can create bounties, you need to have administrative access to one or more repositories. These can be either in the scope of your personal user account or in the scope of a Github orgnazation.
 
-* click the `Repositories tab`
-* grant CommitETH the needed addtional permissions for managing repository webhooks, adding and modifying comments
+* click the `Repositories` tab
+* grant Status Open Bounty the needed addtional permissions for managing repository webhooks, adding and modifying comments
 * now you should see your repositories, click `Add` on one. This should cause the `bounty` label to available in the repository's labels and a new webhook should now exist for the repository.
 * now, add the bounty label to a new or an existing issue. This should cause CommitETH to post a new comment for the issue containing an image with text `Deploying contract, please wait`
 * once the contract has been mined, the comment will be updated to contain the bounty contract's address and a QR code
