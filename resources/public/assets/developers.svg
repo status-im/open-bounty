@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="165" height="178" viewBox="0 0 165 178">
+    <defs>
+        <rect id="b" width="119" height="122" rx="12"/>
+        <filter id="a" width="136.1%" height="135.2%" x="-18.1%" y="-11.9%" filterUnits="objectBoundingBox">
+            <feOffset dy="7" in="SourceAlpha" result="shadowOffsetOuter1"/>
+            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="6"/>
+            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0.0861117027 0 0 0 0 0.200077948 0 0 0 0 0.317974065 0 0 0 0.253566576 0"/>
+        </filter>
+        <circle id="d" cx="23" cy="23" r="23"/>
+        <filter id="c" width="152.2%" height="152.2%" x="-26.1%" y="-19.6%" filterUnits="objectBoundingBox">
+            <feOffset dy="3" in="SourceAlpha" result="shadowOffsetOuter1"/>
+            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="3.5"/>
+            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0.152941176 0 0 0 0 0.274509804 0 0 0 0 0.4 0 0 0 0.282297328 0"/>
+        </filter>
+    </defs>
+    <g fill="none" fill-rule="evenodd">
+        <g transform="rotate(-15 172.543 -6.755)">
+            <use fill="#000" filter="url(#a)" xlink:href="#b"/>
+            <use fill="#FFF" xlink:href="#b"/>
+            <rect width="81" height="8" x="19" y="22" fill="#E8E9EC" rx="4"/>
+            <rect width="81" height="8" x="19" y="42" fill="#E8E9EC" rx="4"/>
+            <rect width="41" height="8" x="19" y="62" fill="#E8E9EC" rx="4"/>
+            <rect width="21" height="18" x="19" y="88" fill="#D248CB" rx="2"/>
+            <text fill="#FFF" font-family="RobotoMono-Medium, Roboto Mono" font-size="12" font-weight="400" letter-spacing=".857">
+                <tspan x="21.442" y="101">js</tspan>
+            </text>
+            <rect width="29" height="18" x="48" y="88" fill="#F7E34F" rx="2"/>
+            <text fill="#000" font-family="RobotoMono-Medium, Roboto Mono" font-size="12" font-weight="400" letter-spacing=".857">
+                <tspan x="50" y="101">css</tspan>
+            </text>
+        </g>
+        <g transform="translate(94 4)">
+            <use fill="#000" filter="url(#c)" xlink:href="#d"/>
+            <use fill="#8AEBAC" xlink:href="#d"/>
+        </g>
+        <text fill="#030A01" font-family="GraphikWeb-Semibold, Graphik Web" font-size="12" font-weight="500" letter-spacing=".857" opacity=".5" transform="translate(94 4)">
+            <tspan x="10.262" y="28">ETH</tspan>
+        </text>
+    </g>
+</svg>
