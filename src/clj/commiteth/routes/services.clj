@@ -183,8 +183,9 @@
 ;; NOTE: This assumes username can be trusted and not tampered with
 (def user-whitelisted?
   #{"oskarth"
-    "annadanchenko"
-    "tpatja"})
+    "tpatja"
+    "anna02test"
+    "anna03test"})
 
 (defapi service-routes
   (when (:dev env)
