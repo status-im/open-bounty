@@ -80,7 +80,8 @@
 
     (cond (not can-create?)
           {:status 400
-           :body "We are doing a gradual roll-out - please email support@status.im to add repo manually"}
+           :body "Please join our Riot - chat.status.im/#/register and request
+           access in our #openbounty room to have your account whitelisted"}
 
           (empty? (:address db-user))
           {:status 400
