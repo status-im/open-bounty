@@ -18,3 +18,4 @@ profiles.clj
 *.ipr
 *.log
 resources/contracts
+node_modules
