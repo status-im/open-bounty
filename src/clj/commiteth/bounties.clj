@@ -55,9 +55,9 @@
   (let [res (issues/get-issues-count repo-id)
         {count :count} res
         limit-reached? (> count max-issues-limit)
-        _ (log/debug "*** get-issues-count" repo-id res count limit-reached?)]
+        _ (log/debug "*** get-issues-count" repo-id " " res " " count " " limit-reached?)]
     (if limit-reached?
-      (log/debug "Total issues for repo limit reached " repo count)
+      (log/debug "Total issues for repo limit reached " repo " " count)
       (add-bounty-for-issue repo repo-id issue))))
 
 
