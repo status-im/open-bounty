@@ -141,7 +141,7 @@
                (Math/pow 10 token-base)
                token-base)]
     (assert (> base 0))
-    (/ value base)))
+    (float (/ value base))))
 
 
 (defn token-balance-in-bounty
