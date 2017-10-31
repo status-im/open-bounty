@@ -180,6 +180,12 @@
          (dissoc :email)
          (assoc :status-team-member? status-member?))}))
 
+;; NOTE: This assumes username can be trusted and not tampered with
+(def user-whitelisted?
+  #{"oskarth"
+    "annadanchenko"
+    "tpatja"})
+
 (defapi service-routes
   (when (:dev env)
     {:swagger {:ui   "/swagger-ui"
@@ -256,4 +262,4 @@
                           ;; NOTE: Don't allow anyone to create repos; manual add
                           :auth-rules authenticated?
                           :current-user user
-                          (handle-toggle-repo user params false)))))
+                          (handle-toggle-repo user params user-whitelisted?)))))
