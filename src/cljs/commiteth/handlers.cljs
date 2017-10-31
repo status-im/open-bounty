@@ -145,8 +145,10 @@
 
 (reg-event-fx
  :load-activity-feed
- (fn [{:keys [db]} [_]]
-   {:db   (assoc db :activity-feed-loading? true)
+ (fn [{:keys [db]} [_ initial-load?]]
+   {:db   (if initial-load?
+            (assoc db :activity-feed-loading? true)
+            db)
     :http {:method     GET
            :url        "/api/activity-feed"
            :on-success #(dispatch [:set-activity-feed %])}}))
@@ -161,8 +163,10 @@
 
 (reg-event-fx
  :load-open-bounties
- (fn [{:keys [db]} [_]]
-   {:db   (assoc  db :open-bounties-loading? true)
+ (fn [{:keys [db]} [_ initial-load?]]
+   {:db   (if initial-load?
+            (assoc  db :open-bounties-loading? true)
+            db)
     :http {:method     GET
            :url        "/api/open-bounties"
            :on-success #(dispatch [:set-open-bounties %])}}))
