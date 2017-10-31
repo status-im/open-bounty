@@ -31,6 +31,11 @@
 (defn factory-contract-addr []
   (env :contract-factory-addr "0x47F56FD26EEeCda4FdF5DB5843De1fe75D2A64A6"))
 
+(defn tokenreg-base-format
+  ;; status tokenreg uses eg :base 18, while parity uses :base 1000000000000
+  []
+  (env :tokenreg-base-format :status))
+
 (defn create-new
   [owner1 owner2 required]
   (eth/execute (eth/eth-account)
@@ -131,10 +136,12 @@
   "Convert given value to decimal using given token's base."
   [value token]
   (let [token-details (token-data/token-info token)
-        token-base (:base token-details)]
-    (assert (> token-base 0))
-    (-> value
-        (/ (Math/pow 10 token-base)))))
+        token-base (:base token-details)
+        base (if (= (tokenreg-base-format) :status)
+               (Math/pow 10 token-base)
+               token-base)]
+    (assert (> base 0))
+    (/ value base)))
 
 
 (defn token-balance-in-bounty
