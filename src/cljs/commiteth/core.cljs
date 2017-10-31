@@ -36,12 +36,12 @@
 (def user-dropdown-open? (r/atom false))
 
 (defn user-dropdown [user items]
-  (let [menu (if @user-dropdown-open?
-                  [:div.ui.menu.transition.visible]
-                  [:div.ui.menu.transition.hidden])
+  (let [menu (if @(rf/subscribe [:user-dropdown-open?])
+               [:div.ui.menu.transition.visible]
+               [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.left.item.dropdown
-     {:on-click #(swap! user-dropdown-open? not)}
+     {:on-click #(rf/dispatch [:user-dropdown-open])}
      [:div.item
       [:img.ui.mini.circular.image {:src avatar-url}]]
      [:div.item
@@ -137,9 +137,10 @@
 (defn footer []
   (let [social-links [["icon-fb" "Facebook" "https://www.facebook.com/ethstatus"]
                       ["icon-tw" "Twitter" "https://twitter.com/ethstatus"]
+                      ["icon-rt" "Riot" "https://chat.status.im/#/register"]
                       ["icon-gh" "Github" "https://github.com/status-im"]
                       ["icon-rd" "Reddit" "https://www.reddit.com/r/statusim/"]
-                      ["icon-yt" "YouTube" "https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/"]]]
+                      #_["icon-yt" "YouTube" "https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/"]]]
     [:div.commiteth-footer
      [:div.commiteth-footer-inner
       [:div.commiteth-footer-logo-container
@@ -166,11 +167,14 @@
         [:div.commiteth-footer-header "Community"]
         [:ul.commiteth-footer-list
          [:li.commiteth-footer-link
-            [:a {:href "https://wiki.status.im/"}
-             "Wiki"]]
+          [:a {:href "https://wiki.status.im/"}
+           "Wiki"]]
          [:li.commiteth-footer-link
-            [:a {:href "https://status.im/jobs.html"}
-             "Jobs"]]]]
+          [:a {:href "https://status.im/privacy-policy.html"}
+           "Privacy policy"]]
+         [:li.commiteth-footer-link
+          [:a {:href "https://status.im/jobs.html"}
+           "Jobs"]]]]
        [:div.commiteth-footer-table__column
         [:div.commiteth-footer-header "Language"]
         [:ul.commiteth-footer-list

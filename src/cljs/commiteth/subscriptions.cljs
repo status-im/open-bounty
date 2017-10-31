@@ -75,3 +75,8 @@
  :metrics-loading?
    (fn [db _]
      (:metrics-loading? db)))
+
+(reg-sub
+    :user-dropdown-open?
+  (fn [db _]
+    (:user-dropdown-open? db)))
