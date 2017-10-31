@@ -1,6 +1,6 @@
-# Testing CommitETH
+# Testing Open Bounty
 
-We have a continuously deployed version tracking the `develop` branch live at https://openbounty.status.im:444. It uses the [Ropsten](https://ropsten.io/) Ethereum testnet. Any one is welcome to use it and your help with testing CommitETH is greatly appreciated!
+We have a continuously deployed version tracking the `develop` branch live at https://openbounty.status.im:444. It uses the [Ropsten](https://ropsten.io/) Ethereum testnet. Any one is welcome to use it and your help with testing Open Bounty is greatly appreciated!
 
 ### General
 
@@ -14,7 +14,7 @@ The developers can be reached on the `#commiteth` channel in the [Status slack](
 
 ### Signing up
 
-* point your browser to https://openbounty.status.im:444 and click `Sign in`
+* point your browser to https://openbounty.status.im:444 and click `Login`
 * Authorise status-open-bounty to have read access to your public GitHub profile.
 
 You should now see `Bounties`, `Activity`, `Repositories` and `Manage Payouts` tabs. In the upper right hand corner, there should be a dropdown with your GitHub username and options `My Payment Details` and `Sign Out`.
@@ -35,7 +35,7 @@ Before you can create bounties, you need to have administrative access to one or
 * click on the button `Enable Github Account`
 * If you have 1 or more Organisation repositories then grant Organisation access to each of them by clicking on the button `Grant` 
 * grant Status Open Bounty the needed addtional permissions for managing repository webhooks, adding and modifying comments by clicking on the button `Authorize status-open-bounty`
-* now you should see your repositories on the `Repositories` tab, click `Add` on one. This should cause the `bounty` label to available in the repository's labels and a new webhook should now exist for the repository.
+* now you should see your repositories on the `Repositories` tab, click `Add` on one. This should cause the `bounty` label to be available in the repository's labels and a new webhook should now exist for the repository.
 * now, add the `bounty` label to a new or an existing issue. This should cause Status Open Bounty to post a new comment for the issue containing an image with text `Deploying contract, please wait`
 * once the contract has been mined, the comment will be updated to contain the bounty contract's address and a QR code
 
@@ -46,11 +46,15 @@ The Github comment has a QR code as an image containing the bounty contract addr
 
 ### Submitting claims
 
-Open a pull request against the target repository with `Fixes: #NN` in the comment where `NN` is the issue number of the bountied Github issue. After the PR has been opened, the activity feed should show an item indicating the your username has opened a claim for the related bounty issue. The repository admin should also see the claim under `Open claims` in the `Manage payouts` view.
+Open a pull request against the target repository with `Fixes: #NN` in the comment where `NN` is the issue number of the bountied Github issue. After the PR has been opened, the activity feed should show an item indicating that your username has opened a claim for the related bounty issue. The repository admin should also see the claim under `Open claims` in the `Manage payouts` view.
 
 ### Managing payouts
 
 Repository admins see a listing of all open claims and bounties that have already been paid out on the `Manage Payouts` tab. The `open claims` listing includes unmerged claim pull requests and merged pull requests. Once a claim pull request has been merged, it is selected as the winning claim. The repository admin will still need to sign off the payout with his connected Ethereum wallet. This is done with the `Confirm` button. Once the payout transaction has been mined, the `Activity` feed view will show that the claimer received the bounty funds. All tokens and ETH will be transferred to the claimer's Ethereum address.
+
+### Removing bounties
+
+To remove issue from the Bounties list you can close it in GitHub.  
 
 ### Reporting bugs
 
