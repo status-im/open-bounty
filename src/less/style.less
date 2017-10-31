@@ -63,11 +63,17 @@
 }
 
 
+.status-header-logo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .status-logo {
     width: 42px !important;
 	height: 42px !important;
-	box-shadow: 0 2px 4px 0 rgba(22, 51, 81, 0.14);
 }
+
 
 .logo-header {
     color: #fff;
@@ -75,6 +81,9 @@
 	font-size: 21px;
 	font-weight: 500;
 	text-align: left;
+    position: relative;
+    top: -37px;
+    left: 50px;
 }
 
 .logo-subheader {
@@ -84,7 +93,15 @@
 	font-size: 15px;
 	line-height: 1.0;
 	text-align: left;
+    position: relative;
+    top: -37px;
+    left: 50px;
 }
+
+.computer-tabs-container {
+    padding-top: 0 !important;
+}
+
 
 .top-hunters-header {
     margin-bottom: 0;
@@ -129,8 +146,10 @@
 }
 
 .ui.mini.circular.image {
-    height: 32px;
+    height: 32px !important;
     width: 32px!important;
+    //min-width: 32px;
+    box-shadow: none;
 }
 
 .ui.header {
@@ -144,7 +163,7 @@
 
 
 .user-component {
-    margin-top: 0px!important;
+//     margin-top: 0px!important;
 }
 
 .ui.text.menu {

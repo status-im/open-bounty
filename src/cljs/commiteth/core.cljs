@@ -72,7 +72,8 @@
            [[:update-address "My Payment Details" {}]
             ["/logout" "Sign Out" {:class "logout-link"}]]
            mobile?]]]
-        [:a.ui.button.small.login-button {:href js/authorizeUrl} "LOG IN \u2192"]))))
+        [:a.ui.button.small.login-button {:href js/authorizeUrl} (str "LOG IN"
+                                                                      (when-not mobile? " \u2192"))]))))
 
 (defn tabs []
   (let [user (rf/subscribe [:user])
@@ -94,13 +95,11 @@
 
 
 (defn header-logo []
-  [:div.ui.grid
-   [:div.ui.four.wide.column.header-logo-left
-    [:div.ui.circular.image.status-logo
-     [svg/status-logo]]]
-   [:div.ui.twelve.wide.column.left.aligned.header-logo-right
-    [:div.logo-header "Status"]
-    [:div.logo-subheader "Open Bounty"]]])
+  [:div.status-header-logo
+   [:div.ui.circular.image.status-logo
+    [svg/status-logo]]
+   [:div.logo-header "Status"]
+   [:div.logo-subheader "Open Bounty"]])
 
 (defn page-header []
   (let [user (rf/subscribe [:user])
@@ -110,7 +109,7 @@
        [:div.ui.grid.container.computer.only
         [:div.four.wide.column
          [header-logo]]
-        [:div.eight.wide.column.middle.aligned.computer.only
+        [:div.eight.wide.column.middle.aligned.computer.only.computer-tabs-container
          [tabs]]
         [:div.four.wide.column.right.aligned.computer.only
          [user-component @user false]]]
