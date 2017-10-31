@@ -188,7 +188,8 @@
     "carlbennetts"
     "jarradh"
     "anna02test"
-    "anna03test"})
+    "anna03test"
+    "anna04test"})
 
 (defapi service-routes
   (when (:dev env)
