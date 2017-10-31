@@ -17,6 +17,16 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
+;; TODO: Change max-limit, also defined in two places
+(defn maybe-add-bounty-for-issue [repo repo-id issue]
+  (let [res  (issues/get-issues-count repo-id)
+        {issues-count :count} res
+        max-limit 2
+        limit-reacted? (> issues-count max-limit)
+        _ log/debug ("*** get-issues-count" repo-id res count limit-reached?)]
+    (if limit-reached?
+      (log/debug "Total issues for repo limit reached " repo issues-count)
+      (add-bounty-for-issue repo repo-id issue))))
 
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
@@ -48,17 +58,21 @@
             (issues/update-transaction-hash issue-id transaction-hash))))
       (log/debug "Issue already exists in DB, ignoring"))))
 
-
+;; We have a max-limit to ensure people can't add more issues and
+;; drain bot account until we have economic design in place
+;; TODO(oskarth): Update max-limit to 100
 (defn add-bounties-for-existing-issues [full-name]
   (let [{repo-id :repo_id
          owner :owner
          repo :repo} (repos/get-repo full-name)
         issues (github/get-issues owner repo)
-        bounty-issues (filter has-bounty-label? issues)]
-    (log/debug "adding bounties for"
-               (count bounty-issues) " existing issues")
+        bounty-issues (filter has-bounty-label? issues)
+        limit 2
+        max-bounties (take limit bounty-issues)]
+    (log/debug (str "adding bounties for" (count bounty-issues)
+                    " existing issues (total " (count bounty-issues) ")"))
     (doall
-     (map (partial add-bounty-for-issue repo repo-id) bounty-issues))))
+     (map (partial maybe-add-bounty-for-issue repo repo-id) max-bounties))))
 
 
 (defn update-bounty-comment-image [issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens]

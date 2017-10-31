@@ -66,8 +66,9 @@
                                      :state 0
                                      :hook_id nil}))
 
-(defn handle-toggle-repo [user params]
+(defn handle-toggle-repo [user params can-create?]
   (log/debug "handle-toggle-repo" user params)
+  (log/info "MANUAL ACTION REQUIRED: Possibly add repo:" (pr-str user) (pr-str params))
   (let [{user-id :id} user
         {repo-id :id
          full-repo :full_name
@@ -76,23 +77,31 @@
          repo    :name} params
         [owner _] (str/split full-repo #"/")
         db-user (users/get-user (:id user))]
-    (if (empty? (:address db-user))
-      {:status 400
-       :body "Please add your ethereum address to your profile first"}
-      (try
-        (let [db-item (repositories/create (merge params {:user_id user-id
-                                                          :owner owner}))
-              is-enabled (= 2 (:state db-item))]
-          (if is-enabled
-            (disable-repo repo-id full-repo (:hook_id db-item) token)
-            (enable-repo repo-id repo full-repo token))
-          (ok (merge
-               {:enabled (not is-enabled)}
-               (select-keys params [:id :full_name]))))
-        (catch Exception e
-          (log/error "exception when enabling repo" e)
-          (repositories/update-repo repo-id {:state -1})
-          (internal-server-error))))))
+
+    (cond (not can-create?)
+          {:status 400
+           :body "We are doing a gradual roll-out - please email support@status.im to add repo manually"}
+
+          (empty? (:address db-user))
+          {:status 400
+           :body "Please add your ethereum address to your profile first"}
+
+          :else
+          (try
+            (let [_ (println "CREATING")
+                  db-item (repositories/create (merge params {:user_id user-id
+                                                              :owner owner}))
+                  is-enabled (= 2 (:state db-item))]
+              (if is-enabled
+                (disable-repo repo-id full-repo (:hook_id db-item) token)
+                (enable-repo repo-id repo full-repo token))
+              (ok (merge
+                   {:enabled (not is-enabled)}
+                   (select-keys params [:id :full_name]))))
+            (catch Exception e
+              (log/error "exception when enabling repo" e)
+              (repositories/update-repo repo-id {:state -1})
+              (internal-server-error))))))
 
 (defn in? [coll elem]
   (some #(= elem %) coll))
@@ -171,6 +180,13 @@
          (dissoc :email)
          (assoc :status-team-member? status-member?))}))
 
+;; NOTE: This assumes username can be trusted and not tampered with
+(def user-whitelisted?
+  #{"oskarth"
+    "tpatja"
+    "anna02test"
+    "anna03test"})
+
 (defapi service-routes
   (when (:dev env)
     {:swagger {:ui   "/swagger-ui"
@@ -244,6 +260,7 @@
                          (log/debug "/user/bounties")
                          (ok (user-bounties user)))
                     (POST "/repository/toggle" {:keys [params]}
+                          ;; NOTE: Don't allow anyone to create repos; manual add
                           :auth-rules authenticated?
                           :current-user user
-                          (handle-toggle-repo user params)))))
+                          (handle-toggle-repo user params user-whitelisted?)))))

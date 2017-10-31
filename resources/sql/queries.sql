@@ -89,6 +89,10 @@ SELECT i.title, i.issue_number, r.repo, r.owner
 FROM issues i, repositories r
 WHERE i.repo_id = r.repo_id;
 
+-- :name get-issues-count :? :1
+SELECT COUNT(*)
+FROM issues i, repositories r
+WHERE i.repo_id = :repo_id;
 
 -- :name update-repo-generic :! :n
 /* :require [clojure.string :as string]

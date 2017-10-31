@@ -35,7 +35,7 @@
 
 (def user-dropdown-open? (r/atom false))
 
-(defn user-dropdown [user items]
+(defn user-dropdown [user items mobile?]
   (let [menu (if @(rf/subscribe [:user-dropdown-open?])
                [:div.ui.menu.transition.visible]
                [:div.ui.menu.transition.hidden])
@@ -44,8 +44,9 @@
      {:on-click #(rf/dispatch [:user-dropdown-open])}
      [:div.item
       [:img.ui.mini.circular.image {:src avatar-url}]]
-     [:div.item
-      (:login user)]
+     (when not mobile?
+           [:div.item
+            (:login user)])
      [:div.item
       [svg/dropdown-icon]]
      (into menu
@@ -59,17 +60,22 @@
                               caption]]))]))
 
 
-(defn user-component [user]
+(defn user-component
+  [user mobile?]
   (let [user (rf/subscribe [:user])]
     (fn []
       (if @user
         [:div.ui.text.menu.user-component
          [:div.item
-          [user-dropdown @user [[:update-address "My Payment Details" {}]
-                                ["/logout" "Sign Out" {:class "logout-link"}]]]]]
-        [:a.ui.button.small.login-button {:href js/authorizeUrl} "LOG IN \u2192"]))))
+          [user-dropdown
+           @user
+           [[:update-address "My Payment Details" {}]
+            ["/logout" "Sign Out" {:class "logout-link"}]]
+           mobile?]]]
+        [:a.ui.button.small.login-button {:href js/authorizeUrl} (str "LOG IN"
+                                                                      (when-not mobile? " \u2192"))]))))
 
-(defn tabs []
+(defn tabs [mobile?]
   (let [user (rf/subscribe [:user])
         current-page (rf/subscribe [:page])]
     (fn []
@@ -77,7 +83,7 @@
                               [:activity "Activity"]]
                         (when @user
                           [[:repos "Repositories"]
-                           [:manage-payouts "Manage Payouts"]
+                           [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")]
                            (when (:status-team-member? @user)
                              [:usage-metrics "Usage metrics"])]))]
         (into [:div.ui.attached.tabular.menu.tiny]
@@ -88,26 +94,35 @@
                   ^{:key page} [:div props caption])))))))
 
 
+(defn header-logo []
+  [:div.status-header-logo
+   [:div.ui.circular.image.status-logo
+    [svg/status-logo]]
+   [:div.logo-header "Status"]
+   [:div.logo-subheader "Open Bounty"]])
+
 (defn page-header []
   (let [user (rf/subscribe [:user])
         flash-message (rf/subscribe [:flash-message])]
     (fn []
       [:div.vertical.segment.commiteth-header
-       [:div.ui.grid.container
+       [:div.ui.grid.container.computer.only
         [:div.four.wide.column
-         [:div.ui.grid
-          [:div.ui.four.wide.column
-           [:div.ui.circular.image.status-logo
-            [svg/status-logo]]]
-          [:div.ui.twelve.wide.column.left.aligned
-           [:div.logo-header "Status"]
-           [:div.logo-subheader "Open Bounty"]]]]
-        [:div.eight.wide.column.middle.aligned
-         [tabs]]
-        [:div.four.wide.column.middle.aligned
-         [user-component @user]]
-        (when @flash-message
-          [flash-message-pane])]])))
+         [header-logo]]
+        [:div.eight.wide.column.middle.aligned.computer.only.computer-tabs-container
+         [tabs false]]
+        [:div.four.wide.column.right.aligned.computer.only
+         [user-component @user false]]]
+       [:div.ui.grid.container.tablet.mobile.only
+        [:div.row
+         [:div.eight.wide.column.left.aligned
+          [header-logo]]
+         [:div.eight.wide.column.right.aligned
+          [user-component @user true]]]
+        [:div.row.mobile-tab-container
+         [tabs true]]]
+       (when @flash-message
+         [flash-message-pane])])))
 
 
 (def pages

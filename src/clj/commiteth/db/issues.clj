@@ -24,6 +24,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/get-issue-titles con-db {})))
 
+(defn get-issues-count
+  [repo-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issues-count con-db {:repo_id repo-id})))
+
 (defn update-issue-title
   [issue-id title]
   (jdbc/with-db-connection [con-db *db*]

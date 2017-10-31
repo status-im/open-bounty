@@ -30,18 +30,8 @@
   <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
   <meta name="theme-color" content="#ffffff">
 
-  <!-- <link rel="icon" type="image/png" href="dest/img/new-site/logo-32.png?v=516c1cd" sizes="32x32" />
-       <link rel="icon" type="image/png" href="dest/img/new-site/logo-16.png?v=5108317" sizes="16x16" />
+  <link rel="shortcut icon" href="/img/favicon.ico" />
 
-       <link rel="apple-touch-icon" href="dest/img/new-site/apple-touch-icon-1024.png?v=464c5b1">
-       <link rel="apple-touch-icon" sizes="76x76" href="dest/img/new-site/apple-touch-icon-76.png?v=13dde43">
-       <link rel="apple-touch-icon" sizes="120x120" href="dest/img/new-site/apple-touch-icon-120.png?v=e3d71d5">
-       <link rel="apple-touch-icon" sizes="152x152" href="dest/img/new-site/apple-touch-icon-152.png?v=1353ddd">
-       <link rel="apple-touch-icon" sizes="180x180" href="dest/img/new-site/apple-touch-icon-180.png?v=401931a">
-       <link rel="mask-icon" href="dest/img/new-site/logo-mask.svg" color="4360DF">
-     -->
-
-  <!-- favicon.ico in the root directory -->
   <link rel="stylesheet" href="dest/css/main.css?v=a664cb5">
 
   <!-- Facebook Pixel Code -->
@@ -83,7 +73,7 @@
             <div class="nav">
               <a class="nav__item nav__item-features" href="/app">Activity</a>
               <a class="nav__item nav__item-features" href="/app">Open Bounties</a>
-              <a href="{{authorize-url}}" id="button-login" class="button">Login -></a>
+              <a href="{{authorize-url}}" id="button-login" class="button">Log in →</a>
             </div>
           </div>
         </div>
@@ -112,17 +102,7 @@
             </p>
 
             <div class="email-form">
-              <!--[if lte IE 8]>
-              <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/v2-legacy.js"></script>
-              <![endif]-->
-              <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/v2.js"></script>
-              <script>
-                hbspt.forms.create({
-                  css: '',
-                  portalId: '3954379',
-                  formId: 'b6c83d22-0bcf-4cfa-b9df-88fbaa09dee7'
-                });
-              </script>
+              <div class="hbspt-form"></div>
             </div>
           </div>
 
@@ -188,7 +168,8 @@
 
                 <div class="section">
                   <div class="section__text">
-                    <h2>Open Source Collaboration Tool</h2>
+                    <img src="assets/github-logo.svg" class="logo-github">
+                    <h2 class="github-heading" >Open Source Collaboration Tool</h2>
                     <div class="text">
                       <p>Status Open Bounty is a bounty- based collaboration tool that plugs right into GitHub.</p>
                     </div>
@@ -232,7 +213,6 @@
             <li class="footer-link footer-link--rt"><a href="https://chat.status.im/#/register" target="_blank"><span class="footer-icon"></span><span class="footer-link-label">Riot</span></a></li>
             <li class="footer-link footer-link--gh"><a href="https://github.com/status-im" target="_blank"><span class="footer-icon"></span><span class="footer-link-label">Github</span></a></li>
             <li class="footer-link footer-link--rd"><a href="https://www.reddit.com/r/statusim/" target="_blank"><span class="footer-icon"></span><span class="footer-link-label">Reddit</span></a></li>
-            <!-- <li class="footer-link footer-link--yt"><a href="https://www.youtube.com/channel/UCFzdJTUdzqyX4e9dOW7UpPQ/" target="_blank"><span class="footer-icon"></span><span class="footer-link-label">YouTube</span></a></li> -->
           </ul>
         </div>
         <div class="footer-table__column">
@@ -256,6 +236,19 @@
       </div>
     </div>
   </div>
+
+  <!--[if lte IE 8]>
+  <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/v2-legacy.js"></script>
+  <![endif]-->
+  <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/v2.js"></script>
+  <script>
+    hbspt.forms.create({
+      css: '',
+      target: '.hbspt-form',
+      portalId: '3954379',
+      formId: 'b6c83d22-0bcf-4cfa-b9df-88fbaa09dee7'
+    });
+  </script>
 
   <!-- Google Analytics -->
   <script>

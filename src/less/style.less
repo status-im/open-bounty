@@ -49,15 +49,31 @@
     border-radius: 0em;
     padding-top: 1.5em;
     padding-bottom: 2.5em;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    .header-logo-left {
+        padding-right: 0 !important;
+    }
+    .header-logo-right {
+        padding-left: 0 !important;
+    }
+    .mobile-tab-container {
+        padding-left: 16px !important;
+    }
 }
 
+
+.status-header-logo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
 .status-logo {
-    width: 42px;
-	height: 42px;
-	object-fit: contain;
-	box-shadow: 0 2px 4px 0 rgba(22, 51, 81, 0.14);
+    width: 42px !important;
+	height: 42px !important;
 }
+
 
 .logo-header {
     color: #fff;
@@ -65,6 +81,9 @@
 	font-size: 21px;
 	font-weight: 500;
 	text-align: left;
+    position: relative;
+    top: -37px;
+    left: 50px;
 }
 
 .logo-subheader {
@@ -74,7 +93,15 @@
 	font-size: 15px;
 	line-height: 1.0;
 	text-align: left;
+    position: relative;
+    top: -37px;
+    left: 50px;
 }
+
+.computer-tabs-container {
+    padding-top: 0 !important;
+}
+
 
 .top-hunters-header {
     margin-bottom: 0;
@@ -119,8 +146,10 @@
 }
 
 .ui.mini.circular.image {
-    height: 32px;
+    height: 32px !important;
     width: 32px!important;
+    //min-width: 32px;
+    box-shadow: none;
 }
 
 .ui.header {
@@ -134,7 +163,7 @@
 
 
 .user-component {
-    margin-top: 0px!important;
+//     margin-top: 0px!important;
 }
 
 .ui.text.menu {
@@ -206,6 +235,14 @@
     }
 }
 
+@media only screen and (max-width: 767px) {
+    .ui.container {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+
 .ui.grid {
     margin-top: 0px;
 }
@@ -258,6 +295,9 @@
     color: #42505c;
     font-family: "PostGrotesk-Medium";
     font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     a { color: #42505c; }
 }
 
