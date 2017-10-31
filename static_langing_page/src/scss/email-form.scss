@@ -1,6 +1,5 @@
 .email-form {
   display: flex;
-  width: 460px;
   position: relative;
 }
 
@@ -78,25 +77,23 @@
 
 .email-form__inner {
   display: flex;
-  width: 460px;
   position: relative;
 }
 
-.email-form__input {
-  height: 45px;
-  line-height: 45px;
+.email-form .hs_email.hs-form-field label {
+  display: none;
 }
 
-.email-form__input--email {
+.email-form__input--email,
+.email-form .hs_email.hs-form-field input {
   text-align: left;
-  background-color: #F2F6F8;
-  color: #49555F;
-  width: 240px;
-  padding: 0 15px;
+  background-color: #4c81b6;
+  color: #b6cbe1;
+  padding: 16px 15px 15px 15px;
   margin: 0 0 0 0;
   font-family: 'PostGrotesk-Book', sans-serif;
   box-sizing: border-box;
-  border-radius: 8px 0 0 8px;
+  border-radius: 8px;
 
   transition: background-color .2s ease;
   font-weight: 400;
@@ -121,14 +118,8 @@ input.email-form__input--email:disabled {
 
 }
 
-.email-form__input--email::-webkit-input-placeholder {
-  color: #AEB5BA;
-}
-
-.email-form__input--email::-moz-placeholder {
-  color: #AEB5BA;
-}
-
+.email-form__input--email::-webkit-input-placeholder,
+.email-form__input--email::-moz-placeholder,
 .email-form__input--email:-ms-input-placeholder {
   color: #AEB5BA;
 }
@@ -137,11 +128,28 @@ input.email-form__input--email:disabled {
   color: rgba(255, 255, 255, .6);
 }
 
+.email-form .hbspt-form {
+  width: 100%;
+
+  & > .submitted-message {
+    color: #ffffff;
+    opacity: 0.6;
+  }
+
+  & > form > div {
+    display: inline-block;
+
+    & > div {
+      margin: 0;
+    }
+  }
+}
+
 .email-form input[type="submit"] {
-  width: 220px;
   flex-shrink: 0;
   flex-grow: 0;
-  border-radius: 0 8px 8px 0;
+  margin-left: 1em;
+  border-radius: 8px;
 }
 
 .email-form input[type="submit"]:hover {
@@ -168,17 +176,6 @@ input.email-form__input--email:disabled {
 
   .email-form__inner {
     flex-direction: column;
-  }
-
-  .email-form__input--email {
-    width: 240px;
-    border-radius: 8px;
-    margin: 0 0 16px 0;
-  }
-
-  .email-form input[type="submit"] {
-    width: 240px;
-    border-radius: 8px;
   }
 
   .email-form__responces {
