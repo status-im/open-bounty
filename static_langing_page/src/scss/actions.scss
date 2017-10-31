@@ -57,9 +57,8 @@
   color: #ffffff;
 }
 
-.action button {
-    width: 240px;
-    height: 45px;
+.action button,
+.hs_submit .hs-button {
     object-fit: contain;
     border-radius: 8px;
     background-color: #1e3751;
@@ -69,13 +68,15 @@
     font-weight: 500;
     line-height: 1.15;
     letter-spacing: 1px;
+    padding: 16px 32px;
     text-align: center;
     text-transform: uppercase;
     color: #ffffff;
     transition: opacity .2s ease;
 }
 
-.action button:hover {
+.action button:hover,
+.hs_submit .hs-button:hover {
     opacity: 0.5;
     cursor: pointer;
   }
