@@ -48,10 +48,11 @@
       (log/debug "Issue already exists in DB, ignoring"))))
 
 ;; TODO: Change max-limit, also defined in two places
+;; Note this is limits for total issues, need to take subset of this/join somehow
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
   (let [res (issues/get-issues-count repo-id)
         {count :count} res
-        max-limit 2
+        max-limit 10000
         limit-reached? (> count max-limit)
         _ (log/debug "*** get-issues-count" repo-id res count limit-reached?)]
     (if limit-reached?
@@ -68,7 +69,7 @@
          repo :repo} (repos/get-repo full-name)
         issues (github/get-issues owner repo)
         bounty-issues (filter has-bounty-label? issues)
-        limit 2
+        limit 100
         max-bounties (take limit bounty-issues)]
     (log/debug (str "adding bounties for" (count bounty-issues)
                     " existing issues (total " (count bounty-issues) ")"))
