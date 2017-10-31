@@ -184,8 +184,11 @@
 (def user-whitelisted?
   #{"oskarth"
     "tpatja"
+    "carlbennetts"
+    "jarradh"
     "anna02test"
-    "anna03test"})
+    "anna03test"
+    "anna04test"})
 
 (defapi service-routes
   (when (:dev env)
@@ -263,4 +266,4 @@
                           ;; NOTE: Don't allow anyone to create repos; manual add
                           :auth-rules authenticated?
                           :current-user user
-                          (handle-toggle-repo user params user-whitelisted?)))))
+                          (handle-toggle-repo user params (user-whitelisted? (:login user)))))))
