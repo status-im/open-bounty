@@ -48,13 +48,10 @@
               user (assoc (get-or-create-user access-token)
                           token-key access-token)]
           (when new-user?
-            (hubspot/create-hubspot-contact (:email user)
-                                              (:name user "")
-                                              (:login user)))
             (try
               (hubspot/create-hubspot-contact (:email user)
-                                                 (:name user "")
-                                                 (:login user))
+                                              (:name user "")
+                                              (:login user))
               (catch Throwable t
                 (log/error "Failed to create hubspot contact" t))))
           (assoc (found (str (env :server-address) "/app"))
