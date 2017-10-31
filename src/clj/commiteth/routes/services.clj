@@ -185,6 +185,8 @@
 (def user-whitelisted?
   #{"oskarth"
     "tpatja"
+    "carlbennetts"
+    "jarradh"
     "anna02test"
     "anna03test"})
 
