@@ -263,4 +263,4 @@
                           ;; NOTE: Don't allow anyone to create repos; manual add
                           :auth-rules authenticated?
                           :current-user user
-                          (handle-toggle-repo user params user-whitelisted?)))))
+                          (handle-toggle-repo user params (user-whitelisted? user))))))
