@@ -47,7 +47,7 @@
   (let [{issue :issue} webhook-payload
         {repo-id :id
          repo-name :name} (:repository webhook-payload)]
-    (bounties/add-bounty-for-issue repo-name repo-id issue)))
+    (bounties/maybe-add-bounty-for-issue repo-name repo-id issue)))
 
 (defn handle-issue-closed
   [{{{owner :login} :owner repo :name}   :repository

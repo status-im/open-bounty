@@ -17,6 +17,16 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
+;; TODO: Change max-limit, also defined in two places
+(defn maybe-add-bounty-for-issue [repo repo-id issue]
+  (let [res  (issues/get-issues-count repo-id)
+        {issues-count :count} res
+        max-limit
+        limit-reacted? (> issues-count max-limit)
+        _ log/debug ("*** get-issues-count" repo-id res count limit-reached?)]
+    (if limit-reached?
+      (log/debug "Total issues for repo limit reached " repo issues-count)
+      (add-bounty-for-issue repo repo-id issue))))
 
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
@@ -62,7 +72,7 @@
     (log/debug (str "adding bounties for" (count bounty-issues)
                     " existing issues (total " (count bounty-issues) ")"))
     (doall
-     (map (partial add-bounty-for-issue repo repo-id) max-bounties))))
+     (map (partial maybe-add-bounty-for-issue repo repo-id) max-bounties))))
 
 
 (defn update-bounty-comment-image [issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens]
