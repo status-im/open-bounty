@@ -75,7 +75,7 @@
         [:a.ui.button.small.login-button {:href js/authorizeUrl} (str "LOG IN"
                                                                       (when-not mobile? " \u2192"))]))))
 
-(defn tabs []
+(defn tabs [mobile?]
   (let [user (rf/subscribe [:user])
         current-page (rf/subscribe [:page])]
     (fn []
@@ -83,7 +83,7 @@
                               [:activity "Activity"]]
                         (when @user
                           [[:repos "Repositories"]
-                           [:manage-payouts "Manage Payouts"]
+                           [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")]
                            (when (:status-team-member? @user)
                              [:usage-metrics "Usage metrics"])]))]
         (into [:div.ui.attached.tabular.menu.tiny]
@@ -110,7 +110,7 @@
         [:div.four.wide.column
          [header-logo]]
         [:div.eight.wide.column.middle.aligned.computer.only.computer-tabs-container
-         [tabs]]
+         [tabs false]]
         [:div.four.wide.column.right.aligned.computer.only
          [user-component @user false]]]
        [:div.ui.grid.container.tablet.mobile.only
@@ -120,7 +120,7 @@
          [:div.eight.wide.column.right.aligned
           [user-component @user true]]]
         [:div.row.mobile-tab-container
-         [tabs]]]
+         [tabs true]]]
        (when @flash-message
          [flash-message-pane])])))
 
