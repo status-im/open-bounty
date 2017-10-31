@@ -156,11 +156,15 @@
   [bounty-addr token]
   (let [token-address (get-token-address token)]
     (log/debug "token-balance" bounty-addr token token-address)
-    (-> (eth/call token-address
-                  (:balance-of method-ids)
-                  bounty-addr)
-        eth/hex->big-integer
-        (convert-token-value token))))
+    (try
+      (-> (eth/call token-address
+                    (:balance-of method-ids)
+                    bounty-addr)
+          eth/hex->big-integer
+          (convert-token-value token))
+      (catch Throwable t
+        (log/error "Failed to query token balance " t)
+        0))))
 
 
 (defn token-balances
