@@ -15,6 +15,17 @@
   font-family: $PostGroteskMedium;
 }
 
+.email-form form {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1230px) {
+  .email-form form {
+    display: initial;
+  }
+}
+
 .email-form__responces {
   position: relative;
   color: rgba(255, 255, 255, .6);
@@ -87,8 +98,8 @@
 .email-form__input--email,
 .email-form .hs_email.hs-form-field input {
   text-align: left;
-  background-color: #4c81b6;
-  color: #b6cbe1;
+  background-color: rgba(51, 0, 0, 0.2);
+  color: rgba(255, 255, 255, .67);
   padding: 16px 15px 15px 15px;
   margin: 0 0 0 0;
   font-family: 'PostGrotesk-Book', sans-serif;
@@ -100,12 +111,6 @@
   font-size: 16px;
 }
 
-input.email-form__input--email:disabled {
-  //color: #AEB5BA;
-  //background-color: #F7FAFB;
-  //opacity: 1;
-}
-
 .email-form--valid .email-form__input--email {
   color: #92999F;
   background-image: url(../img/new-site/verified.png);
@@ -114,18 +119,8 @@ input.email-form__input--email:disabled {
   background-position: right 10px center;
 }
 
-.email-form__input--email:focus {
-
-}
-
-.email-form__input--email::-webkit-input-placeholder,
-.email-form__input--email::-moz-placeholder,
-.email-form__input--email:-ms-input-placeholder {
-  color: #AEB5BA;
-}
-
-.email-form__input--email:-moz-placeholder {
-  color: rgba(255, 255, 255, .6);
+.email-form input::placeholder {
+  color: rgba(255, 255, 255, .67);
 }
 
 .email-form .hbspt-form {
@@ -148,53 +143,19 @@ input.email-form__input--email:disabled {
 .email-form input[type="submit"] {
   flex-shrink: 0;
   flex-grow: 0;
-  margin-left: 1em;
   border-radius: 8px;
 }
 
-.email-form input[type="submit"]:hover {
-  //background-color: #945BF0;
+.hs_submit {
+  width: fit-content;
+  margin: 5px auto;
 }
 
-.email-form input[type="submit"]:disabled {
-  //cursor: default;
-  //color: #8CC2F2;
+@media (min-width: 1230px) {
+  .email-form input[type="submit"] {
+    margin-left: 10px;
+  }
 }
-
-.email-form input[type="submit"]:disabled:hover {
-    //background-color: #CAE1F7;
-}
-
-
-
-@media (max-width: 640px) {
-
-  .email-form, .email-form__inner {
-    display: flex;
-    width: auto;
-  }
-
-  .email-form__inner {
-    flex-direction: column;
-  }
-
-  .email-form__responces {
-    width: 240px;
-    text-align: center;
-    margin-bottom: 24px;
-    height: auto;
-  }
-
-  .email-form__success-message {
-    width: 240px;
-  }
-  .email-form__success-message::after {
-    left: 50%;
-    margin: 0 0 0 -14px;
-  }
-
-}
-
 
 @keyframes shakeIt {
   0%, 100% {

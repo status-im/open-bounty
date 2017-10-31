@@ -15,7 +15,6 @@
   flex-basis: 0;
   flex-grow: 1;
   margin-top: 24px;
-  margin-bottom: 24px;
 }
 
 @media (min-width: 640px) {
@@ -48,9 +47,9 @@
 
 .action p {
   opacity: 0.6;
-  font-family: $PostGroteskMedium;
+  font-family: $PostGroteskBook;
   font-size: 18px;
-  line-height: 1.39;
+  line-height: 25px;
   margin: 0 auto 26px;
   max-width: 400px;
   text-align: center;
