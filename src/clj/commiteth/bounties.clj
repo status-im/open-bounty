@@ -19,13 +19,13 @@
 
 ;; TODO: Change max-limit, also defined in two places
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
-  (let [res  (issues/get-issues-count repo-id)
-        {issues-count :count} res
+  (let [res (issues/get-issues-count repo-id)
+        {count :count} res
         max-limit 2
-        limit-reacted? (> issues-count max-limit)
-        _ log/debug ("*** get-issues-count" repo-id res count limit-reached?)]
+        limit-reached? (> count max-limit)
+        _ (log/debug "*** get-issues-count" repo-id res count limit-reached?)]
     (if limit-reached?
-      (log/debug "Total issues for repo limit reached " repo issues-count)
+      (log/debug "Total issues for repo limit reached " repo count)
       (add-bounty-for-issue repo repo-id issue))))
 
 (defn add-bounty-for-issue [repo repo-id issue]
