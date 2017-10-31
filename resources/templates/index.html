@@ -104,54 +104,27 @@
           </div>
 
           <div class="action">
-              <img src="assets/organisations.svg" class="logo-organisations">
-              <h1>For organizations</h1>
-              <h2>Find talented developers fast</h2>
-              <p>
-                  Post bounties, build your team and move your project forward today.
-              </p>
+            <img src="assets/organisations.svg" class="logo-organisations">
+            <h1>For organizations</h1>
+            <h2>Find talented developers fast</h2>
+            <p>
+                Post bounties, build your team and move your project forward today.
+            </p>
+
+            <div class="email-form">
               <!--[if lte IE 8]>
               <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/v2-legacy.js"></script>
               <![endif]-->
               <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/v2.js"></script>
               <script>
-                function signup() {
-                  console.log("Signing up");
-                  hbspt.forms.create({
-                    portalId: '3954379',
-                    formId: '9a0a26a8-3163-45a8-a933-774de4853609'
-                  });
-                }
+                hbspt.forms.create({
+                  css: '',
+                  portalId: '3954379',
+                  formId: 'b6c83d22-0bcf-4cfa-b9df-88fbaa09dee7'
+                });
               </script>
-
-
-              <!-- HACK(oskarth): Mailchimp - should probably be Hubspot but we can hack this with JS
-                   Also adds ad hoc margin-left to action and border radius styles.
-                   TODO Add background style.
-
-                 -->
-              <div class="email-form">
-                <!-- XXX: Mailchimp -->
-                <form action="//status.us13.list-manage.com/subscribe/post?u=d0c1a0be2adff281b52e27a7f&amp;id=09e2d9ae07" method="post" name="mc-embedded-subscribe-form" id="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate="novalidate" _lpchecked="1">
-                  <div class="email-form__inner">
-                    <input type="email" value="" name="EMAIL" class="required email-input mce-EMAIL email-form__input email-form__input--email" placeholder="Enter your email" aria-required="true" style="border-bottom-right-radius: .5em; border-top-right-radius: .5em;">
-
-              <button style="margin-left: 1em;" onclick="signup()">Sign up for beta</button>
-                    <!-- <input type="submit" value="GET EARLY ACCESS" name="subscribe" class="button email-form__input email-form__input--sumbit mc-embedded-subscribe button email-button">
-                    -->
-                    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_d0c1a0be2adff281b52e27a7f_09e2d9ae07" tabindex="-1" value=""></div>
-                  </div>
-                  <div id="mce-responses" class="email-form__responces">
-                    <div class="response email-form__error-message" id="mce-error-response"></div>
-                    <div class="email-form__success-message response" id="mce-success-response"></div>
-                  </div>
-                </form>
-                <!-- End Mailchimp -->
-              </div>
-
-              <!-- <button onclick="signup()">Sign up for beta</button> -->
             </div>
-
+          </div>
 
         </div>
 

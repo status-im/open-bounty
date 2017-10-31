@@ -795,9 +795,8 @@ li.social-link a {
   text-align: center;
   color: #ffffff; }
 
-.action button {
-  width: 240px;
-  height: 45px;
+.action button,
+.hs_submit .hs-button {
   object-fit: contain;
   border-radius: 8px;
   background-color: #1e3751;
@@ -807,12 +806,14 @@ li.social-link a {
   font-weight: 500;
   line-height: 1.15;
   letter-spacing: 1px;
+  padding: 16px 32px;
   text-align: center;
   text-transform: uppercase;
   color: #ffffff;
   transition: opacity .2s ease; }
 
-.action button:hover {
+.action button:hover,
+.hs_submit .hs-button:hover {
   opacity: 0.5;
   cursor: pointer; }
 
@@ -1521,7 +1522,6 @@ li.social-link a {
 .email-form {
   display: -ms-flexbox;
   display: flex;
-  width: 460px;
   position: relative; }
 
 .email-form.email-form--error .email-form__inner {
@@ -1589,23 +1589,21 @@ li.social-link a {
 .email-form__inner {
   display: -ms-flexbox;
   display: flex;
-  width: 460px;
   position: relative; }
 
-.email-form__input {
-  height: 45px;
-  line-height: 45px; }
+.email-form .hs_email.hs-form-field label {
+  display: none; }
 
-.email-form__input--email {
+.email-form__input--email,
+.email-form .hs_email.hs-form-field input {
   text-align: left;
-  background-color: #F2F6F8;
-  color: #49555F;
-  width: 240px;
-  padding: 0 15px;
+  background-color: #4c81b6;
+  color: #b6cbe1;
+  padding: 16px 15px 15px 15px;
   margin: 0 0 0 0;
   font-family: 'PostGrotesk-Book', sans-serif;
   box-sizing: border-box;
-  border-radius: 8px 0 0 8px;
+  border-radius: 8px;
   transition: background-color .2s ease;
   font-weight: 400;
   font-size: 16px; }
@@ -1617,25 +1615,31 @@ li.social-link a {
   background-repeat: no-repeat;
   background-position: right 10px center; }
 
-.email-form__input--email::-webkit-input-placeholder {
-  color: #AEB5BA; }
-
-.email-form__input--email::-moz-placeholder {
-  color: #AEB5BA; }
-
+.email-form__input--email::-webkit-input-placeholder,
+.email-form__input--email::-moz-placeholder,
 .email-form__input--email:-ms-input-placeholder {
   color: #AEB5BA; }
 
 .email-form__input--email:-moz-placeholder {
   color: rgba(255, 255, 255, 0.6); }
 
+.email-form .hbspt-form {
+  width: 100%; }
+  .email-form .hbspt-form > .submitted-message {
+    color: #ffffff;
+    opacity: 0.6; }
+  .email-form .hbspt-form > form > div {
+    display: inline-block; }
+    .email-form .hbspt-form > form > div > div {
+      margin: 0; }
+
 .email-form input[type="submit"] {
-  width: 220px;
   -ms-flex-negative: 0;
   flex-shrink: 0;
   -ms-flex-positive: 0;
   flex-grow: 0;
-  border-radius: 0 8px 8px 0; }
+  margin-left: 1em;
+  border-radius: 8px; }
 
 @media (max-width: 640px) {
   .email-form, .email-form__inner {
@@ -1645,13 +1649,6 @@ li.social-link a {
   .email-form__inner {
     -ms-flex-direction: column;
     flex-direction: column; }
-  .email-form__input--email {
-    width: 240px;
-    border-radius: 8px;
-    margin: 0 0 16px 0; }
-  .email-form input[type="submit"] {
-    width: 240px;
-    border-radius: 8px; }
   .email-form__responces {
     width: 240px;
     text-align: center;
@@ -1781,8 +1778,7 @@ li.social-link a {
   background-image: url(../img/new-site/icon_yt.svg); }
 
 .footer-link--rt .footer-icon {
-  background-image: url(../img/new-site/icon_rt.svg);
-}
+  background-image: url(../img/new-site/icon_rt.svg); }
 
 .footer-link a {
   color: white; }
