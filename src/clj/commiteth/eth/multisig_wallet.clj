@@ -155,7 +155,7 @@
   contract."
   [bounty-addr token]
   (let [token-address (get-token-address token)]
-
+    (log/debug "token-balance" bounty-addr token token-address)
     (-> (eth/call token-address
                   (:balance-of method-ids)
                   bounty-addr)
