@@ -91,8 +91,10 @@ WHERE i.repo_id = r.repo_id;
 
 -- :name get-issues-count :? :1
 SELECT COUNT(*)
-FROM issues i, repositories r
-WHERE i.repo_id = :repo_id;
+FROM issues i
+WHERE i.repo_id = :repo_id
+AND i.confirm_hash is null
+AND i.is_open = true;
 
 -- :name update-repo-generic :! :n
 /* :require [clojure.string :as string]
