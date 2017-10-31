@@ -21,7 +21,7 @@
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
   (let [res  (issues/get-issues-count repo-id)
         {issues-count :count} res
-        max-limit
+        max-limit 2
         limit-reacted? (> issues-count max-limit)
         _ log/debug ("*** get-issues-count" repo-id res count limit-reached?)]
     (if limit-reached?
