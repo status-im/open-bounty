@@ -1,5 +1,13 @@
 .header {
-  background-color: #57a7ed;
+  background: linear-gradient(90deg, #57A7ED 50%, #54A3E8 50%);
+}
+
+.header-pattern {
+  background-image: url(../img/new-site/SOB_tile4@2x.png);
+  background-size: 20px;
+  background-position: left top;
+  background-repeat: repeat;
+  padding-bottom: 134px;
 }
 
 @media (min-width: 1230px) {
@@ -10,7 +18,7 @@
     box-shadow: 0 10px 18px 0 rgba(122, 135, 142, 0.33);
     z-index: 900;
     max-width: 1200px;
-    padding-bottom: 134px;
+
   }
 }
 

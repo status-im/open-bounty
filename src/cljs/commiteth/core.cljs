@@ -261,11 +261,11 @@
                       js/adminToken])))
     (reset! active-user nil)))
 
-(defn load-data []
+(defn load-data [initial-load?]
   (doall (map rf/dispatch
-        [[:load-open-bounties]
-         [:load-activity-feed]
-         [:load-top-hunters]]))
+        [[:load-open-bounties initial-load?]
+         [:load-activity-feed initial-load?]
+         [:load-top-hunters initial-load?]]))
   (load-user))
 
 (defonce timer-id (r/atom nil))
@@ -273,7 +273,7 @@
 (defn on-js-load []
   (when-not (nil? @timer-id)
     (js/clearInterval @timer-id))
-  (reset! timer-id (js/setInterval load-data 60000))
+  (reset! timer-id (js/setInterval #(load-data false) 60000))
   (mount-components))
 
 (defn init! []
@@ -283,5 +283,5 @@
     (enable-re-frisk!))
   (load-interceptors!)
   (hook-browser-navigation!)
-  (load-data)
+  (load-data true)
   (on-js-load))
