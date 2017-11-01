@@ -160,7 +160,7 @@
      [:div.commiteth-footer-inner
       [:div.commiteth-footer-logo-container
        [:div.commiteth-footer-logo-container-inner
-        [:div (svg/status-logo-footer)]
+        [:div.commiteth-footer-logo (svg/status-logo-footer)]
         [:div.commiteth-footer-status-addr
          "Status Research & Development GmbH"
          [:br]
