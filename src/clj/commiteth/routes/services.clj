@@ -192,7 +192,9 @@
     "anna04test"
     "pablanopete"
     "andytudhope"
-    "ara4n"})
+    "ara4n"
+    "commitethtest"
+    })
 
 (defapi service-routes
   (when (:dev env)
