@@ -253,6 +253,13 @@
                (not (float= db-balance-eth balance-eth))
                (not= db-tokens token-balances))
           (log/debug "balances differ")
+          (log/debug "ETH (db):" db-balance-eth (type db-balance-eth) )
+          (log/debug "ETH (chain):" balance-eth (type balance-eth) )
+          (log/debug "ETH cmp:" (float= db-balance-eth balance-eth))
+          (log/debug "tokens (db):" db-tokens (type db-tokens) (type (:SNT db-tokens)))
+          (log/debug "tokens (chain):" token-balances (type token-balances) (type (:SNT token-balances)))
+          (log/debug "tokens cmp:" (= db-tokens token-balances))
+
           (issues/update-eth-balance contract-address balance-eth)
           (issues/update-token-balances contract-address token-balances)
           (bounties/update-bounty-comment-image issue-id

@@ -80,9 +80,9 @@
   (let [repos-loading? (rf/subscribe [:repos-loading?])]
     (fn []
       (if @repos-loading?
-        [:div
+        [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
-          [:div.ui.text.loader "Loading"]]]
+          [:div.ui.text.loader.view-loading-label "Loading"]]]
         [repos-list]))))
 
 (defn repos-page []

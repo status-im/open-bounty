@@ -35,7 +35,7 @@ Before you can create bounties, you need to have administrative access to one or
 * click on the button `Enable Github Account`
 * If you have 1 or more Organisation repositories then grant Organisation access to each of them by clicking on the button `Grant` 
 * grant Status Open Bounty the needed addtional permissions for managing repository webhooks, adding and modifying comments by clicking on the button `Authorize status-open-bounty`
-* now you should see your repositories on the `Repositories` tab, click `Add` on one. This should cause the `bounty` label to be available in the repository's labels and a new webhook should now exist for the repository.
+* now you should see your repositories on the `Repositories` tab, click `Add` on one. If your account isn't whitelisted you will see instructions how to request an access. If your account is whitelisted then new `bounty` label will become available in the GitHub repository's labels and a new webhook should now exist for the repository.
 * now, add the `bounty` label to a new or an existing issue. This should cause Status Open Bounty to post a new comment for the issue containing an image with text `Deploying contract, please wait`
 * once the contract has been mined, the comment will be updated to contain the bounty contract's address and a QR code
 
@@ -45,6 +45,8 @@ Before you can create bounties, you need to have administrative access to one or
 The Github comment has a QR code as an image containing the bounty contract address. The address is also on the comment as text. Use any ethereum wallet to send ETH and/or supported ERC20 tokens to this address. After a small delay (max 5 minutes), the activity feed should show that the related bounty issue's balance increased and comment should be updated.
 
 ### Submitting claims
+
+To get bounties you need to provide an Ethereum address in you Payment details on the https://openbounty.status.im:444 that will be used to send bounties to.
 
 Open a pull request against the target repository with `Fixes: #NN` in the comment where `NN` is the issue number of the bountied Github issue. After the PR has been opened, the activity feed should show an item indicating that your username has opened a claim for the related bounty issue. The repository admin should also see the claim under `Open claims` in the `Manage payouts` view.
 
