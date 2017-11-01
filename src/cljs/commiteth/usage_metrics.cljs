@@ -45,9 +45,9 @@
   (let [metrics-loading? (rf/subscribe [:metrics-loading?])]
     (fn []
       (if @metrics-loading?
-        [:div
+        [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
-          [:div.ui.text.loader "Loading"]]]
+          [:div.ui.text.loader.view-loading-label "Loading"]]]
         [:div
          [:h2 "Usage metrics for the past 30 days"]
          [chartjs-component]]))))
