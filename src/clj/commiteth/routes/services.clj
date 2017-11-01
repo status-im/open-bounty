@@ -191,7 +191,8 @@
     "anna03test"
     "anna04test"
     "pablanopete"
-    "andytudhope"})
+    "andytudhope"
+    "ara4n"})
 
 (defapi service-routes
   (when (:dev env)
