@@ -12,9 +12,8 @@
 
 (def ^:const label-name "bounty")
 
-;; TODO: Change max-limit, also defined in two places
-;; TODO: Change max limit to 1000 after testing
-(def max-issues-limit 2)
+;; max number of issues allowed to be created per repo
+(def max-issues-limit 100)
 
 (defn has-bounty-label?
   [issue]
