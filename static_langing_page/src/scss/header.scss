@@ -15,10 +15,16 @@
     margin: 0 auto;
     margin-top: 40px;
     border-radius: 10px;
-    box-shadow: 0 10px 18px 0 rgba(122, 135, 142, 0.33);
     z-index: 900;
     max-width: 1200px;
 
+  }
+  .header-welcome {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0;
+    max-width: inherit;
+    padding-bottom: 0;
   }
 }
 
@@ -32,7 +38,7 @@
 @media (min-width: 640px) {
   .header__inner {
     flex-direction: row;
-    padding: 30px 0 0 30px;
+    padding: 40px 0 38px 80px;
   }
 }
 
