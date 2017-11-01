@@ -71,6 +71,11 @@
     ;;  not to support it)
     #_(issues/close commit-sha issue-id)))
 
+(defn handle-issue-reopened
+  [{{issue-id :id} :issue}]
+  (when (issues/is-bounty-issue? issue-id)
+    (issues/update-open-status issue-id true)))
+
 (def ^:const keywords
   [#"(?i)close:?\s+#(\d+)"
    #"(?i)closes:?\s+#(\d+)"
@@ -187,7 +192,9 @@
            (bounties/has-bounty-label? (:issue webhook-payload)))
       (handle-issue-closed webhook-payload))
     (when (= "edited" action)
-           (handle-issue-edited webhook-payload)))
+      (handle-issue-edited webhook-payload))
+    (when (= "reopened" action)
+      (handle-issue-reopened webhook-payload)))
   (ok))
 
 
