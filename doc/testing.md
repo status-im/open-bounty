@@ -46,6 +46,8 @@ The Github comment has a QR code as an image containing the bounty contract addr
 
 ### Submitting claims
 
+To get bounties you need to provide an Ethereum address in you Payment details on the https://openbounty.status.im:444 that will be used to send bounties to.
+
 Open a pull request against the target repository with `Fixes: #NN` in the comment where `NN` is the issue number of the bountied Github issue. After the PR has been opened, the activity feed should show an item indicating that your username has opened a claim for the related bounty issue. The repository admin should also see the claim under `Open claims` in the `Manage payouts` view.
 
 ### Managing payouts
