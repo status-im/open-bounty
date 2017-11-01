@@ -19,3 +19,4 @@ profiles.clj
 *.log
 resources/contracts
 node_modules
+.DS_Store
