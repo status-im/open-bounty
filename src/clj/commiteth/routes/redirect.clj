@@ -12,6 +12,8 @@
             [clojure.string :as str]))
 
 
+(defn hubspot-contact-create-enabled []
+  (env :hubspot-contact-create-enabled false))
 
 (defn- create-user [token user]
   (let [{name    :name
@@ -47,7 +49,8 @@
               new-user? (nil? (users/get-user (:id gh-user 0)))
               user (assoc (get-or-create-user access-token)
                           token-key access-token)]
-          (when new-user?
+          (when (and (hubspot-contact-create-enabled)
+                     new-user?)
             (try
               (hubspot/create-hubspot-contact (:email user)
                                                  (:name user "")
