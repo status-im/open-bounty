@@ -1,0 +1,141 @@
+.welcome-block {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    top: -28px;
+  }
+  
+  .welcome-block__top {
+    display: flex;
+    justify-content: center;
+    width: 550px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .welcome-block__image {
+    width: 126px;
+    height: 138px;
+    background-image: url(../img/new-site/welcome@2x.png);
+    background-size: 126px;
+    background-position: center;
+    margin: 0 0 16px 0;
+  }
+  
+  .welcome-block__top h2 {
+	font-family: $PostGroteskMedium;
+	font-size: 25px;
+	font-weight: 500;
+	line-height: 1.36;
+	text-align: center;
+	color: #42505c;
+  }
+  
+  .welcome-block__top p {
+	font-family: $PostGroteskMedium;
+	font-size: 18px;
+	line-height: 1.39;
+	text-align: center;
+    color: #8d99a4;
+    margin-top: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .welcome-block .button {
+    width: 200px;
+  }
+  
+  .welcome-home-link {
+    display: block;
+    padding-top: 24px;
+    padding-bottom: 60px;
+    margin: 0 auto;
+	font-family: $PostGroteskMedium;
+	font-size: 17px;
+	line-height: 1.41;
+	text-align: center;
+	color: #8d99a4;
+  }
+  
+  .welcome-home-link:hover {
+    opacity: 1
+  }
+
+  .welcome-actions {
+    max-width: 723px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    border-radius: 8px;
+	background-color: #ffffff;
+	box-shadow: 0 5px 16px 0 rgba(230, 235, 238, 0.68);
+  }
+  
+  .welcome-action h2 {
+    font-family: $PostGroteskMedium;
+	font-size: 18px;
+	font-weight: 500;
+	line-height: 1.72;
+	text-align: left;
+	color: #42505c;
+  }
+
+  .welcome-action p {
+    opacity: 0.5;
+	font-family: $PostGroteskMedium;
+	font-size: 16px;
+	line-height: 1.5;
+	text-align: left;
+	color: #42505c;
+  }
+
+  .welcome-icon {
+      width: 32px;
+      height: 32px;
+      padding: 7px;
+      border-radius: 100px;
+      border: solid 1px #ecf0f3;      
+  }
+
+  .welcome-button {
+    display: block;
+    width: fit-content;
+    margin-top: 16px;
+	border-radius: 8px;
+	background-color: rgba(87, 167, 237, 0.2);
+    border: solid 1px rgba(199, 206, 209, 0.12);
+    font-family: $PostGroteskMedium;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.15;
+	letter-spacing: 1px;
+	text-align: center;
+    color: #57a7ed;
+    padding: 15px;
+  }
+
+  .welcome-action:first-of-type .welcome-button {
+      margin-bottom: 40px;
+  }
+
+  @media (max-width: 740px) {
+  
+  .welcome-block__top {
+    width: 100%;
+    padding: 0 32px;
+  }
+  
+  .welcome-block__top h2 {
+      font-size: 22px;
+      line-height: 26px;
+      padding: 0 24px;
+    }
+  
+  .welcome-block__top p {
+      padding: 0 24px;
+    }
+  
+  .welcome-block__image {
+      transform: scale(.9);
+    }
+  }
