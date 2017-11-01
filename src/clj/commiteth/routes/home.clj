@@ -25,9 +25,14 @@
 (defn landing-page []
   (layout/render "index.html" {:authorize-url (github/signup-authorize-url)}))
 
+(defn welcome-page []
+  (layout/render "welcome-dev.html"))
+
 (defroutes home-routes
   (GET "/app" {{user :identity} :session}
        (home-page user))
+  (GET "/welcome" {session :session}
+       (welcome-page))
   (GET "/" {session :session}
        (landing-page))
   (GET "/logout" {session :session}

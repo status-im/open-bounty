@@ -224,14 +224,12 @@ a {
     border-radius: 10px;
     z-index: 900;
     max-width: 1200px; }
-
   .header-welcome {
     margin: 0;
     border-radius: 0;
     box-shadow: 0;
     max-width: inherit;
-    padding-bottom: 0; } 
-}
+    padding-bottom: 0; } }
 
 .header__inner {
   display: -ms-flexbox;
