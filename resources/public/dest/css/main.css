@@ -714,12 +714,24 @@ li.social-link a {
   opacity: 1; }
 
 .welcome-actions {
-  max-width: 723px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 24px 32px;
   border-radius: 8px;
   background-color: #ffffff;
   box-shadow: 0 5px 16px 0 rgba(230, 235, 238, 0.68); }
+
+.welcome-action {
+  -ms-flex: 1;
+  flex: 1;
+  padding: 24px 32px; }
+
+@media (min-width: 640px) {
+  .welcome-actions {
+    display: -ms-flexbox;
+    display: flex; }
+  .welcome-action:last-of-type {
+    padding-left: 32px;
+    border-left: solid 1px #ecf0f3; } }
 
 .welcome-action h2 {
   font-family: "PostGrotesk-Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
