@@ -21,6 +21,9 @@
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]))
 
+(defn add-bounties-for-existing-issues? []
+  (env :add-bounties-for-existing-issues false))
+
 (defn access-error [_ _]
   (unauthorized {:error "unauthorized"}))
 
@@ -56,8 +59,8 @@
       (repositories/update-repo repo-id {:hook_id (:id created-hook)})))
   (github/create-label full-repo token)
   (repositories/update-repo repo-id {:state 2})
-  (bounties/add-bounties-for-existing-issues full-repo))
-
+  (when (add-bounties-for-existing-issues?)
+    (bounties/add-bounties-for-existing-issues full-repo)))
 
 (defn disable-repo [repo-id full-repo hook-id token]
   (log/debug "disable-repo" repo-id full-repo)
