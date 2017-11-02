@@ -227,6 +227,8 @@ VALUES(:pr_id,
 ON CONFLICT (pr_id) DO UPDATE
 SET
   state = :state,
+  issue_number = :issue_number,
+  issue_id = :issue_id,
   updated = timezone('utc'::text, now()),
   commit_sha = :commit_sha;
 
