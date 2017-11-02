@@ -202,11 +202,12 @@
 
 (defn handle-pull-request
   [pull-request]
-  (case (:action pull-request)
-    "opened" (handle-pull-request-event :opened pull-request)
-    "closed" (handle-pull-request-event :closed pull-request)
-    nil)
-  (ok))
+  (let [action (keyword (:action pull-request))]
+    (when (contains? #{:opened
+                       :edited
+                       :closed} action)
+      (handle-pull-request-event action pull-request))
+    (ok)))
 
 
 (defn validate-secret [webhook-payload raw-payload github-signature]
