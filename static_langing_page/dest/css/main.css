@@ -244,7 +244,7 @@ a {
   .header__inner {
     -ms-flex-direction: row;
     flex-direction: row;
-    padding: 40px 0 38px 80px; } }
+    padding: 40px 0 38px 40px; } }
 
 .header-section {
   display: -ms-flexbox;
@@ -412,7 +412,9 @@ li.social-link a {
   .logo__text {
     margin: 7px 0 0 10px; }
   .logo__title {
-    font-size: 19px; } }
+    font-size: 19px; }
+  .header {
+    background: #57A7ED 50%; } }
 
 .page {
   display: -ms-flexbox;
@@ -1490,7 +1492,7 @@ li.social-link a {
 
 .slide.slide--three .slide__inner {
   text-align: center;
-  margin: 60px 0 60px 0; }
+  margin: 0 0 60px 0; }
 
 .slide__text {
   width: 520px; }
