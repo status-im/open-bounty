@@ -59,20 +59,25 @@
 
 
 (defn manage-payouts-page []
-  (let [owner-bounties (rf/subscribe [:owner-bounties])]
+  (let [owner-bounties (rf/subscribe [:owner-bounties])
+        owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
     (fn []
-      (let [web3 (.-web3 js/window)
-            bounties (vals @owner-bounties)
-            unpaid? #(empty? (:payout_hash %))
-            paid? #(not-empty (:payout_hash %))
-            unpaid-bounties (filter unpaid? bounties)
-            paid-bounties (filter paid? bounties)]
-        [:div.ui.container
-         (when (nil? web3)
-           [:div.ui.warning.message
-            [:i.warning.icon]
-            "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
-         [:h3 "New claims"]
-         [claim-list unpaid-bounties]
-         [:h3 "Old claims"]
-         [claim-list paid-bounties]]))))
+      (if @owner-bounties-loading?
+        [:container
+         [:div.ui.active.inverted.dimmer
+          [:div.ui.text.loader "Loading"]]]
+        (let [web3 (.-web3 js/window)
+              bounties (vals @owner-bounties)
+              unpaid? #(empty? (:payout_hash %))
+              paid? #(not-empty (:payout_hash %))
+              unpaid-bounties (filter unpaid? bounties)
+              paid-bounties (filter paid? bounties)]
+          [:div.ui.container
+           (when (nil? web3)
+             [:div.ui.warning.message
+              [:i.warning.icon]
+              "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
+           [:h3 "New claims"]
+           [claim-list unpaid-bounties]
+           [:h3 "Old claims"]
+           [claim-list paid-bounties]])))))
