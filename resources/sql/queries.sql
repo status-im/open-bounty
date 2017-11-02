@@ -128,16 +128,14 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title)
 -- :name update-commit-sha :<! :1
 -- :doc updates issue with commit_sha
 UPDATE issues
-SET commit_sha = :commit_sha,
-updated = timezone('utc'::text, now())
+SET commit_sha = :commit_sha
 WHERE issue_id = :issue_id
 RETURNING repo_id, issue_id, issue_number, title, commit_sha, contract_address;
 
 -- :name update-transaction-hash :! :n
 -- :doc updates transaction-hash for a given issue
 UPDATE issues
-SET transaction_hash = :transaction_hash,
-updated = timezone('utc'::text, now())
+SET transaction_hash = :transaction_hash
 WHERE issue_id = :issue_id;
 
 
@@ -311,6 +309,24 @@ AND r.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
+
+
+-- :name get-bounty-winner :? :*
+-- :doc return user_id, login and name for a user that has won and
+--      been paid given bounty issue
+SELECT
+  u.address         AS payout_address,
+  u.login           AS payee_login,
+  u.id              AS payee_user_id,
+  u.name            AS payee_name
+FROM issues i, users u, pull_requests p
+WHERE
+i.issue_id = :issue_id
+AND p.issue_id = i.issue_id
+AND p.repo_id = i.repo_id
+AND u.id = p.user_id
+AND i.payout_receipt IS NOT NULL;
+
 
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash

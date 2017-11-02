@@ -71,6 +71,10 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/get-bounty con-db {:owner owner :repo repo :issue_number issue-number})))
 
+(defn get-bounty-winner
+  [issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-bounty-winner con-db {:issue_id issue-id})))
 
 (defn open-bounty-contracts
   []
