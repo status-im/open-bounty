@@ -14,10 +14,10 @@
          user-name :user_name
          avatar-url :user_avatar_url
          issue-id :issue_id
-         issue-title :issue_title
-         winner :winner} claim
+         issue-title :issue_title} claim
         merged? (= 1 (:pr_state claim))
         paid? (not-empty (:payout_hash claim))
+        winner (:winner bounty)
         winner-login (:payee_login winner)
         bot-confirm-unmined? (empty? (:confirm_hash bounty))
         confirming? (:confirming? bounty)
