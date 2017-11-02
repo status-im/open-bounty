@@ -26,7 +26,7 @@
   (layout/render "index.html" {:authorize-url (github/signup-authorize-url)}))
 
 (defn welcome-page []
-  (layout/render "welcome-dev.html"))
+  (layout/render "welcome.html"))
 
 (defroutes home-routes
   (GET "/app" {{user :identity} :session}

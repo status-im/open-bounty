@@ -51,11 +51,11 @@
     padding-top: 24px;
     padding-bottom: 60px;
     margin: 0 auto;
-	font-family: $PostGroteskMedium;
-	font-size: 17px;
-	line-height: 1.41;
-	text-align: center;
-	color: #8d99a4;
+    font-family: $PostGroteskMedium;
+    font-size: 17px;
+    line-height: 1.41;
+    text-align: center;
+    color: #8d99a4;
   }
   
   .welcome-home-link:hover {
@@ -63,59 +63,74 @@
   }
 
   .welcome-actions {
-    max-width: 723px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 24px 32px;
     border-radius: 8px;
-	background-color: #ffffff;
-	box-shadow: 0 5px 16px 0 rgba(230, 235, 238, 0.68);
+	  background-color: #ffffff;
+	  box-shadow: 0 5px 16px 0 rgba(230, 235, 238, 0.68);
   }
   
+  .welcome-action {
+    flex: 1;
+    padding: 24px 32px;
+  }
+
+  @media (min-width: 640px) {
+    .welcome-actions {
+      display: flex;
+    }
+
+    .welcome-action:last-of-type {
+      padding-left: 32px;
+      border-left: solid 1px #ecf0f3;
+    }
+  }
+
   .welcome-action h2 {
     font-family: $PostGroteskMedium;
-	font-size: 18px;
-	font-weight: 500;
-	line-height: 1.72;
-	text-align: left;
-	color: #42505c;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.72;
+    text-align: left;
+    color: #42505c;
   }
 
   .welcome-action p {
     opacity: 0.5;
-	font-family: $PostGroteskMedium;
-	font-size: 16px;
-	line-height: 1.5;
-	text-align: left;
-	color: #42505c;
+    font-family: $PostGroteskMedium;
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: left;
+    color: #42505c;
   }
 
   .welcome-icon {
-      width: 32px;
-      height: 32px;
-      padding: 7px;
-      border-radius: 100px;
-      border: solid 1px #ecf0f3;      
+    width: 32px;
+    height: 32px;
+    padding: 7px;
+    border-radius: 100px;
+    border: solid 1px #ecf0f3;      
   }
 
   .welcome-button {
     display: block;
     width: fit-content;
     margin-top: 16px;
-	border-radius: 8px;
-	background-color: rgba(87, 167, 237, 0.2);
+    border-radius: 8px;
+    background-color: rgba(87, 167, 237, 0.2);
     border: solid 1px rgba(199, 206, 209, 0.12);
     font-family: $PostGroteskMedium;
-	font-size: 13px;
-	font-weight: 500;
-	line-height: 1.15;
-	letter-spacing: 1px;
-	text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: 1px;
+    text-align: center;
     color: #57a7ed;
     padding: 15px;
   }
 
   .welcome-action:first-of-type .welcome-button {
-      margin-bottom: 40px;
+    margin-bottom: 40px;
   }
 
   @media (max-width: 740px) {
