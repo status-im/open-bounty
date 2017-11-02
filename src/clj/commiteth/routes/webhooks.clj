@@ -59,17 +59,17 @@
     (issues/update-open-status issue-id false))
 
   #_(when-let [commit-sha (find-commit-sha owner repo issue-number ["referenced" "closed"])]
-    (log/debug (format "Issue %s/%s/%s closed with commit %s"
-                       owner repo issue-number commit-sha))
-    (log/info "NOT considering event as bounty winner")
-    ;; TODO: disabled for now since the system is meant to be used
-    ;;  exclusively via pull requests. issue closed event without a PR
-    ;;  closed via merge first means that the referencing commit was
-    ;;  pushed directly to master and thus never accepted by the
-    ;;  maintainer (could be that the bounty hunter had write access
-    ;;  to master, but that scenario should be very rare and better
-    ;;  not to support it)
-    #_(issues/close commit-sha issue-id)))
+      (log/debug (format "Issue %s/%s/%s closed with commit %s"
+                         owner repo issue-number commit-sha))
+      (log/info "NOT considering event as bounty winner")
+      ;; TODO: disabled for now since the system is meant to be used
+      ;;  exclusively via pull requests. issue closed event without a PR
+      ;;  closed via merge first means that the referencing commit was
+      ;;  pushed directly to master and thus never accepted by the
+      ;;  maintainer (could be that the bounty hunter had write access
+      ;;  to master, but that scenario should be very rare and better
+      ;;  not to support it)
+      #_(issues/close commit-sha issue-id)))
 
 (defn handle-issue-reopened
   [{{issue-id :id} :issue}]
@@ -142,6 +142,8 @@
     (log/debug "Referenced bounty issue found" repo bounty-issue-number)
     (users/create-user user-id login name nil avatar_url)
     (let [issue (github/get-issue owner repo bounty-issue-number)
+          open-or-edit? (contains? #{:opened :edited} event-type)
+          close? (= :closed event-type)
           pr-data {:repo_id   repo-id
                    :pr_id     id
                    :pr_number pr-number
@@ -154,24 +156,24 @@
       ;; Ethereum address stored, we could post a comment to the
       ;; Github PR explaining that payout is not possible if the PR is
       ;; merged
-      (case event-type
-        :opened (do
-                  (log/info "PR with reference to bounty issue"
-                            bounty-issue-number "opened")
-                  (pull-requests/save (merge pr-data {:state :opened
-                                                      :commit_sha head-sha})))
-        :closed (if merged?
-                  (do (log/info "PR with reference to bounty issue"
-                                bounty-issue-number "merged")
-                      (pull-requests/save
-                       (merge pr-data {:state :merged
-                                       :commit_sha head-sha}))
-                      (issues/update-commit-sha (:id issue) head-sha))
-                  (do (log/info "PR with reference to bounty issue"
-                                bounty-issue-number "closed with no merge")
-                      (pull-requests/save
-                       (merge pr-data {:state :closed
-                                       :commit_sha head-sha}))))))))
+      (cond
+        open-or-edit? (do
+                        (log/info "PR with reference to bounty issue"
+                                  bounty-issue-number "opened")
+                        (pull-requests/save (merge pr-data {:state :opened
+                                                            :commit_sha head-sha})))
+        close? (if merged?
+                 (do (log/info "PR with reference to bounty issue"
+                               bounty-issue-number "merged")
+                     (pull-requests/save
+                      (merge pr-data {:state :merged
+                                      :commit_sha head-sha}))
+                     (issues/update-commit-sha (:id issue) head-sha))
+                 (do (log/info "PR with reference to bounty issue"
+                               bounty-issue-number "closed with no merge")
+                     (pull-requests/save
+                      (merge pr-data {:state :closed
+                                      :commit_sha head-sha}))))))))
 
 (defn handle-issue-edited
   [webhook-payload]
