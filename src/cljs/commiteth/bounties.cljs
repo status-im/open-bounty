@@ -42,7 +42,8 @@
   [:div.ui.container.open-bounties-container
    [:div.open-bounties-header "Bounties"]
    (if (empty? open-bounties)
-     [:div.ui.text "No data"]
+     [:div.view-no-data-container
+      [:p "No recent activity yet"]]
      (into [:div.ui.items]
            (for [bounty open-bounties]
              [bounty-item bounty])))])
