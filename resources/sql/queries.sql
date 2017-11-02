@@ -424,7 +424,7 @@ SELECT
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
   i.updated          AS updated,
-  i.winner_login     AS winner_login
+  i.winner_login     AS winner_login,
   r.repo             AS repo_name,
   o.address          AS owner_address
 FROM issues i, users o, repositories r
