@@ -17,8 +17,7 @@
          issue-title :issue_title} claim
         merged? (= 1 (:pr_state claim))
         paid? (not-empty (:payout_hash claim))
-        winner (:winner bounty)
-        winner-login (:payee_login winner)
+        winner-login (:winner_login bounty)
         bot-confirm-unmined? (empty? (:confirm_hash bounty))
         confirming? (:confirming? bounty)
         updated (:updated bounty)]

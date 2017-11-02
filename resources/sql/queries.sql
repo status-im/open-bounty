@@ -310,24 +310,6 @@ AND u.id = p.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
 
-
--- :name get-bounty-winner :? :*
--- :doc return user_id, login and name for a user that has won and
---      been paid given bounty issue
-SELECT
-  u.address         AS payout_address,
-  u.login           AS payee_login,
-  u.id              AS payee_user_id,
-  u.name            AS payee_name
-FROM issues i, users u, pull_requests p
-WHERE
-i.issue_id = :issue_id
-AND p.issue_id = i.issue_id
-AND p.repo_id = i.repo_id
-AND u.id = p.user_id
-AND i.payout_receipt IS NOT NULL;
-
-
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash
 UPDATE issues
@@ -342,6 +324,11 @@ SET execute_hash = :execute_hash,
 updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
+-- :name update-winner-login :! :n
+UPDATE issues
+SET winner_login = :winner_login
+WHERE issue_id = :issue_id;
+
 -- :name update-payout-hash :! :n
 -- :doc updates issue with payout transaction hash
 UPDATE issues
@@ -352,7 +339,8 @@ WHERE issue_id = :issue_id;
 -- :name reset-payout-hash :! :n
 -- :doc sets issue's payout transaction hash to NULL
 UPDATE issues
-SET payout_hash = NULL
+SET payout_hash = NULL,
+winner_login = NULL
 WHERE issue_id = :issue_id;
 
 
@@ -436,6 +424,7 @@ SELECT
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
   i.updated          AS updated,
+  i.winner_login     AS winner_login
   r.repo             AS repo_name,
   o.address          AS owner_address
 FROM issues i, users o, repositories r
