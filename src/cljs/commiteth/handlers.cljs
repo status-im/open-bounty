@@ -182,7 +182,7 @@
 (reg-event-fx
  :load-owner-bounties
  (fn [{:keys [db]} [_]]
-   {:db   db
+   {:db   (assoc db :owner-bounties-loading? true)
     :http {:method     GET
            :url        "/api/user/bounties"
            :on-success #(dispatch [:set-owner-bounties %])}}))
@@ -190,7 +190,9 @@
 (reg-event-db
  :set-owner-bounties
  (fn [db [_ issues]]
-   (assoc db :owner-bounties issues)))
+   (assoc db
+          :owner-bounties issues
+          :owner-bounties-loading? false)))
 
 (defn get-ls-token [db token]
   (let [login (get-in db [:user :login])]
