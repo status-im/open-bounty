@@ -194,6 +194,7 @@
     "andytudhope"
     "ara4n"
     "commitethtest"
+    "noman-land"
     })
 
 (defapi service-routes
