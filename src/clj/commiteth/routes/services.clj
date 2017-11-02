@@ -126,9 +126,10 @@
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
     (into {}
           (for [ob owner-bounties
-                :let [b (update ob :value_usd usd-decimal->str)]]
+                :let [b (update ob :value_usd usd-decimal->str)
+                      winner (first (bounties-db/get-bounty-winner (:issue_id b)))]]
             [(:issue_id b)
-             (conj b
+             (conj (conj b {:winner winner})
                    (let [claims (map
                                  #(update % :value_usd usd-decimal->str)
                                  (bounties-db/bounty-claims (:issue_id b)))]

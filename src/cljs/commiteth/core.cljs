@@ -138,7 +138,8 @@
   (let [top-hunters (rf/subscribe [:top-hunters])]
     (fn []
       (if (empty? @top-hunters)
-        [:div.ui.text "No data"]
+        [:div.view-no-data-container
+         [:p "No recent activity yet"]]
         (into [:div.ui.items]
               (map-indexed (fn [idx hunter]
                              [:div.item

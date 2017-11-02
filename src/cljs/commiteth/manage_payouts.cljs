@@ -17,6 +17,8 @@
          issue-title :issue_title} claim
         merged? (= 1 (:pr_state claim))
         paid? (not-empty (:payout_hash claim))
+        winner (:winner bounty)
+        winner-login (:payee_login winner)
         bot-confirm-unmined? (empty? (:confirm_hash bounty))
         confirming? (:confirming? bounty)
         updated (:updated bounty)]
@@ -30,7 +32,7 @@
        [:div.description "Submitted a claim for " [:a {:href (pr-url claim)}
                                                    issue-title]]
        [:div.description (if paid?
-                           "(paid)"
+                           (str "(paid to " winner-login ")")
                            (str "(" (if merged? "merged" "open") ")"))]
        [:div.time (moment-timestamp updated)]
        [:button.ui.button

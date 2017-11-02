@@ -54,7 +54,8 @@
 (defn activity-list [activity-items]
   [:div.ui.container.activity-container
    (if (empty? activity-items)
-     [:div.ui.text "No data"]
+     [:div.view-no-data-container
+      [:p "No recent activity yet"]]
      (into [:div.ui.items]
            (for [item activity-items]
              ^{:key item} [activity-item item])))]  )
