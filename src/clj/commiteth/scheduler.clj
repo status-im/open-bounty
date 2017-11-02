@@ -97,6 +97,7 @@
       (let [execute-hash (multisig/send-all contract-address payout-address)]
         (log/info "Payout self-signed, called sign-all(" contract-address payout-address ") tx:" execute-hash)
         (db-bounties/update-execute-hash issue-id execute-hash)
+        (db-bounties/update-winner-login issue-id winner-login)
         (github/update-merged-issue-comment owner
                                             repo
                                             comment-id

@@ -50,6 +50,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/update-execute-hash con-db {:issue_id issue-id :execute_hash execute-hash})))
 
+(defn update-winner-login
+  [issue-id login]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-winner-login con-db {:issue_id issue-id :winner_login login})))
+
 (defn update-payout-hash
   [issue-id payout-hash]
   (jdbc/with-db-connection [con-db *db*]
@@ -70,11 +75,6 @@
   [owner repo issue-number]
   (jdbc/with-db-connection [con-db *db*]
     (db/get-bounty con-db {:owner owner :repo repo :issue_number issue-number})))
-
-(defn get-bounty-winner
-  [issue-id]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/get-bounty-winner con-db {:issue_id issue-id})))
 
 (defn open-bounty-contracts
   []
