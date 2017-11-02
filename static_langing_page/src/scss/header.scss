@@ -38,7 +38,7 @@
 @media (min-width: 640px) {
   .header__inner {
     flex-direction: row;
-    padding: 40px 0 38px 80px;
+    padding: 40px 0 38px 40px;
   }
 }
 
@@ -57,6 +57,7 @@
   .header-section--right {
     justify-content: flex-end;
   }
+
 }
 
 .nav {
@@ -227,6 +228,9 @@ li.social-link a {
     font-size: 19px;
   }
 
+  .header {
+    background: #57A7ED 50%;
+  }
   // .header-section--right {
   //   display: none;
   // }

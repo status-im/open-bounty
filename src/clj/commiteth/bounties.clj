@@ -45,8 +45,7 @@
                                               issue-number
                                               transaction-hash)
                      :id
-                     (issues/update-comment-id issue-id)))
-)
+                     (issues/update-comment-id issue-id))))
             (issues/update-transaction-hash issue-id transaction-hash))))
       (log/debug "Issue already exists in DB, ignoring"))))
 
