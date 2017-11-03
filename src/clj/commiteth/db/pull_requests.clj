@@ -16,3 +16,9 @@
     (jdbc/with-db-connection [con-db *db*]
       (db/save-pull-request! con-db
                              (assoc pull-request :state state)))))
+
+(defn remove
+  [pr-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/remove-pull-request! con-db
+                             {:pr_id pr-id})))

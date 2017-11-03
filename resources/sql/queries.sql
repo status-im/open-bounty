@@ -232,6 +232,13 @@ SET
   updated = timezone('utc'::text, now()),
   commit_sha = :commit_sha;
 
+
+-- :name remove-pull-request! :! :n
+-- :doc remove a PR by id
+DELETE from pull_requests
+WHERE pr_id = :pr_id;
+
+
 -- Bounties ------------------------------------------------------------------------
 
 

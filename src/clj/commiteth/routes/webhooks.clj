@@ -111,6 +111,44 @@
       issue-number)))
 
 
+(defn handle-claim
+  [user-id login name avatar_url owner repo repo-id bounty-issue-number pr-id pr-number head-sha merged? event-type]
+  (users/create-user user-id login name nil avatar_url)
+  (let [issue (github/get-issue owner repo bounty-issue-number)
+        open-or-edit? (contains? #{:opened :edited} event-type)
+        close? (= :closed event-type)
+        pr-data {:repo_id   repo-id
+                 :pr_id     pr-id
+                 :pr_number pr-number
+                 :user_id   user-id
+                 :issue_number bounty-issue-number
+                 :issue_id (:id issue)
+                 :state event-type}]
+
+    ;; TODO: in the opened case if the submitting user has no
+    ;; Ethereum address stored, we could post a comment to the
+    ;; Github PR explaining that payout is not possible if the PR is
+    ;; merged
+    (cond
+      open-or-edit? (do
+                      (log/info "PR with reference to bounty issue"
+                                bounty-issue-number "opened")
+                      (pull-requests/save (merge pr-data {:state :opened
+                                                          :commit_sha head-sha})))
+      close? (if merged?
+               (do (log/info "PR with reference to bounty issue"
+                             bounty-issue-number "merged")
+                   (pull-requests/save
+                    (merge pr-data {:state :merged
+                                    :commit_sha head-sha}))
+                   (issues/update-commit-sha (:id issue) head-sha))
+               (do (log/info "PR with reference to bounty issue"
+                             bounty-issue-number "closed with no merge")
+                   (pull-requests/save
+                    (merge pr-data {:state :closed
+                                    :commit_sha head-sha})))))))
+
+
 (defn handle-pull-request-event
   ;; when a PR is opened, only consider it as a claim if:
   ;; * PR references an existing bounty-issue
@@ -127,7 +165,7 @@
       login      :login
       avatar_url :avatar_url
       name       :name} :user
-     id              :id
+     pr-id              :id
      merged?         :merged
      {head-sha :sha} :head
      pr-number       :number
@@ -135,45 +173,26 @@
      pr-title        :title} :pull_request}]
   (log/debug "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
   (log/debug (extract-issue-number pr-body pr-title))
-  (when-let [bounty-issue-number (->>
+  (if-let [bounty-issue-number (->>
                                   (extract-issue-number pr-body pr-title)
                                   (first)
                                   (ensure-bounty-issue owner repo))]
-    (log/debug "Referenced bounty issue found" repo bounty-issue-number)
-    (users/create-user user-id login name nil avatar_url)
-    (let [issue (github/get-issue owner repo bounty-issue-number)
-          open-or-edit? (contains? #{:opened :edited} event-type)
-          close? (= :closed event-type)
-          pr-data {:repo_id   repo-id
-                   :pr_id     id
-                   :pr_number pr-number
-                   :user_id   user-id
-                   :issue_number bounty-issue-number
-                   :issue_id (:id issue)
-                   :state event-type}]
+    (do
+      (log/debug "Referenced bounty issue found" owner repo bounty-issue-number)
+      (handle-claim user-id
+                    login name
+                    avatar_url
+                    owner repo
+                    repo-id
+                    bounty-issue-number
+                    pr-id
+                    pr-number
+                    head-sha
+                    merged?
+                    event-type))
+    (when (= :edited event-type)
+      (pull-requests/remove pr-id))))
 
-      ;; TODO: in the opened case if the submitting user has no
-      ;; Ethereum address stored, we could post a comment to the
-      ;; Github PR explaining that payout is not possible if the PR is
-      ;; merged
-      (cond
-        open-or-edit? (do
-                        (log/info "PR with reference to bounty issue"
-                                  bounty-issue-number "opened")
-                        (pull-requests/save (merge pr-data {:state :opened
-                                                            :commit_sha head-sha})))
-        close? (if merged?
-                 (do (log/info "PR with reference to bounty issue"
-                               bounty-issue-number "merged")
-                     (pull-requests/save
-                      (merge pr-data {:state :merged
-                                      :commit_sha head-sha}))
-                     (issues/update-commit-sha (:id issue) head-sha))
-                 (do (log/info "PR with reference to bounty issue"
-                               bounty-issue-number "closed with no merge")
-                     (pull-requests/save
-                      (merge pr-data {:state :closed
-                                      :commit_sha head-sha}))))))))
 
 (defn handle-issue-edited
   [webhook-payload]
