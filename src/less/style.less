@@ -607,17 +607,25 @@
     &.error {
         background-color: #e96868;
     }
+    display: flex;
+    flex-direction: column;
 
     color: #fff;
     border-radius: 8px;
     z-index: 100;
-    padding: 1.4em 1em 1.4em;
+    padding: 40px 60px 40px;
+    height: auto;
     i {
         position: absolute;
         margin: 0;
         right: 1.5em;
         top: 1.5em;
         cursor: pointer;
+    }
+    p {
+        font-family: "PostGrotesk-Book";
+        font-weight: 500;
+        font-size: 15px;
     }
 }
 

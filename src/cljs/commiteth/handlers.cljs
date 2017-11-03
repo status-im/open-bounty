@@ -324,9 +324,11 @@
                           (dispatch [:set-flash-message
                                      :success
                                      "Address saved"]))
-           :on-error   #(dispatch [:set-flash-message
-                                   :error
-                                   (:response %)])
+           :on-error   #(do
+                          (println %)
+                          (dispatch [:set-flash-message
+                                     :error
+                                     (:response %)]))
            :finally    #(dispatch [:clear-updating-address])
            :params     {:user-id user-id :address address}}}))
 
