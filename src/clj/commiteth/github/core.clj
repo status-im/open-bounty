@@ -37,8 +37,13 @@
 (defn signup-authorize-url []
   (authorize-url "user:email"))
 
+;; XXX: Disable this to get normal behavior
+(def github-app-flag true)
+
 (defn admin-authorize-url []
-  (authorize-url "admin:repo_hook repo user:email admin:org_hook"))
+  (if github-app-flag
+    (authorize-url "public_repo user:email")
+    (authorize-url "admin:repo_hook repo user:email admin:org_hook")))
 
 (defn access-settings-url []
   (str "https://github.com/settings/connections/applications/" (client-id)))
