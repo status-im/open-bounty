@@ -33,10 +33,12 @@
                               :auto-correct "off"
                               :spell-check "false"
                               :max-length 42}]])]
-          [:button.ui.button (merge {:on-click
-                                     #(rf/dispatch [:save-user-address
-                                                    (:id @user)
-                                                    @address])}
-                                    (when @updating-address
-                                      {:class "busy loading"}))
-           "Update"]]]))))
+          [:button
+           (merge {:on-click
+                   #(rf/dispatch [:save-user-address
+                                  (:id @user)
+                                  @address])
+                   :class (str "ui button small update-address-button"
+                               (when @updating-address
+                                 " busy loading"))})
+           "UPDATE"]]]))))

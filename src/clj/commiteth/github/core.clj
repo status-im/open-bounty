@@ -227,7 +227,8 @@
                  (contract-addr-text contract-address)
                  "%s\n"
                  (network-text)
-                 "To claim this bounty sign up at %s\n"
+                 "To claim this bounty sign up at %s and make sure to update your Ethereum address "
+                 "in `My Payment Details` so that the bounty is correctly allocated.\n"
                  (if (on-testnet?)
                    "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))

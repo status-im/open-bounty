@@ -285,4 +285,5 @@
   (load-interceptors!)
   (hook-browser-navigation!)
   (load-data true)
+  (.addEventListener js/window "click" #(rf/dispatch [:clear-flash-message]))
   (on-js-load))

@@ -235,8 +235,10 @@
                           :body-params [user-id :- Long, address :- String]
                           :summary "Update user address"
                           (if-not (eth/valid-address? address)
-                            {:status 400
-                             :body "Invalid Ethereum address"}
+                            (do
+                              (log/debug "POST /address: invalid input" address)
+                              {:status 400
+                               :body (str "Invalid Ethereum address '" address "'")})
                             (let [result (users/update-user-address
                                           user-id
                                           address)]
