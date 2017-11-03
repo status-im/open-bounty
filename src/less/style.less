@@ -70,12 +70,12 @@
     }
 }
 
-
 .status-header-logo {
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
+
 
 .status-logo {
     width: 42px !important;
@@ -106,8 +106,28 @@
     left: 50px;
 }
 
+.header-dropdown-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    witdh: 100%;
+}
+
+.header-username {
+    color: #fff;
+    font-size: 15px;
+    padding-left: 5px;
+    padding-right: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
 .computer-tabs-container {
     padding-top: 0 !important;
+    .item {
+        height: 24px;
+    }
 }
 
 
@@ -156,7 +176,6 @@
 .ui.mini.circular.image {
     height: 32px !important;
     width: 32px!important;
-    //min-width: 32px;
     box-shadow: none;
 }
 
@@ -169,9 +188,12 @@
     font-weight: normal;
 }
 
-
 .user-component {
-//     margin-top: 0px!important;
+    margin-top: 5px!important;
+
+    .item {
+        padding-top: 0px !important;
+    }
 }
 
 .ui.text.menu {
@@ -201,8 +223,8 @@
 
 .ui.selection.dropdown.address-input option {
     color: #e7e7e7;
-    background-color: yellow!important;
 }
+
 
 .ui.menu.transition.visible {
     font-family: "PostGrotesk-Book";
@@ -210,9 +232,12 @@
     border-radius: 8px;
     border: none;
     padding: .5em;
-    z-index: 999;
-    transform: translate(100%, -100%);
-    .item>a {
+    background-color: #1e3751;
+    @media  (max-width: 767px) {
+        transform: translateX(-72px);
+    }
+
+    a {
         color: #fff;
         pointer: default;
     }
@@ -244,10 +269,14 @@
 }
 
 @media only screen and (max-width: 767px) {
-    .ui.container {
+    .ui.container  {
+        margin-left: 1px !important;
+        margin-right: 1px !important;
         width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
+    }
+    .ui.mini.circular.image {
+        width: 48px !important;
+        height: 48px !important;
     }
 }
 
@@ -266,7 +295,6 @@
     padding-top: 80px;
     padding-bottom: 80px;
     .center.aligned.segment { border: 0; }
-
 
     .button {
         font-size: 13px;

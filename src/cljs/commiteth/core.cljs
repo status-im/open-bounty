@@ -33,31 +33,29 @@
             [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
             [:p message]]])))))
 
-(def user-dropdown-open? (r/atom false))
-
 (defn user-dropdown [user items mobile?]
   (let [menu (if @(rf/subscribe [:user-dropdown-open?])
-               [:div.ui.menu.transition.visible]
+               [:div.ui.menu.transition.visible {:tab-index -1}]
                [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
-    [:div.ui.left.item.dropdown
+    [:div.ui.inline.dropdown
      {:on-click #(rf/dispatch [:user-dropdown-open])}
-     [:div.item
-      [:img.ui.mini.circular.image {:src avatar-url}]]
-     (when not mobile?
-           [:div.item
-            (:login user)])
-     [:div.item
-      [svg/dropdown-icon]]
-     (into menu
-           (for [[target caption props] items]
-             ^{:key target} [:div.item
-                             [:a
-                              (merge props
-                                     (if (keyword? target)
-                                       {:on-click #(rf/dispatch [target])}
-                                       {:href target}))
-                              caption]]))]))
+     [:div.header-dropdown-container
+      [:div.item.header-avatar
+       [:img.ui.mini.circular.image.user-dropdown-image {:src avatar-url}]]
+      (when-not mobile?
+        [:div.header-username (:login user)])
+      [:div.item
+       [svg/dropdown-icon]]
+      (into menu
+            (for [[target caption props] items]
+              ^{:key target} [:div.item
+                              [:a
+                               (merge props
+                                      (if (keyword? target)
+                                        {:on-click #(rf/dispatch [target])}
+                                        {:href target}))
+                               caption]]))]]))
 
 
 (defn user-component
@@ -65,13 +63,12 @@
   (let [user (rf/subscribe [:user])]
     (fn []
       (if @user
-        [:div.ui.text.menu.user-component
-         [:div.item
-          [user-dropdown
-           @user
-           [[:update-address "My Payment Details" {}]
-            ["/logout" "Sign Out" {:class "logout-link"}]]
-           mobile?]]]
+        [:div.ui.container.user-component
+         [user-dropdown
+          @user
+          [[:update-address "My Payment Details" {}]
+           ["/logout" "Sign Out" {:class "logout-link"}]]
+          mobile?]]
         [:a.ui.button.small.login-button {:href js/authorizeUrl} (str "LOG IN"
                                                                       (when-not mobile? " \u2192"))]))))
 
@@ -106,14 +103,14 @@
         flash-message (rf/subscribe [:flash-message])]
     (fn []
       [:div.vertical.segment.commiteth-header
-       [:div.ui.grid.container.computer.only
+       [:div.ui.grid.container.computer.tablet.only
         [:div.four.wide.column
          [header-logo]]
-        [:div.eight.wide.column.middle.aligned.computer.only.computer-tabs-container
+        [:div.eight.wide.column.middle.aligned.computer.tablet.only.computer-tabs-container
          [tabs false]]
-        [:div.four.wide.column.right.aligned.computer.only
+        [:div.four.wide.column.right.aligned.computer.tablet.only
          [user-component @user false]]]
-       [:div.ui.grid.container.tablet.mobile.only
+       [:div.ui.grid.container.mobile.only
         [:div.row
          [:div.eight.wide.column.left.aligned
           [header-logo]]
