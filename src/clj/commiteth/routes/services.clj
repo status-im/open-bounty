@@ -198,6 +198,7 @@
     "ara4n"
     "commitethtest"
     "noman-land"
+    "cancuncoconut"
     })
 
 (defapi service-routes
