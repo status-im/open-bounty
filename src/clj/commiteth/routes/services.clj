@@ -198,6 +198,7 @@
     "ara4n"
     "commitethtest"
     "noman-land"
+    "ara4n"
     })
 
 (defapi service-routes
