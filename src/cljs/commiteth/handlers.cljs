@@ -383,7 +383,7 @@
                    confirm-id)
          payload {:from  owner-address
                   :to    contract-address
-                  :gas   180000
+                  :gas   600000
                   :gas-price 20000000000
                   :value 0
                   :data data}]
