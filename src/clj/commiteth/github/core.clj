@@ -39,10 +39,11 @@
   (authorize-url "user:email"))
 
 ;; NOTE: Capabilities picked for Github apps if true, Oauth if false
-(def github-app-flag true)
+(defn github-app-enabled? []
+  (env :github-app-enabled) true)
 
 (defn admin-authorize-url []
-  (if github-app-flag
+  (if (github-app-enabled?)
     (authorize-url "public_repo user:email")
     (authorize-url "admin:repo_hook repo user:email admin:org_hook")))
 
