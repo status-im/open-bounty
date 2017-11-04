@@ -37,8 +37,8 @@
 (defn signup-authorize-url []
   (authorize-url "user:email"))
 
-;; XXX: Disable this to get normal behavior
-(def github-app-flag true)
+;; NOTE: Capabilities picked for Github apps if true, Oauth if false
+(def github-app-flag false)
 
 (defn admin-authorize-url []
   (if github-app-flag
