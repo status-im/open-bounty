@@ -193,11 +193,17 @@
     "anna02test"
     "anna03test"
     "anna04test"
+    "anna05test"
+    "anna06test"
+    "anna07test"
+    "anna08test"
+    "anna09test"
     "pablanopete"
     "andytudhope"
     "ara4n"
     "commitethtest"
     "noman-land"
+    "cancuncoconut"
     })
 
 (defapi service-routes

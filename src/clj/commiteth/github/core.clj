@@ -25,6 +25,7 @@
 (defn self [] (:github-user env))
 (defn self-password [] (:github-password env))
 (defn on-testnet? [] (env :on-testnet))
+(defn webhook-secret [] (env :webhook-secret))
 
 (defn authorize-url [scope]
   (let [params (codec/form-encode {:client_id    (client-id)
@@ -37,8 +38,14 @@
 (defn signup-authorize-url []
   (authorize-url "user:email"))
 
+;; NOTE: Capabilities picked for Github apps if true, Oauth if false
+(defn github-app-enabled? []
+  (env :github-app-enabled) true)
+
 (defn admin-authorize-url []
-  (authorize-url "admin:repo_hook repo user:email admin:org_hook"))
+  (if (github-app-enabled?)
+    (authorize-url "public_repo user:email")
+    (authorize-url "admin:repo_hook repo user:email admin:org_hook")))
 
 (defn access-settings-url []
   (str "https://github.com/settings/connections/applications/" (client-id)))
