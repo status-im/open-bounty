@@ -251,6 +251,7 @@
         debug-secret (apply str (take 5 (github/webhook-secret)))]
     (log/debug "validate secret one hook - repo exists and github origin" repo " - " debug-secret)
     (and (not (string/blank? secret))
+         repo
          (crypto/eq? github-signature
                      (str "sha1=" (hex-hmac-sha1 secret raw-payload))))))
 
