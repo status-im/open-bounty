@@ -230,6 +230,7 @@
 
 
 (defn validate-secret [webhook-payload raw-payload github-signature]
+  ;; used for oauth app webhooks. secret is repo-specific
   (let [full-name (get-in webhook-payload [:repository :full_name])
         repo (repos/get-repo full-name)
         secret (:hook_secret repo)]
@@ -237,21 +238,14 @@
          (crypto/eq? github-signature
                      (str "sha1=" (hex-hmac-sha1 secret raw-payload))))))
 
-(defn validate-secret-naive [webhook-payload raw-payload github-signature]
-  (let [full-name (get-in webhook-payload [:repository :full_name])
-        repo (repos/get-repo full-name)]
-    (log/debug "validate secret naive - repo exists?" repo)
-    repo))
 
 (defn validate-secret-one-hook [webhook-payload raw-payload github-signature]
-  (let [full-name (get-in webhook-payload [:repository :full_name])
-        repo (repos/get-repo full-name)
-        secret (github/webhook-secret)
+  ;; used for GH app webhooks. secret is shared
+  (let [secret (github/webhook-secret)
         ;; XXX remove below once verified in logs
         debug-secret (apply str (take 5 (github/webhook-secret)))]
-    (log/debug "validate secret one hook - repo exists and github origin" repo " - " debug-secret)
+    (log/debug "validate secret for GH app"  debug-secret)
     (and (not (string/blank? secret))
-         repo
          (crypto/eq? github-signature
                      (str "sha1=" (hex-hmac-sha1 secret raw-payload))))))
 
@@ -283,5 +277,4 @@
                 "issues" (handle-issue payload)
                 "pull_request" (handle-pull-request payload)
                 (ok)))
-            (forbidden))))
-  )
+            (forbidden)))))
