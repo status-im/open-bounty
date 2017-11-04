@@ -39,7 +39,7 @@
   (authorize-url "user:email"))
 
 ;; NOTE: Capabilities picked for Github apps if true, Oauth if false
-(def github-app-flag true)
+(def github-app-flag false)
 
 (defn admin-authorize-url []
   (if github-app-flag
