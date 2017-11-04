@@ -30,6 +30,9 @@
  :github-user            "commiteth"
  :github-password        "XXX"
 
+ ;; Add Github App webhook secret here to verify GH origin
+ :webhook-secret "XXX"
+
  ;; set to true when on Ropsten testnet
  :on-testnet             true
 

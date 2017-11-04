@@ -240,9 +240,19 @@
 (defn validate-secret-naive [webhook-payload raw-payload github-signature]
   (let [full-name (get-in webhook-payload [:repository :full_name])
         repo (repos/get-repo full-name)]
-    (log/debug "validate secret - repo exists?" repo)
+    (log/debug "validate secret naive - repo exists?" repo)
     repo))
 
+(defn validate-secret-one-hook [webhook-payload raw-payload github-signature]
+  (let [full-name (get-in webhook-payload [:repository :full_name])
+        repo (repos/get-repo full-name)
+        secret (github/webhook-secret)
+        ;; XXX remove below once verified in logs
+        debug-secret (apply str (take 5 (github/webhook-secret)))]
+    (log/debug "validate secret one hook - repo exists and github origin" repo " - " debug-secret)
+    (and (not (string/blank? secret))
+         (crypto/eq? github-signature
+                     (str "sha1=" (hex-hmac-sha1 secret raw-payload))))))
 
 (defroutes webhook-routes
   (POST "/webhook" {:keys [headers body]}
@@ -264,7 +274,7 @@
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
           (log/debug "webhook-app POST, payload" payload)
-          (if (validate-secret-naive payload raw-payload (get headers "x-hub-signature"))
+          (if (validate-secret-one-hook payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK app")
               (log/debug "x-github-event app" (get headers "x-github-event"))
