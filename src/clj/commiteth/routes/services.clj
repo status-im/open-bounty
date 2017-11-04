@@ -193,6 +193,8 @@
     "anna02test"
     "anna03test"
     "anna04test"
+    "anna05test"
+    "anna06test"
     "pablanopete"
     "andytudhope"
     "ara4n"
