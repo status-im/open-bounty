@@ -54,7 +54,7 @@
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?
-        [:container
+        [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
-          [:div.ui.text.loader "Loading"]]]
+          [:div.ui.text.loader.view-loading-label "Loading"]]]
         [bounties-list @open-bounties]))))
