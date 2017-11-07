@@ -204,7 +204,8 @@
     "commitethtest"
     "noman-land"
     "cancuncoconut"
-    "Chu127001"})
+    "Chu127001"
+    "izqui"})
 
 (defapi service-routes
   (when (:dev env)
