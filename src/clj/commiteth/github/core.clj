@@ -226,7 +226,7 @@
     (str "Contract address: [" addr "](" url-base "/address/" addr ")\n")))
 
 (defn generate-open-comment
-  [owner repo issue-number contract-address eth-balance balance-str tokens]
+  [owner repo issue-number contract-address eth-balance eth-balance-str tokens]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance))
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s ETH\n"
@@ -239,7 +239,7 @@
                  (if (on-testnet?)
                    "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
-            eth-balance image-url site-url)))
+            eth-balance-str image-url site-url)))
 
 
 (defn generate-merged-comment
