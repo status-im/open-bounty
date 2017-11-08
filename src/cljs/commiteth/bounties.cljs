@@ -36,7 +36,8 @@
           (str (subs (str tla) 1) " " balance)])
        [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
        (when (> claim-count 0)
-         [:span.open-claims-label (str open-claims " open claims")]) ]]
+         [:span.open-claims-label (str claim-count " open claim"
+                                       (when (> claim-count 1) "s"))]) ]]
      [:div.open-bounty-item-icon
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
