@@ -213,7 +213,7 @@
    + key total-usd -> current total USD value for all funds"
   [bounty-addr]
   (let [token-balances (multisig/token-balances bounty-addr)
-        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))
+        eth-balance (read-string (eth/get-balance-eth bounty-addr 6))
         all-funds
         (merge token-balances
                {:ETH eth-balance})]
