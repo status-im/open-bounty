@@ -170,7 +170,7 @@
           eth/hex->big-integer
           (convert-token-value token))
       (catch Throwable t
-        (log/error "Failed to query token balance " t)
+        (log/debug "Failed to query token balance " t)
         0))))
 
 
