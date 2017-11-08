@@ -8,7 +8,6 @@ contract MultiSigTokenWallet is MultiSigWallet {
     address[] public tokens;
     mapping (address => uint) watchedPos;
     mapping (address => address[]) public userList;
-    uint public nonce;
 
     event TokenDeposit(address indexed token, address indexed sender, uint value);
 
@@ -39,13 +38,10 @@ contract MultiSigTokenWallet is MultiSigWallet {
     {
         if (_from == address(this))
             return;
-        uint _nonce = nonce;
         bool result = ERC20(_token).transferFrom(_from, this, _amount);
-        assert(result);
-        //ERC23 not executed _deposited tokenFallback by
-        if (nonce == _nonce) {
-            _deposited(_from, _amount, _token, _data);
-        }
+        require(result);
+        _deposited(_from, _amount, _token, _data);
+
     }
 
     /**
@@ -168,7 +164,7 @@ contract MultiSigTokenWallet is MultiSigWallet {
             address _tokenAddr = _tokenList[i];
             uint _amount = ERC20(_tokenAddr).balanceOf(address(this));
             if (_amount > 0) {
-                ERC20(_tokenAddr).transfer(_dest, _amount);
+                ERC20(_tokenAddr).call(bytes4(keccak256("transfer(address,uint256)")), _dest, _amount);
             }
         }
     }
