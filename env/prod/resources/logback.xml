@@ -30,7 +30,7 @@
     <logger name="com.zaxxer.hikari" level="warn">
         <AppenderRef ref="FILE"/>
     </logger>
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
