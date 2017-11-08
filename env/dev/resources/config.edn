@@ -41,4 +41,7 @@
  :hubspot-contact-create-enabled false
 
  ;; needeed when :hubspot-contact-create-enabled
- :hubspot-api-key "xxxxxxx-xxxx-x-xxxx-xxxx"}
+ :hubspot-api-key "xxxxxxx-xxxx-x-xxxx-xxxx"
+
+ ;; used for blacklisting tokens from token registry data
+ :token-blacklist #{}}
