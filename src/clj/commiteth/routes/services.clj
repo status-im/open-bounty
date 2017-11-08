@@ -154,6 +154,7 @@
                  :repo_owner :repo-owner
                  :issue_number :issue-number
                  :value_usd :value-usd
+                 :open_claims :open-claims
                  :balance_eth :balance-eth}]
     (map #(-> %
               (rename-keys renames)
