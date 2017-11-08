@@ -13,7 +13,8 @@
          updated :updated
          tokens :tokens
          balance-eth :balance-eth
-         value-usd :value-usd} bounty
+         value-usd :value-usd
+         open-claims :open-claims} bounty
         full-repo (str owner "/" repo-name)
         repo-url (str "https://github.com/" full-repo)
         repo-link [:a {:href repo-url} full-repo]
@@ -33,7 +34,9 @@
          ^{:key (random-uuid)}
          [:div.balance-badge.token
           (str (subs (str tla) 1) " " balance)])
-       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]]]
+       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
+       (when (> open-claims 0)
+         [:span.open-claims-label (str open-claims " open claims")]) ]]
      [:div.open-bounty-item-icon
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))

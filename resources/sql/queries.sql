@@ -409,7 +409,8 @@ SELECT
   i.updated          AS updated,
   r.owner            AS repo_owner,
   r.owner_avatar_url AS repo_owner_avatar_url,
-  r.repo             AS repo_name
+  r.repo             AS repo_name,
+  (SELECT count(*) FROM pull_requests WHERE issue_id = i.issue_id AND state = 0) AS claim_count
 FROM issues i, repositories r
 WHERE
 r.repo_id = i.repo_id
