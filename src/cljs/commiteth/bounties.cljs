@@ -13,7 +13,8 @@
          updated :updated
          tokens :tokens
          balance-eth :balance-eth
-         value-usd :value-usd} bounty
+         value-usd :value-usd
+         claim-count :claim-count} bounty
         full-repo (str owner "/" repo-name)
         repo-url (str "https://github.com/" full-repo)
         repo-link [:a {:href repo-url} full-repo]
@@ -33,7 +34,10 @@
          ^{:key (random-uuid)}
          [:div.balance-badge.token
           (str (subs (str tla) 1) " " balance)])
-       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]]]
+       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
+       (when (> claim-count 0)
+         [:span.open-claims-label (str claim-count " open claim"
+                                       (when (> claim-count 1) "s"))]) ]]
      [:div.open-bounty-item-icon
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
@@ -54,7 +58,7 @@
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?
-        [:container
+        [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
-          [:div.ui.text.loader "Loading"]]]
+          [:div.ui.text.loader.view-loading-label "Loading"]]]
         [bounties-list @open-bounties]))))

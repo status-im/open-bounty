@@ -53,8 +53,8 @@
     [:div.ui.text "No items"]
     (into [:div.activity-item-container]
           (for [bounty bounties
-                claim (:claims bounty)]
-            ;; TODO: for paid bounties, only show the winning claim
+                claim (filter #(not (= 2 (:pr_state %))) ;; exclude closed
+                       (:claims bounty))]
             [claim-card bounty claim]))))
 
 

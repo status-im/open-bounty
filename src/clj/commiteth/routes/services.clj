@@ -154,6 +154,7 @@
                  :repo_owner :repo-owner
                  :issue_number :issue-number
                  :value_usd :value-usd
+                 :claim_count :claim-count
                  :balance_eth :balance-eth}]
     (map #(-> %
               (rename-keys renames)
@@ -204,7 +205,8 @@
     "commitethtest"
     "noman-land"
     "cancuncoconut"
-    })
+    "Chu127001"
+    "izqui"})
 
 (defapi service-routes
   (when (:dev env)

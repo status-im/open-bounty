@@ -315,6 +315,7 @@ WHERE
 p.issue_id = i.issue_id
 AND p.repo_id = i.repo_id
 AND r.repo_id = i.repo_id
+AND p.state = 1
 AND u.id = p.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
@@ -408,7 +409,8 @@ SELECT
   i.updated          AS updated,
   r.owner            AS repo_owner,
   r.owner_avatar_url AS repo_owner_avatar_url,
-  r.repo             AS repo_name
+  r.repo             AS repo_name,
+  (SELECT count(*) FROM pull_requests WHERE issue_id = i.issue_id AND state = 0) AS claim_count
 FROM issues i, repositories r
 WHERE
 r.repo_id = i.repo_id
@@ -493,7 +495,8 @@ SELECT
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
 AND contract_address IS NOT NULL
-AND i.confirm_hash IS NULL;
+AND i.confirm_hash IS NULL
+AND i.is_open = true;
 
 -- :name get-bounty :? :1
 -- :doc details for a bounty issue given owner, repo and issue nunber

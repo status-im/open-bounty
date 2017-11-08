@@ -144,11 +144,11 @@
            updated :updated} (db-bounties/confirmed-payouts)]
     (log/debug "confirmed payout:" payout-hash)
     (if-let [receipt (eth/get-transaction-receipt payout-hash)]
-      (let [tokens (multisig/token-balances contract-address)
-            eth-balance (eth/get-balance-wei contract-address)]
+      (let [contract-tokens (multisig/token-balances contract-address)
+            contract-eth-balance (eth/get-balance-wei contract-address)]
         (if (or
-             (some #(> (second %) 0.0) tokens)
-             (> eth-balance 0))
+             (some #(> (second %) 0.0) contract-tokens)
+             (> contract-eth-balance 0))
           (do
             (log/info "Contract still has funds")
             (when (multisig/is-confirmed? contract-address confirm-id)
@@ -213,7 +213,7 @@
    + key total-usd -> current total USD value for all funds"
   [bounty-addr]
   (let [token-balances (multisig/token-balances bounty-addr)
-        eth-balance (read-string (eth/get-balance-eth bounty-addr 4))
+        eth-balance (read-string (eth/get-balance-eth bounty-addr 6))
         all-funds
         (merge token-balances
                {:ETH eth-balance})]
