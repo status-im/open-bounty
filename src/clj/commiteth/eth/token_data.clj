@@ -6,13 +6,21 @@
 
 (def token-data-atom (atom {}))
 
+(defn token-blacklisted?
+  [tla]
+  (let [blacklist (env :token-blacklist #{})]
+    (blacklist tla)))
+
+
 (defn update-data []
   (let [test-data (env :testnet-token-data)
         token-data
         (if (and (env :on-testnet true)
                  test-data)
           test-data
-          (token-reg/load-parity-tokenreg-data))]
+          (into {}
+                (filter (fn [[tla _]] (not (token-blacklisted? tla)))
+                        (token-reg/load-parity-tokenreg-data))))]
     (reset! token-data-atom token-data)))
 
 (mount/defstate
