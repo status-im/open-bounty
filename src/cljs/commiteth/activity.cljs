@@ -21,6 +21,7 @@
                       " for " issue-link]
       "open-claim" [:div "Submitted a claim for " issue-link]
       "balance-update" [:div issue-link " bounty increased to USD " value-usd]
+      "claim-pending" [:div "Won USD " value-usd " for " issue-link " (payout pending maintainer confirmation)"]
       "")))
 
 
