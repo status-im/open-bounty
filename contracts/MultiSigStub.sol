@@ -157,30 +157,11 @@ contract MultiSigStub is DelegatedCall {
         }
     }
 
-
-    function _malloc(uint size) 
-        private 
-        pure
-        returns(bytes32 mData) 
+    function _getDelegatedContract()
+        internal
+        returns(address)
     {
-        assembly {
-            mData := mload(0x40)
-            mstore(0x40, add(mData, size))
-        }
-    }
-
-    function _delegatecall(bytes32 mData, uint size) 
-        private 
-        returns(bytes32 mResult) 
-    {
-        address target = 0xCaFFE810d0dF52E27DC580AD4a3C6283B0094291;
-        bool failed;
-
-        assembly {
-            failed := iszero(delegatecall(sub(gas, 10000), target, mData, size, mResult, 0x20))
-        }
-
-        assert(!failed);
+        return 0xCaFFE810d0dF52E27DC580AD4a3C6283B0094291;    
     }
     
 }
