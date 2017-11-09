@@ -571,6 +571,7 @@ SELECT
   balance_eth,
   tokens,
   value_usd,
+  user_has_address,
   updated
 FROM activity_feed_view
 ORDER BY updated DESC

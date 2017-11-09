@@ -13,7 +13,6 @@
             [commiteth.eth.core :as eth]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
-            [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
             [commiteth.util.util :refer [usd-decimal->str
                                          eth-decimal->str]]
@@ -147,15 +146,16 @@
 
 (defn prettify-bounty-items [bounty-items]
     (let [renames {:user_name :display-name
-                 :user_avatar_url :avatar-url
-                 :issue_title :issue-title
-                 :type :item-type
-                 :repo_name :repo-name
-                 :repo_owner :repo-owner
-                 :issue_number :issue-number
-                 :value_usd :value-usd
-                 :claim_count :claim-count
-                 :balance_eth :balance-eth}]
+                   :user_avatar_url :avatar-url
+                   :issue_title :issue-title
+                   :type :item-type
+                   :repo_name :repo-name
+                   :repo_owner :repo-owner
+                   :issue_number :issue-number
+                   :value_usd :value-usd
+                   :claim_count :claim-count
+                   :balance_eth :balance-eth
+                   :user_has_address :user-has-address}]
     (map #(-> %
               (rename-keys renames)
               (update :value-usd usd-decimal->str)
@@ -185,28 +185,9 @@
          (dissoc :email)
          (assoc :status-team-member? status-member?))}))
 
-;; NOTE: This assumes username can be trusted and not tampered with
-(def user-whitelisted?
-  #{"oskarth"
-    "tpatja"
-    "carlbennetts"
-    "jarradh"
-    "anna02test"
-    "anna03test"
-    "anna04test"
-    "anna05test"
-    "anna06test"
-    "anna07test"
-    "anna08test"
-    "anna09test"
-    "pablanopete"
-    "andytudhope"
-    "ara4n"
-    "commitethtest"
-    "noman-land"
-    "cancuncoconut"
-    "Chu127001"
-    "izqui"})
+(defn user-whitelisted? [user]
+  (let [whitelist (env :user-whitelist #{})]
+    (whitelist user)))
 
 (defapi service-routes
   (when (:dev env)
