@@ -11,7 +11,8 @@
                                 item-type
                                 repo-owner
                                 repo-name
-                                issue-number] :as item}]
+                                issue-number
+                                user-has-address] :as item}]
   (let [issue-link [:a
                     {:href (issue-url repo-owner repo-name issue-number)}
                     issue-title]]
@@ -21,7 +22,10 @@
                       " for " issue-link]
       "open-claim" [:div "Submitted a claim for " issue-link]
       "balance-update" [:div issue-link " bounty increased to USD " value-usd]
-      "claim-pending" [:div "Won USD " value-usd " for " issue-link " (payout pending maintainer confirmation)"]
+      "claim-pending" [:div "Won USD " value-usd " for " issue-link
+                       (if user-has-address
+                         " (payout pending maintainer confirmation)"
+                         " (payout pending user to update ETH address)")]
       "")))
 
 
