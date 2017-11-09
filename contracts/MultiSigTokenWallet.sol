@@ -5,10 +5,6 @@ import "./ERC20.sol";
 
 contract MultiSigTokenWallet is MultiSigWallet {
 
-    address[] public tokens;
-    mapping (address => uint) watchedPos;
-    mapping (address => address[]) public userList;
-
     event TokenDeposit(address indexed token, address indexed sender, uint value);
 
     /**
@@ -40,45 +36,8 @@ contract MultiSigTokenWallet is MultiSigWallet {
             return;
         bool result = ERC20(_token).transferFrom(_from, this, _amount);
         require(result);
-        _deposited(_from, _amount, _token, _data);
+        TokenDeposit(_token, _from, _amount);
 
-    }
-
-    /**
-    * @notice watches for balance in a token contract
-    * @param _tokenAddr the token contract address
-    **/   
-    function watch(address _tokenAddr) 
-        public
-        ownerExists(msg.sender) 
-    {
-        require(watchedPos[_tokenAddr] == 0);
-        require(ERC20(_tokenAddr).balanceOf(address(this)) > 0);
-        tokens.push(_tokenAddr);
-        watchedPos[_tokenAddr] = tokens.length;
-    }
-
-    /**
-    * @notice watches for balance in a token contract
-    * @param _tokenAddr the token contract address
-    **/   
-    function unwatch(address _tokenAddr) 
-        public
-        ownerExists(msg.sender) 
-    {
-        require(watchedPos[_tokenAddr] > 0);
-        tokens[watchedPos[_tokenAddr] - 1] = tokens[tokens.length - 1];
-        delete watchedPos[_tokenAddr];
-        tokens.length--;
-    }
-
-    /**
-    * @notice set token list that will be used at `withdrawEverything(msg.sender)` and `withdrawAllTokens(msg.sender)` function when sending to `msg.sender`.
-    **/
-    function setMyTokenList(address[] _tokenList) 
-        public
-    {
-        userList[msg.sender] = _tokenList;
     }
 
     /**
@@ -94,7 +53,7 @@ contract MultiSigTokenWallet is MultiSigWallet {
         public 
         returns (bool)
     {
-        _deposited(_from, _amount, msg.sender, _data);
+        TokenDeposit(msg.sender, _from, _amount);
         return true;
     }
         
@@ -116,24 +75,6 @@ contract MultiSigTokenWallet is MultiSigWallet {
         deposit(_from, _amount, _token, _data);
     }
     
-    /**
-    * @dev withdraw all watched tokens balances and ether to `_dest`
-    * @param _dest the address of receiver
-    **/    
-    function withdrawEverything(address _dest) 
-        public
-        notNull(_dest)
-        onlyWallet
-    {
-        address[] memory _tokenList;
-        if (userList[_dest].length > 0) {
-            _tokenList = userList[_dest];
-        } else {
-            _tokenList = tokens;
-        }
-        withdrawAllTokens(_dest, _tokenList);
-        _dest.transfer(this.balance);
-    }
 
     /**
     * @dev withdraw all tokens in list and ether to `_dest`
@@ -167,32 +108,6 @@ contract MultiSigTokenWallet is MultiSigWallet {
                 ERC20(_tokenAddr).call(bytes4(keccak256("transfer(address,uint256)")), _dest, _amount);
             }
         }
-    }
-
-    /**
-    * @dev register the deposit
-    **/
-    function _deposited(address _from,  uint _amount, address _tokenAddr, bytes) 
-        internal 
-    {
-        TokenDeposit(_tokenAddr, _from, _amount);
-        if (watchedPos[_tokenAddr] > 0) {
-            tokens.push(_tokenAddr);  
-            watchedPos[_tokenAddr] = tokens.length;
-        }
-    }
-    
-    /*
-    * Web3 call functions
-    */
-    /// @dev Returns list of tokens.
-    /// @return List of token addresses.
-    function getTokenList()
-        public
-        constant
-        returns (address[])
-    {
-        return tokens;
     }
 
 }
