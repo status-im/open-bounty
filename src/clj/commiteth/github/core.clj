@@ -44,7 +44,7 @@
 
 (defn admin-authorize-url []
   (if (github-app-enabled?)
-    (authorize-url "public_repo user:email")
+    (authorize-url "user:email")
     (authorize-url "admin:repo_hook repo user:email admin:org_hook")))
 
 (defn access-settings-url []
