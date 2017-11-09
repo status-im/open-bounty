@@ -12,6 +12,15 @@ contract MultiSigTokenWallet is MultiSigWallet {
     * 
     **/
     /**
+     * @dev only call parent constructor
+     */
+    function MultiSigTokenWallet(address[] _owners, uint _required) 
+        MultiSigWallet(_owners,_required) 
+        public 
+    {
+        //does nothing
+    }
+    /**
     * @notice deposit a ERC20 token. The amount of deposit is the allowance set to this contract.
     * @param _token the token contract address
     * @param _data might be used by child implementations
@@ -105,7 +114,7 @@ contract MultiSigTokenWallet is MultiSigWallet {
             address _tokenAddr = _tokenList[i];
             uint _amount = ERC20(_tokenAddr).balanceOf(address(this));
             if (_amount > 0) {
-                ERC20(_tokenAddr).call(bytes4(keccak256("transfer(address,uint256)")), _dest, _amount);
+                ERC20(_tokenAddr).transfer(_dest, _amount);
             }
         }
     }
