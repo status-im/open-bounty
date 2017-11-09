@@ -93,7 +93,16 @@
            winner-login :winner_login} (db-bounties/pending-bounties)
           :let [value (eth/get-balance-hex contract-address)]]
     (if (empty? payout-address)
-      (log/error "Cannot sign pending bounty - winner has no payout address")
+      (do
+        (log/error "Cannot sign pending bounty - winner has no payout address")
+        (github/update-merged-issue-comment owner
+                                            repo
+                                            comment-id
+                                            contract-address
+                                            (eth-decimal->str balance-eth)
+                                            tokens
+                                            winner-login
+                                            true))
       (let [execute-hash (multisig/send-all contract-address payout-address)]
         (log/info "Payout self-signed, called sign-all(" contract-address payout-address ") tx:" execute-hash)
         (db-bounties/update-execute-hash issue-id execute-hash)
@@ -104,7 +113,8 @@
                                             contract-address
                                             (eth-decimal->str balance-eth)
                                             tokens
-                                            winner-login)))))
+                                            winner-login
+                                            false)))))
 
 (defn update-confirm-hash
   "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."

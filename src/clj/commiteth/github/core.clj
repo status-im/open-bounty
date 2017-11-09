@@ -243,12 +243,14 @@
 
 
 (defn generate-merged-comment
-  [contract-address eth-balance-str tokens winner-login]
+  [contract-address eth-balance-str tokens winner-login winner-address-missing?]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
                (contract-addr-text contract-address)
                (network-text)
-               "Status: pending maintainer confirmation\n"
+               (str "Status: " (if winner-address-missing?
+                                 "Pending user to save ETH address"
+                                 "Pending maintainer confirmation")  "\n")
                "Winner: %s\n")
           eth-balance-str winner-login))
 
@@ -303,14 +305,17 @@
                                   (assoc (self-auth-params) :body comment))]
       (tentacles/safe-parse (http/request req)))))
 
+
+
 (defn update-merged-issue-comment
   "Update comment for a bounty issue with winning claim (waiting to be
-  signed off by maintainer)"
-  [owner repo comment-id contract-address eth-balance-str tokens winner-login]
+  signed off by maintainer/user ETH address missing)"
+  [owner repo comment-id contract-address eth-balance-str tokens winner-login winner-address-missing?]
   (let [comment (generate-merged-comment contract-address
                                          eth-balance-str
                                          tokens
-                                         winner-login)]
+                                         winner-login
+                                         winner-address-missing?)]
     (log/debug (str "Updating merged bounty issue (" owner "/" repo ")"
                     " comment#" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
