@@ -52,6 +52,7 @@ contract MultiSigTokenWalletV1 is MultiSigWallet {
     * @param _tokenAddr the token contract address
     **/   
     function watch(address _tokenAddr) 
+        public
         ownerExists(msg.sender) 
     {
         uint oldBal = tokenBalances[_tokenAddr];
@@ -68,6 +69,7 @@ contract MultiSigTokenWalletV1 is MultiSigWallet {
     }
 
     function setTokenList(address[] _tokenList) 
+        public
         onlyWallet
     {
         tokens = _tokenList;
@@ -91,7 +93,9 @@ contract MultiSigTokenWalletV1 is MultiSigWallet {
     * @param _token the token contract address
     * @param _data (might be used by child classes)
     */ 
-    function receiveApproval(address _from, uint256 _amount, address _token, bytes _data) {
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes _data) 
+        public 
+    {
         deposit(_from, _amount, _token, _data);
     }
     
