@@ -1,9 +1,10 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./DelegatedCall.sol";
 
 /**
  * @title MultiSigStub  
+ * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
  * Contract that delegates calls to a library to build a full MultiSigWallet that is cheap to create. 
  */
 contract MultiSigStub is DelegatedCall {
