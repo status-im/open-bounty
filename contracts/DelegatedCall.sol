@@ -19,10 +19,10 @@ contract DelegatedCall {
             calldatacopy(inDataPtr, 0x0, inSize)
         }
 
-        uint256 outSize;
         bytes32 outDataPtr;
+        uint256 outSize;
 
-        _delegatecall(inDataPtr, inSize);
+        (outDataPtr, outSize) = _delegatecall(inDataPtr, inSize);
         _;
         assembly {
             return(0, outSize)
