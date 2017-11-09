@@ -218,6 +218,31 @@
       (handle-issue-reopened webhook-payload)))
   (ok))
 
+(defn handle-installation [{:keys [action installation sender]}]
+  ;; TODO(oskarth): Handle other installs? Like remove, say.
+  (when (= action "created")
+    (let [user-id (:id sender)
+          username (:login sender)
+          owner-avatar-url (:avatar_url sender)
+          ;; [{id,name,full_name},...]
+          repos (:repositories installation)
+          ;; TODO(oskarth): Handle install for each repo
+          first-repo (first repos)
+          ]
+      ;; NOTE(oskarth): All needed params to call equivalent
+      ;; handle-toggle-repo.
+      ;; DON'T need token cause we don't modify webhooks.
+      (log/info "handle-installation created"
+                (pr-str
+                 {:user-id user-id
+                  :name username
+                  :owner-avatar-url owner-avatar-url
+                  :all-selected-repos repos
+                  :first-repo-id (:id first-repo)
+                  :first-repo (:name first-repo)
+                  :first-full-name (:full_name first-repo)}))
+      ;; TODO(oskarth): Actually install repo
+      )))
 
 (defn handle-pull-request
   [pull-request]
@@ -268,13 +293,16 @@
         (log/debug "webhook-app POST, headers" headers)
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
-          (log/debug "webhook-app POST, payload" payload)
+          (log/info "webhook-app POST, payload:" (pr-str payload))
           (if (validate-secret-one-hook payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK app")
-              (log/debug "x-github-event app" (get headers "x-github-event"))
+              (log/info "x-github-event app" (get headers "x-github-event"))
               (case (get headers "x-github-event")
                 "issues" (handle-issue payload)
                 "pull_request" (handle-pull-request payload)
+                "installation" (handle-installation payload)
                 (ok)))
             (forbidden)))))
+
+
