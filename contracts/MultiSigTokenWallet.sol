@@ -51,7 +51,6 @@ contract MultiSigTokenWallet is MultiSigWallet {
         bool result = ERC20(_token).transferFrom(_from, this, _amount);
         require(result);
         TokenDeposit(_token, _from, _amount);
-
     }
 
     /**
