@@ -1,8 +1,13 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./MultiSigWallet.sol";
 import "./ERC20.sol";
 
+/**
+ * @title MultiSigTokenWallet
+ * @author Ricardo Guilherme Schmidt (Status Research & Development GmbH) 
+ * MultiSigWallet that supports withdrawing all ERC20 tokens at once.
+ */
 contract MultiSigTokenWallet is MultiSigWallet {
 
     event TokenDeposit(address indexed token, address indexed sender, uint value);
