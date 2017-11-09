@@ -8,7 +8,7 @@
   (:import [org.web3j
             abi.datatypes.Address
             abi.datatypes.generated.Uint256]
-           [commiteth.eth.contracts MultiSigTokenWallet]))
+           [commiteth.eth.contracts MultiSigTokenWalletV1]))
 
 (def method-ids
   (into {}
@@ -126,7 +126,7 @@
 
 
 (defn load-bounty-contract [addr]
-  (MultiSigTokenWallet/load addr
+  (MultiSigTokenWalletV1/load addr
     (create-web3j)
     (creds)
     (eth/gas-price)
