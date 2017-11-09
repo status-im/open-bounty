@@ -1,13 +1,14 @@
 pragma solidity ^0.4.15;
 
+import "./DelegatedCall.sol";
+
 /**
  * @title MultiSigStub  
  * Contract that delegates calls to a library to build a full MultiSigWallet that is cheap to create. 
  */
-contract MultiSigStub {
+contract MultiSigStub is DelegatedCall {
 
     address[] public owners;
-    address[] public tokens;
     mapping (uint => Transaction) public transactions;
     mapping (uint => mapping (address => bool)) public confirmations;
     uint public transactionCount;
@@ -34,21 +35,6 @@ contract MultiSigStub {
         _delegatecall(mData, size);
     }
     
-    modifier delegated {
-        uint size = msg.data.length;
-        bytes32 mData = _malloc(size);
-
-        assembly {
-            calldatacopy(mData, 0x0, size)
-        }
-
-        bytes32 mResult = _delegatecall(mData, size);
-        _;
-        assembly {
-            return(mResult, 0x20)
-        }
-    }
-    
     function()
         payable
         delegated
@@ -70,20 +56,7 @@ contract MultiSigStub {
     {
         
     }
-    
-    function watch(address _tokenAddr)
-        public
-        delegated
-    {
-        
-    }
-    
-    function setMyTokenList(address[] _tokenList)  
-        public
-        delegated
-    {
 
-    }
     /// @dev Returns the confirmation status of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Confirmation status.
@@ -99,15 +72,6 @@ contract MultiSigStub {
     /*
     * Web3 call functions
     */
-    function tokenBalances(address tokenAddress) 
-        public
-        constant 
-        delegated 
-        returns (uint)
-    {
-
-    }
-
 
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
@@ -142,16 +106,6 @@ contract MultiSigStub {
         returns (address[])
     {
         return owners;
-    }
-
-    /// @dev Returns list of tokens.
-    /// @return List of token addresses.
-    function getTokenList()
-        public
-        constant
-        returns (address[])
-    {
-        return tokens;
     }
 
     /// @dev Returns array with owner addresses, which confirmed transaction.
@@ -206,6 +160,7 @@ contract MultiSigStub {
 
     function _malloc(uint size) 
         private 
+        pure
         returns(bytes32 mData) 
     {
         assembly {
@@ -218,8 +173,7 @@ contract MultiSigStub {
         private 
         returns(bytes32 mResult) 
     {
-        address target = 0xc0FFeEE61948d8993864a73a099c0E38D887d3F4; //Multinetwork
-        mResult = _malloc(32);
+        address target = 0xCaFFE810d0dF52E27DC580AD4a3C6283B0094291;
         bool failed;
 
         assembly {
