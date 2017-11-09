@@ -113,7 +113,7 @@ contract MultiSigStub is DelegatedCall {
         internal
         returns(address)
     {
-        return 0xCaFFE810d0dF52E27DC580AD4a3C6283B0094291;    
+        return 0xCaFFE810d0dF52E27DC580AD4a3C6283B0094291; //hardcoded multinetwork address   
     }
     
 }
