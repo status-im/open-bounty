@@ -8,18 +8,6 @@ import "./DelegatedCall.sol";
  */
 contract MultiSigStub is DelegatedCall {
 
-    address[] public owners;
-    mapping (uint => Transaction) public transactions;
-    mapping (uint => mapping (address => bool)) public confirmations;
-    uint public transactionCount;
-
-    struct Transaction {
-        address destination;
-        uint value;
-        bytes data;
-        bool executed;
-    }
-    
     function MultiSigStub(address[] _owners, uint256 _required) {
         //bytes4 sig = bytes4(sha3("constructor(address[],uint256)"));
         bytes4 sig = 0x36756a23;
@@ -40,21 +28,6 @@ contract MultiSigStub is DelegatedCall {
         delegated
     {
 
-    }
-
-    function submitTransaction(address destination, uint value, bytes data)
-        public
-        delegated
-        returns (uint)
-    {
-        
-    }
-    
-    function confirmTransaction(uint transactionId)
-        public
-        delegated
-    {
-        
     }
 
     /// @dev Returns the confirmation status of a transaction.
@@ -103,9 +76,10 @@ contract MultiSigStub is DelegatedCall {
     function getOwners()
         public
         constant
+        delegated
         returns (address[])
     {
-        return owners;
+
     }
 
     /// @dev Returns array with owner addresses, which confirmed transaction.
@@ -114,21 +88,10 @@ contract MultiSigStub is DelegatedCall {
     function getConfirmations(uint transactionId)
         public
         constant
+        delegated
         returns (address[] _confirmations)
     {
-        address[] memory confirmationsTemp = new address[](owners.length);
-        uint count = 0;
-        uint i;
-        for (i = 0; i < owners.length; i++) {
-            if (confirmations[transactionId][owners[i]]) {
-                confirmationsTemp[count] = owners[i];
-                count += 1;
-            }
-        }
-        _confirmations = new address[](count);
-        for (i = 0; i < count; i++) {
-            _confirmations[i] = confirmationsTemp[i];
-        }
+
     }
 
     /// @dev Returns list of transaction IDs in defined range.
@@ -137,24 +100,13 @@ contract MultiSigStub is DelegatedCall {
     /// @param pending Include pending transactions.
     /// @param executed Include executed transactions.
     /// @return Returns array of transaction IDs.
-    function getTransactionIds(uint from, uint to, bool pending, bool executed)
+    function getTransactionIds(uint from, uint to, bool pending, bool executed) 
         public
         constant
+        delegated
         returns (uint[] _transactionIds)
     {
-        uint[] memory transactionIdsTemp = new uint[](transactionCount);
-        uint count = 0;
-        uint i;
-        for (i = 0; i < transactionCount; i++) {
-            if (pending && !transactions[i].executed || executed && transactions[i].executed) {
-                transactionIdsTemp[count] = i;
-                count += 1;
-            }
-        }
-        _transactionIds = new uint[](to - from);
-        for (i = from; i < to; i++) {
-            _transactionIds[i - from] = transactionIdsTemp[i];
-        }
+
     }
 
     function _getDelegatedContract()
