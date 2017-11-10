@@ -79,7 +79,9 @@
       (let [tabs (apply conj [[:bounties (str (when-not @user "Open ") "Bounties")]
                               [:activity "Activity"]]
                         (when @user
-                          [[:repos "Repositories"]
+                          [
+                           ;; NOTE(oskarth) Disabling this as repo management happens through GH app
+                           #_[:repos "Repositories"]
                            [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")]
                            (when (:status-team-member? @user)
                              [:usage-metrics "Usage metrics"])]))]
