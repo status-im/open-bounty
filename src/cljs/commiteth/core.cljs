@@ -223,6 +223,10 @@
 (secretary/defroute "/" []
   (rf/dispatch [:set-active-page :bounties]))
 
+(secretary/defroute "/activity" []
+  (rf/dispatch [:set-active-page :activity]))
+
+
 (secretary/defroute "/repos" []
   (if js/user
     (rf/dispatch [:set-active-page :repos])
