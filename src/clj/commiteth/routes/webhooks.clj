@@ -248,9 +248,9 @@
 ;; handle-toggle-repo for Github App.
 (defn handle-add-repo [user-id username owner-avatar-url repo can-create?]
   (let [repo-id   (:id repo)
-        repo      (:name repo)
+        repo-name (:name repo)
         full-repo (:full_name repo)
-        _ (log/info "handle-installation add pre repo" repo)
+        _ (log/info "handle-installation add pre repo" (pr-str repo) " " (pr-str full-repo))
         owner (full-repo->owner full-repo)
         _ (log/info "handle-installation add" full-repo " " owner)
         db-user   (users/get-user user-id)]
@@ -259,7 +259,7 @@
                      :name             username
                      :owner-avatar-url owner-avatar-url
                      :repo-id          repo-id
-                     :repo             repo
+                     :repo             repo-name
                      :full-repo        full-repo}))
   (cond (not can-create?)
         {:status 400
