@@ -41,6 +41,7 @@ contract DelegatedCall {
      */
     function _malloc(uint size) 
         internal 
+        pure
         returns(bytes32 ptr) 
     {
         assembly {
