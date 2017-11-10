@@ -1,20 +1,26 @@
 (ns commiteth.routes.webhooks
-  (:require [cheshire.core :as json]
-            [clojure.string :as str :refer [join]]
-            [clojure.tools.logging :as log]
-            [commiteth.bounties :as bounties]
-            [commiteth.db
-             [issues :as issues]
-             [pull-requests :as pull-requests]
-             [repositories :as repos]
-             [users :as users]]
-            [commiteth.github.core :as github]
-            [commiteth.util.digest :refer [hex-hmac-sha1]]
-            [compojure.core :refer [defroutes POST]]
-            [crypto.equality :as crypto]
-            [ring.util.http-response :refer [ok forbidden]]
-            [commiteth.db.bounties :as bounties-db]
-            [clojure.string :as string])
+  (:require
+   ;; TODO(oskarth): Don't use :refer :all (not sure where services.clj functions come from so importing both.
+   [ring.util.http-response :refer :all]
+   [compojure.api.sweet :refer :all]
+   [cheshire.core :as json]
+   [clojure.string :as str :refer [join]]
+   [clojure.tools.logging :as log]
+   [commiteth.bounties :as bounties]
+   [commiteth.db
+    [issues :as issues]
+    [pull-requests :as pull-requests]
+    [repositories :as repositories]
+    [users :as users]]
+   [commiteth.github.core :as github]
+   [commiteth.util.digest :refer [hex-hmac-sha1]]
+   ;; TODO(oskarth): Bad form, put whitelist in better namespace
+   [commiteth.routes.services :refer [user-whitelisted?]]
+   [compojure.core :refer [defroutes POST]]
+   [crypto.equality :as crypto]
+   [ring.util.http-response :refer [ok forbidden]]
+   [commiteth.db.bounties :as bounties-db]
+   [clojure.string :as string])
   (:import java.lang.Integer))
 
 (defn find-issue-event
@@ -218,31 +224,75 @@
       (handle-issue-reopened webhook-payload)))
   (ok))
 
-(defn handle-installation [{:keys [action installation sender]}]
-  ;; TODO(oskarth): Handle other installs? Like remove, say.
+(defn enable-repo-2 [repo-id full-repo]
+  (log/debug "enable-repo-2" repo-id full-repo)
+  ;; TODO(oskarth): Add granular permissions to enable creation of label
+  #_(github/create-label full-repo)
+  (repositories/update-repo repo-id {:state 2})
+  (when (add-bounties-for-existing-issues?)
+    (bounties/add-bounties-for-existing-issues full-repo)))
+
+(defn disable-repo-2 [repo-id full-repo]
+  (log/debug "disable-repo-2" repo-id full-repo)
+  (repositories/update-repo repo-id {:state 0}))
+
+;; NOTE(oskarth): Together with {enable,disable}-repo-2 above, this replaces
+;; handle-toggle-repo for Github App.
+(defn handle-add-repo [user-id username owner-avatar-url repo can-create?]
+  (let [repo-id   (:id repo)
+        repo      (:name repo)
+        full-repo (:full_name repo)
+        [owner _] (str/split full-repo #"/")
+        db-user   (users/get-user user-id)]
+  (log/info "handle-add-repo"
+            (pr-str {:user-id          user-id
+                     :name             username
+                     :owner-avatar-url owner-avatar-url
+                     :repo-id          repo-id
+                     :repo             repo
+                     :full-repo        full-repo}))
+  (cond (not can-create?)
+        {:status 400
+         :body "Please join our Riot - chat.status.im/#/register and request
+           access in our #openbounty room to have your account whitelisted"}
+
+        (empty? (:address db-user))
+        {:status 400
+         :body "Please add your ethereum address to your profile first"}
+
+        :else
+        (try
+          (let [_ (log/info "handle-add-repo pre-create")
+                db-item (repositories/create (merge params {:user_id user-id
+                                                            :owner owner}))
+                is-enabled (= 2 (:state db-item))]
+            (if is-enabled
+              (disable-repo-2 repo-id full-repo)
+              (enable-repo-2 repo-id full-repo))
+            (ok (merge
+                 {:enabled (not is-enabled)}
+                 (select-keys params [:id :full_name]))))
+          (catch Exception e
+            (log/error "exception when enabling repo" e)
+            (repositories/update-repo repo-id {:state -1})
+            (internal-server-error))))))
+
+(defn handle-installation [{:keys [action repositories sender]}]
+  ;; TODO(oskarth): Handle other installs, like disable.
   (when (= action "created")
     (let [user-id (:id sender)
           username (:login sender)
           owner-avatar-url (:avatar_url sender)
-          ;; [{id,name,full_name},...]
-          repos (:repositories installation)
-          ;; TODO(oskarth): Handle install for each repo
-          first-repo (first repos)
-          ]
-      ;; NOTE(oskarth): All needed params to call equivalent
-      ;; handle-toggle-repo.
-      ;; DON'T need token cause we don't modify webhooks.
+          first-repo (first repositories)
+          can-create? (user-whitelisted? (:username username))]
       (log/info "handle-installation created"
-                (pr-str
-                 {:user-id user-id
-                  :name username
-                  :owner-avatar-url owner-avatar-url
-                  :all-selected-repos repos
-                  :first-repo-id (:id first-repo)
-                  :first-repo (:name first-repo)
-                  :first-full-name (:full_name first-repo)}))
-      ;; TODO(oskarth): Actually install repo
-      )))
+                (pr-str {:user-id user-id
+                         :name username
+                         :owner-avatar-url owner-avatar-url
+                         :repos repositories}))
+      (doseq [repo repositories]
+        (handle-add-repo user-id username owner-avatar-url repo can-create?))))
+  (ok))
 
 (defn handle-pull-request
   [pull-request]
@@ -257,7 +307,7 @@
 (defn validate-secret [webhook-payload raw-payload github-signature]
   ;; used for oauth app webhooks. secret is repo-specific
   (let [full-name (get-in webhook-payload [:repository :full_name])
-        repo (repos/get-repo full-name)
+        repo (repositories/get-repo full-name)
         secret (:hook_secret repo)]
     (and (not (string/blank? secret))
          (crypto/eq? github-signature
