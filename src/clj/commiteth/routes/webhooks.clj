@@ -263,20 +263,22 @@
                      :full-repo        full-repo
                      :can-create?      can-create?}))
   (cond (not can-create?)
-        {:status 400
-         :body "Please join our Riot - chat.status.im/#/register and request
-           access in our #openbounty room to have your account whitelisted"}
+        (do (log/info "handle-add-repo user not in whitelist: " username)
+            {:status 400
+             :body "Please join our Riot - chat.status.im/#/register and request
+           access in our #openbounty room to have your account whitelisted"})
 
         (empty? (:address db-user))
-        {:status 400
-         :body "Please add your ethereum address to your profile first"}
+        (do (log/info "handle-add-repo user lacking ethereum address: " (pr-str db-user))
+            {:status 400
+             :body "Please add your ethereum address to your profile first"})
 
         :else
         (try
           (let [_ (log/info "handle-add-repo pre-create")
                 db-item (repositories/create
                          {:id repo-id ;; XXX: Being rename twice... silly.
-                          :name repo ;; XXX: Is this name of repo?
+                          :name repo-name ;; XXX: Is this name of repo?
                           :owner-avatar-url owner-avatar-url
                           :user_id user-id
                           :owner owner})
