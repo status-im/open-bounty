@@ -1,8 +1,6 @@
 (ns commiteth.routes.webhooks
   (:require
-   ;; TODO(oskarth): Don't use :refer :all (not sure where services.clj functions come from so importing both.
-   [ring.util.http-response :refer :all]
-   [compojure.api.sweet :refer :all]
+   [ring.util.http-response :refer [internal-server-error]]
    [cheshire.core :as json]
    [clojure.string :as str :refer [join]]
    [clojure.tools.logging :as log]
@@ -14,8 +12,10 @@
     [users :as users]]
    [commiteth.github.core :as github]
    [commiteth.util.digest :refer [hex-hmac-sha1]]
-   ;; TODO(oskarth): Bad form, put whitelist in better namespace
-   [commiteth.routes.services :refer [user-whitelisted?]]
+   ;; TODO(oskarth): Bad form, put these in better namespace
+   [commiteth.routes.services :refer
+    [user-whitelisted?
+     add-bounties-for-existing-issues?]]
    [compojure.core :refer [defroutes POST]]
    [crypto.equality :as crypto]
    [ring.util.http-response :refer [ok forbidden]]
@@ -263,15 +263,20 @@
         :else
         (try
           (let [_ (log/info "handle-add-repo pre-create")
-                db-item (repositories/create (merge params {:user_id user-id
-                                                            :owner owner}))
+                db-item (repositories/create
+                         {:id repo-id ;; XXX: Being rename twice... silly.
+                          :name repo ;; XXX: Is this name of repo?
+                          :owner-avatar-url owner-avatar-url
+                          :user_id user-id
+                          :owner owner})
+                _ (log/info "handle-add-repo db-item" db-item)
                 is-enabled (= 2 (:state db-item))]
             (if is-enabled
               (disable-repo-2 repo-id full-repo)
               (enable-repo-2 repo-id full-repo))
-            (ok (merge
-                 {:enabled (not is-enabled)}
-                 (select-keys params [:id :full_name]))))
+            (ok {:enabled (not is-enabled)
+                 :id repo-id
+                 :full_name full-repo}))
           (catch Exception e
             (log/error "exception when enabling repo" e)
             (repositories/update-repo repo-id {:state -1})
