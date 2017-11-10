@@ -310,7 +310,7 @@
         (handle-add-repo user-id username owner-avatar-url repo can-create?))))
   (ok))
 
-(defn handle-installation-integration [{:keys [action sender] :as payload}]
+(defn handle-installation-repositories [{:keys [action sender] :as payload}]
   ;; TODO(oskarth): Handle other installs, like disable.
   ;; TODO(oskarth): Also support remove in :repositories_removed
   ;; TODO(oskarth): Also support case when :repository_selection is all - does it work differently?
