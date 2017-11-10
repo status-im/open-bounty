@@ -260,7 +260,8 @@
                      :owner-avatar-url owner-avatar-url
                      :repo-id          repo-id
                      :repo             repo-name
-                     :full-repo        full-repo}))
+                     :full-repo        full-repo
+                     :can-create?      can-create?}))
   (cond (not can-create?)
         {:status 400
          :body "Please join our Riot - chat.status.im/#/register and request
@@ -299,7 +300,7 @@
           username (:login sender)
           owner-avatar-url (:avatar_url sender)
           first-repo (first repositories)
-          can-create? (user-whitelisted? (:username username))]
+          can-create? (user-whitelisted? username)]
       (log/info "handle-installation created"
                 (pr-str {:user-id user-id
                          :name username
@@ -320,7 +321,7 @@
           username (:login sender)
           owner-avatar-url (:avatar_url sender)
           first-repo (first repositories)
-          can-create? (user-whitelisted? (:username username))]
+          can-create? (user-whitelisted? username)]
       (log/info "handle-installation-integration created"
                 (pr-str {:user-id user-id
                          :name username
