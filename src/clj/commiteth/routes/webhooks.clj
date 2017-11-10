@@ -310,6 +310,27 @@
         (handle-add-repo user-id username owner-avatar-url repo can-create?))))
   (ok))
 
+(defn handle-installation-integration [{:keys [action sender] :as payload}]
+  ;; TODO(oskarth): Handle other installs, like disable.
+  ;; TODO(oskarth): Also support remove in :repositories_removed
+  ;; TODO(oskarth): Also support case when :repository_selection is all - does it work differently?
+  (when (= action "added")
+    (let [repositories (:repositories_added payload)
+          user-id (:id sender)
+          username (:login sender)
+          owner-avatar-url (:avatar_url sender)
+          first-repo (first repositories)
+          can-create? (user-whitelisted? (:username username))]
+      (log/info "handle-installation-integration created"
+                (pr-str {:user-id user-id
+                         :name username
+                         :owner-avatar-url owner-avatar-url
+                         :repos repositories}))
+      (doseq [repo repositories]
+        (log/info "handle-installation-integration add pre repo" repo)
+        (handle-add-repo user-id username owner-avatar-url repo can-create?))))
+  (ok))
+
 (defn handle-pull-request
   [pull-request]
   (let [action (keyword (:action pull-request))]
@@ -368,6 +389,14 @@
                 "issues" (handle-issue payload)
                 "pull_request" (handle-pull-request payload)
                 "installation" (handle-installation payload)
+                "installation_repositories" (handle-installation-repositories payload)
+
+                ;; NOTE(oskarth): These two webhooks are / will be deprecated on
+                ;; November 22, 2017 but they keep being called. According to
+                ;; documentation they should contain same format.
+                ;; https://developer.github.com/webhooks/
+                "integration_installation" (handle-installation payload)
+                "integration_installation_repositories" (handle-installation-repositories payload)
                 (ok)))
             (forbidden)))))
 
