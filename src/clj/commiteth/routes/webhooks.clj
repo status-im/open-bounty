@@ -236,13 +236,23 @@
   (log/debug "disable-repo-2" repo-id full-repo)
   (repositories/update-repo repo-id {:state 0}))
 
+(defn full-repo->owner [full-repo]
+  (try
+    (let [[owner _] (str/split full-repo #"/")]
+      owner)
+    (catch Exception e
+      (log/error "exception when parsing repo" e)
+      nil)))
+
 ;; NOTE(oskarth): Together with {enable,disable}-repo-2 above, this replaces
 ;; handle-toggle-repo for Github App.
 (defn handle-add-repo [user-id username owner-avatar-url repo can-create?]
   (let [repo-id   (:id repo)
         repo      (:name repo)
         full-repo (:full_name repo)
-        [owner _] (str/split full-repo #"/")
+        _ (log/info "handle-installation add pre repo" repo)
+        owner (full-repo->owner full-repo)
+        _ (log/info "handle-installation add" full-repo " " owner)
         db-user   (users/get-user user-id)]
   (log/info "handle-add-repo"
             (pr-str {:user-id          user-id
@@ -296,6 +306,7 @@
                          :owner-avatar-url owner-avatar-url
                          :repos repositories}))
       (doseq [repo repositories]
+        (log/info "handle-installation add pre repo" repo)
         (handle-add-repo user-id username owner-avatar-url repo can-create?))))
   (ok))
 
