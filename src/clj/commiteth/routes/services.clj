@@ -68,9 +68,9 @@
                                      :state 0
                                      :hook_id nil}))
 
+;; NOTE(oskarth): This and above two functions about to be deprecated with Github App
 (defn handle-toggle-repo [user params can-create?]
-  (log/debug "handle-toggle-repo" user params)
-  (log/info "MANUAL ACTION REQUIRED: Possibly add repo:" (pr-str user) (pr-str params))
+  (log/info "XXX handle-toggle-repo" (pr-str user) (pr-str params))
   (let [{user-id :id} user
         {repo-id :id
          full-repo :full_name

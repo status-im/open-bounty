@@ -106,7 +106,8 @@
   (let [active-tab (:active-tab app-state)]
     [:div.ui.attached.tabular.menu.tiny
      (for [[tab caption] [[:activity "Activity"]
-                          [:manage "Repositories"]
+                          ;; NOTE(oskarth) Disabling this as repo management happens through GH app
+                          #_[:manage "Repositories"]
                           [:bounties "Bounties"]]]
        (let [props {:class (str "ui item"
                                 (when (= active-tab tab) " active"))

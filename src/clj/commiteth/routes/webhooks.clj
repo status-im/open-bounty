@@ -1,20 +1,26 @@
 (ns commiteth.routes.webhooks
-  (:require [cheshire.core :as json]
-            [clojure.string :as str :refer [join]]
-            [clojure.tools.logging :as log]
-            [commiteth.bounties :as bounties]
-            [commiteth.db
-             [issues :as issues]
-             [pull-requests :as pull-requests]
-             [repositories :as repos]
-             [users :as users]]
-            [commiteth.github.core :as github]
-            [commiteth.util.digest :refer [hex-hmac-sha1]]
-            [compojure.core :refer [defroutes POST]]
-            [crypto.equality :as crypto]
-            [ring.util.http-response :refer [ok forbidden]]
-            [commiteth.db.bounties :as bounties-db]
-            [clojure.string :as string])
+  (:require
+   [ring.util.http-response :refer [internal-server-error]]
+   [cheshire.core :as json]
+   [clojure.string :as str :refer [join]]
+   [clojure.tools.logging :as log]
+   [commiteth.bounties :as bounties]
+   [commiteth.db
+    [issues :as issues]
+    [pull-requests :as pull-requests]
+    [repositories :as repositories]
+    [users :as users]]
+   [commiteth.github.core :as github]
+   [commiteth.util.digest :refer [hex-hmac-sha1]]
+   ;; TODO(oskarth): Bad form, put these in better namespace
+   [commiteth.routes.services :refer
+    [user-whitelisted?
+     add-bounties-for-existing-issues?]]
+   [compojure.core :refer [defroutes POST]]
+   [crypto.equality :as crypto]
+   [ring.util.http-response :refer [ok forbidden]]
+   [commiteth.db.bounties :as bounties-db]
+   [clojure.string :as string])
   (:import java.lang.Integer))
 
 (defn find-issue-event
@@ -218,6 +224,115 @@
       (handle-issue-reopened webhook-payload)))
   (ok))
 
+(defn enable-repo-2 [repo-id full-repo]
+  (log/debug "enable-repo-2" repo-id full-repo)
+  ;; TODO(oskarth): Add granular permissions to enable creation of label
+  #_(github/create-label full-repo)
+  (repositories/update-repo repo-id {:state 2})
+  (when (add-bounties-for-existing-issues?)
+    (bounties/add-bounties-for-existing-issues full-repo)))
+
+(defn disable-repo-2 [repo-id full-repo]
+  (log/debug "disable-repo-2" repo-id full-repo)
+  (repositories/update-repo repo-id {:state 0}))
+
+(defn full-repo->owner [full-repo]
+  (try
+    (let [[owner _] (str/split full-repo #"/")]
+      owner)
+    (catch Exception e
+      (log/error "exception when parsing repo" e)
+      nil)))
+
+;; NOTE(oskarth): Together with {enable,disable}-repo-2 above, this replaces
+;; handle-toggle-repo for Github App.
+(defn handle-add-repo [user-id username owner-avatar-url repo can-create?]
+  (let [repo-id   (:id repo)
+        repo-name (:name repo)
+        full-repo (:full_name repo)
+        _ (log/info "handle-installation add pre repo" (pr-str repo) " " (pr-str full-repo))
+        owner (full-repo->owner full-repo)
+        _ (log/info "handle-installation add" full-repo " " owner)
+        db-user   (users/get-user user-id)]
+  (log/info "handle-add-repo"
+            (pr-str {:user-id          user-id
+                     :name             username
+                     :owner-avatar-url owner-avatar-url
+                     :repo-id          repo-id
+                     :repo             repo-name
+                     :full-repo        full-repo
+                     :can-create?      can-create?}))
+  (cond (not can-create?)
+        (do (log/info "handle-add-repo user not in whitelist: " username)
+            {:status 400
+             :body "Please join our Riot - chat.status.im/#/register and request
+           access in our #openbounty room to have your account whitelisted"})
+
+        (empty? (:address db-user))
+        (do (log/info "handle-add-repo user lacking ethereum address: " (pr-str db-user))
+            {:status 400
+             :body "Please add your ethereum address to your profile first"})
+
+        :else
+        (try
+          (let [_ (log/info "handle-add-repo pre-create")
+                db-item (repositories/create
+                         {:id repo-id ;; XXX: Being rename twice... silly.
+                          :name repo-name ;; XXX: Is this name of repo?
+                          :owner-avatar-url owner-avatar-url
+                          :user_id user-id
+                          :owner owner})
+                _ (log/info "handle-add-repo db-item" db-item)
+                is-enabled (= 2 (:state db-item))]
+            (if is-enabled
+              (disable-repo-2 repo-id full-repo)
+              (enable-repo-2 repo-id full-repo))
+            (ok {:enabled (not is-enabled)
+                 :id repo-id
+                 :full_name full-repo}))
+          (catch Exception e
+            (log/error "exception when enabling repo" e)
+            (repositories/update-repo repo-id {:state -1})
+            (internal-server-error))))))
+
+(defn handle-installation [{:keys [action repositories sender]}]
+  ;; TODO(oskarth): Handle other installs, like disable.
+  (when (= action "created")
+    (let [user-id (:id sender)
+          username (:login sender)
+          owner-avatar-url (:avatar_url sender)
+          first-repo (first repositories)
+          can-create? (user-whitelisted? username)]
+      (log/info "handle-installation created"
+                (pr-str {:user-id user-id
+                         :name username
+                         :owner-avatar-url owner-avatar-url
+                         :repos repositories}))
+      (doseq [repo repositories]
+        (log/info "handle-installation add pre repo" repo)
+        (handle-add-repo user-id username owner-avatar-url repo can-create?))))
+  (ok))
+
+(defn handle-installation-repositories [{:keys [action sender] :as payload}]
+  ;; TODO(oskarth): Handle other installs, like disable.
+  ;; TODO(oskarth): Also support remove in :repositories_removed
+  ;; TODO(oskarth): Also support case when :repository_selection is all - does it work differently?
+  (when (= action "added")
+    (let [repositories (:repositories_added payload)
+          user-id (:id sender)
+          username (:login sender)
+          owner-avatar-url (:avatar_url sender)
+          first-repo (first repositories)
+          can-create? (user-whitelisted? username)]
+      (log/info "handle-installation-integration created"
+                (pr-str {:user-id user-id
+                         :name username
+                         :owner-avatar-url owner-avatar-url
+                         :repos repositories}))
+      (doseq [repo repositories]
+        (log/info "handle-installation-integration add pre repo" repo)
+        (handle-add-repo user-id username owner-avatar-url repo can-create?))))
+  (ok))
 
 (defn handle-pull-request
   [pull-request]
@@ -232,7 +347,7 @@
 (defn validate-secret [webhook-payload raw-payload github-signature]
   ;; used for oauth app webhooks. secret is repo-specific
   (let [full-name (get-in webhook-payload [:repository :full_name])
-        repo (repos/get-repo full-name)
+        repo (repositories/get-repo full-name)
         secret (:hook_secret repo)]
     (and (not (string/blank? secret))
          (crypto/eq? github-signature
@@ -268,13 +383,24 @@
         (log/debug "webhook-app POST, headers" headers)
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
-          (log/debug "webhook-app POST, payload" payload)
+          (log/info "webhook-app POST, payload:" (pr-str payload))
           (if (validate-secret-one-hook payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK app")
-              (log/debug "x-github-event app" (get headers "x-github-event"))
+              (log/info "x-github-event app" (get headers "x-github-event"))
               (case (get headers "x-github-event")
                 "issues" (handle-issue payload)
                 "pull_request" (handle-pull-request payload)
+                "installation" (handle-installation payload)
+                "installation_repositories" (handle-installation-repositories payload)
+
+                ;; NOTE(oskarth): These two webhooks are / will be deprecated on
+                ;; November 22, 2017 but they keep being called. According to
+                ;; documentation they should contain same format.
+                ;; https://developer.github.com/webhooks/
+                "integration_installation" (handle-installation payload)
+                "integration_installation_repositories" (handle-installation-repositories payload)
                 (ok)))
             (forbidden)))))
+
+

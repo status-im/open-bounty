@@ -3,8 +3,10 @@
 SOLC=$(which solc)
 WEB3J=$(which web3j)
 
+rm -f resources/contracts/*.{abi,bin}
+
 # compile contracts
-for f in contracts/*.sol; do
+for f in contracts/{TokenReg,MultiSigTokenWallet*}.sol; do
     $SOLC $f --overwrite --bin --abi --optimize -o resources/contracts
 done
 
