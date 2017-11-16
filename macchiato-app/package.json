@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "name": "macchiato-web3-example",
+  "description": "FIXME: write this!",
+  "version": "0.1.0-SNAPSHOT",
+  "dependencies": {
+    "random-bytes": "1.0.0",
+    "multiparty": "4.1.2",
+    "source-map-support": "0.4.6",
+    "ws": "1.1.1",
+    "web3": "0.14.0",
+    "cookies": "0.6.2",
+    "etag": "1.7.0",
+    "lru": "3.1.0",
+    "qs": "6.3.0",
+    "content-type": "1.0.2",
+    "url": "0.11.0",
+    "simple-encryptor": "1.1.0",
+    "concat-stream": "1.5.2"
+  },
+  "main": "target/out/macchiato-web3-example.js",
+  "scripts": {
+    "start": "node target/out/macchiato-web3-example.js"
+  }
+}
