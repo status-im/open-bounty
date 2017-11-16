@@ -1,7 +1,6 @@
 (ns macchiato-web3-example.routes
   (:require
    [bidi.bidi :as bidi]
-   [hiccups.runtime]
    [macchiato.util.response :as r]
    [cljs.nodejs :as node]
    [cljs-web3.core :as web3]
@@ -42,31 +41,13 @@
       (r/content-type "application/json")
       (res)))
 
-(defn home [req res raise]
-  (-> (html
-       [:html
-        [:head [:link {:rel "stylesheet" :href "/css/site.css"}]]
-        [:body
-         [:h2 "Hello World!"]
-         [:p
-          "Your user-agent is: "
-          (str (get-in req [:headers "user-agent"]))]]])
-      (r/ok)
-      (r/content-type "text/html")
-      (res)))
-
 (defn not-found [req res raise]
-  (-> (html
-       [:html
-        [:body
-         [:h2 (:uri req) " was not found"]]])
-      (r/not-found)
-      (r/content-type "text/html")
+  (-> (r/not-found)
+      (r/content-type "application/json")
       (res)))
 
 (def routes
-  ["/" {:get home
-        "accounts" accounts
+  ["/" {"accounts" accounts
         "balance" balance}])
 
 (defn router [req res raise]
