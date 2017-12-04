@@ -17,6 +17,10 @@ profiles.clj
 *.iml
 *.ipr
 *.log
+*.pyc
+*result.xml
+.cache
+.idea
 resources/contracts
 node_modules
 .DS_Store
