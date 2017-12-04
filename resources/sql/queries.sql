@@ -495,7 +495,7 @@ SELECT
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
 AND contract_address IS NOT NULL
-AND i.confirm_hash IS NULL
+AND i.execute_hash IS NULL
 AND i.is_open = true;
 
 -- :name get-bounty :? :1
