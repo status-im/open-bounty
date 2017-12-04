@@ -243,7 +243,7 @@
 
 (defn learn-more-text []
   (let [site-url (md-url (server-address) (server-address))]
-    (format "Visit %s to learn more.\n" (site-url))))
+    (format "Visit %s to learn more.\n" site-url)))
 
 (defn generate-merged-comment
   [contract-address eth-balance-str tokens winner-login winner-address-missing?]
