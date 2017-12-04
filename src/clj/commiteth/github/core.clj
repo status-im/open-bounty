@@ -241,6 +241,9 @@
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
             eth-balance-str image-url site-url)))
 
+(defn learn-more-text []
+  (let [site-url (md-url (server-address) (server-address))]
+    (format "Visit %s to learn more.\n" site-url)))
 
 (defn generate-merged-comment
   [contract-address eth-balance-str tokens winner-login winner-address-missing?]
@@ -251,7 +254,8 @@
                (str "Status: " (if winner-address-missing?
                                  "Pending user to save ETH address"
                                  "Pending maintainer confirmation")  "\n")
-               "Winner: %s\n")
+               "Winner: %s\n"
+               (learn-more-text))
           eth-balance-str winner-login))
 
 (defn generate-paid-comment
@@ -260,7 +264,8 @@
                (token-balances-text tokens)
                (contract-addr-text contract-address)
                (network-text)
-               "Paid to: %s\n")
+               "Paid to: %s\n"
+               (learn-more-text))
           eth-balance-str payee-login))
 
 

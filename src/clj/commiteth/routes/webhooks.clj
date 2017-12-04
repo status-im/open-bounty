@@ -295,12 +295,12 @@
             (repositories/update-repo repo-id {:state -1})
             (internal-server-error))))))
 
-(defn handle-installation [{:keys [action repositories sender]}]
+(defn handle-installation [{:keys [action installation repositories sender]}]
   ;; TODO(oskarth): Handle other installs, like disable.
   (when (= action "created")
     (let [user-id (:id sender)
           username (:login sender)
-          owner-avatar-url (:avatar_url sender)
+          owner-avatar-url (get-in installation [:account :avatar_url])
           first-repo (first repositories)
           can-create? (user-whitelisted? username)]
       (log/info "handle-installation created"
@@ -313,7 +313,7 @@
         (handle-add-repo user-id username owner-avatar-url repo can-create?))))
   (ok))
 
-(defn handle-installation-repositories [{:keys [action sender] :as payload}]
+(defn handle-installation-repositories [{:keys [action installation sender] :as payload}]
   ;; TODO(oskarth): Handle other installs, like disable.
   ;; TODO(oskarth): Also support remove in :repositories_removed
   ;; TODO(oskarth): Also support case when :repository_selection is all - does it work differently?
@@ -321,7 +321,7 @@
     (let [repositories (:repositories_added payload)
           user-id (:id sender)
           username (:login sender)
-          owner-avatar-url (:avatar_url sender)
+          owner-avatar-url (get-in installation [:account :avatar_url])
           first-repo (first repositories)
           can-create? (user-whitelisted? username)]
       (log/info "handle-installation-integration created"
