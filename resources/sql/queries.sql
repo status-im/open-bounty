@@ -393,7 +393,7 @@ SELECT exists(SELECT 1
 
 
 -- :name open-bounties :? :*
--- :doc all bounty issues for given owner
+-- :doc all open bounty issues
 SELECT
   i.contract_address AS contract_address,
   i.issue_id         AS issue_id,
@@ -414,7 +414,8 @@ SELECT
 FROM issues i, repositories r
 WHERE
 r.repo_id = i.repo_id
-AND i.confirm_hash is null
+AND i.contract_address IS NOT NULL
+AND i.confirm_hash IS NULL
 AND i.is_open = true
 ORDER BY updated desc;
 
