@@ -6,18 +6,39 @@
             [clojure.string :refer [join]]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
-            [pandect.core :as pandect]))
+            [pandect.core :as pandect]
+            [commiteth.util.util :refer [json-api-request]]))
 
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
 (defn eth-password [] (:eth-password env))
 (defn gas-estimate-factor [] (env :gas-estimate-factor 1.0))
+(defn auto-gas-price? [] (env :auto-gas-price? false))
 
-(defn gas-price
+(defn eth-gasstation-gas-price
   []
+  (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
+        avg-price (-> (get data "average")
+                      bigint)
+        avg-price-gwei (/ avg-price (bigint 10))]
+    (->> (* (bigint (Math/pow 10 9)) avg-price-gwei) ;; for some reason the API returns 10x gwei price
+        .toBigInteger)))
+
+
+(defn gas-price-from-config []
   (-> (:gas-price env 20000000000) ;; 20 gwei default
       str
       BigInteger.))
+
+(defn gas-price
+  []
+  (if (auto-gas-price?)
+    (try
+      (eth-gasstation-gas-price)
+      (catch Throwable t
+        (log/error "Failed to get gas price with ethgasstation API" t)
+        (gas-price-from-config)))
+    (gas-price-from-config)))
 
 (defn eth-rpc
   [method params]

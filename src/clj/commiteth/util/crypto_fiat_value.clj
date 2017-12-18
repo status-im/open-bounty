@@ -1,18 +1,12 @@
 (ns commiteth.util.crypto-fiat-value
-  (:require [clj-http.client :as http]
-            [mount.core :as mount]
+  (:require [mount.core :as mount]
             [clojure.tools.logging :as log]
             [commiteth.config :refer [env]]
-            [clojure.data.json :as json]))
+            [commiteth.util.util :refer [json-api-request]]))
 
 
 (defn fiat-api-provider []
   (env :fiat-api-provider :coinmarketcap))
-
-(defn json-api-request [url]
-  (->> (http/get url)
-       (:body)
-       (json/read-str)))
 
 
 (defn get-token-usd-price-cryptonator

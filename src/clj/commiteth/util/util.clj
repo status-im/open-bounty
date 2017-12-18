@@ -1,4 +1,7 @@
-(ns commiteth.util.util)
+(ns commiteth.util.util
+  (:require
+   [clj-http.client :as http]
+   [clojure.data.json :as json]))
 
 
 (defn eth-decimal->str [n]
@@ -6,3 +9,8 @@
 
 (defn usd-decimal->str [n]
   (format "%.2f" n))
+
+(defn json-api-request [url]
+  (->> (http/get url)
+       (:body)
+       (json/read-str)))
