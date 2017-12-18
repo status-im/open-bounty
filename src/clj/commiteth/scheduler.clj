@@ -129,6 +129,16 @@
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
 
+(defn update-watch-hash
+  "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
+  []
+  (doseq [{issue-id :issue_id
+           watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
+    (log/info "pending watch call" watch-hash)
+    (when-let [receipt (eth/get-transaction-receipt watch-hash)]
+      (db-bounties/update-watch-hash issue-id nil))))
+
+
 (defn older-than-3h?
   [timestamp]
   (let [now (t/now)
@@ -198,23 +208,27 @@
 
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
-  [bounty-addr]
+  [issue-id bounty-addr watch-hash]
   (doseq [[tla token-data] (token-data/as-map)]
     (let [balance (multisig/token-balance bounty-addr tla)]
       (when (> balance 0)
         (do
           (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
           (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
-            (when (not= balance internal-balance)
+            (when (and (nil? watch-hash)
+                       (not= balance internal-balance))
               (log/info "balances not in sync, calling watch")
-              (multisig/watch-token bounty-addr tla))))))))
+              (let [hash (multisig/watch-token bounty-addr tla)]
+                (db-bounties/update-watch-hash issue-id hash)))))))))
 
 (defn update-contract-internal-balances
   "It is required in our current smart contract to manually update it's internal balance when some tokens have been added."
   []
-  (doseq [{bounty-address :contract_address}
+  (doseq [{issue-id :issue_id
+           bounty-address :contract_address
+           watch-hash :watch_hash}
           (db-bounties/open-bounty-contracts)]
-    (update-bounty-token-balances bounty-address)))
+    (update-bounty-token-balances issue-id bounty-address watch-hash)))
 
 
 (defn get-bounty-funds
@@ -313,6 +327,7 @@
       update-issue-contract-address
       update-confirm-hash
       update-payout-receipt
+      update-watch-hash
       self-sign-bounty
       update-contract-internal-balances
       update-balances])

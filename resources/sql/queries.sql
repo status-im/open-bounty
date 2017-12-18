@@ -339,6 +339,21 @@ UPDATE issues
 SET winner_login = :winner_login
 WHERE issue_id = :issue_id;
 
+-- :name update-watch-hash :! :n
+-- :doc updates issue with watch transaction hash
+UPDATE issues
+SET watch_hash = :watch_hash
+WHERE issue_id = :issue_id;
+
+-- :name pending-watch-calls :? :*
+-- :doc issues with a pending watch transaction
+SELECT
+issue_id,
+watch_hash
+FROM issues
+WHERE watch_hash IS NOT NULL;
+
+
 -- :name update-payout-hash :! :n
 -- :doc updates issue with payout transaction hash
 UPDATE issues
@@ -492,7 +507,8 @@ SELECT
   i.issue_id         AS issue_id,
   i.balance_eth      AS balance_eth,
   i.tokens           AS tokens,
-  i.value_usd        AS value_usd
+  i.value_usd        AS value_usd,
+  i.watch_hash       AS watch_hash
 FROM issues i, repositories r
 WHERE r.repo_id = i.repo_id
 AND contract_address IS NOT NULL
