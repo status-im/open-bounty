@@ -55,6 +55,16 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/update-winner-login con-db {:issue_id issue-id :winner_login login})))
 
+(defn update-watch-hash
+  [issue-id watch-hash]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-watch-hash con-db {:issue_id issue-id :watch_hash watch-hash})))
+
+(defn pending-watch-calls
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/pending-watch-calls con-db)))
+
 (defn update-payout-hash
   [issue-id payout-hash]
   (jdbc/with-db-connection [con-db *db*]

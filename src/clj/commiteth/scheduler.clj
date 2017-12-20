@@ -23,8 +23,9 @@
            transaction-hash :transaction_hash} (issues/list-pending-deployments)]
     (log/debug "pending deployment:" transaction-hash)
     (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
-      (log/info "transaction receipt for issue #" issue-id ": " receipt)
-      (when-let [contract-address (multisig/find-created-multisig-address receipt)]
+      (log/info "update-issue-contract-address: transaction receipt for issue #"
+                issue-id ": " receipt)
+      (if-let [contract-address (multisig/find-created-multisig-address receipt)]
         (let [issue   (issues/update-contract-address issue-id contract-address)
               {owner        :owner
                repo         :repo
@@ -32,6 +33,7 @@
                issue-number :issue_number} issue
               balance-eth-str (eth/get-balance-eth contract-address 6)
               balance-eth (read-string balance-eth-str)]
+          (log/info "Updating comment image")
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
@@ -40,6 +42,7 @@
                                                 balance-eth
                                                 balance-eth-str
                                                 {})
+          (log/info "Updating comment")
           (github/update-comment owner
                                  repo
                                  comment-id
@@ -47,7 +50,8 @@
                                  contract-address
                                  balance-eth
                                  balance-eth-str
-                                 {}))))))
+                                 {}))
+        (log/error "Failed to find contract address in tx logs")))))
 
 
 (defn deploy-contract [owner-address issue-id]
@@ -129,6 +133,16 @@
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
 
 
+(defn update-watch-hash
+  "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
+  []
+  (doseq [{issue-id :issue_id
+           watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
+    (log/info "pending watch call" watch-hash)
+    (when-let [receipt (eth/get-transaction-receipt watch-hash)]
+      (db-bounties/update-watch-hash issue-id nil))))
+
+
 (defn older-than-3h?
   [timestamp]
   (let [now (t/now)
@@ -198,23 +212,27 @@
 
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
-  [bounty-addr]
+  [issue-id bounty-addr watch-hash]
   (doseq [[tla token-data] (token-data/as-map)]
     (let [balance (multisig/token-balance bounty-addr tla)]
       (when (> balance 0)
         (do
           (log/debug "bounty at" bounty-addr "has" balance "of token" tla)
           (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
-            (when (not= balance internal-balance)
+            (when (and (nil? watch-hash)
+                       (not= balance internal-balance))
               (log/info "balances not in sync, calling watch")
-              (multisig/watch-token bounty-addr tla))))))))
+              (let [hash (multisig/watch-token bounty-addr tla)]
+                (db-bounties/update-watch-hash issue-id hash)))))))))
 
 (defn update-contract-internal-balances
   "It is required in our current smart contract to manually update it's internal balance when some tokens have been added."
   []
-  (doseq [{bounty-address :contract_address}
+  (doseq [{issue-id :issue_id
+           bounty-address :contract_address
+           watch-hash :watch_hash}
           (db-bounties/open-bounty-contracts)]
-    (update-bounty-token-balances bounty-address)))
+    (update-bounty-token-balances issue-id bounty-address watch-hash)))
 
 
 (defn get-bounty-funds
@@ -313,6 +331,7 @@
       update-issue-contract-address
       update-confirm-hash
       update-payout-receipt
+      update-watch-hash
       self-sign-bounty
       update-contract-internal-balances
       update-balances])
