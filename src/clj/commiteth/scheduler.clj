@@ -23,8 +23,9 @@
            transaction-hash :transaction_hash} (issues/list-pending-deployments)]
     (log/debug "pending deployment:" transaction-hash)
     (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
-      (log/info "transaction receipt for issue #" issue-id ": " receipt)
-      (when-let [contract-address (multisig/find-created-multisig-address receipt)]
+      (log/info "update-issue-contract-address: transaction receipt for issue #"
+                issue-id ": " receipt)
+      (if-let [contract-address (multisig/find-created-multisig-address receipt)]
         (let [issue   (issues/update-contract-address issue-id contract-address)
               {owner        :owner
                repo         :repo
@@ -32,6 +33,7 @@
                issue-number :issue_number} issue
               balance-eth-str (eth/get-balance-eth contract-address 6)
               balance-eth (read-string balance-eth-str)]
+          (log/info "Updating comment image")
           (bounties/update-bounty-comment-image issue-id
                                                 owner
                                                 repo
@@ -40,6 +42,7 @@
                                                 balance-eth
                                                 balance-eth-str
                                                 {})
+          (log/info "Updating comment")
           (github/update-comment owner
                                  repo
                                  comment-id
@@ -47,7 +50,8 @@
                                  contract-address
                                  balance-eth
                                  balance-eth-str
-                                 {}))))))
+                                 {}))
+        (log/error "Failed to find contract address in tx logs")))))
 
 
 (defn deploy-contract [owner-address issue-id]
