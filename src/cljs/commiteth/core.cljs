@@ -215,7 +215,7 @@
           (when (show-top-hunters?)
             [:div.six.wide.column.computer.only
              [:div.ui.container.top-hunters
-              [:h3.top-hunters-header "Top hunters"]
+              [:h3.top-hunters-header "Top 5 hunters"]
               [:div.top-hunters-subheader "All time"]
               [top-hunters]]])]]
         [footer]]])))
