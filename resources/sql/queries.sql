@@ -572,7 +572,8 @@ pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
 GROUP BY u.id
-ORDER BY total_usd DESC;
+ORDER BY total_usd DESC
+LIMIT 10;
 
 
 -- :name bounties-activity :? :*
