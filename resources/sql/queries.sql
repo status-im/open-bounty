@@ -558,7 +558,7 @@ AND comment_hash = :hash;
 
 
 -- :name top-hunters :? :*
--- :doc list of user that have reveived bounty payouts with sum of
+-- :doc top 5 list of users that have reveived bounty payouts with sum of
 -- earnings
 SELECT
 u.id AS user_id,
@@ -573,7 +573,7 @@ AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
 GROUP BY u.id
 ORDER BY total_usd DESC
-LIMIT 10;
+LIMIT 5;
 
 
 -- :name bounties-activity :? :*
