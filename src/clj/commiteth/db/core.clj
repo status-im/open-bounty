@@ -4,7 +4,7 @@
    [clojure.java.jdbc :as jdbc]
    [conman.core :as conman]
    [commiteth.config :refer [env]]
-   [mount.core :refer [defstate]]
+   [mount.core :refer [defstate] :as mount]
    [migratus.core :as migratus]
    [mpg.core :as mpg]
    [clojure.string :as str])
@@ -20,20 +20,25 @@
 
 (mpg/patch)
 
-(defn start []
+(defn db-start []
   (let [db (env :jdbc-database-url)
         migratus-config {:store :database
                          :migration-dir "migrations/"
                          :migration-table-name "schema_migrations"
                          :db db}]
     (migratus/migrate migratus-config)
-    (conman/bind-connection db "sql/queries.sql")
     (conman/connect! {:jdbc-url db})
     db))
 
 (defstate ^:dynamic *db*
-  :start (start)
+  :start (db-start)
   :stop (conman/disconnect! *db*))
+
+(defn start! []
+  (mount/start #'*db*))
+
+(defn stop! []
+  (mount/stop #'*db*))
 
 (conman/bind-connection *db* "sql/queries.sql")
 

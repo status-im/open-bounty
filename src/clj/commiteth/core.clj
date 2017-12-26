@@ -16,17 +16,23 @@
     :parse-fn #(Integer/parseInt %)]])
 
 (mount/defstate
-http-server
+  http-server
   :start
   (http/start
-    (-> env
-      (assoc :handler (handler/app))
-      (update :port #(or (-> env :options :port) %))))
+   (-> env
+       (assoc :handler (handler/app))
+       (update :port #(or (-> env :options :port) %))))
   :stop
   (http/stop http-server))
 
+(defn start! []
+  (mount/start #'http-server))
+
+(defn stop! []
+  (mount/stop #'http-server))
+
 (mount/defstate ^{:on-reload :noop}
-repl-server
+  repl-server
   :start
   (when-let [nrepl-port (env :nrepl-port)]
     (log/info "Starting NREPL server on port" nrepl-port)
