@@ -38,7 +38,13 @@ Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required an
 
 ## Running
 
-Make sure `env/dev/resources/config.edn` is correctly populated.
+Prepare your local git-ignored config file:
+
+```
+cp env/dev/resources/config.edn config.edn
+```
+
+Make sure `config.edn` is correctly populated.
 
 Lauch a local geth node with the bot account unlocked:
 

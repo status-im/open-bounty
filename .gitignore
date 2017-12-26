@@ -24,3 +24,6 @@ profiles.clj
 resources/contracts
 node_modules
 .DS_Store
+src/java
+yarn.lock
+/config.edn
