@@ -26,4 +26,4 @@ node_modules
 .DS_Store
 src/java
 yarn.lock
-/config.edn
+env/dev/resources/config.edn
