@@ -1,6 +1,6 @@
 (ns commiteth.update-address
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [input dropdown checkbox]]
+            [commiteth.common :refer [input dropdown]]
             [reagent.core :as r]
             [reagent.crypt :as crypt]
             [cljs-web3.eth :as web3-eth]))
@@ -10,12 +10,7 @@
         user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
-        hidden (r/atom @(rf/subscribe [:get-in [:user :is_hidden]]))]
-
-    (add-watch hidden
-     :default
-     (fn [_ _ _ new-val]
-       (rf/dispatch [:mark-user-hidden (:id @user) new-val])))
+        hidden (rf/subscribe [:get-in [:user :is_hidden]])]
 
     (fn []
       (let [web3 (:web3 @db)
@@ -50,5 +45,14 @@
 
           [:h3 "Settings"]
           [:div
-           [checkbox hidden {:id :input-hidden}]
+
+           [:input
+            {:type :checkbox
+             :id :input-hidden
+             :checked @hidden
+             :on-change
+             (fn [e]
+               (let [value (-> e .-target .-checked)]
+                 (rf/dispatch [:mark-user-hidden (:id @user) value])))}]
+
            [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))

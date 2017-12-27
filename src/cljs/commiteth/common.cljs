@@ -10,21 +10,6 @@
                    :value     @val-ratom
                    :on-change #(reset! val-ratom (-> % .-target .-value))})]))
 
-(defn checkbox
-  "Common checkbox widget. Takes a boolean value wrapped into an atom
-  and updates its state when clicking in it. An additional `opt` map
-  is to override its attributes (class, id, etc)."
-  [val-atom & [opt]]
-  [:input
-   (merge
-    {:type :checkbox
-     :checked @val-atom
-     :on-change
-     (fn [e]
-       (let [value (-> e .-target .-checked)]
-         (reset! val-atom value)))}
-    opt)])
-
 (defn dropdown [props title val-ratom items]
   (fn []
     (if (= 1 (count items))
