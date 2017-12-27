@@ -1,21 +1,26 @@
 (ns commiteth.update-address
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [input dropdown]]
+            [commiteth.common :refer [input dropdown checkbox]]
             [reagent.core :as r]
             [reagent.crypt :as crypt]
             [cljs-web3.eth :as web3-eth]))
-
 
 (defn update-address-page []
   (let [db (rf/subscribe [:db])
         user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
-        address (r/atom @(rf/subscribe [:get-in [:user :address]]))]
+        address (r/atom @(rf/subscribe [:get-in [:user :address]]))
+        hidden (r/atom @(rf/subscribe [:get-in [:user :is_hidden]]))]
+
+    (add-watch hidden
+     :default
+     (fn [_ _ _ new-val]
+       (rf/dispatch [:mark-user-hidden (:id @user) new-val])))
+
     (fn []
       (let [web3 (:web3 @db)
             web3-accounts (when web3
                             (web3-eth/accounts web3))]
-        (println "web3-accounts" web3-accounts)
         [:div.ui.container.grid
          [:div.ui.form.sixteen.wide.column
           [:h3 "Update address"]
@@ -41,4 +46,9 @@
                    :class (str "ui button small update-address-button"
                                (when @updating-address
                                  " busy loading"))})
-           "UPDATE"]]]))))
+           "UPDATE"]
+
+          [:h3 "Settings"]
+          [:div
+           [checkbox hidden {:id :input-hidden}]
+           [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))

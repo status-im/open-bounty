@@ -311,7 +311,6 @@
    {:db db
     :dispatch [:set-active-page :update-address]}))
 
-
 (reg-event-fx
  :save-user-address
  (fn [{:keys [db]} [_ user-id address]]
@@ -320,7 +319,7 @@
     :http {:method     POST
            :url        "/api/user/address"
            :on-success #(do
-                          (dispatch [:assoc-in [:user [:address] address]])
+                          (dispatch [:assoc-in [:user :address] address])
                           (dispatch [:set-flash-message
                                      :success
                                      "Address saved"]))
@@ -331,6 +330,23 @@
                                      (:response %)]))
            :finally    #(dispatch [:clear-updating-address])
            :params     {:user-id user-id :address address}}}))
+
+(reg-event-fx
+ :mark-user-hidden
+ (fn [{:keys [db]} [_ user-id hidden]]
+   {:http {:method     POST
+           :url        "/api/user/hidden"
+           :on-success #(do
+                          (dispatch [:assoc-in [:user :is_hidden] hidden])
+                          (dispatch [:set-flash-message
+                                     :success
+                                     "Settings saved"]))
+           :on-error   #(do
+                          (dispatch [:set-flash-message
+                                     :error (:response %)]))
+           :params     {:user-id user-id :hidden hidden}}}))
+
+
 
 (reg-event-db
  :clear-updating-address
