@@ -240,8 +240,7 @@
                           :auth-rules authenticated?
                           :body-params [user-id :- Long, hidden :- Boolean]
                           :summary "(Un)mark a user as being hidden (not visible in rating tables)."
-                          (db/with-trx
-                            (db/update! :users {:is_hidden hidden} ["id = ?" user-id]))
+                          (db/update! :users {:is_hidden hidden} ["id = ?" user-id])
                           (ok))
 
                     (GET "/repositories" {:keys [params]}
