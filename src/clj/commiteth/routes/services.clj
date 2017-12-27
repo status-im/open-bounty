@@ -5,6 +5,7 @@
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
+            [commiteth.db.core :as db]
             [commiteth.db.users :as users]
             [commiteth.db.usage-metrics :as usage-metrics]
             [commiteth.db.repositories :as repositories]
@@ -234,6 +235,15 @@
                               (if (= 1 result)
                                 (ok)
                                 (internal-server-error)))))
+
+                    (POST "/hidden" []
+                          :auth-rules authenticated?
+                          :body-params [user-id :- Long, hidden :- Boolean]
+                          :summary "(Un)mark a user as being hidden (not visible in rating tables)."
+                          (db/with-trx
+                            (db/update! :users {:is_hidden hidden} ["id = ?" user-id]))
+                          (ok))
+
                     (GET "/repositories" {:keys [params]}
                          :auth-rules authenticated?
                          :current-user user

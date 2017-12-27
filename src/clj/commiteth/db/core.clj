@@ -90,3 +90,11 @@
   (sql-value [value] (to-pg-json value))
   IPersistentVector
   (sql-value [value] (to-pg-json value)))
+
+(defmacro with-trx [& body]
+  "Performs a set of queries in transaction."
+  `(conman/with-transaction [*db*]
+     ~@body))
+
+(defn update! [& args]
+  (apply jdbc/update! *db* args))
