@@ -342,7 +342,8 @@
   (do
     (log/debug "run-1-min-interval-tasks" time)
     (run-tasks
-     [update-open-issue-usd-values])
+     [update-open-issue-usd-values
+      eth/check-bot-account-eth-threshold])
     (log/debug "run-10-min-interval-tasks done")))
 
 
