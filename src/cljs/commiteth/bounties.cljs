@@ -1,6 +1,7 @@
 (ns commiteth.bounties
   (:require [re-frame.core :as rf]
             [commiteth.common :refer [moment-timestamp
+                                      display-data-page
                                       issue-url]]))
 
 
@@ -42,23 +43,22 @@
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
 
-(defn bounties-list [open-bounties]
+(defn bounties-list [{:keys [items item-count total-count] :as bounty-page-data}]
   [:div.ui.container.open-bounties-container
    [:div.open-bounties-header "Bounties"]
-   (if (empty? open-bounties)
+   (if (empty? items)
      [:div.view-no-data-container
       [:p "No recent activity yet"]]
-     (into [:div.ui.items]
-           (for [bounty open-bounties]
-             [bounty-item bounty])))])
-
+     [:div [:div.item-counts-label
+            [:span (str "Showing " item-count " of " total-count)]]
+      (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
 
 (defn bounties-page []
-  (let [open-bounties (rf/subscribe [:open-bounties])
+  (let [bounty-page-data (rf/subscribe [:open-bounties-page])
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?
         [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [bounties-list @open-bounties]))))
+        [bounties-list @bounty-page-data]))))

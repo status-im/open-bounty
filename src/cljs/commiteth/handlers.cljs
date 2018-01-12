@@ -68,6 +68,16 @@
  (fn [db [_ page]]
    (assoc db :page page)))
 
+(reg-event-db
+  :set-bounty-page-number
+  (fn [db [_ page]]
+    (assoc db :bounty-page-number page)))
+
+(reg-event-db
+  :set-activity-page-number
+  (fn [db [_ page]]
+    (assoc db :activity-page-number page)))
+
 (reg-event-fx
  :set-flash-message
  (fn [{:keys [db]} [_ type text]]
