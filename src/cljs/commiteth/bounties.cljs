@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf]
             [commiteth.common :refer [moment-timestamp
                                       display-data-page
+                                      items-per-page
                                       issue-url]]))
 
 
@@ -43,14 +44,18 @@
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
 
-(defn bounties-list [{:keys [items item-count total-count] :as bounty-page-data}]
+(defn bounties-list [{:keys [items item-count page-number total-count] 
+                      :as bounty-page-data}]
   [:div.ui.container.open-bounties-container
    [:div.open-bounties-header "Bounties"]
    (if (empty? items)
      [:div.view-no-data-container
       [:p "No recent activity yet"]]
-     [:div [:div.item-counts-label
-            [:span (str "Showing " item-count " of " total-count)]]
+     [:div 
+      (let [left (inc (* (dec page-number) items-per-page))
+            right (dec (+ left item-count))]
+        [:div.item-counts-label
+            [:span (str "Showing " left "-" right " of " total-count)]])
       (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
 
 (defn bounties-page []
