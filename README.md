@@ -29,6 +29,20 @@ sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
 sudo -u postgres createdb commiteth
 ```
 
+### GitHub App installation
+
+* Browse https://github.com/settings/applications/new
+* Fill details
+
+```
+Application name: a_unique_id
+Homepage URL: http://_your_.ddns.net:3000/
+Authorization URL: http://_your_.ddns.net:3000/callback
+```
+
+
+* Copy OAuth credentials to `env/dev/resources/config.edn`
+
 ## Running
 
 Launch following commands each in its own shell:
