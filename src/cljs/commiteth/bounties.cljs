@@ -5,19 +5,19 @@
 
 
 (defn bounty-item [bounty]
-  (let [{avatar-url :repo_owner_avatar_url
-         owner :repo-owner
-         repo-name :repo-name
-         issue-title :issue-title
+  (let [{avatar-url   :repo_owner_avatar_url
+         owner        :repo-owner
+         repo-name    :repo-name
+         issue-title  :issue-title
          issue-number :issue-number
-         updated :updated
-         tokens :tokens
-         balance-eth :balance-eth
-         value-usd :value-usd
-         claim-count :claim-count} bounty
-        full-repo (str owner "/" repo-name)
-        repo-url (str "https://github.com/" full-repo)
-        repo-link [:a {:href repo-url} full-repo]
+         updated      :updated
+         tokens       :tokens
+         balance-eth  :balance-eth
+         value-usd    :value-usd
+         claim-count  :claim-count} bounty
+        full-repo  (str owner "/" repo-name)
+        repo-url   (str "https://github.com/" full-repo)
+        repo-link  [:a {:href repo-url} full-repo]
         issue-link [:a
                     {:href (issue-url owner repo-name issue-number)}
                     issue-title]]
@@ -37,24 +37,38 @@
        [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
        (when (> claim-count 0)
          [:span.open-claims-label (str claim-count " open claim"
-                                       (when (> claim-count 1) "s"))]) ]]
+                                       (when (> claim-count 1) "s"))])]]
      [:div.open-bounty-item-icon
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
 
 (defn bounties-list [open-bounties]
-  [:div.ui.container.open-bounties-container
-   [:div.open-bounties-header "Bounties"]
-   (if (empty? open-bounties)
-     [:div.view-no-data-container
-      [:p "No recent activity yet"]]
-     (into [:div.ui.items]
-           (for [bounty open-bounties]
-             [bounty-item bounty])))])
+  (let [order (rf/subscribe [:bounties-order])]
+    [:div.ui.container.open-bounties-container
+     [:div.open-bounties-header "Bounties"]
+     [:div.open-bounties-filter-and-sort
+      [:div.open-bounties-filter
+       [:a.open-bounties-filter-element {:href "javascript:;"} "Value"]
+       [:div.open-bounties-filter-tooltip "Lalala"]
+       [:a.open-bounties-filter-element {:href "javascript:;"} "Type"]
+       [:a.open-bounties-filter-element {:href "javascript:;"} "Language"]
+       [:a.open-bounties-filter-element {:href "javascript:;"} "Date"]
+       [:a.open-bounties-filter-element {:href "javascript:;"} "More"]]
+      [:div.open-bounties-sort
+       "Most Recent"
+       [:div.icon-forward-white-box
+        [:img
+         {:src "icon-forward-white.svg"}]]]]
+     (if (empty? open-bounties)
+       [:div.view-no-data-container
+        [:p "No recent activity yet"]]
+       (into [:div.ui.items]
+             (for [bounty open-bounties]
+               [bounty-item bounty])))]))
 
 
 (defn bounties-page []
-  (let [open-bounties (rf/subscribe [:open-bounties])
+  (let [open-bounties          (rf/subscribe [:open-bounties])
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?

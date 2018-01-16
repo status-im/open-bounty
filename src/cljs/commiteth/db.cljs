@@ -10,4 +10,5 @@
    :open-bounties []
    :owner-bounties   {}
    :top-hunters []
-   :activity-feed []})
+   :activity-feed []
+   :bounties-order ::bounties-order|most-recent})

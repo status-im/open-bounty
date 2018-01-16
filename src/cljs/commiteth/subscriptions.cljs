@@ -80,3 +80,8 @@
     :user-dropdown-open?
   (fn [db _]
     (:user-dropdown-open? db)))
+
+(reg-sub
+  :bounties-order
+  (fn [db _]
+    (:bounties-order db)))
