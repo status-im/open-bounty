@@ -30,7 +30,7 @@
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))
 
-(def items-per-page 20)
+(def items-per-page 15)
 
 (defn draw-page-numbers [page-number page-count set-page-kw]
   "Draw page numbers for the pagination component.
