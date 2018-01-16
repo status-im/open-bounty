@@ -1,5 +1,6 @@
 (ns commiteth.bounties
-  (:require [re-frame.core :as rf]
+  (:require [reagent.core :as r]
+            [re-frame.core :as rf]
             [commiteth.common :refer [moment-timestamp
                                       issue-url]]))
 
@@ -42,23 +43,51 @@
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
 
+(defn bounties-filter [name]
+  (let [open? (r/atom false)]
+    (fn [name]
+      [:div.open-bounties-filter-element-container
+       {:tab-index 0
+        :on-blur   #(reset! open? false)}
+       [:div.open-bounties-filter-element
+        {:on-click #(swap! open? not)
+         :class    (when @open? "open-bounties-filter-element-active")}
+        name]
+       (when @open?
+         [:div.open-bounties-filter-element-tooltip
+          "TOOLTIP"])])))
+
+(defn bounties-filters []
+  [:div.open-bounties-filter
+   [bounties-filter "Value"]
+   [bounties-filter "Type"]
+   [bounties-filter "Language"]
+   [bounties-filter "Date"]
+   [bounties-filter "More"]])
+
+(defn bounties-sort []
+  (let [open? (r/atom false)]
+    (fn []
+      [:div.open-bounties-sort
+       {:tab-index 0
+        :on-blur   #(reset! open? false)}
+       [:div.open-bounties-sort-element
+        {:on-click #(swap! open? not)}
+        "Most Recent"
+        [:div.icon-forward-white-box
+         [:img
+          {:src "icon-forward-white.svg"}]]]
+       (when @open?
+         [:div.open-bounties-sort-element-tooltip
+          "TOOLTIP"])])))
+
 (defn bounties-list [open-bounties]
   (let [order (rf/subscribe [:bounties-order])]
     [:div.ui.container.open-bounties-container
      [:div.open-bounties-header "Bounties"]
      [:div.open-bounties-filter-and-sort
-      [:div.open-bounties-filter
-       [:a.open-bounties-filter-element {:href "javascript:;"} "Value"]
-       [:div.open-bounties-filter-tooltip "Lalala"]
-       [:a.open-bounties-filter-element {:href "javascript:;"} "Type"]
-       [:a.open-bounties-filter-element {:href "javascript:;"} "Language"]
-       [:a.open-bounties-filter-element {:href "javascript:;"} "Date"]
-       [:a.open-bounties-filter-element {:href "javascript:;"} "More"]]
-      [:div.open-bounties-sort
-       "Most Recent"
-       [:div.icon-forward-white-box
-        [:img
-         {:src "icon-forward-white.svg"}]]]]
+      [bounties-filters]
+      [bounties-sort]]
      (if (empty? open-bounties)
        [:div.view-no-data-container
         [:p "No recent activity yet"]]

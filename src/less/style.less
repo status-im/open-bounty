@@ -425,7 +425,6 @@
     }
 
     .open-bounties-filter-element {
-        position: relative;
         font-size: 15px;
         font-weight: 500;
         line-height: 1.0;
@@ -434,23 +433,67 @@
         border-radius: 8px;
         border: solid 1px rgba(151, 151, 151, 0.2);
         margin-right: 10px;
+        position: relative;
     }
 
-    .open-bounties-filter-element:focus {
+    .open-bounties-filter-element:hover {
+        cursor: pointer;
+    }
+
+    .open-bounties-filter-element-active {
         background-color: #57a7ed;
+        color: #ffffff;
     }
 
-    .open-bounties-filter-tooltip {
+    .open-bounties-filter-element-container:focus {
+        outline: none;
+    }
+
+    .open-bounties-filter-element-tooltip {
         position: absolute;
+        margin-top: 12px;
+        padding: 16px 24px;
+        border-radius: 10px;
+        background-color: #ffffff;
+        box-shadow: 0 15px 12px 0 rgba(161, 174, 182, 0.53), 0 0 38px 0 rgba(0, 0, 0, 0.05);
     }
 
     .open-bounties-sort {
+        position: relative;
+    }
+
+    .open-bounties-sort:focus {
+        outline: none;
+    }
+
+    .open-bounties-sort-element {
+        display: flex;
         font-size: 15px;
         font-weight: 500;
         line-height: 1.0;
         color: #8d99a4;
+        padding: 8px 12px;
         display: flex;
         align-items: center;
+    }
+
+    .open-bounties-sort-element:hover {
+        cursor: pointer;
+    }
+
+    .open-bounties-sort-element-tooltip {
+        position: absolute;
+        right: 0;
+        //margin-top: 12px;
+        padding: 16px 24px;
+        min-width: 200px;
+        border-radius: 8px;
+        background-color: #1e3751;
+        font-family: "PostGrotesk-Medium";
+        font-size: 15px;
+        line-height: 1.0;
+        text-align: left;
+        color: #ffffff;
     }
 
     .icon-forward-white-box {
