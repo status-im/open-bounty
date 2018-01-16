@@ -312,12 +312,13 @@
 
 (defn wrap-in-try-catch [func]
   (try
+    (func)
     (catch Throwable t
       (log/error t))))
 
 (defn run-tasks [tasks]
   (doall
-   (map (fn [func] (wrap-in-try-catch (func)))
+   (map (fn [func] (wrap-in-try-catch func))
         tasks)))
 
 (defn run-1-min-interval-tasks [time]
