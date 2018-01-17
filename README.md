@@ -1,6 +1,6 @@
 # Status Open Bounty
 
-Allows you to set bounties for Github issues, paid out in Ether.
+Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
 More information:
 https://wiki.status.im/Status_Open_Bounty
