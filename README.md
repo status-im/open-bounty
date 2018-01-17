@@ -1,11 +1,11 @@
-# Commiteth
+# Status Open Bounty
 
 Allows you to set bounties for Github issues, paid out in Ether.
 
 More information:
-http://wiki.status.im/proposals/commiteth/
+https://wiki.status.im/Status_Open_Bounty
 
-Live beta version:
+Live production version:
 https://openbounty.status.im
 The `master` branch is automatically deployed here.
 
