@@ -2,7 +2,9 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [commiteth.common :refer [moment-timestamp
-                                      issue-url]]))
+                                      issue-url]]
+            [commiteth.handlers :as handlers]
+            [commiteth.db :as db]))
 
 
 (defn bounty-item [bounty]
@@ -60,40 +62,44 @@
 (defn bounties-filters []
   [:div.open-bounties-filter
    [bounties-filter "Value"]
-   [bounties-filter "Type"]
-   [bounties-filter "Language"]
+   [bounties-filter "Currency"]
    [bounties-filter "Date"]
-   [bounties-filter "More"]])
+   [bounties-filter "Owner"]])
 
 (defn bounties-sort []
   (let [open? (r/atom false)]
     (fn []
-      [:div.open-bounties-sort
-       {:tab-index 0
-        :on-blur   #(reset! open? false)}
-       [:div.open-bounties-sort-element
-        {:on-click #(swap! open? not)}
-        "Most Recent"
-        [:div.icon-forward-white-box
-         [:img
-          {:src "icon-forward-white.svg"}]]]
-       (when @open?
-         [:div.open-bounties-sort-element-tooltip
-          "TOOLTIP"])])))
+      (let [current-sorting (rf/subscribe [::db/bounty-sorting-type])]
+        [:div.open-bounties-sort
+        {:tab-index 0
+         :on-blur   #(reset! open? false)}
+        [:div.open-bounties-sort-element
+         {:on-click #(swap! open? not)}
+         (db/bounty-sorting-types @current-sorting)
+         [:div.icon-forward-white-box
+          [:img
+           {:src "icon-forward-white.svg"}]]]
+        (when @open?
+          [:div.open-bounties-sort-element-tooltip
+           (for [[sorting-type sorting-name] db/bounty-sorting-types]
+             [:div.open-bounties-sort-type
+              {:on-click #(do
+                            (reset! open? false)
+                            (rf/dispatch [::handlers/set-bounty-sorting-type sorting-type]))}
+              sorting-name])])]))))
 
 (defn bounties-list [open-bounties]
-  (let [order (rf/subscribe [:bounties-order])]
-    [:div.ui.container.open-bounties-container
-     [:div.open-bounties-header "Bounties"]
-     [:div.open-bounties-filter-and-sort
-      [bounties-filters]
-      [bounties-sort]]
-     (if (empty? open-bounties)
-       [:div.view-no-data-container
-        [:p "No recent activity yet"]]
-       (into [:div.ui.items]
-             (for [bounty open-bounties]
-               [bounty-item bounty])))]))
+  [:div.ui.container.open-bounties-container
+   [:div.open-bounties-header "Bounties"]
+   [:div.open-bounties-filter-and-sort
+    [bounties-filters]
+    [bounties-sort]]
+   (if (empty? open-bounties)
+     [:div.view-no-data-container
+      [:p "No recent activity yet"]]
+     (into [:div.ui.items]
+           (for [bounty open-bounties]
+             [bounty-item bounty])))])
 
 
 (defn bounties-page []

@@ -453,3 +453,8 @@
  (fn [db [_]]
    (.removeEventListener js/window "click" close-dropdown)
    (assoc db :user-dropdown-open? false)))
+
+(reg-event-db
+  ::set-bounty-sorting-type
+  (fn [db [_ sorting-type]]
+    (assoc db ::db/bounty-sorting-type sorting-type)))

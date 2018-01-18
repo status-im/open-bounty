@@ -1,5 +1,6 @@
 (ns commiteth.subscriptions
-  (:require [re-frame.core :refer [reg-sub]]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [commiteth.db :as db]))
 
 (reg-sub
  :db
@@ -82,6 +83,6 @@
     (:user-dropdown-open? db)))
 
 (reg-sub
-  :bounties-order
+  ::db/bounty-sorting-type
   (fn [db _]
-    (:bounties-order db)))
+    (::db/bounty-sorting-type db)))
