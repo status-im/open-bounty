@@ -6,7 +6,6 @@
                                    reg-fx
                                    inject-cofx]]
             [ajax.core :refer [GET POST]]
-            [clojure.browser.dom :as dom :refer [get-element]]
             [cuerdas.core :as str]
             [cljs-web3.core :as web3]
             [cljs-web3.eth :as web3-eth]
