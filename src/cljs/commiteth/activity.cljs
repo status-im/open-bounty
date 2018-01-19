@@ -59,6 +59,7 @@
 
 (defn activity-list [activity-page-data]
   [:div.ui.container.activity-container
+   {:id "activity-container"}
    (if (empty? (:items activity-page-data))
      [:div.view-no-data-container
       [:p "No recent activity yet"]]

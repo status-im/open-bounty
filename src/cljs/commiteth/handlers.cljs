@@ -6,6 +6,7 @@
                                    reg-fx
                                    inject-cofx]]
             [ajax.core :refer [GET POST]]
+            [clojure.browser.dom :as dom :refer [get-element]]
             [cuerdas.core :as str]
             [cljs-web3.core :as web3]
             [cljs-web3.eth :as web3-eth]
@@ -38,6 +39,15 @@
    (println "redirecting to" path)
    (set! (.-pathname js/location) path)))
 
+(reg-fx
+  :bounty-scroll-pos
+  (fn [scroll-pos]
+    (.scrollIntoView (get-element "open-bounties-container")) ))
+
+(reg-fx
+  :activity-scroll-pos
+  (fn [scroll-pos]
+    (.scrollIntoView (get-element "activity-container"))))
 
 (reg-event-fx
  :initialize-db
@@ -68,15 +78,17 @@
  (fn [db [_ page]]
    (assoc db :page page)))
 
-(reg-event-db
+(reg-event-fx
   :set-bounty-page-number
-  (fn [db [_ page]]
-    (assoc db :bounty-page-number page)))
+  (fn [{:keys [db]} [_ page]]
+    {:db (assoc db :bounty-page-number page)
+     :bounty-scroll-pos 0}))
 
-(reg-event-db
+(reg-event-fx
   :set-activity-page-number
-  (fn [db [_ page]]
-    (assoc db :activity-page-number page)))
+  (fn [{:keys [db]} [_ page]]
+    {:db (assoc db :activity-page-number page)
+     :activity-scroll-pos 0}))
 
 (reg-event-fx
  :set-flash-message

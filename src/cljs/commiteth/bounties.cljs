@@ -47,15 +47,16 @@
 (defn bounties-list [{:keys [items item-count page-number total-count] 
                       :as bounty-page-data}]
   [:div.ui.container.open-bounties-container
+   {:id "open-bounties-container"}
    [:div.open-bounties-header "Bounties"]
    (if (empty? items)
      [:div.view-no-data-container
       [:p "No recent activity yet"]]
-     [:div 
+     [:div
       (let [left (inc (* (dec page-number) items-per-page))
             right (dec (+ left item-count))]
         [:div.item-counts-label
-            [:span (str "Showing " left "-" right " of " total-count)]])
+         [:span (str "Showing " left "-" right " of " total-count)]])
       (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
 
 (defn bounties-page []
