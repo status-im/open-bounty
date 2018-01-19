@@ -61,35 +61,40 @@
      :on-focus #(reset! tooltip-open? true)}]])
 
 (defn bounties-filter-tooltip-value [tooltip-open?]
-  [bounties-filter-tooltip
+  [:div
    "$0 - $1000+"
    [bounties-filter-tooltip-value-input "Min" tooltip-open?]
    [bounties-filter-tooltip-value-input "Max" tooltip-open?]])
 
-(defn bounties-filter-tooltip-currency []
-  [bounties-filter-tooltip "CURRENCY"])
+(defn bounties-filter-tooltip-currency [tooltip-open?]
+  [:div.open-bounties-filter-list
+   (for [t ["ETH" "SNT"]]
+     [:div.open-bounties-filter-list-option-checkbox
+      [:label
+       [:input
+        {:type     "checkbox"
+         :on-focus #(reset! tooltip-open? true)}]
+       [:div.text t]]])])
 
 (defn bounties-filter-tooltip-date []
-  [bounties-filter-tooltip
-   [:div.open-bounties-filter-list
-    (for [t ["Last week" "Last month" "Last 3 months"]]
-      [:div.open-bounties-filter-list-option
-       t])]])
+  [:div.open-bounties-filter-list
+   (for [t ["Last week" "Last month" "Last 3 months"]]
+     [:div.open-bounties-filter-list-option
+      t])])
 
 (defn bounties-filter-tooltip-owner [tooltip-open?]
-  [bounties-filter-tooltip
-   [:div.open-bounties-filter-list
-    (for [t ["status-im" "aragon"]]
-      [:div.open-bounties-filter-list-option-checkbox
-       [:label
-        [:input
-         {:type     "checkbox"
-          :on-focus #(reset! tooltip-open? true)}]
-        [:div.text t]]])]])
+  [:div.open-bounties-filter-list
+   (for [t ["status-im" "aragon"]]
+     [:div.open-bounties-filter-list-option-checkbox
+      [:label
+       [:input
+        {:type     "checkbox"
+         :on-focus #(reset! tooltip-open? true)}]
+       [:div.text t]]])])
 
-(defn bounties-filter [name tooltip]
+(defn bounties-filter [name tooltip-content]
   (let [open? (r/atom false)]
-    (fn [name tooltip]
+    (fn [name tooltip-content]
       [:div.open-bounties-filter-element-container
        {:tab-index 0
         :on-focus  #(reset! open? true)
@@ -99,7 +104,8 @@
          :class         (when @open? "open-bounties-filter-element-active")}
         name]
        (when @open?
-         [tooltip open?])])))
+         [bounties-filter-tooltip
+          [tooltip-content open?]])])))
 
 (defn bounties-filters []
   [:div.open-bounties-filter
