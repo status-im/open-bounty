@@ -58,19 +58,25 @@
 
 
 (defn activity-list [activity-page-data]
-  [:div.ui.container.activity-container
-   {:id "activity-container"}
-   (if (empty? (:items activity-page-data))
-     [:div.view-no-data-container
-      [:p "No recent activity yet"]]
-     (display-data-page activity-page-data activity-item :set-activity-page-number))])
+  (if (empty? (:items activity-page-data))
+    [:div.view-no-data-container
+     [:p "No recent activity yet"]]
+    (display-data-page activity-page-data activity-item :set-activity-page-number)))
 
 (defn activity-page []
   (let [activity-page-data (rf/subscribe [:activities-page])
-        activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])]
-    (fn []
-      (if @activity-feed-loading?
-        [:div.view-loading-container
-         [:div.ui.active.inverted.dimmer
-          [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [activity-list @activity-page-data]))))
+        activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])
+        container-element (atom nil) 
+        render-fn (fn []
+                    (if @activity-feed-loading?
+                      [:div.view-loading-container
+                       [:div.ui.active.inverted.dimmer
+                        [:div.ui.text.loader.view-loading-label "Loading"]]]
+                      [:div.ui.container.activity-container
+                       {:ref #(reset! container-element %1)} 
+                       [activity-list @activity-page-data]]))]
+    (r/create-class
+      {:component-did-update (fn [] 
+                               (when @container-element
+                                 (.scrollIntoView @container-element)))
+       :reagent-render render-fn})))

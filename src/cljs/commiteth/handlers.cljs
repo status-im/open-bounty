@@ -39,16 +39,6 @@
    (println "redirecting to" path)
    (set! (.-pathname js/location) path)))
 
-(reg-fx
-  :bounty-scroll-pos
-  (fn [scroll-pos]
-    (.scrollIntoView (get-element "open-bounties-container")) ))
-
-(reg-fx
-  :activity-scroll-pos
-  (fn [scroll-pos]
-    (.scrollIntoView (get-element "activity-container"))))
-
 (reg-event-fx
  :initialize-db
  [(inject-cofx :store)]
@@ -78,17 +68,15 @@
  (fn [db [_ page]]
    (assoc db :page page)))
 
-(reg-event-fx
+(reg-event-db
   :set-bounty-page-number
-  (fn [{:keys [db]} [_ page]]
-    {:db (assoc db :bounty-page-number page)
-     :bounty-scroll-pos 0}))
+  (fn [db [_ page]]
+    (assoc db :bounty-page-number page)))
 
-(reg-event-fx
+(reg-event-db
   :set-activity-page-number
-  (fn [{:keys [db]} [_ page]]
-    {:db (assoc db :activity-page-number page)
-     :activity-scroll-pos 0}))
+  (fn [db [_ page]]
+    (assoc db :activity-page-number page)))
 
 (reg-event-fx
  :set-flash-message

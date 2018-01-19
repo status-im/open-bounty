@@ -1,5 +1,6 @@
 (ns commiteth.bounties
   (:require [re-frame.core :as rf]
+            [reagent.core :as r]
             [commiteth.common :refer [moment-timestamp
                                       display-data-page
                                       items-per-page
@@ -46,25 +47,31 @@
 
 (defn bounties-list [{:keys [items item-count page-number total-count] 
                       :as bounty-page-data}]
-  [:div.ui.container.open-bounties-container
-   {:id "open-bounties-container"}
-   [:div.open-bounties-header "Bounties"]
-   (if (empty? items)
-     [:div.view-no-data-container
-      [:p "No recent activity yet"]]
-     [:div
-      (let [left (inc (* (dec page-number) items-per-page))
-            right (dec (+ left item-count))]
-        [:div.item-counts-label
-         [:span (str "Showing " left "-" right " of " total-count)]])
-      (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
+  (if (empty? items)
+    [:div.view-no-data-container
+     [:p "No recent activity yet"]]
+    [:div
+     (let [left (inc (* (dec page-number) items-per-page))
+           right (dec (+ left item-count))]
+       [:div.item-counts-label
+        [:span (str "Showing " left "-" right " of " total-count)]])
+     (display-data-page bounty-page-data bounty-item :set-bounty-page-number)]))
 
 (defn bounties-page []
   (let [bounty-page-data (rf/subscribe [:open-bounties-page])
-        open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
-    (fn []
-      (if @open-bounties-loading?
-        [:div.view-loading-container
-         [:div.ui.active.inverted.dimmer
-          [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [bounties-list @bounty-page-data]))))
+        open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])
+        container-element (atom nil) 
+        render-fn (fn []
+                    (if @open-bounties-loading?
+                      [:div.view-loading-container
+                       [:div.ui.active.inverted.dimmer
+                        [:div.ui.text.loader.view-loading-label "Loading"]]]
+                      [:div.ui.container.open-bounties-container
+                       {:ref #(reset! container-element %1)} 
+                       [:div.open-bounties-header "Bounties"]
+                       [bounties-list @bounty-page-data]]))]
+    (r/create-class
+      {:component-did-update (fn [] 
+                               (when @container-element
+                                 (.scrollIntoView @container-element)))
+       :reagent-render render-fn})))
