@@ -91,3 +91,22 @@
   ::open-bounties-filters
   (fn [db _]
     (::db/open-bounties-filters db)))
+
+(reg-sub
+  ::open-bounties-owners
+  :<- [:open-bounties]
+  (fn [open-bounties _]
+    (->> open-bounties
+         (map :repo-owner)
+         set)))
+
+(reg-sub
+  ::open-bounties-currencies
+  :<- [:open-bounties]
+  (fn [open-bounties _]
+    (let [token-ids (->> open-bounties
+                         (map :tokens)
+                         (map keys)
+                         (filter identity)
+                         set)]
+      (into #{"ETH"} token-ids))))

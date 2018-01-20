@@ -92,21 +92,22 @@
                                                                       :on-change-val on-max-change-fn})]]))
 
 (defn bounties-filter-tooltip-currency [current-filter-value tooltip-open?]
-  [:div.open-bounties-filter-list
-   (for [t ["ETH" "SNT"]]
-     (let [active? (and current-filter-value (current-filter-value t))]
-       [:div.open-bounties-filter-list-option-checkbox
-        [:label
-         {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
-                                   ::ui-model/bounty-filter-type|currency
-                                   (cond
-                                     (and active? (= #{t} current-filter-value)) nil
-                                     active? (disj current-filter-value t)
-                                     :else (into #{t} current-filter-value))])}
-         [:input
-          {:type     "checkbox"
-           :on-focus #(reset! tooltip-open? true)}]
-         [:div.text t]]]))])
+  (let [currencies (rf/subscribe [::subs/open-bounties-currencies])]
+    [:div.open-bounties-filter-list
+     (for [currency @currencies]
+       (let [active? (and current-filter-value (current-filter-value currency))]
+         [:div.open-bounties-filter-list-option-checkbox
+          [:label
+           {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
+                                     ::ui-model/bounty-filter-type|currency
+                                     (cond
+                                       (and active? (= #{currency} current-filter-value)) nil
+                                       active? (disj current-filter-value currency)
+                                       :else (into #{currency} current-filter-value))])}
+           [:input
+            {:type     "checkbox"
+             :on-focus #(reset! tooltip-open? true)}]
+           [:div.text currency]]]))]))
 
 (defn bounties-filter-tooltip-date [current-filter-value tooltip-open?]
   [:div.open-bounties-filter-list
@@ -122,22 +123,23 @@
       option-text])])
 
 (defn bounties-filter-tooltip-owner [current-filter-value tooltip-open?]
-  [:div.open-bounties-filter-list
-   (for [t ["status-im" "aragon"]]
-     (let [active? (and current-filter-value (current-filter-value t))]
-       [:div.open-bounties-filter-list-option-checkbox
-        [:label
-         {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
-                                   ::ui-model/bounty-filter-type|owner
-                                   (cond
-                                     (and active? (= #{t} current-filter-value)) nil
-                                     active? (disj current-filter-value t)
-                                     :else (into #{t} current-filter-value))])}
-         [:input
-          {:type     "checkbox"
-           :on-focus #(reset! tooltip-open? true)
-           :checked  (when active? "checked")}]
-         [:div.text t]]]))])
+  (let [owners (rf/subscribe [::subs/open-bounties-owners])]
+    [:div.open-bounties-filter-list
+     (for [owner @owners]
+       (let [active? (and current-filter-value (current-filter-value owner))]
+         [:div.open-bounties-filter-list-option-checkbox
+          [:label
+           {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
+                                     ::ui-model/bounty-filter-type|owner
+                                     (cond
+                                       (and active? (= #{owner} current-filter-value)) nil
+                                       active? (disj current-filter-value owner)
+                                       :else (into #{owner} current-filter-value))])}
+           [:input
+            {:type     "checkbox"
+             :on-focus #(reset! tooltip-open? true)
+             :checked  (when active? "checked")}]
+           [:div.text owner]]]))]))
 
 (defn- tooltip-view-for-filter-type [filter-type]
   (condp = filter-type
