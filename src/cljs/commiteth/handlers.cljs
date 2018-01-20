@@ -455,6 +455,11 @@
    (assoc db :user-dropdown-open? false)))
 
 (reg-event-db
-  ::set-bounty-sorting-type
+  ::set-open-bounties-sorting-type
   (fn [db [_ sorting-type]]
-    (assoc db ::db/bounty-sorting-type sorting-type)))
+    (assoc db ::db/open-bounties-sorting-type sorting-type)))
+
+(reg-event-db
+  ::set-open-bounty-filter-type
+  (fn [db [_ filter-type filter-value]]
+    (assoc-in db [::db/open-bounties-filters filter-type] filter-value)))

@@ -430,18 +430,29 @@
         font-weight: 500;
         line-height: 1.0;
         color: #8d99a4;
-        padding: 8px 12px;
+        //padding: 8px 12px;
         border-radius: 8px;
         border: solid 1px rgba(151, 151, 151, 0.2);
         margin-right: 10px;
         position: relative;
+        display: flex;
+
+        .text {
+            margin: 8px 12px;
+        }
+
+        .remove {
+            margin-left: -6px;
+            margin-right: 5px;
+        }
     }
 
     .open-bounties-filter-element:hover {
         cursor: pointer;
     }
 
-    .open-bounties-filter-element-active {
+    .open-bounties-filter-element-active
+    {
         background-color: #57a7ed;
         color: #ffffff;
     }
@@ -580,6 +591,11 @@
             padding: 8px 12px;
             border-radius: 8px;
             border: solid 1px rgba(151, 151, 151, 0.2);
+        }
+
+        .open-bounties-filter-list-option.active {
+            background-color: #57a7ed;
+            color: #ffffff;
         }
 
         .open-bounties-filter-list-option:not(:first-child) {

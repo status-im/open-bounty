@@ -83,6 +83,11 @@
     (:user-dropdown-open? db)))
 
 (reg-sub
-  ::db/bounty-sorting-type
+  ::open-bounties-sorting-type
   (fn [db _]
-    (::db/bounty-sorting-type db)))
+    (::db/open-bounties-sorting-type db)))
+
+(reg-sub
+  ::open-bounties-filters
+  (fn [db _]
+    (::db/open-bounties-filters db)))

@@ -1,19 +1,19 @@
-(ns commiteth.db)
-
-(def bounty-sorting-types {::bounty-sorting-type|most-recent   "Most recent"
-                           ::bounty-sorting-type|lowest-value  "Lowest value"
-                           ::bounty-sorting-type|highest-value "Highest value"
-                           ::bounty-sorting-type|owner         "Owner"})
+(ns commiteth.db
+  (:require [commiteth.ui-model :as ui-model]))
 
 (def default-db
-  {:page                   :bounties
-   :user                   nil
-   :repos-loading?         false
-   :repos                  {}
-   :activity-feed-loading? false
-   :open-bounties-loading? false
-   :open-bounties          []
-   :owner-bounties         {}
-   :top-hunters            []
-   :activity-feed          []
-   ::bounty-sorting-type   ::bounty-sorting-type|most-recent})
+  {:page                        :bounties
+   :user                        nil
+   :repos-loading?              false
+   :repos                       {}
+   :activity-feed-loading?      false
+   :open-bounties-loading?      false
+   :open-bounties               []
+   ::open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent
+   ::open-bounties-filters      {::ui-model/bounty-filter-type|value    nil
+                                 ::ui-model/bounty-filter-type|currency nil
+                                 ::ui-model/bounty-filter-type|date     nil
+                                 ::ui-model/bounty-filter-type|owner    nil}
+   :owner-bounties              {}
+   :top-hunters                 []
+   :activity-feed               []})
