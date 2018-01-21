@@ -2,10 +2,35 @@
 
 ;;;; bounty sorting types
 
-(def bounty-sorting-types-def {::bounty-sorting-type|most-recent   "Most recent"
-                               ::bounty-sorting-type|lowest-value  "Lowest value"
-                               ::bounty-sorting-type|highest-value "Highest value"
-                               ::bounty-sorting-type|owner         "Owner"})
+(def bounty-sorting-types-def
+  {::bounty-sorting-type|most-recent   {::bounty-sorting-type.name               "Most recent"
+                                        ::bounty-sorting-type.sort-key-fn        (fn [bounty]
+                                                                                   (:created-at bounty))
+                                        ::bounty-sorting-type.sort-comparator-fn compare}
+   ::bounty-sorting-type|lowest-value  {::bounty-sorting-type.name               "Lowest value"
+                                        ::bounty-sorting-type.sort-key-fn        (fn [bounty]
+                                                                                   (:value-usd bounty))
+                                        ::bounty-sorting-type.sort-comparator-fn compare}
+   ::bounty-sorting-type|highest-value {::bounty-sorting-type.name               "Highest value"
+                                        ::bounty-sorting-type.sort-key-fn        (fn [bounty]
+                                                                                   (:value-usd bounty))
+                                        ::bounty-sorting-type.sort-comparator-fn (comp - compare)}
+   ::bounty-sorting-type|owner         {::bounty-sorting-type.name               "Owner"
+                                        ::bounty-sorting-type.sort-key-fn        (fn [bounty]
+                                                                                   (:repo-owner bounty))
+                                        ::bounty-sorting-type.sort-comparator-fn compare}})
+
+(defn bounty-sorting-type->name [sorting-type]
+  (-> bounty-sorting-types-def (get sorting-type) ::bounty-sorting-type.name))
+
+(defn sort-bounties-by-sorting-type [sorting-type bounties]
+  (let [keyfn (-> bounty-sorting-types-def
+                  sorting-type
+                  ::bounty-sorting-type.sort-key-fn)
+        comparator (-> bounty-sorting-types-def
+                       sorting-type
+                       ::bounty-sorting-type.sort-comparator-fn)]
+    (sort-by keyfn comparator bounties)))
 
 ;;;; bounty filter types
 

@@ -196,19 +196,19 @@
           :on-blur   #(reset! open? false)}
          [:div.open-bounties-sort-element
           {:on-click #(swap! open? not)}
-          (ui-model/bounty-sorting-types-def @current-sorting)
+          (ui-model/bounty-sorting-type->name @current-sorting)
           [:div.icon-forward-white-box
            [:img
             {:src "icon-forward-white.svg"}]]]
          (when @open?
            [:div.open-bounties-sort-element-tooltip
-            (for [[sorting-type sorting-name] ui-model/bounty-sorting-types-def]
+            (for [sorting-type (keys ui-model/bounty-sorting-types-def)]
               ^{:key (str sorting-type)}
               [:div.open-bounties-sort-type
                {:on-click #(do
                              (reset! open? false)
                              (rf/dispatch [::handlers/set-open-bounties-sorting-type sorting-type]))}
-               sorting-name])])]))))
+               (ui-model/bounty-sorting-type->name sorting-type)])])]))))
 
 (defn bounties-list [open-bounties]
   [:div.ui.container.open-bounties-container
@@ -225,7 +225,7 @@
 
 
 (defn bounties-page []
-  (let [open-bounties          (rf/subscribe [:open-bounties])
+  (let [open-bounties          (rf/subscribe [::subs/filtered-and-sorted-open-bounties])
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?

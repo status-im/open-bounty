@@ -1,10 +1,11 @@
 (ns commiteth.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
-            [commiteth.db :as db]))
+            [commiteth.db :as db]
+            [commiteth.ui-model :as ui-model]))
 
 (reg-sub
- :db
- (fn [db _] db))
+  :db
+  (fn [db _] db))
 
 (reg-sub
   :page
@@ -68,17 +69,17 @@
     (get-in db path)))
 
 (reg-sub
- :usage-metrics
-   (fn [db _]
-     (:usage-metrics db)))
+  :usage-metrics
+  (fn [db _]
+    (:usage-metrics db)))
 
 (reg-sub
- :metrics-loading?
-   (fn [db _]
-     (:metrics-loading? db)))
+  :metrics-loading?
+  (fn [db _]
+    (:metrics-loading? db)))
 
 (reg-sub
-    :user-dropdown-open?
+  :user-dropdown-open?
   (fn [db _]
     (:user-dropdown-open? db)))
 
@@ -110,3 +111,13 @@
                          (filter identity)
                          set)]
       (into #{"ETH"} token-ids))))
+
+(reg-sub
+  ::filtered-and-sorted-open-bounties
+  :<- [:open-bounties]
+  :<- [::open-bounties-sorting-type]
+  (fn [[open-bounties sorting-type] _]
+    (println "RAW" open-bounties)
+    (cond->> open-bounties
+             sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type)
+             )))
