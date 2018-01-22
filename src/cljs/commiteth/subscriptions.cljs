@@ -107,7 +107,7 @@
   (fn [open-bounties _]
     (let [token-ids (->> open-bounties
                          (map :tokens)
-                         (map keys)
+                         (mapcat keys)
                          (filter identity)
                          set)]
       (into #{"ETH"} token-ids))))
@@ -115,9 +115,9 @@
 (reg-sub
   ::filtered-and-sorted-open-bounties
   :<- [:open-bounties]
+  :<- [::open-bounties-filters]
   :<- [::open-bounties-sorting-type]
-  (fn [[open-bounties sorting-type] _]
-    (println "RAW" open-bounties)
+  (fn [[open-bounties filters sorting-type] _]
     (cond->> open-bounties
-             sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type)
-             )))
+             filters (ui-model/filter-bounties filters)
+             sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type))))

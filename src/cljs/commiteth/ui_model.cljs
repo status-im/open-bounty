@@ -1,4 +1,5 @@
-(ns commiteth.ui-model)
+(ns commiteth.ui-model
+  (:require [clojure.set :as set]))
 
 ;;;; bounty sorting types
 
@@ -24,9 +25,9 @@
   (-> bounty-sorting-types-def (get sorting-type) ::bounty-sorting-type.name))
 
 (defn sort-bounties-by-sorting-type [sorting-type bounties]
-  (let [keyfn (-> bounty-sorting-types-def
-                  sorting-type
-                  ::bounty-sorting-type.sort-key-fn)
+  (let [keyfn      (-> bounty-sorting-types-def
+                       sorting-type
+                       ::bounty-sorting-type.sort-key-fn)
         comparator (-> bounty-sorting-types-def
                        sorting-type
                        ::bounty-sorting-type.sort-comparator-fn)]
@@ -34,15 +35,27 @@
 
 ;;;; bounty filter types
 
-(def bounty-filter-types-def {::bounty-filter-type|value    "Value"
-                              ::bounty-filter-type|currency "Currency"
-                              ::bounty-filter-type|date     "Date"
-                              ::bounty-filter-type|owner    "Owner"})
+(def bounty-filter-types-def
+  {::bounty-filter-type|value    {::bounty-filter-type.name      "Value"
+                                  ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                                                   true)}
+   ::bounty-filter-type|currency {::bounty-filter-type.name      "Currency"
+                                  ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                                                   (and (or (not-any? #{"ETH"} filter-value)
+                                                                            (< 0 (:balance-eth bounty)))
+                                                                        (set/subset? (->> filter-value (remove #{"ETH"}) set)
+                                                                                     (-> bounty :tokens keys set))))}
+   ::bounty-filter-type|date     {::bounty-filter-type.name      "Date"
+                                  ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                                                   true)}
+   ::bounty-filter-type|owner    {::bounty-filter-type.name      "Owner"
+                                  ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                                                   true)}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 
 (defn bounty-filter-type->name [filter-type]
-  (bounty-filter-types-def filter-type))
+  (-> bounty-filter-types-def (get filter-type) ::bounty-filter-type.name))
 
 (def bounty-filter-type-date-options-def {::bounty-filter-type-date-option|last-week     "Last week"
                                           ::bounty-filter-type-date-option|last-month    "Last month"
@@ -67,3 +80,14 @@
 
     :else
     (str filter-type " with val " filter-value)))
+
+(defn filter-bounties [filters-by-type bounties]
+  (let [filter-preds (->> filters-by-type
+                          (remove #(nil? (val %)))
+                          (map (fn [[filter-type filter-value]]
+                                 (let [pred (-> bounty-filter-types-def (get filter-type) ::bounty-filter-type.predicate)]
+                                   (partial pred filter-value)))))
+        filters-pred (fn [bounty]
+                       (every? #(% bounty) filter-preds))]
+    (->> bounties
+         (filter filters-pred))))

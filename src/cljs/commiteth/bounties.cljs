@@ -95,7 +95,8 @@
   (let [currencies (rf/subscribe [::subs/open-bounties-currencies])]
     [:div.open-bounties-filter-list
      (for [currency @currencies]
-       (let [active? (and current-filter-value (current-filter-value currency))]
+       (let [active? (boolean (and current-filter-value (current-filter-value currency)))]
+         ^{:key (str currency)}
          [:div.open-bounties-filter-list-option-checkbox
           [:label
            {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
@@ -106,6 +107,7 @@
                                        :else (into #{currency} current-filter-value))])}
            [:input
             {:type     "checkbox"
+             :checked  active?
              :on-focus #(reset! tooltip-open? true)}]
            [:div.text currency]]]))]))
 
@@ -126,7 +128,8 @@
   (let [owners (rf/subscribe [::subs/open-bounties-owners])]
     [:div.open-bounties-filter-list
      (for [owner @owners]
-       (let [active? (and current-filter-value (current-filter-value owner))]
+       (let [active? (boolean (and current-filter-value (current-filter-value owner)))]
+         ^{:key (str owner)}
          [:div.open-bounties-filter-list-option-checkbox
           [:label
            {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
@@ -137,8 +140,8 @@
                                        :else (into #{owner} current-filter-value))])}
            [:input
             {:type     "checkbox"
-             :on-focus #(reset! tooltip-open? true)
-             :checked  (when active? "checked")}]
+             :checked  active?
+             :on-focus #(reset! tooltip-open? true)}]
            [:div.text owner]]]))]))
 
 (defn- tooltip-view-for-filter-type [filter-type]
