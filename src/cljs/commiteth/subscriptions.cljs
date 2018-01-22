@@ -37,14 +37,14 @@
     (vec (:open-bounties db))))
 
 (reg-sub
-  :bounty-page-number
+  :page-number
   (fn [db _]
-    (:bounty-page-number db)))
+    (:page-number db)))
 
 (reg-sub
   :open-bounties-page
   :<- [:open-bounties]
-  :<- [:bounty-page-number]
+  :<- [:page-number]
   (fn [[open-bounties page-number] _]
     (let [total-count (count open-bounties)
           start (* (dec page-number) items-per-page)
@@ -78,14 +78,9 @@
     (vec (:activity-feed db))))
 
 (reg-sub
-  :activity-page-number
-  (fn [db _]
-    (:activity-page-number db)))
-
-(reg-sub
   :activities-page
   :<- [:activity-feed]
-  :<- [:activity-page-number]
+  :<- [:page-number]
   (fn [[activities page-number] _]
     (let [total-count (count activities)
           start (* (dec page-number) items-per-page)
