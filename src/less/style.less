@@ -919,15 +919,6 @@ body {
     filter: fliph;
 }
 
-.pagination-text {
-	width: 83px;
-	height: 15px;
-	font-family: PostGrotesk;
-	font-size: 15px;
-	text-align: center;
-	color: #8d99a4;
-}
-
 .icon-forward-gray {
 	width: 24px;
 	height: 24px;
@@ -937,10 +928,24 @@ body {
 .page-nav-container {
   display: flex;
   margin: 0 -6px;
+  @media (max-width: 767px) {
+    align-items: center;
+    flex-direction: column;
+  }
+}
+
+.page-direction-container {
+  display: flex;
+  @media (max-width: 767px) {
+    flex-direction: row;
+  }
 }
 
 .page-nums-container {
   display: flex;
+  @media (max-width: 767px) {
+    display: none;
+  }
   margin-left: auto;
   justify-content: space-between;
 }
@@ -955,6 +960,10 @@ body {
   flex: none;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 767px) {
+    margin-top: 12px;
+  }
 }
 
 .item-counts-label {

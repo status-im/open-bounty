@@ -123,8 +123,9 @@
           [:div
            [draw-items] 
            [:div.page-nav-container
-            [draw-rect :backward]
-            [draw-rect :forward]
+            [:div.page-direction-container
+             [draw-rect :backward]
+             [draw-rect :forward]]
             [:div.page-nav-text [:span (str "Page " page-number " of " page-count)]]
             [draw-page-numbers page-number page-count]]])))
 
