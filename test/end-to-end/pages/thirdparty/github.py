@@ -84,7 +84,7 @@ class LabelsButton(BaseButton):
     class BountyLabel(BaseButton):
         def __init__(self, driver):
             super(LabelsButton.BountyLabel, self).__init__(driver)
-            self.locator = self.Locator.css_selector("[data-name='bounty']")
+            self.locator = self.Locator.css_selector("[data-name='748942015']")
 
     class CrossButton(BaseButton):
         def __init__(self, driver):

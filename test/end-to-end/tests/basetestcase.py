@@ -39,16 +39,21 @@ class BaseTestCase:
         desired_caps['captureHtml'] = False
         return desired_caps
 
+    @property
+    def environment(self):
+        return pytest.config.getoption('env')
+
     def setup_method(self):
 
         self.errors = []
 
-        # options = webdriver.ChromeOptions()
-        # options.add_argument('--start-fullscreen')
-        # options.add_extension(path.abspath('/resources/metamask3_12_0.crx'))
-
-        self.driver = webdriver.Remote(self.executor_sauce_lab,
-                                       desired_capabilities=self.capabilities_sauce_lab)
+        if self.environment == 'local':
+            options = webdriver.ChromeOptions()
+            options.add_argument('--start-fullscreen')
+            self.driver = webdriver.Chrome(options=options)
+        if self.environment == 'sauce':
+            self.driver = webdriver.Remote(self.executor_sauce_lab,
+                                           desired_capabilities=self.capabilities_sauce_lab)
         self.driver.implicitly_wait(5)
 
     def verify_no_errors(self):
