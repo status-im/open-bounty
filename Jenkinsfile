@@ -8,7 +8,10 @@ checkout scm
 
 			GIT_COMMIT_HASH = sh (script: "git rev-parse --short HEAD | tr -d '\n'", returnStdout: true)
 
-			sh ("docker build -t status-open-bounty:latest -t status-open-bounty:${env.BUILD_NUMBER}.${GIT_COMMIT_HASH} -t statusimdockerhub/openbounty-app . ")
+			def openbountyApp = docker.build("statusimdockerhub/openbounty-app:${env.BUILD_NUMBER}")
+			openbountyApp.push('latest')
+
+			// sh ("docker build -t status-open-bounty:latest -t status-open-bounty:${env.BUILD_NUMBER}.${GIT_COMMIT_HASH} -t statusimdockerhub/openbounty-app . ")
 
 		}
 
