@@ -6,14 +6,14 @@ checkout scm
 	try {
 		stage('Build') {
 
-		GIT_COMMIT_HASH = sh (script: "git rev-parse --short HEAD | tr -d '\n'", returnStdout: true)
+			GIT_COMMIT_HASH = sh (script: "git rev-parse --short HEAD | tr -d '\n'", returnStdout: true)
 
-		sh ("docker build -t status-open-bounty:latest -t status-open-bounty:${env.BUILD_NUMBER}.${GIT_COMMIT_HASH} . ")
+			sh ("docker build -t status-open-bounty:latest -t status-open-bounty:${env.BUILD_NUMBER}.${GIT_COMMIT_HASH} . ")
 
 		}
 
 		stage('Push to registry') {
-
+			docker push statusimdockerhub/openbounty-app
 		}
 
 		stage('Deploy') {
