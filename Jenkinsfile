@@ -19,5 +19,8 @@ checkout scm
 		stage('Deploy') {
 
 		}
-	}
+	} catch (e) {
+    // slackSend color: 'bad', message: REPO + ":" + BRANCH_NAME + ' failed to build. ' + env.BUILD_URL
+    throw e
+  }
 }
