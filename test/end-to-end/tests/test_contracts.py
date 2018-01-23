@@ -17,6 +17,6 @@ class TestLogin(BaseTestCase):
         bounties_page = github.authorize_sob.click()
         github.install_sob_plugin()
         assert bounties_page.bounties_header.text == 'Bounties'
-        assert bounties_page.top_hunters_header.text == 'Top hunters'
+        assert bounties_page.top_hunters_header.text == 'Top 5 hunters'
         github.create_new_bounty()
         github.get_deployed_contract()
