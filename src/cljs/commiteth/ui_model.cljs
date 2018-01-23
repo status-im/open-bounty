@@ -1,5 +1,8 @@
 (ns commiteth.ui-model
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [cljs-time.core :as t]
+            [cljs-time.coerce :as t-coerce]
+            [cljs-time.format :as t-format]))
 
 ;;;; bounty sorting types
 
@@ -10,11 +13,11 @@
                                         ::bounty-sorting-type.sort-comparator-fn compare}
    ::bounty-sorting-type|lowest-value  {::bounty-sorting-type.name               "Lowest value"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
-                                                                                   (:value-usd bounty))
+                                                                                   (js/parseFloat (:value-usd bounty)))
                                         ::bounty-sorting-type.sort-comparator-fn compare}
    ::bounty-sorting-type|highest-value {::bounty-sorting-type.name               "Highest value"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
-                                                                                   (:value-usd bounty))
+                                                                                   (js/parseFloat (:value-usd bounty)))
                                         ::bounty-sorting-type.sort-comparator-fn (comp - compare)}
    ::bounty-sorting-type|owner         {::bounty-sorting-type.name               "Owner"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
@@ -38,7 +41,9 @@
 (def bounty-filter-types-def
   {::bounty-filter-type|value    {::bounty-filter-type.name      "Value"
                                   ::bounty-filter-type.predicate (fn [filter-value bounty]
-                                                                   true)}
+                                                                   (let [min-val (first filter-value)
+                                                                         max-val (second filter-value)]
+                                                                     (<= min-val (:value-usd bounty) max-val)))}
    ::bounty-filter-type|currency {::bounty-filter-type.name      "Currency"
                                   ::bounty-filter-type.predicate (fn [filter-value bounty]
                                                                    (and (or (not-any? #{"ETH"} filter-value)
@@ -47,10 +52,19 @@
                                                                                      (-> bounty :tokens keys set))))}
    ::bounty-filter-type|date     {::bounty-filter-type.name      "Date"
                                   ::bounty-filter-type.predicate (fn [filter-value bounty]
-                                                                   true)}
+                                                                   (when-let [created-at-inst (:created-at bounty)]
+                                                                     (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)
+                                                                           filter-from     (condp = filter-value
+                                                                                             ::bounty-filter-type-date-option|last-week (t/minus (t/now) (t/weeks 1))
+                                                                                             ::bounty-filter-type-date-option|last-month (t/minus (t/now) (t/months 1))
+                                                                                             ::bounty-filter-type-date-option|last-3-months (t/minus (t/now) (t/months 3)))
+                                                                           interval        (t/interval filter-from (t/now))]
+                                                                       (t/within? interval created-at-date))))}
    ::bounty-filter-type|owner    {::bounty-filter-type.name      "Owner"
                                   ::bounty-filter-type.predicate (fn [filter-value bounty]
-                                                                   true)}})
+                                                                   (->> filter-value
+                                                                        (some #{(:repo-owner bounty)})
+                                                                        boolean))}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 

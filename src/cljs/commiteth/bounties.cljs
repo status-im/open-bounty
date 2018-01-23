@@ -74,13 +74,13 @@
         on-change-fn      (fn [min-val max-val]
                             (rf/dispatch [::handlers/set-open-bounty-filter-type
                                           ::ui-model/bounty-filter-type|value
-                                          [(min min-val (dec default-max))
-                                           (max max-val (inc default-min))]]))
+                                          [(min min-val default-max)
+                                           (max max-val default-min)]]))
         on-min-change-fn  (fn [new-min]
-                            (let [new-max (max current-max (inc new-min))]
+                            (let [new-max (max current-max (min default-max new-min))]
                               (on-change-fn new-min new-max)))
         on-max-change-fn  (fn [new-max]
-                            (let [new-min (min current-min (dec new-max))]
+                            (let [new-min (min current-min (max default-min new-max))]
                               (on-change-fn new-min new-max)))]
     [:div
      "$0 - $1000+"
