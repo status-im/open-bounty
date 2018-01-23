@@ -10,7 +10,6 @@ checkout scm
 
 			docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-statusvan') {
 				def openbountyApp = docker.build("statusimdockerhub/openbounty-app:${env.BUILD_NUMBER}")
-				openbountyApp.push('latest')
 			}
 
 			// sh ("docker build -t status-open-bounty:latest -t status-open-bounty:${env.BUILD_NUMBER}.${GIT_COMMIT_HASH} -t statusimdockerhub/openbounty-app . ")
@@ -18,7 +17,8 @@ checkout scm
 		}
 
 		stage('Push to registry') {
-			sh ("docker push statusimdockerhub/openbounty-app")
+			// sh ("docker push statusimdockerhub/openbounty-app")
+			openbountyApp.push('latest')
 		}
 
 		stage('Deploy') {
