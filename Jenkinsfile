@@ -13,7 +13,7 @@ checkout scm
 		}
 
 		stage('Push to registry') {
-			docker push statusimdockerhub/openbounty-app
+			sh ("docker push statusimdockerhub/openbounty-app")
 		}
 
 		stage('Deploy') {
