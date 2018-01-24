@@ -12,11 +12,11 @@ def dockerreponame = "statusim/openbounty-app"
 
 			docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-statusvan') {
 				def openbountyApp = docker.build("${dockerreponame}:${env.BUILD_NUMBER}")
-				openbountyApp.push('latest')
+				openbountyApp.push("${env.BRANCH_NAME}")
 		        if (env.BRANCH_NAME == 'develop') {
-		            openbountyApp.push('${dockerreponame}:develop')
+		            openbountyApp.push("${dockerreponame}:develop")
 		        } else if (env.BRANCH_NAME == 'master') {
-		            openbountyApp.push('${dockerreponame}:master')
+		            openbountyApp.push("${dockerreponame}:master")
 		        } else {
 		            println "Not named branch have no custom tag"
 		        }
@@ -27,7 +27,7 @@ def dockerreponame = "statusim/openbounty-app"
 		stage('Deploy') {
 
 		}
-		
+
 	} catch (e) {
     // slackSend color: 'bad', message: REPO + ":" + BRANCH_NAME + ' failed to build. ' + env.BUILD_URL
     throw e
