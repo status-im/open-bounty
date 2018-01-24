@@ -99,12 +99,15 @@
          ^{:key (str currency)}
          [:div.open-bounties-filter-list-option-checkbox
           [:label
-           {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
-                                     ::ui-model/bounty-filter-type|currency
-                                     (cond
-                                       (and active? (= #{currency} current-filter-value)) nil
-                                       active? (disj current-filter-value currency)
-                                       :else (into #{currency} current-filter-value))])}
+           {:on-click  #(do (println "label on-click")
+                            (rf/dispatch [::handlers/set-open-bounty-filter-type
+                                          ::ui-model/bounty-filter-type|currency
+                                          (cond
+                                            (and active? (= #{currency} current-filter-value)) nil
+                                            active? (disj current-filter-value currency)
+                                            :else (into #{currency} current-filter-value))]))
+            :tab-index 0
+            :on-focus  #(do (.stopPropagation %) (reset! tooltip-open? true))}
            [:input
             {:type     "checkbox"
              :checked  active?
@@ -137,7 +140,9 @@
                                      (cond
                                        (and active? (= #{owner} current-filter-value)) nil
                                        active? (disj current-filter-value owner)
-                                       :else (into #{owner} current-filter-value))])}
+                                       :else (into #{owner} current-filter-value))])
+            :tab-index 0
+            :on-focus  #(do (.stopPropagation %) (reset! tooltip-open? true))}
            [:input
             {:type     "checkbox"
              :checked  active?
@@ -159,7 +164,7 @@
         :on-focus  #(reset! open? true)
         :on-blur   #(reset! open? false)}
        [:div.open-bounties-filter-element
-        {:on-mouse-down #(swap! open? not)
+        {:on-mouse-down #(do (println "element on-mouse-down") (swap! open? not))
          :class         (when (or current-filter-value @open?)
                           "open-bounties-filter-element-active")}
         [:div.text
@@ -167,14 +172,15 @@
            (ui-model/bounty-filter-value->short-text filter-type current-filter-value)
            (ui-model/bounty-filter-type->name filter-type))]
         (when current-filter-value
-          [:img.remove
-           {:src           "bounty-filter-remove.svg"
-            :tab-index     0
-            :on-focus      #(.stopPropagation %)
-            :on-mouse-down (fn [e]
-                             (.stopPropagation e)
-                             (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
-                             (reset! open? false))}])]
+          [:div.remove-container
+           {:tab-index 0
+            :on-focus  #(.stopPropagation %)}
+           [:img.remove
+            {:src           "bounty-filter-remove.svg"
+             :on-mouse-down (fn [e]
+                              (.stopPropagation e)
+                              (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
+                              (reset! open? false))}]])]
        (when @open?
          [bounties-filter-tooltip
           [(tooltip-view-for-filter-type filter-type) current-filter-value open?]])])))
