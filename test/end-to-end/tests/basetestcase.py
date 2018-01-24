@@ -46,15 +46,21 @@ class BaseTestCase:
     def setup_method(self):
 
         self.errors = []
+        self.cleanup = None
 
         if self.environment == 'local':
             options = webdriver.ChromeOptions()
             options.add_argument('--start-fullscreen')
-            self.driver = webdriver.Chrome(options=options)
+            options.add_extension(
+            path.abspath(test_data.config['Paths']['tests_absolute'] + 'resources/metamask3_12_0.crx'))
+            # for chromedriver 2.35
+            self.driver = webdriver.Chrome(chrome_options=options)
         if self.environment == 'sauce':
             self.driver = webdriver.Remote(self.executor_sauce_lab,
                                            desired_capabilities=self.capabilities_sauce_lab)
         self.driver.implicitly_wait(5)
+
+
 
     def verify_no_errors(self):
         if self.errors:
@@ -64,9 +70,9 @@ class BaseTestCase:
             pytest.fail(msg, pytrace=False)
 
     def teardown_method(self):
-
-        remove_application(self.driver)
-        remove_installation(self.driver)
+        if self.cleanup:
+            remove_application(self.driver)
+            remove_installation(self.driver)
 
         try:
             self.print_sauce_lab_info(self.driver)
