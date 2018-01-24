@@ -99,13 +99,12 @@
          ^{:key (str currency)}
          [:div.open-bounties-filter-list-option-checkbox
           [:label
-           {:on-click  #(do (println "label on-click")
-                            (rf/dispatch [::handlers/set-open-bounty-filter-type
-                                          ::ui-model/bounty-filter-type|currency
-                                          (cond
-                                            (and active? (= #{currency} current-filter-value)) nil
-                                            active? (disj current-filter-value currency)
-                                            :else (into #{currency} current-filter-value))]))
+           {:on-click  #(rf/dispatch [::handlers/set-open-bounty-filter-type
+                                      ::ui-model/bounty-filter-type|currency
+                                      (cond
+                                        (and active? (= #{currency} current-filter-value)) nil
+                                        active? (disj current-filter-value currency)
+                                        :else (into #{currency} current-filter-value))])
             :tab-index 0
             :on-focus  #(do (.stopPropagation %) (reset! tooltip-open? true))}
            [:input
@@ -164,7 +163,7 @@
         :on-focus  #(reset! open? true)
         :on-blur   #(reset! open? false)}
        [:div.open-bounties-filter-element
-        {:on-mouse-down #(do (println "element on-mouse-down") (swap! open? not))
+        {:on-mouse-down #(swap! open? not)
          :class         (when (or current-filter-value @open?)
                           "open-bounties-filter-element-active")}
         [:div.text
