@@ -33,7 +33,7 @@ class BountyFooters(BaseText):
 
     def __init__(self, driver):
         super(BountyFooters, self).__init__(driver)
-        self.locator = self.Locator.css_selector('.open-bounty-item-content .bounty-item-row')
+        self.locator = self.Locator.css_selector('.open-bounty-item-content .footer-row')
 
 
 class BountiesPage(BasePageObject):
