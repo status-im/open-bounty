@@ -30,13 +30,6 @@
                    (= type (:event %)))
                  events)))
 
-
-(defn labeled-as-bounty?
-  [action issue]
-  (and
-   (= "labeled" action)
-   (= bounties/label-name (get-in issue [:label :name]))))
-
 (defn find-commit-sha
   [user repo issue-number event-types]
   (log/debug "find-commit-sha" user repo issue-number event-types)
@@ -48,12 +41,14 @@
 
 
 (defn handle-issue-labeled
-  [webhook-payload]
+  [webhook-payload label-added?]
   (log/debug "handle-issue-labeled")
   (let [{issue :issue} webhook-payload
         {repo-id :id
          repo-name :name} (:repository webhook-payload)]
-    (bounties/maybe-add-bounty-for-issue repo-name repo-id issue)))
+    (if label-added?
+      (bounties/maybe-add-bounty-for-issue repo-name repo-id issue)
+      (bounties/remove-bounty-for-issue repo-name repo-id issue))))
 
 (defn handle-issue-closed
   [{{{owner :login} :owner repo :name}   :repository
@@ -212,17 +207,18 @@
   [webhook-payload]
   (when-let [action (:action webhook-payload)]
     (log/debug "handle-issue" action)
-    (when (labeled-as-bounty? action webhook-payload)
-      (handle-issue-labeled webhook-payload))
-    (when (and
-           (= "closed" action)
-           (bounties/has-bounty-label? (:issue webhook-payload)))
-      (handle-issue-closed webhook-payload))
-    (when (= "edited" action)
-      (handle-issue-edited webhook-payload))
-    (when (= "reopened" action)
-      (handle-issue-reopened webhook-payload)))
-  (ok))
+    (case action
+      ("labeled" "unlabeled")
+      (when (= bounties/label-name (get-in webhook-payload [:label :name]))
+        (handle-issue-labeled webhook-payload (= action "labeled")))
+      "closed"
+      (when (bounties/has-bounty-label? (:issue webhook-payload))
+        (handle-issue-closed webhook-payload))
+      "edited"
+      (handle-issue-edited webhook-payload)
+      "reopened"
+      (handle-issue-reopened webhook-payload))
+  (ok)))
 
 (defn enable-repo-2 [repo-id full-repo]
   (log/debug "enable-repo-2" repo-id full-repo)

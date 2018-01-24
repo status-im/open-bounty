@@ -125,6 +125,15 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title)
                    FROM issues
                    WHERE repo_id = :repo_id AND issue_id = :issue_id);
 
+-- :name remove-issue! :<! :1
+-- :doc removes issue
+DELETE FROM issues
+  WHERE repo_id = :repo_id 
+  AND issue_id = :issue_id
+  AND value_usd = 0.0
+  RETURNING comment_id;
+
+
 -- :name update-commit-sha :<! :1
 -- :doc updates issue with commit_sha
 UPDATE issues

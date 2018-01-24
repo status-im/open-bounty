@@ -58,6 +58,16 @@
       (log/debug "Total issues for repo limit reached " repo " " count)
       (add-bounty-for-issue repo repo-id issue))))
 
+(defn remove-bounty-for-issue [repo repo-id issue]
+  (let [{issue-id     :id
+         issue-number :number} issue
+        removed-issue (issues/remove repo-id issue-id)
+        {owner-address :address
+         owner :owner} (users/get-repo-owner repo-id) ]
+    (log/debug "Removing bounty for issue " repo issue-number "owner address: " owner-address)
+    (if-let [comment-id (:comment_id removed-issue)]
+      (github/remove-deploying-comment owner repo comment-id)
+      (log/debug "Cannot remove Github bounty comment as it has non-zero value"))))
 
 ;; We have a max-limit to ensure people can't add more issues and
 ;; drain bot account until we have economic design in place

@@ -12,6 +12,14 @@
                               :issue_number issue-number
                               :title        issue-title})))
 
+(defn remove
+  "Removes issue"
+  [repo-id issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/remove-issue! con-db {:repo_id      repo-id
+                              :issue_id     issue-id})))
+
+
 (defn update-commit-sha
   "Updates issue with commit-sha"
   [issue-id commit-sha]
