@@ -47,10 +47,6 @@
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
 
-(defn bounties-filter-tooltip [content]
-  [:div.open-bounties-filter-element-tooltip
-   content])
-
 (defn bounties-filter-tooltip-value-input [label tooltip-open? opts]
   [:div.open-bounties-filter-element-tooltip-value-input-container
    [:div.:input.open-bounties-filter-element-tooltip-value-input-label
@@ -65,15 +61,15 @@
                   #(-> % .-target .-value int f))
      :on-focus  #(reset! tooltip-open? true)}]])
 
-(defn bounties-filter-tooltip-value [current-filter-value tooltip-open?]
-  (let [default-min       0
-        default-max       1000
+(defn bounties-filter-tooltip-category-range [filter-type filter-type-def current-filter-value tooltip-open?]
+  (let [default-min       (::ui-model/bounty-filter-type.min-val filter-type-def)
+        default-max       (::ui-model/bounty-filter-type.max-val filter-type-def)
         common-range-opts {:min default-min :max default-max}
         current-min       (or (first current-filter-value) default-min)
         current-max       (or (second current-filter-value) default-max)
         on-change-fn      (fn [min-val max-val]
                             (rf/dispatch [::handlers/set-open-bounty-filter-type
-                                          ::ui-model/bounty-filter-type|value
+                                          filter-type
                                           [(min min-val default-max)
                                            (max max-val default-min)]]))
         on-min-change-fn  (fn [new-min]
@@ -91,80 +87,66 @@
                                                                      {:current-val   current-max
                                                                       :on-change-val on-max-change-fn})]]))
 
-(defn bounties-filter-tooltip-currency [current-filter-value tooltip-open?]
-  (let [currencies (rf/subscribe [::subs/open-bounties-currencies])]
-    [:div.open-bounties-filter-list
-     (for [currency @currencies]
-       (let [active? (boolean (and current-filter-value (current-filter-value currency)))]
-         ^{:key (str currency)}
-         [:div.open-bounties-filter-list-option-checkbox
-          [:label
-           {:on-click  #(rf/dispatch [::handlers/set-open-bounty-filter-type
-                                      ::ui-model/bounty-filter-type|currency
-                                      (cond
-                                        (and active? (= #{currency} current-filter-value)) nil
-                                        active? (disj current-filter-value currency)
-                                        :else (into #{currency} current-filter-value))])
-            :tab-index 0
-            :on-focus  #(do (.stopPropagation %) (reset! tooltip-open? true))}
-           [:input
-            {:type     "checkbox"
-             :checked  active?
-             :on-focus #(reset! tooltip-open? true)}]
-           [:div.text currency]]]))]))
-
-(defn bounties-filter-tooltip-date [current-filter-value tooltip-open?]
+(defn bounties-filter-tooltip-category-single-static-option
+  [filter-type filter-type-def current-filter-value tooltip-open?]
   [:div.open-bounties-filter-list
-   (for [[option-type option-text] ui-model/bounty-filter-type-date-options-def]
+   (for [[option-type option-text] (::ui-model/bounty-filter-type.options filter-type-def)]
      ^{:key (str option-type)}
      [:div.open-bounties-filter-list-option
       (merge {:on-click #(do (rf/dispatch [::handlers/set-open-bounty-filter-type
-                                           ::ui-model/bounty-filter-type|date
+                                           filter-type
                                            option-type])
                              (reset! tooltip-open? false))}
              (when (= option-type current-filter-value)
                {:class "active"}))
       option-text])])
 
-(defn bounties-filter-tooltip-owner [current-filter-value tooltip-open?]
-  (let [owners (rf/subscribe [::subs/open-bounties-owners])]
+(defn bounties-filter-tooltip-category-multiple-dynamic-options
+  [filter-type filter-type-def current-filter-value tooltip-open?]
+  (let [options (rf/subscribe [(::ui-model/bounty-filter-type.re-frame-subscription-key-for-options filter-type-def)])]
     [:div.open-bounties-filter-list
-     (for [owner @owners]
-       (let [active? (boolean (and current-filter-value (current-filter-value owner)))]
-         ^{:key (str owner)}
+     (for [option @options]
+       (let [active? (boolean (and current-filter-value (current-filter-value option)))]
+         ^{:key (str option)}
          [:div.open-bounties-filter-list-option-checkbox
           [:label
-           {:on-click #(rf/dispatch [::handlers/set-open-bounty-filter-type
-                                     ::ui-model/bounty-filter-type|owner
-                                     (cond
-                                       (and active? (= #{owner} current-filter-value)) nil
-                                       active? (disj current-filter-value owner)
-                                       :else (into #{owner} current-filter-value))])
+           {:on-click  #(rf/dispatch [::handlers/set-open-bounty-filter-type
+                                      filter-type
+                                      (cond
+                                        (and active? (= #{option} current-filter-value)) nil
+                                        active? (disj current-filter-value option)
+                                        :else (into #{option} current-filter-value))])
             :tab-index 0
             :on-focus  #(do (.stopPropagation %) (reset! tooltip-open? true))}
            [:input
             {:type     "checkbox"
              :checked  active?
              :on-focus #(reset! tooltip-open? true)}]
-           [:div.text owner]]]))]))
+           [:div.text option]]]))]))
 
-(defn- tooltip-view-for-filter-type [filter-type]
-  (condp = filter-type
-    ::ui-model/bounty-filter-type|value bounties-filter-tooltip-value
-    ::ui-model/bounty-filter-type|currency bounties-filter-tooltip-currency
-    ::ui-model/bounty-filter-type|date bounties-filter-tooltip-date
-    ::ui-model/bounty-filter-type|owner bounties-filter-tooltip-owner))
+(defn bounties-filter-tooltip [filter-type filter-type-def current-filter-val tooltip-open?]
+  [:div.open-bounties-filter-element-tooltip
+   (let [compo (condp = (::ui-model/bounty-filter-type.category filter-type-def)
+                 ::ui-model/bounty-filter-type-category|single-static-option
+                 bounties-filter-tooltip-category-single-static-option
+
+                 ::ui-model/bounty-filter-type-category|multiple-dynamic-options
+                 bounties-filter-tooltip-category-multiple-dynamic-options
+
+                 ::ui-model/bounty-filter-type-category|range
+                 bounties-filter-tooltip-category-range)]
+     (compo filter-type filter-type-def current-filter-val tooltip-open?))])
 
 (defn bounty-filter-view [filter-type current-filter-value]
-  (let [open? (r/atom false)]
+  (let [tooltip-open? (r/atom false)]
     (fn [filter-type current-filter-value]
       [:div.open-bounties-filter-element-container
        {:tab-index 0
-        :on-focus  #(reset! open? true)
-        :on-blur   #(reset! open? false)}
+        :on-focus  #(reset! tooltip-open? true)
+        :on-blur   #(reset! tooltip-open? false)}
        [:div.open-bounties-filter-element
-        {:on-mouse-down #(swap! open? not)
-         :class         (when (or current-filter-value @open?)
+        {:on-mouse-down #(swap! tooltip-open? not)
+         :class         (when (or current-filter-value @tooltip-open?)
                           "open-bounties-filter-element-active")}
         [:div.text
          (if current-filter-value
@@ -179,10 +161,13 @@
              :on-mouse-down (fn [e]
                               (.stopPropagation e)
                               (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
-                              (reset! open? false))}]])]
-       (when @open?
+                              (reset! tooltip-open? false))}]])]
+       (when @tooltip-open?
          [bounties-filter-tooltip
-          [(tooltip-view-for-filter-type filter-type) current-filter-value open?]])])))
+          filter-type
+          (ui-model/bounty-filter-types-def filter-type)
+          current-filter-value
+          tooltip-open?])])))
 
 (defn bounty-filters-view []
   (let [current-filters (rf/subscribe [::subs/open-bounties-filters])]
