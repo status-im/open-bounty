@@ -33,7 +33,11 @@
         <AppenderRef ref="FILE"/>
     </logger>
     <root level="DEBUG">
-        <appender-ref ref="STDOUT"/>
+        <!-- <appender-ref ref="STDOUT"/> -->
+        <appender-ref ref="FILE"/>
+    </root>
+    <root level="INFO">
+        <!-- <appender-ref ref="STDOUT"/> -->
         <appender-ref ref="FILE"/>
     </root>
 </configuration>

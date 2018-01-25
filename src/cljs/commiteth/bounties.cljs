@@ -2,6 +2,8 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [commiteth.common :refer [moment-timestamp
+                                      display-data-page
+                                      items-per-page
                                       issue-url]]
             [commiteth.handlers :as handlers]
             [commiteth.db :as db]
@@ -203,26 +205,70 @@
                              (rf/dispatch [::handlers/set-open-bounties-sorting-type sorting-type]))}
                (ui-model/bounty-sorting-type->name sorting-type)])])]))))
 
-(defn bounties-list [open-bounties]
+;(defn bounties-list [open-bounties]
+;  [:div.ui.container.open-bounties-container
+;   [:div.open-bounties-header "Bounties"]
+;   [:div.open-bounties-filter-and-sort
+;    [bounty-filters-view]
+;    [bounties-sort]]
+;   (if (empty? open-bounties)
+;     [:div.view-no-data-container
+;      [:p "No matching bounties found."]]
+;     (into [:div.ui.items]
+;           (for [bounty open-bounties]
+;             [bounty-item bounty])))])
+
+(defn bounties-list [{:keys [items item-count page-number total-count]
+                      :as bounty-page-data}]
   [:div.ui.container.open-bounties-container
    [:div.open-bounties-header "Bounties"]
    [:div.open-bounties-filter-and-sort
     [bounty-filters-view]
     [bounties-sort]]
-   (if (empty? open-bounties)
+   (if (empty? items)
      [:div.view-no-data-container
       [:p "No matching bounties found."]]
-     (into [:div.ui.items]
-           (for [bounty open-bounties]
-             [bounty-item bounty])))])
-
+     [:div
+      (let [left (inc (* (dec page-number) items-per-page))
+            right (dec (+ left item-count))]
+        [:div.item-counts-label
+         [:span (str "Showing " left "-" right " of " total-count)]])
+      (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
 
 (defn bounties-page []
-  (let [open-bounties          (rf/subscribe [::subs/filtered-and-sorted-open-bounties])
+  (let [bounty-page-data (rf/subscribe [:open-bounties-page])
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?
         [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [bounties-list @open-bounties]))))
+        [bounties-list @bounty-page-data]))))
+;
+;(defn bounties-page []
+;  (let [open-bounties          (rf/subscribe [::subs/filtered-and-sorted-open-bounties])
+;=======
+;(defn bounties-list [{:keys [items item-count page-number total-count]
+;                      :as bounty-page-data}]
+;  [:div.ui.container.open-bounties-container
+;   [:div.open-bounties-header "Bounties"]
+;   (if (empty? items)
+;     [:div.view-no-data-container
+;      [:p "No recent activity yet"]]
+;     [:div
+;      (let [left (inc (* (dec page-number) items-per-page))
+;            right (dec (+ left item-count))]
+;        [:div.item-counts-label
+;            [:span (str "Showing " left "-" right " of " total-count)]])
+;      (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
+;
+;(defn bounties-page []
+;  (let [bounty-page-data (rf/subscribe [:open-bounties-page])
+;>>>>>>> status/develop
+;        open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
+;    (fn []
+;      (if @open-bounties-loading?
+;        [:div.view-loading-container
+;         [:div.ui.active.inverted.dimmer
+;          [:div.ui.text.loader.view-loading-label "Loading"]]]
+;        [bounties-list @bounty-page-data]))))

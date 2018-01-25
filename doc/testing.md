@@ -10,7 +10,7 @@ For testing you will need:
 * a Github account with administrative access to one or more repositories
 * for approving bounty payouts you will additionally need access to an Ethereum wallet. So far, Mist and [MetaMask](https://metamask.io/) have been used, but anything that provides the web3 javascript interface should work.
 
-The developers can be reached on the `#commiteth` channel in the [Status slack](http://slack.status.im/).
+The developers can be reached on the `#openbounty` channel in the [Status slack](http://slack.status.im/).
 
 ### Signing up
 
@@ -60,6 +60,6 @@ To remove issue from the Bounties list you can close it in GitHub.
 
 ### Reporting bugs
 
-All bugs should be reported as issues in the [CommitETH Github repository](https://github.com/status-im/commiteth/issues).
+All bugs should be reported as issues in the [OpenBounty Github repository](https://github.com/status-im/open-bounty/issues).
 
 Please first check that there is not already a duplicate issue. Issues should contain exact and minimal step-by-step instructions for reproducing the problem.

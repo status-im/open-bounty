@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
             [commiteth.common :refer [moment-timestamp
+                                      display-data-page
                                       issue-url]]))
 
 
@@ -56,21 +57,19 @@
 
 
 
-(defn activity-list [activity-items]
+(defn activity-list [activity-page-data]
   [:div.ui.container.activity-container
-   (if (empty? activity-items)
+   (if (empty? (:items activity-page-data))
      [:div.view-no-data-container
       [:p "No recent activity yet"]]
-     (into [:div.ui.items]
-           (for [item activity-items]
-             ^{:key item} [activity-item item])))]  )
+     (display-data-page activity-page-data activity-item :set-activity-page-number))])
 
 (defn activity-page []
-  (let [activity-items (rf/subscribe [:activity-feed])
+  (let [activity-page-data (rf/subscribe [:activities-page])
         activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])]
     (fn []
       (if @activity-feed-loading?
         [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [activity-list @activity-items]))))
+        [activity-list @activity-page-data]))))

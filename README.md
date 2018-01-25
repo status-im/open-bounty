@@ -1,11 +1,11 @@
-# Commiteth
+# Status Open Bounty
 
-Allows you to set bounties for Github issues, paid out in Ether.
+Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
 More information:
-http://wiki.status.im/proposals/commiteth/
+https://wiki.status.im/Status_Open_Bounty
 
-Live beta version:
+Live production version:
 https://openbounty.status.im
 The `master` branch is automatically deployed here.
 
@@ -20,6 +20,26 @@ The `develop` branch is automatically deployed here.
 You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above installed.
 
 ### PostgreSQL
+<<<<<<< HEAD
+
+Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
+
+```
+sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
+sudo -u postgres createdb commiteth
+```
+
+## Running
+
+Launch following commands each in its own shell:
+
+```
+lein run
+lein figwheel
+lein less auto
+```
+
+=======
 
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 

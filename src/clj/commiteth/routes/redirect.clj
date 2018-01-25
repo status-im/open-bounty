@@ -53,8 +53,8 @@
                      new-user?)
             (try
               (hubspot/create-hubspot-contact (:email user)
-                                                 (:name user "")
-                                                 (:login user))
+                                              (:name user "")
+                                              (:login user))
               (catch Throwable t
                 (log/error "Failed to create hubspot contact" t))))
           (assoc (found (str (env :server-address) "/app"))

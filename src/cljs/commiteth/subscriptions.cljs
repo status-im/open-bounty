@@ -1,7 +1,8 @@
 (ns commiteth.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
             [commiteth.db :as db]
-            [commiteth.ui-model :as ui-model]))
+            [commiteth.ui-model :as ui-model]
+            [commiteth.common :refer [items-per-page]]))
 
 (reg-sub
   :db
@@ -35,7 +36,28 @@
 (reg-sub
   :open-bounties
   (fn [db _]
-    (:open-bounties db)))
+    (vec (:open-bounties db))))
+
+(reg-sub
+  :bounty-page-number
+  (fn [db _]
+    (:bounty-page-number db)))
+
+(reg-sub
+  :open-bounties-page
+  :<- [::filtered-and-sorted-open-bounties]
+  :<- [:bounty-page-number]
+  (fn [[open-bounties page-number] _]
+    (let [total-count (count open-bounties)
+          start (* (dec page-number) items-per-page)
+          end (min total-count (+ items-per-page start))
+          items (subvec open-bounties start end)]
+      {:items items
+       :item-count (count items)
+       :total-count total-count
+       :page-number page-number
+       :page-count (Math/ceil (/ total-count items-per-page))})))
+
 
 (reg-sub
   :owner-bounties
@@ -55,7 +77,28 @@
 (reg-sub
   :activity-feed
   (fn [db _]
-    (:activity-feed db)))
+    (vec (:activity-feed db))))
+
+(reg-sub
+  :activity-page-number
+  (fn [db _]
+    (:activity-page-number db)))
+
+(reg-sub
+  :activities-page
+  :<- [:activity-feed]
+  :<- [:activity-page-number]
+  (fn [[activities page-number] _]
+    (let [total-count (count activities)
+          start (* (dec page-number) items-per-page)
+          end (min total-count (+ items-per-page start))
+          items (subvec activities start end)]
+      {:items items
+       :item-count (count items)
+       :total-count total-count
+       :page-number page-number
+       :page-count (Math/ceil (/ total-count items-per-page))})))
+
 
 (reg-sub
   :gh-admin-token
@@ -120,4 +163,5 @@
   (fn [[open-bounties filters sorting-type] _]
     (cond->> open-bounties
              filters (ui-model/filter-bounties filters)
-             sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type))))
+             sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type)
+             filter vec)))
