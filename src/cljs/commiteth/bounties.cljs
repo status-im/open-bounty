@@ -211,7 +211,7 @@
     [bounties-sort]]
    (if (empty? open-bounties)
      [:div.view-no-data-container
-      [:p "No recent activity yet"]]
+      [:p "No matching bounties found."]]
      (into [:div.ui.items]
            (for [bounty open-bounties]
              [bounty-item bounty])))])
