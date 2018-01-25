@@ -63,7 +63,7 @@
                   #(-> % .-target .-value int f))
      :on-focus  #(reset! tooltip-open? true)}]])
 
-(defn bounties-filter-tooltip-category-range [filter-type filter-type-def current-filter-value tooltip-open?]
+(defn bounties-filter-tooltip-category-range-view [filter-type filter-type-def current-filter-value tooltip-open?]
   (let [default-min       (::ui-model/bounty-filter-type.min-val filter-type-def)
         default-max       (::ui-model/bounty-filter-type.max-val filter-type-def)
         common-range-opts {:min default-min :max default-max}
@@ -89,7 +89,7 @@
                                                                      {:current-val   current-max
                                                                       :on-change-val on-max-change-fn})]]))
 
-(defn bounties-filter-tooltip-category-single-static-option
+(defn bounties-filter-tooltip-category-single-static-option-view
   [filter-type filter-type-def current-filter-value tooltip-open?]
   [:div.open-bounties-filter-list
    (for [[option-type option-text] (::ui-model/bounty-filter-type.options filter-type-def)]
@@ -103,7 +103,7 @@
                {:class "active"}))
       option-text])])
 
-(defn bounties-filter-tooltip-category-multiple-dynamic-options
+(defn bounties-filter-tooltip-category-multiple-dynamic-options-view
   [filter-type filter-type-def current-filter-value tooltip-open?]
   (let [options (rf/subscribe [(::ui-model/bounty-filter-type.re-frame-subscription-key-for-options filter-type-def)])]
     [:div.open-bounties-filter-list
@@ -126,17 +126,17 @@
              :on-focus #(reset! tooltip-open? true)}]
            [:div.text option]]]))]))
 
-(defn bounties-filter-tooltip [filter-type filter-type-def current-filter-val tooltip-open?]
+(defn bounties-filter-tooltip-view [filter-type filter-type-def current-filter-val tooltip-open?]
   [:div.open-bounties-filter-element-tooltip
    (let [compo (condp = (::ui-model/bounty-filter-type.category filter-type-def)
                  ::ui-model/bounty-filter-type-category|single-static-option
-                 bounties-filter-tooltip-category-single-static-option
+                 bounties-filter-tooltip-category-single-static-option-view
 
                  ::ui-model/bounty-filter-type-category|multiple-dynamic-options
-                 bounties-filter-tooltip-category-multiple-dynamic-options
+                 bounties-filter-tooltip-category-multiple-dynamic-options-view
 
                  ::ui-model/bounty-filter-type-category|range
-                 bounties-filter-tooltip-category-range)]
+                 bounties-filter-tooltip-category-range-view)]
      (compo filter-type filter-type-def current-filter-val tooltip-open?))])
 
 (defn bounty-filter-view [filter-type current-filter-value]
@@ -165,7 +165,7 @@
                               (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
                               (reset! tooltip-open? false))}]])]
        (when @tooltip-open?
-         [bounties-filter-tooltip
+         [bounties-filter-tooltip-view
           filter-type
           (ui-model/bounty-filter-types-def filter-type)
           current-filter-value
@@ -182,7 +182,7 @@
           filter-type
           (get @current-filters filter-type)]))]))
 
-(defn bounties-sort []
+(defn bounties-sort-view []
   (let [open? (r/atom false)]
     (fn []
       (let [current-sorting (rf/subscribe [::subs/open-bounties-sorting-type])]
@@ -205,38 +205,25 @@
                              (rf/dispatch [::handlers/set-open-bounties-sorting-type sorting-type]))}
                (ui-model/bounty-sorting-type->name sorting-type)])])]))))
 
-;(defn bounties-list [open-bounties]
-;  [:div.ui.container.open-bounties-container
-;   [:div.open-bounties-header "Bounties"]
-;   [:div.open-bounties-filter-and-sort
-;    [bounty-filters-view]
-;    [bounties-sort]]
-;   (if (empty? open-bounties)
-;     [:div.view-no-data-container
-;      [:p "No matching bounties found."]]
-;     (into [:div.ui.items]
-;           (for [bounty open-bounties]
-;             [bounty-item bounty])))])
-
 (defn bounties-list [{:keys [items item-count page-number total-count]
-                      :as bounty-page-data}]
+                      :as   bounty-page-data}]
   [:div.ui.container.open-bounties-container
    [:div.open-bounties-header "Bounties"]
    [:div.open-bounties-filter-and-sort
     [bounty-filters-view]
-    [bounties-sort]]
+    [bounties-sort-view]]
    (if (empty? items)
      [:div.view-no-data-container
       [:p "No matching bounties found."]]
      [:div
-      (let [left (inc (* (dec page-number) items-per-page))
+      (let [left  (inc (* (dec page-number) items-per-page))
             right (dec (+ left item-count))]
         [:div.item-counts-label
          [:span (str "Showing " left "-" right " of " total-count)]])
       (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
 
 (defn bounties-page []
-  (let [bounty-page-data (rf/subscribe [:open-bounties-page])
+  (let [bounty-page-data       (rf/subscribe [:open-bounties-page])
         open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
     (fn []
       (if @open-bounties-loading?
@@ -244,31 +231,3 @@
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
         [bounties-list @bounty-page-data]))))
-;
-;(defn bounties-page []
-;  (let [open-bounties          (rf/subscribe [::subs/filtered-and-sorted-open-bounties])
-;=======
-;(defn bounties-list [{:keys [items item-count page-number total-count]
-;                      :as bounty-page-data}]
-;  [:div.ui.container.open-bounties-container
-;   [:div.open-bounties-header "Bounties"]
-;   (if (empty? items)
-;     [:div.view-no-data-container
-;      [:p "No recent activity yet"]]
-;     [:div
-;      (let [left (inc (* (dec page-number) items-per-page))
-;            right (dec (+ left item-count))]
-;        [:div.item-counts-label
-;            [:span (str "Showing " left "-" right " of " total-count)]])
-;      (display-data-page bounty-page-data bounty-item :set-bounty-page-number)])])
-;
-;(defn bounties-page []
-;  (let [bounty-page-data (rf/subscribe [:open-bounties-page])
-;>>>>>>> status/develop
-;        open-bounties-loading? (rf/subscribe [:get-in [:open-bounties-loading?]])]
-;    (fn []
-;      (if @open-bounties-loading?
-;        [:div.view-loading-container
-;         [:div.ui.active.inverted.dimmer
-;          [:div.ui.text.loader.view-loading-label "Loading"]]]
-;        [bounties-list @bounty-page-data]))))
