@@ -48,15 +48,15 @@
 
 (defn draw-page-numbers [page-number page-count]
   "Draw page numbers for the pagination component.
-   Inserts ellipsis when list is too long, by default
-   max 6 items are allowed"
+  Inserts ellipsis when list is too long, by default
+  max 6 items are allowed"
   (let [draw-page-num-fn (fn [current? i]
                            ^{:key i}
                            [:div.rectangle-rounded
-                            (cond-> {} 
-                              (not current?) 
-                              (assoc :class "grayed-out-page-num"
-                                     :on-click #(rf/dispatch [:set-page-number i])))
+                            (if current?
+                              {:class "page-num-active"}
+                              {:class "grayed-out-page-num"
+                               :on-click #(rf/dispatch [:set-page-number i])})
                             i])
         max-page-nums 6]
     [:div.page-nums-container 
