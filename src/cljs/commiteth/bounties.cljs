@@ -3,7 +3,6 @@
             [reagent.core :as r]
             [commiteth.common :refer [moment-timestamp
                                       display-data-page
-                                      scroll-div
                                       items-per-page
                                       issue-url]]))
 
@@ -47,7 +46,8 @@
        [:img {:src avatar-url}]]]]))
 
 (defn bounties-list [{:keys [items item-count page-number total-count] 
-                      :as bounty-page-data}]
+                      :as bounty-page-data}
+                     container-element]
   (if (empty? items)
     [:div.view-no-data-container
      [:p "No recent activity yet"]]
@@ -56,7 +56,7 @@
            right (dec (+ left item-count))]
        [:div.item-counts-label
         [:span (str "Showing " left "-" right " of " total-count)]])
-     (display-data-page bounty-page-data bounty-item)]))
+     (display-data-page bounty-page-data bounty-item container-element)]))
 
 (defn bounties-page []
   (let [bounty-page-data (rf/subscribe [:open-bounties-page])
@@ -69,7 +69,6 @@
           [:div.ui.text.loader.view-loading-label "Loading"]]]
         [:div.ui.container.open-bounties-container
          {:ref #(reset! container-element %1)} 
-         [scroll-div container-element]
          [:div.open-bounties-header "Bounties"]
-         [bounties-list @bounty-page-data]]))
+         [bounties-list @bounty-page-data container-element]]))
     ))
