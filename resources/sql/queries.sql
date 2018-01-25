@@ -422,6 +422,7 @@ SELECT
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
   i.updated          AS updated,
+  i.created_at       AS created_at,
   r.owner            AS repo_owner,
   r.owner_avatar_url AS repo_owner_avatar_url,
   r.repo             AS repo_name,
