@@ -49,7 +49,7 @@
       [:div.ui.tiny.circular.image
        [:img {:src avatar-url}]]]]))
 
-(defn bounties-filter-tooltip-value-input [label tooltip-open? opts]
+(defn bounties-filter-tooltip-value-input-view [label tooltip-open? opts]
   [:div.open-bounties-filter-element-tooltip-value-input-container
    [:div.:input.open-bounties-filter-element-tooltip-value-input-label
     label]
@@ -63,7 +63,10 @@
                   #(-> % .-target .-value int f))
      :on-focus  #(reset! tooltip-open? true)}]])
 
-(defn bounties-filter-tooltip-category-range-view [filter-type filter-type-def current-filter-value tooltip-open?]
+(defmulti bounties-filter-tooltip-view #(-> %2 ::ui-model/bounty-filter-type.category))
+
+(defmethod bounties-filter-tooltip-view ::ui-model/bounty-filter-type-category|range
+  [filter-type filter-type-def current-filter-value tooltip-open?]
   (let [default-min       (::ui-model/bounty-filter-type.min-val filter-type-def)
         default-max       (::ui-model/bounty-filter-type.max-val filter-type-def)
         common-range-opts {:min default-min :max default-max}
@@ -82,14 +85,14 @@
                               (on-change-fn new-min new-max)))]
     [:div
      "$0 - $1000+"
-     [bounties-filter-tooltip-value-input "Min" tooltip-open? (merge common-range-opts
-                                                                     {:current-val   current-min
-                                                                      :on-change-val on-min-change-fn})]
-     [bounties-filter-tooltip-value-input "Max" tooltip-open? (merge common-range-opts
-                                                                     {:current-val   current-max
-                                                                      :on-change-val on-max-change-fn})]]))
+     [bounties-filter-tooltip-value-input-view "Min" tooltip-open? (merge common-range-opts
+                                                                          {:current-val   current-min
+                                                                           :on-change-val on-min-change-fn})]
+     [bounties-filter-tooltip-value-input-view "Max" tooltip-open? (merge common-range-opts
+                                                                          {:current-val   current-max
+                                                                           :on-change-val on-max-change-fn})]]))
 
-(defn bounties-filter-tooltip-category-single-static-option-view
+(defmethod bounties-filter-tooltip-view ::ui-model/bounty-filter-type-category|single-static-option
   [filter-type filter-type-def current-filter-value tooltip-open?]
   [:div.open-bounties-filter-list
    (for [[option-type option-text] (::ui-model/bounty-filter-type.options filter-type-def)]
@@ -103,7 +106,7 @@
                {:class "active"}))
       option-text])])
 
-(defn bounties-filter-tooltip-category-multiple-dynamic-options-view
+(defmethod bounties-filter-tooltip-view ::ui-model/bounty-filter-type-category|multiple-dynamic-options
   [filter-type filter-type-def current-filter-value tooltip-open?]
   (let [options (rf/subscribe [(::ui-model/bounty-filter-type.re-frame-subscription-key-for-options filter-type-def)])]
     [:div.open-bounties-filter-list
@@ -125,19 +128,6 @@
              :checked  active?
              :on-focus #(reset! tooltip-open? true)}]
            [:div.text option]]]))]))
-
-(defn bounties-filter-tooltip-view [filter-type filter-type-def current-filter-val tooltip-open?]
-  [:div.open-bounties-filter-element-tooltip
-   (let [compo (condp = (::ui-model/bounty-filter-type.category filter-type-def)
-                 ::ui-model/bounty-filter-type-category|single-static-option
-                 bounties-filter-tooltip-category-single-static-option-view
-
-                 ::ui-model/bounty-filter-type-category|multiple-dynamic-options
-                 bounties-filter-tooltip-category-multiple-dynamic-options-view
-
-                 ::ui-model/bounty-filter-type-category|range
-                 bounties-filter-tooltip-category-range-view)]
-     (compo filter-type filter-type-def current-filter-val tooltip-open?))])
 
 (defn bounty-filter-view [filter-type current-filter-value]
   (let [tooltip-open? (r/atom false)]
@@ -165,11 +155,12 @@
                               (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
                               (reset! tooltip-open? false))}]])]
        (when @tooltip-open?
-         [bounties-filter-tooltip-view
-          filter-type
-          (ui-model/bounty-filter-types-def filter-type)
-          current-filter-value
-          tooltip-open?])])))
+         [:div.open-bounties-filter-element-tooltip
+          [bounties-filter-tooltip-view
+           filter-type
+           (ui-model/bounty-filter-types-def filter-type)
+           current-filter-value
+           tooltip-open?]])])))
 
 (defn bounty-filters-view []
   (let [current-filters (rf/subscribe [::subs/open-bounties-filters])]
