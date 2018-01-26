@@ -15,3 +15,7 @@ class BasePageObject(object):
     @property
     def time_now(self):
         return datetime.now().strftime('%-m%-d%-H%-M%-S')
+
+    @property
+    def current_url(self):
+        return self.driver.current_url

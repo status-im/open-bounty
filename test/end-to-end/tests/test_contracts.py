@@ -2,6 +2,7 @@ import pytest
 from os import environ
 from pages.openbounty.landing import LandingPage
 from pages.openbounty.bounties import BountiesPage
+from pages.thirdparty.github import GithubPage
 from tests.basetestcase import BaseTestCase
 from tests import test_data
 
@@ -36,6 +37,26 @@ class TestLogin(BaseTestCase):
         titles = bounties_page.bounty_titles.find_elements()
         assert titles[0].text == test_data.issue['title']
 
+
+    def test_forking_repo(self):
+        github = GithubPage(self.driver)
+        self.cleanup = True
+
+        # Sign In to GH as Developer
+        github.get_login_page()
+        github.sign_in(test_data.config['DEV']['gh_login'],
+                       test_data.config['DEV']['gh_password'])
+
+        # Fork repo as Developer from Organization
+        github.fork_repo(test_data.config['ORG']['gh_repo'])
+
+        # Cloning repo to local git as Developer and set upstream to Organization (via HTTPS)
+        github.clone_repo(test_data.config['ORG']['gh_repo'],
+                          test_data.config['DEV']['gh_username'],
+                          test_data.config['ORG']['gh_repo_name'],
+                          'git_repo')
+
+        github.clean_repo_local_folder()
 
 
 
