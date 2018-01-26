@@ -45,7 +45,8 @@
                               {:class "grayed-out-page-num"
                                :on-click #(do 
                                             (rf/dispatch [:set-page-number i])
-                                            (.scrollIntoView @container-element))})
+                                            (when @container-element
+                                              (.scrollIntoView @container-element)))})
                             i])
         max-page-nums 6]
     [:div.page-nums-container 
@@ -97,7 +98,8 @@
                                               (if forward?
                                                 (inc page-number)
                                                 (dec page-number))])
-                                (.scrollIntoView @container-element)))
+                                (when @container-element
+                                  (.scrollIntoView @container-element))))
         draw-rect (fn [direction]
                     (let [forward? (= direction :forward)
                           gray-out? (or (and forward? (= page-number page-count))
