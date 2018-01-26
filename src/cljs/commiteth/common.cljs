@@ -1,6 +1,7 @@
 (ns commiteth.common
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
+            [clojure.string :as str]
             [cljsjs.moment]))
 
 (defn input [val-ratom props]
@@ -32,17 +33,20 @@
 
 (def items-per-page 15)
 
-(defn draw-page-numbers [page-number page-count set-page-kw]
+(defn draw-page-numbers [page-number page-count container-element]
   "Draw page numbers for the pagination component.
-   Inserts ellipsis when list is too long, by default
-   max 6 items are allowed"
+  Inserts ellipsis when list is too long, by default
+  max 6 items are allowed"
   (let [draw-page-num-fn (fn [current? i]
                            ^{:key i}
                            [:div.rectangle-rounded
-                            (cond-> {} 
-                              (not current?) 
-                              (assoc :class "grayed-out"
-                                     :on-click #(rf/dispatch [set-page-kw i])))
+                            (if current?
+                              {:class "page-num-active"}
+                              {:class "grayed-out-page-num"
+                               :on-click #(do 
+                                            (rf/dispatch [:set-page-number i])
+                                            (when @container-element
+                                              (.scrollIntoView @container-element)))})
                             i])
         max-page-nums 6]
     [:div.page-nums-container 
@@ -79,7 +83,7 @@
                                  page-number 
                                  page-count]} 
                          draw-item-fn
-                         set-page-kw]
+                         container-element]
   "Draw data items along with pagination controls"
   (let [draw-items (fn []
                      (into [:div.ui.items]
@@ -90,14 +94,19 @@
                                              forward?) 
                                         (and (< 1 page-number)
                                              (not forward?))) 
-                                (rf/dispatch [set-page-kw 
+                                (rf/dispatch [:set-page-number
                                               (if forward?
                                                 (inc page-number)
-                                                (dec page-number))])))
+                                                (dec page-number))])
+                                (when @container-element
+                                  (.scrollIntoView @container-element))))
         draw-rect (fn [direction]
-                    (let [forward? (= direction :forward)]
+                    (let [forward? (= direction :forward)
+                          gray-out? (or (and forward? (= page-number page-count))
+                                        (and (not forward?) (= page-number 1)))]
                       [:div.rectangle-rounded 
-                       {:on-click (on-direction-click forward?)}
+                       (cond-> {:on-click (on-direction-click forward?)}
+                         gray-out? (assoc :class "grayed-out-direction"))
                        [:img.icon-forward-gray 
                         (cond-> {:src "icon-forward-gray.svg"}
                           forward? (assoc :class "flip-horizontal"))]]))]
@@ -107,9 +116,10 @@
           [:div
            [draw-items] 
            [:div.page-nav-container
-            [draw-rect :backward]
-            [draw-rect :forward]
+            [:div.page-direction-container
+             [draw-rect :backward]
+             [draw-rect :forward]]
             [:div.page-nav-text [:span (str "Page " page-number " of " page-count)]]
-            [draw-page-numbers page-number page-count set-page-kw]]])))
+            [draw-page-numbers page-number page-count container-element]]])))
 
 

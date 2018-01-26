@@ -8,8 +8,7 @@
    :activity-feed-loading? false
    :open-bounties-loading? false
    :open-bounties []
-   :bounty-page-number 1
-   :activity-page-number 1
+   :page-number 1
    :owner-bounties   {}
    :top-hunters []
    :activity-feed []})
