@@ -3,6 +3,7 @@
             [commiteth.common :refer [input dropdown]]
             [reagent.core :as r]
             [reagent.crypt :as crypt]
+            [clojure.string :as str]
             [cljs-web3.eth :as web3-eth]))
 
 
@@ -10,7 +11,9 @@
   (let [db (rf/subscribe [:db])
         user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
-        address (r/atom @(rf/subscribe [:get-in [:user :address]]))]
+        address (-> @(rf/subscribe [:get-in [:user :address]]) 
+                    str/lower-case 
+                    r/atom)]
     (fn []
       (let [web3 (:web3 @db)
             web3-accounts (when web3
@@ -22,13 +25,12 @@
           [:p "Insert your Ethereum address in hex format."]
           [:div.field
            (if-not (empty? web3-accounts)
-             [dropdown {:class "address-input"} "Select address"
+             [dropdown {:class "address-input"} 
+              "Select address"
               address
-              (vec
-               (for [acc web3-accounts]
-                 acc))]
+              (map str/lower-case web3-accounts)]
              [:div.ui.input.address-input
-              [input address {:placeholder  "0x0000000000000000000000000000000000000000"
+              [input address {:placeholder "0x0000000000000000000000000000000000000000"
                               :auto-complete "off"
                               :auto-correct "off"
                               :spell-check "false"

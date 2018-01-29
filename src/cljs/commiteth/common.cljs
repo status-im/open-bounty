@@ -10,18 +10,19 @@
      (merge props {:type      "text"
                    :value     @val-ratom
                    :on-change #(reset! val-ratom (-> % .-target .-value))})]))
-
 (defn dropdown [props title val-ratom items]
   (fn []
-    (if (= 1 (count items))
-      (reset! val-ratom (first items)))
     [:select.ui.basic.selection.dropdown
      (merge props {:on-change
-                   #(reset! val-ratom (-> % .-target .-value))})
-     (doall (for [item items]
-              ^{:key item} [:option
-                            {:value item}
-                            item]))]))
+                   #(let [selected-value (-> % .-target .-value)]
+                      (when (not= selected-value title)
+                        (reset! val-ratom selected-value)))
+                   :default-value (if (contains? (set items) @val-ratom) 
+                                    @val-ratom
+                                    title)})
+     (conj (doall (for [item items]
+                    ^{:key item} [:option {:value item} item]))
+           ^{:key title} [:option {:value title :disabled true} title])]))
 
 (defn moment-timestamp [time]
   (let [now (.now js/Date.)
