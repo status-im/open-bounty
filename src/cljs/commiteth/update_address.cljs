@@ -11,9 +11,8 @@
   (let [db (rf/subscribe [:db])
         user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
-        address (-> @(rf/subscribe [:get-in [:user :address]]) 
-                    str/lower-case 
-                    r/atom)]
+        address (r/atom (some-> @(rf/subscribe [:get-in [:user :address]]) 
+                                str/lower-case))]
     (fn []
       (let [web3 (:web3 @db)
             web3-accounts (when web3

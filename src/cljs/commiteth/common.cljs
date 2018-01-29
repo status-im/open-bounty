@@ -10,19 +10,26 @@
      (merge props {:type      "text"
                    :value     @val-ratom
                    :on-change #(reset! val-ratom (-> % .-target .-value))})]))
+
 (defn dropdown [props title val-ratom items]
-  (fn []
-    [:select.ui.basic.selection.dropdown
-     (merge props {:on-change
-                   #(let [selected-value (-> % .-target .-value)]
-                      (when (not= selected-value title)
-                        (reset! val-ratom selected-value)))
-                   :default-value (if (contains? (set items) @val-ratom) 
-                                    @val-ratom
-                                    title)})
-     (conj (doall (for [item items]
-                    ^{:key item} [:option {:value item} item]))
-           ^{:key title} [:option {:value title :disabled true} title])]))
+  "If val-ratom is set, preselect it in the dropdown.
+   Add value of val-ratom if it's missing from items list.
+   Otherwise, prepend title as a disabled option"
+  (let [items (cond-> items
+                  (and @val-ratom
+                       (not (contains? (set items) @val-ratom)))
+                  (conj @val-ratom)
+                  (not @val-ratom)
+                  (conj title))]
+    (fn []
+      [:select.ui.basic.selection.dropdown
+       (merge props {:on-change
+                     #(reset! val-ratom (-> % .-target .-value))
+                     :default-value (or @val-ratom title)})
+       (doall (for [item items]
+                ^{:key item} [:option {:value item
+                                       :disabled (= item title)} 
+                              item]))])))
 
 (defn moment-timestamp [time]
   (let [now (.now js/Date.)
