@@ -324,7 +324,7 @@
     :http {:method     POST
            :url        "/api/user/address"
            :on-success #(do
-                          (dispatch [:assoc-in [:user [:address] address]])
+                          (dispatch [:assoc-in [:user :address] address])
                           (dispatch [:set-flash-message
                                      :success
                                      "Address saved"]))
