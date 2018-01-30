@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
             [commiteth.common :refer [moment-timestamp
+                                      items-per-page
                                       display-data-page
                                       issue-url]]))
 
@@ -55,21 +56,29 @@
            (str (subs (str tla) 1) " " balance)])])
      [:div.time (moment-timestamp updated)]]]])
 
-
-
-(defn activity-list [activity-page-data]
-  [:div.ui.container.activity-container
-   (if (empty? (:items activity-page-data))
-     [:div.view-no-data-container
-      [:p "No recent activity yet"]]
-     (display-data-page activity-page-data activity-item :set-activity-page-number))])
+(defn activity-list [{:keys [items item-count page-number total-count] 
+                      :as activity-page-data}
+                     container-element]
+  (if (empty? (:items activity-page-data))
+    [:div.view-no-data-container
+     [:p "No recent activity yet"]]
+    [:div
+     (let [left (inc (* (dec page-number) items-per-page))
+           right (dec (+ left item-count))]
+       [:div.item-counts-label
+        [:span (str "Showing " left "-" right " of " total-count)]])
+     (display-data-page activity-page-data activity-item container-element)]))
 
 (defn activity-page []
   (let [activity-page-data (rf/subscribe [:activities-page])
-        activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])]
+        activity-feed-loading? (rf/subscribe [:get-in [:activity-feed-loading?]])
+        container-element (atom nil)] 
     (fn []
       (if @activity-feed-loading?
         [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [activity-list @activity-page-data]))))
+        [:div.ui.container.activity-container
+         {:ref #(reset! container-element %1)} 
+         [:div.activity-header "Activities"]
+         [activity-list @activity-page-data container-element]]))))

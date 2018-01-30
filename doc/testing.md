@@ -10,7 +10,7 @@ For testing you will need:
 * a Github account with administrative access to one or more repositories
 * for approving bounty payouts you will additionally need access to an Ethereum wallet. So far, Mist and [MetaMask](https://metamask.io/) have been used, but anything that provides the web3 javascript interface should work.
 
-The developers can be reached on the `#commiteth` channel in the [Status slack](http://slack.status.im/).
+The developers can be reached on the `#openbounty` channel in the [Status slack](http://slack.status.im/).
 
 ### Signing up
 
@@ -29,13 +29,9 @@ You should now see `Bounties`, `Activity`, `Repositories` and `Manage Payouts` t
 
 ### Creating bounty issues
 
-Before you can create bounties, you need to have administrative access to one or more GitHub repositories. These can be either in the scope of your personal user account or in the scope of a Github orgnazation.
+Before you can create bounties, you need to add Open Bounty GitHub App to your account or repos. Go to https://github.com/apps/status-open-bounty-app-test (or link to another GitHub App you've created for testing, as described in the [README](README.md) and click Install. Specify whether access to all org repos or specific repos is granted. This will install webhooks for SOB in your repos.
 
-* click the `Repositories` tab
-* click on the button `Enable Github Account`
-* If you have 1 or more Organisation repositories then grant Organisation access to each of them by clicking on the button `Grant` 
-* grant Status Open Bounty the needed addtional permissions for managing repository webhooks, adding and modifying comments by clicking on the button `Authorize status-open-bounty`
-* now you should see your repositories on the `Repositories` tab, click `Add` on one. If your account isn't whitelisted you will see instructions how to request an access. If your account is whitelisted then new `bounty` label will become available in the GitHub repository's labels and a new webhook should now exist for the repository.
+* Request for your account to be whitelisted. Contact [Riot](https://chat.status.im) for more information
 * now, add the `bounty` label to a new or an existing issue. This should cause Status Open Bounty to post a new comment for the issue containing an image with text `Deploying contract, please wait`
 * once the contract has been mined, the comment will be updated to contain the bounty contract's address and a QR code
 
@@ -60,6 +56,6 @@ To remove issue from the Bounties list you can close it in GitHub.
 
 ### Reporting bugs
 
-All bugs should be reported as issues in the [CommitETH Github repository](https://github.com/status-im/commiteth/issues).
+All bugs should be reported as issues in the [OpenBounty Github repository](https://github.com/status-im/open-bounty/issues).
 
 Please first check that there is not already a duplicate issue. Issues should contain exact and minimal step-by-step instructions for reproducing the problem.

@@ -38,7 +38,6 @@
    (println "redirecting to" path)
    (set! (.-pathname js/location) path)))
 
-
 (reg-event-fx
  :initialize-db
  [(inject-cofx :store)]
@@ -64,19 +63,15 @@
 
 
 (reg-event-db
- :set-active-page
- (fn [db [_ page]]
-   (assoc db :page page)))
+  :set-active-page
+  (fn [db [_ page]]
+    (assoc db :page page
+           :page-number 1)))
 
 (reg-event-db
-  :set-bounty-page-number
+  :set-page-number
   (fn [db [_ page]]
-    (assoc db :bounty-page-number page)))
-
-(reg-event-db
-  :set-activity-page-number
-  (fn [db [_ page]]
-    (assoc db :activity-page-number page)))
+    (assoc db :page-number page)))
 
 (reg-event-fx
  :set-flash-message
@@ -90,7 +85,6 @@
  :clear-flash-message
  (fn [db _]
    (dissoc db :flash-message)))
-
 
 (defn assoc-in-if-not-empty [m path val]
   (if (seq val)

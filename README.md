@@ -1,14 +1,13 @@
-# Commiteth
+# Status Open Bounty
 
-Allows you to set bounties for Github issues, paid out in Ether.
+Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
 More information:
-http://wiki.status.im/proposals/commiteth/
+https://wiki.status.im/Status_Open_Bounty
 
-Live beta version:
+Live production version:
 https://openbounty.status.im
 The `master` branch is automatically deployed here.
-
 
 Live testnet (Ropsten) version:
 https://openbounty.status.im:444
@@ -20,7 +19,6 @@ The `develop` branch is automatically deployed here.
 You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above installed.
 
 ### PostgreSQL
-<<<<<<< HEAD
 
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 
@@ -39,7 +37,6 @@ lein figwheel
 lein less auto
 ```
 
-=======
 
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 
@@ -56,9 +53,40 @@ Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.
 
 Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
 
-## Running
+## Application config
 
-Make sure `env/dev/resources/config.edn` is correctly populated.
+Make sure that `env/dev/resources/config.edn` is correctly populated. Description of config fields is given below:
+
+Key | Description
+--- | ---
+dev | Currently specifies whether Swagger UI endpoints should be added to routes
+port | HTTP port for the Ring web app
+nrepl-port | nREPL port for development
+jdbc-database-url | PostgreSQL database URL. For instance, URL to local db would be `jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth`
+server-address | URL and port of local server that can be resolved from public internet. It will be used as a redirect URI during GitHub OAuth authorization process
+eth-account | Ethereum account ID for the bot
+eth-password | Ethereum account password for the bot
+eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
+eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
+tokenreg-base-format | Should be set to `:status`
+github-client-id | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
+github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
+github-user | GitHub username for bot account. It is used for posting bounty comments
+github-password | GitHub password for bot account
+webhook-secret | Secret string to be used when creating a GitHub App
+user-whitelist | Set of GitHub user/org IDs to be whitelisted. E.g. `#{"status-im" "your_org"}`
+testnet-token-data | Token data map, useful if there are Geth connectivity problems
+
+## GitHub integration
+Open Bounty uses both OAuth App and GitHub App integration.
+
+### OAuth App
+Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/). Specify the value of `:server-address` as "Homepage URL", and `:server-address` + `/callback` as "Authorization callback URL". Be sure to copy Client ID and Client Secret values to `config.edn`.
+
+### GitHub App
+Follow the steps [here](https://developer.github.com/apps/building-github-apps/creating-a-github-app/). Be sure to specify `:server-address` + `/webhook-app` as "Webhook URL", and `:webhook-secret` as "Webhook Secret".
+
+## Running
 
 Lauch a local geth node with the bot account unlocked:
 
@@ -140,6 +168,10 @@ Landing page is static and different CSS and JS due to time constraints.
 - Make changes and `./build-landing-page.sh`
 
 This copies over necessary artifacts to `resources` dir.
+
+
+### Troubleshooting
+See the [Cookbook](doc/cookbook.md).
 
 ## License
 

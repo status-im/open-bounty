@@ -23,4 +23,3 @@ profiles.clj
 .idea
 resources/contracts
 node_modules
-.DS_Store
