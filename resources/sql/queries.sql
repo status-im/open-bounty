@@ -1,3 +1,4 @@
+
 -- Users ---------------------------------------------------------------------------
 
 -- :name create-user! :<! :1
@@ -127,6 +128,16 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title)
 
 -- :name remove-issue! :<! :1
 -- :doc removes issue
+WITH deleted AS (
+  SELECT * FROM issues
+  WHERE repo_id = :repo_id 
+  AND issue_id = :issue_id
+  AND value_usd = 0.0
+),
+archived AS (
+  INSERT INTO issues_archived
+  SELECT * FROM deleted
+)
 DELETE FROM issues
   WHERE repo_id = :repo_id 
   AND issue_id = :issue_id
