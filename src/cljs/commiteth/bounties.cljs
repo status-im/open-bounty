@@ -108,7 +108,7 @@
 
 (defmethod bounties-filter-tooltip-view ::ui-model/bounty-filter-type-category|multiple-dynamic-options
   [filter-type filter-type-def current-filter-value tooltip-open?]
-  (let [options (rf/subscribe [(::ui-model/bounty-filter-type.re-frame-subscription-key-for-options filter-type-def)])]
+  (let [options (rf/subscribe [(::ui-model/bounty-filter-type.re-frame-subs-key-for-options filter-type-def)])]
     [:div.open-bounties-filter-list
      (for [option @options]
        (let [active? (boolean (and current-filter-value (current-filter-value option)))]

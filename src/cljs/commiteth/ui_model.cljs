@@ -45,42 +45,49 @@
 (def bounty-filter-type-date-options (keys bounty-filter-type-date-options-def))
 
 (def bounty-filter-types-def
-  {::bounty-filter-type|value    {::bounty-filter-type.name      "Value"
-                                  ::bounty-filter-type.category  ::bounty-filter-type-category|range
-                                  ::bounty-filter-type.min-val   0
-                                  ::bounty-filter-type.max-val   1000
-                                  ::bounty-filter-type.predicate (fn [filter-value bounty]
-                                                                   (let [min-val (first filter-value)
-                                                                         max-val (second filter-value)]
-                                                                     (<= min-val (:value-usd bounty) max-val)))}
-   ::bounty-filter-type|currency {::bounty-filter-type.name                                  "Currency"
-                                  ::bounty-filter-type.category                              ::bounty-filter-type-category|multiple-dynamic-options
-                                  ::bounty-filter-type.re-frame-subscription-key-for-options :commiteth.subscriptions/open-bounties-currencies
-                                  ::bounty-filter-type.predicate                             (fn [filter-value bounty]
-                                                                                               (and (or (not-any? #{"ETH"} filter-value)
-                                                                                                        (< 0 (:balance-eth bounty)))
-                                                                                                    (set/subset? (->> filter-value (remove #{"ETH"}) set)
-                                                                                                                 (-> bounty :tokens keys set))))}
-   ::bounty-filter-type|date     {::bounty-filter-type.name                          "Date"
-                                  ::bounty-filter-type.category                      ::bounty-filter-type-category|single-static-option
-                                  ::bounty-filter-type.options                       bounty-filter-type-date-options-def
-                                  ::bounty-filter-type.pre-predicate-value-processor (fn [filter-value]
-                                                                                       (let [filter-from (condp = filter-value
-                                                                                                           ::bounty-filter-type-date-option|last-week (t/minus (t/now) (t/weeks 1))
-                                                                                                           ::bounty-filter-type-date-option|last-month (t/minus (t/now) (t/months 1))
-                                                                                                           ::bounty-filter-type-date-option|last-3-months (t/minus (t/now) (t/months 3)))]
-                                                                                         (t/interval filter-from (t/now))))
-                                  ::bounty-filter-type.predicate                     (fn [filter-value-interval bounty]
-                                                                                       (when-let [created-at-inst (:created-at bounty)]
-                                                                                         (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
-                                                                                           (t/within? filter-value-interval created-at-date))))}
-   ::bounty-filter-type|owner    {::bounty-filter-type.name                                  "Owner"
-                                  ::bounty-filter-type.category                              ::bounty-filter-type-category|multiple-dynamic-options
-                                  ::bounty-filter-type.re-frame-subscription-key-for-options :commiteth.subscriptions/open-bounties-owners
-                                  ::bounty-filter-type.predicate                             (fn [filter-value bounty]
-                                                                                               (->> filter-value
-                                                                                                    (some #{(:repo-owner bounty)})
-                                                                                                    boolean))}})
+  {::bounty-filter-type|value
+   {::bounty-filter-type.name      "Value"
+    ::bounty-filter-type.category  ::bounty-filter-type-category|range
+    ::bounty-filter-type.min-val   0
+    ::bounty-filter-type.max-val   1000
+    ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                     (let [min-val (first filter-value)
+                                           max-val (second filter-value)]
+                                       (<= min-val (:value-usd bounty) max-val)))}
+
+   ::bounty-filter-type|currency
+   {::bounty-filter-type.name                          "Currency"
+    ::bounty-filter-type.category                      ::bounty-filter-type-category|multiple-dynamic-options
+    ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-currencies
+    ::bounty-filter-type.predicate                     (fn [filter-value bounty]
+                                                         (and (or (not-any? #{"ETH"} filter-value)
+                                                                  (< 0 (:balance-eth bounty)))
+                                                              (set/subset? (->> filter-value (remove #{"ETH"}) set)
+                                                                           (-> bounty :tokens keys set))))}
+
+   ::bounty-filter-type|date
+   {::bounty-filter-type.name                          "Date"
+    ::bounty-filter-type.category                      ::bounty-filter-type-category|single-static-option
+    ::bounty-filter-type.options                       bounty-filter-type-date-options-def
+    ::bounty-filter-type.pre-predicate-value-processor (fn [filter-value]
+                                                         (let [filter-from (condp = filter-value
+                                                                             ::bounty-filter-type-date-option|last-week (t/minus (t/now) (t/weeks 1))
+                                                                             ::bounty-filter-type-date-option|last-month (t/minus (t/now) (t/months 1))
+                                                                             ::bounty-filter-type-date-option|last-3-months (t/minus (t/now) (t/months 3)))]
+                                                           (t/interval filter-from (t/now))))
+    ::bounty-filter-type.predicate                     (fn [filter-value-interval bounty]
+                                                         (when-let [created-at-inst (:created-at bounty)]
+                                                           (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
+                                                             (t/within? filter-value-interval created-at-date))))}
+
+   ::bounty-filter-type|owner
+   {::bounty-filter-type.name                          "Owner"
+    ::bounty-filter-type.category                      ::bounty-filter-type-category|multiple-dynamic-options
+    ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-owners
+    ::bounty-filter-type.predicate                     (fn [filter-value bounty]
+                                                         (->> filter-value
+                                                              (some #{(:repo-owner bounty)})
+                                                              boolean))}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 
