@@ -44,6 +44,19 @@
 
 (def bounty-filter-type-date-options (keys bounty-filter-type-date-options-def))
 
+(def bounty-filter-type-date-pre-predicate-value-processor
+  (fn [filter-value]
+    (let [filter-from (condp = filter-value
+                        ::bounty-filter-type-date-option|last-week (t/minus (t/now) (t/weeks 1))
+                        ::bounty-filter-type-date-option|last-month (t/minus (t/now) (t/months 1))
+                        ::bounty-filter-type-date-option|last-3-months (t/minus (t/now) (t/months 3)))]
+      (t/interval filter-from (t/now)))))
+(def bounty-filter-type-date-predicate
+  (fn [filter-value-interval bounty]
+    (when-let [created-at-inst (:created-at bounty)]
+      (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
+        (t/within? filter-value-interval created-at-date)))))
+
 (def bounty-filter-types-def
   {::bounty-filter-type|value
    {::bounty-filter-type.name      "Value"
@@ -69,16 +82,8 @@
    {::bounty-filter-type.name                          "Date"
     ::bounty-filter-type.category                      ::bounty-filter-type-category|single-static-option
     ::bounty-filter-type.options                       bounty-filter-type-date-options-def
-    ::bounty-filter-type.pre-predicate-value-processor (fn [filter-value]
-                                                         (let [filter-from (condp = filter-value
-                                                                             ::bounty-filter-type-date-option|last-week (t/minus (t/now) (t/weeks 1))
-                                                                             ::bounty-filter-type-date-option|last-month (t/minus (t/now) (t/months 1))
-                                                                             ::bounty-filter-type-date-option|last-3-months (t/minus (t/now) (t/months 3)))]
-                                                           (t/interval filter-from (t/now))))
-    ::bounty-filter-type.predicate                     (fn [filter-value-interval bounty]
-                                                         (when-let [created-at-inst (:created-at bounty)]
-                                                           (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
-                                                             (t/within? filter-value-interval created-at-date))))}
+    ::bounty-filter-type.pre-predicate-value-processor bounty-filter-type-date-pre-predicate-value-processor
+    ::bounty-filter-type.predicate                     bounty-filter-type-date-predicate}
 
    ::bounty-filter-type|owner
    {::bounty-filter-type.name                          "Owner"
@@ -112,17 +117,20 @@
     :else
     (str filter-type " with val " filter-value)))
 
+(defn- bounty-filter-values-by-type->predicates [filters-by-type]
+  (->> filters-by-type
+       ; used `nil?` because a valid filter value can be `false`
+       (remove #(nil? (val %)))
+       (map (fn [[filter-type filter-value]]
+              (let [filter-type-def    (bounty-filter-types-def filter-type)
+                    pred               (::bounty-filter-type.predicate filter-type-def)
+                    pre-pred-processor (::bounty-filter-type.pre-predicate-value-processor filter-type-def)
+                    filter-value       (cond-> filter-value
+                                               pre-pred-processor pre-pred-processor)]
+                (partial pred filter-value))))))
+
 (defn filter-bounties [filters-by-type bounties]
-  (let [filter-preds (->> filters-by-type
-                          ; used `nil?` because a valid filter value can be `false`
-                          (remove #(nil? (val %)))
-                          (map (fn [[filter-type filter-value]]
-                                 (let [filter-type-def    (bounty-filter-types-def filter-type)
-                                       pred               (::bounty-filter-type.predicate filter-type-def)
-                                       pre-pred-processor (::bounty-filter-type.pre-predicate-value-processor filter-type-def)
-                                       filter-value       (cond-> filter-value
-                                                                  pre-pred-processor pre-pred-processor)]
-                                   (partial pred filter-value)))))
+  (let [filter-preds (bounty-filter-values-by-type->predicates filters-by-type)
         filters-pred (fn [bounty]
                        (every? #(% bounty) filter-preds))]
     (cond->> bounties
