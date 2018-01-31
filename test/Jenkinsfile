@@ -1,0 +1,11 @@
+node ('linux1') {sauce('1be1b688-e0e7-4314-92a0-db11f52d3c00') {
+ checkout([$class: 'GitSCM', branches: [[name: '*/develop']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/status-im/open-bounty.git']]])
+ configFileProvider([configFile(fileId: 'sob_automation_test_config', targetLocation: 'test/end-to-end/tests')]) {
+            try {sh 'cd test/end-to-end/tests && python3 -m pytest -m sanity --build=$BUILD_NAME -v -n 1'
+            }
+            finally {
+                saucePublisher()
+                junit testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']], testResults: 'test/end-to-end/tests/*.xml' }
+        }
+    }
+}

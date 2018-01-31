@@ -9,8 +9,9 @@
    :activity-feed-loading?      false
    :open-bounties-loading?      false
    :open-bounties               []
-   :bounty-page-number 1
-   :activity-page-number 1
+   :page-number                 1
+   :bounty-page-number          1
+   :activity-page-number        1
    ::open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent
    ::open-bounties-filters      {::ui-model/bounty-filter-type|value    nil
                                  ::ui-model/bounty-filter-type|currency nil
