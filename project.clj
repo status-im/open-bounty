@@ -71,6 +71,7 @@
             [lein-shell "0.5.0"]
             [lein-sha-version "0.1.1"]]
 
+
   :less {:source-paths ["src/less"]
          :target-path "resources/public/css"}
 
