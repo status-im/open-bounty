@@ -11,7 +11,8 @@
             [cljs-web3.eth :as web3-eth]
             [akiroz.re-frame.storage
              :as rf-storage
-             :refer [reg-co-fx!]]))
+             :refer [reg-co-fx!]]
+            [commiteth.ui-model :as ui-model]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -66,7 +67,9 @@
 (reg-event-db
  :set-active-page
  (fn [db [_ page]]
-   (assoc db :page page)))
+   (assoc db :page page
+             ::db/open-bounties-filters {}
+             ::db/open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent)))
 
 (reg-event-db
   :set-bounty-page-number
