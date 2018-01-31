@@ -114,7 +114,7 @@
     ::bounty-filter-type.predicate (fn [filter-value bounty]
                                      (condp = filter-value
                                        ::bounty-filter-type-claims-option|no-claims
-                                       (<= 0 (:claim-count bounty))))}})
+                                       (= 0 (:claim-count bounty))))}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 
