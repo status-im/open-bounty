@@ -44,6 +44,9 @@
 
 (def bounty-filter-type-date-options (keys bounty-filter-type-date-options-def))
 
+(defn bounty-filter-type-date-option->name [option]
+  (bounty-filter-type-date-options-def option))
+
 (def bounty-filter-type-date-pre-predicate-value-processor
   (fn [filter-value]
     (let [filter-from (condp = filter-value
@@ -56,6 +59,13 @@
     (when-let [created-at-inst (:created-at bounty)]
       (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
         (t/within? filter-value-interval created-at-date)))))
+
+(def bounty-filter-type-claims-options-def {::bounty-filter-type-claims-option|no-claims "With no claims"})
+
+(def bounty-filter-type-claims-options (keys bounty-filter-type-claims-options-def))
+
+(defn bounty-filter-type-claims-option->name [option]
+  (bounty-filter-type-claims-options-def option))
 
 (def bounty-filter-types-def
   {::bounty-filter-type|value
@@ -92,15 +102,21 @@
     ::bounty-filter-type.predicate                     (fn [filter-value bounty]
                                                          (->> filter-value
                                                               (some #{(:repo-owner bounty)})
-                                                              boolean))}})
+                                                              boolean))}
+
+   ::bounty-filter-type|claims
+   {::bounty-filter-type.name      "Claims"
+    ::bounty-filter-type.category  ::bounty-filter-type-category|single-static-option
+    ::bounty-filter-type.options   bounty-filter-type-claims-options-def
+    ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                     (condp = filter-value
+                                       ::bounty-filter-type-claims-option|no-claims
+                                       (<= 0 (:claim-count bounty))))}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 
 (defn bounty-filter-type->name [filter-type]
   (-> bounty-filter-types-def (get filter-type) ::bounty-filter-type.name))
-
-(defn bounty-filter-type-date-option->name [option]
-  (bounty-filter-type-date-options-def option))
 
 (defn bounty-filter-value->short-text [filter-type filter-value]
   (cond
@@ -113,6 +129,9 @@
 
     (= filter-type ::bounty-filter-type|value)
     (str "$" (first filter-value) "-$" (second filter-value))
+
+    (= filter-type ::bounty-filter-type|claims)
+    (bounty-filter-type-claims-option->name filter-value)
 
     :else
     (str filter-type " with val " filter-value)))
