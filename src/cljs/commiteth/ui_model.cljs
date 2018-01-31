@@ -107,15 +107,16 @@
 
 (defn filter-bounties [filters-by-type bounties]
   (let [filter-preds (->> filters-by-type
+                          ; used `nil?` because a valid filter value can be `false`
                           (remove #(nil? (val %)))
                           (map (fn [[filter-type filter-value]]
                                  (let [filter-type-def    (bounty-filter-types-def filter-type)
                                        pred               (::bounty-filter-type.predicate filter-type-def)
                                        pre-pred-processor (::bounty-filter-type.pre-predicate-value-processor filter-type-def)
                                        filter-value       (cond-> filter-value
-                                                                  pre-pred-processor (pre-pred-processor filter-value))]
+                                                                  pre-pred-processor pre-pred-processor)]
                                    (partial pred filter-value)))))
         filters-pred (fn [bounty]
                        (every? #(% bounty) filter-preds))]
-    (->> bounties
-         (filter filters-pred))))
+    (cond->> bounties
+             (not-empty filter-preds) (filter filters-pred))))

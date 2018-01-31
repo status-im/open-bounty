@@ -162,6 +162,6 @@
   :<- [::open-bounties-sorting-type]
   (fn [[open-bounties filters sorting-type] _]
     (cond->> open-bounties
-             filters (ui-model/filter-bounties filters)
+             true (ui-model/filter-bounties filters)
              sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type)
-             filter vec)))
+             true vec)))
