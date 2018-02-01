@@ -11,8 +11,7 @@
   (let [db (rf/subscribe [:db])
         user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
-        address (r/atom (some-> @(rf/subscribe [:get-in [:user :address]]) 
-                                str/lower-case))]
+        address (r/atom @(rf/subscribe [:get-in [:user :address]]))]
     (fn []
       (let [web3 (:web3 @db)
             web3-accounts (when web3
@@ -29,12 +28,14 @@
              (let [accounts (map str/lower-case web3-accounts)
                    addr @address
                    title "Select address"
-                   items (cond->> accounts
-                           (and addr
-                                (not (contains? (set accounts) addr)))
-                           (into [addr])
-                           (not addr)
-                           (into [title]))]
+                   addr-not-in-web3? (and addr (as-> web3-accounts acc
+                                            (map str/lower-case acc)
+                                            (set acc)
+                                            (contains? acc addr)
+                                            (not acc)))
+                   items (cond->> web3-accounts
+                           addr-not-in-web3?  (into [addr])
+                           (not addr) (into [title]))]
                [dropdown {:class "address-input"} 
                 title
                 address
