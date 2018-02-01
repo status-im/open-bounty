@@ -413,6 +413,302 @@
         font-weight: 500;
         color: #42505c;
     }
+
+    .open-bounties-filter-and-sort {
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    @media (max-width: 767px) {
+        .open-bounties-filter-and-sort {
+            display: none;
+        }
+    }
+
+    .open-bounties-filter {
+        display: flex;
+    }
+
+    .open-bounties-filter-element {
+        font-family: "PostGrotesk-Book";
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.0;
+        color: #8d99a4;
+        //padding: 8px 12px;
+        border-radius: 8px;
+        border: solid 1px rgba(151, 151, 151, 0.2);
+        margin-right: 10px;
+        position: relative;
+        display: flex;
+
+        .text {
+            margin: 8px 12px;
+        }
+
+        .remove-container {
+            display: flex;
+        }
+
+        .remove {
+            margin-left: -6px;
+            margin-right: 5px;
+        }
+    }
+
+    .open-bounties-filter-element:hover {
+        cursor: pointer;
+    }
+
+    .open-bounties-filter-element-active
+    {
+        background-color: #57a7ed;
+        color: #ffffff;
+    }
+
+    .open-bounties-filter-element-container:focus {
+        outline: none;
+    }
+
+    .open-bounties-filter-element-tooltip {
+        position: absolute;
+        min-width: 227px;
+        margin-top: 12px;
+        padding: 24px 16px;
+        border-radius: 10px;
+        background-color: #ffffff;
+        box-shadow: 0 15px 12px 0 rgba(161, 174, 182, 0.53), 0 0 38px 0 rgba(0, 0, 0, 0.05);
+        font-family: "PostGrotesk-Book";
+        font-size: 16px;
+        line-height: 1.5;
+        z-index: 999;
+
+        .open-bounties-filter-element-tooltip-value-input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .open-bounties-filter-element-tooltip-value-input-label {
+            width: 60px;
+        }
+
+        .open-bounties-filter-element-tooltip-value-input {
+            margin-top: 24px;
+            width: 288.5px;
+            height: 4px;
+            background-color: #55a5ea;
+        }
+
+        // generated with http://danielstern.ca/range.css/#/
+        input[type=range] {
+            -webkit-appearance: none;
+            //width: 100%;
+            margin: 14.5px 0;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            background: #55a5ea;
+            border-radius: 0px;
+            border: 0px solid #010101;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            border: 0px solid #000000;
+            height: 33px;
+            width: 33px;
+            border-radius: 50px;
+            background: #55a5ea;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -14.5px;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #5aa7eb;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            background: #55a5ea;
+            border-radius: 0px;
+            border: 0px solid #010101;
+        }
+        input[type=range]::-moz-range-thumb {
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            border: 0px solid #000000;
+            height: 33px;
+            width: 33px;
+            border-radius: 50px;
+            background: #55a5ea;
+            cursor: pointer;
+        }
+        input[type=range]::-ms-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: transparent;
+            border-color: transparent;
+            color: transparent;
+        }
+        input[type=range]::-ms-fill-lower {
+            background: #50a3e9;
+            border: 0px solid #010101;
+            border-radius: 0px;
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+        }
+        input[type=range]::-ms-fill-upper {
+            background: #55a5ea;
+            border: 0px solid #010101;
+            border-radius: 0px;
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+        }
+        input[type=range]::-ms-thumb {
+            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            border: 0px solid #000000;
+            height: 33px;
+            width: 33px;
+            border-radius: 50px;
+            background: #55a5ea;
+            cursor: pointer;
+            height: 4px;
+        }
+        input[type=range]:focus::-ms-fill-lower {
+            background: #55a5ea;
+        }
+        input[type=range]:focus::-ms-fill-upper {
+            background: #5aa7eb;
+        }
+
+        .open-bounties-filter-list {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .open-bounties-filter-list-option {
+            font-family: "PostGrotesk-Book";
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.0;
+            color: #42505c;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: solid 1px rgba(151, 151, 151, 0.2);
+        }
+
+        .open-bounties-filter-list-option.active {
+            background-color: #57a7ed;
+            color: #ffffff;
+        }
+
+        .open-bounties-filter-list-option:not(:first-child) {
+            margin-top: 8px;
+        }
+
+        .open-bounties-filter-list-option:hover {
+            cursor: pointer;
+            background-color: #57a7ed;
+            color: #ffffff;
+        }
+
+        .open-bounties-filter-list-option-checkbox {
+            label {
+                display: flex;
+                align-items: baseline;
+            }
+
+            label:hover {
+                cursor: pointer;
+            }
+
+            label:focus {
+                outline: none;
+            }
+
+            input {
+                background: green;
+                transform: scale(1.3);
+            }
+
+            input:hover {
+                cursor: pointer;
+            }
+
+            .text {
+                font-size: 15px;
+                font-weight: 500;
+                line-height: 1.0;
+                margin-left: 12px;
+            }
+        }
+
+        .open-bounties-filter-list-option-checkbox:not(:first-child) {
+            margin-top: 12px;
+        }
+    }
+
+    .open-bounties-sort {
+        position: relative;
+    }
+
+    .open-bounties-sort:focus {
+        outline: none;
+    }
+
+    .open-bounties-sort-element {
+        display: flex;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.0;
+        color: #8d99a4;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+    }
+
+    .open-bounties-sort-element:hover {
+        cursor: pointer;
+    }
+
+    .open-bounties-sort-element-tooltip {
+        position: absolute;
+        right: 0;
+        //padding: 16px 0;
+        min-width: 200px;
+        border-radius: 8px;
+        background-color: #1e3751;
+        font-family: "PostGrotesk-Book";
+        font-size: 15px;
+        line-height: 1.0;
+        text-align: left;
+        color: #ffffff;
+        z-index: 999;
+    }
+
+    .open-bounties-sort-type {
+        padding: 19px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .open-bounties-sort-type:hover {
+        cursor: pointer;
+    }
+
+    .icon-forward-white-box {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        justify-content: center;
+        align-content: center;
+    }
 }
 
 .open-bounty-item {
