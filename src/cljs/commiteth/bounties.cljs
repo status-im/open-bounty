@@ -84,7 +84,7 @@
                             (let [new-min (min current-min (max default-min new-max))]
                               (on-change-fn new-min new-max)))]
     [:div
-     "$0 - $1000+"
+     (::ui-model/bounty-filter.type.header filter-type-def)
      [bounties-filter-tooltip-value-input-view "Min" tooltip-open? (merge common-range-opts
                                                                           {:current-val   current-min
                                                                            :on-change-val on-min-change-fn})]

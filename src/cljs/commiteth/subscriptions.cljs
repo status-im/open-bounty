@@ -2,7 +2,8 @@
   (:require [re-frame.core :refer [reg-sub]]
             [commiteth.db :as db]
             [commiteth.ui-model :as ui-model]
-            [commiteth.common :refer [items-per-page]]))
+            [commiteth.common :refer [items-per-page]]
+            [clojure.string :as string]))
 
 (reg-sub
   :db
@@ -138,6 +139,12 @@
     (->> open-bounties
          (map :repo-owner)
          set)))
+
+(reg-sub
+  ::open-bounties-owners-sorted
+  :<- [::open-bounties-owners]
+  (fn [owners _]
+    (sort-by string/lower-case owners)))
 
 (reg-sub
   ::open-bounties-currencies
