@@ -13,23 +13,16 @@
 
 (defn dropdown [props title val-ratom items]
   "If val-ratom is set, preselect it in the dropdown.
-   Add value of val-ratom if it's missing from items list.
-   Otherwise, prepend title as a disabled option"
-  (let [items (cond->> items
-                  (and @val-ratom
-                       (not (contains? (set items) @val-ratom)))
-                  (into [@val-ratom])
-                  (not @val-ratom)
-                  (into [title]))]
-    (fn []
-      [:select.ui.basic.selection.dropdown
-       (merge props {:on-change
-                     #(reset! val-ratom (-> % .-target .-value))
-                     :default-value (or @val-ratom title)})
-       (for [item items]
-                ^{:key item} [:option {:value item
-                                       :disabled (= item title)} 
-                              item])])))
+   Otherwise, prepend title as a disabled option."
+  (fn []
+    [:select.ui.basic.selection.dropdown
+     (merge props {:on-change
+                   #(reset! val-ratom (-> % .-target .-value))
+                   :default-value (or @val-ratom title)})
+     (for [item items]
+       ^{:key item} [:option {:value item
+                              :disabled (= item title)} 
+                     item])]))
 
 (defn moment-timestamp [time]
   (let [now (.now js/Date.)

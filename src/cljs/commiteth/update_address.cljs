@@ -24,10 +24,21 @@
           [:p "Insert your Ethereum address in hex format."]
           [:div.field
            (if-not (empty? web3-accounts)
-             [dropdown {:class "address-input"} 
-              "Select address"
-              address
-              (map str/lower-case web3-accounts)]
+             ; Add value of address if it's missing from items list.
+             ; If address is empty, add title 
+             (let [accounts (map str/lower-case web3-accounts)
+                   addr @address
+                   title "Select address"
+                   items (cond->> accounts
+                           (and addr
+                                (not (contains? (set accounts) addr)))
+                           (into [addr])
+                           (not addr)
+                           (into [title]))]
+               [dropdown {:class "address-input"} 
+                title
+                address
+                items])
              [:div.ui.input.address-input
               [input address {:placeholder "0x0000000000000000000000000000000000000000"
                               :auto-complete "off"
