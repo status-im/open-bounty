@@ -98,10 +98,12 @@
    (for [[option-type option-text] (::ui-model/bounty-filter-type.options filter-type-def)]
      ^{:key (str option-type)}
      [:div.open-bounties-filter-list-option
-      (merge {:on-click #(do (rf/dispatch [::handlers/set-open-bounty-filter-type
-                                           filter-type
-                                           option-type])
-                             (reset! tooltip-open? false))}
+      (merge {:on-click  #(do (rf/dispatch [::handlers/set-open-bounty-filter-type
+                                            filter-type
+                                            option-type])
+                              (reset! tooltip-open? false))
+              :tab-index 0
+              :on-focus  #(reset! tooltip-open? true)}
              (when (= option-type current-filter-value)
                {:class "active"}))
       option-text])])
