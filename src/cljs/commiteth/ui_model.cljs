@@ -9,7 +9,7 @@
 (def bounty-sorting-types-def
   {::bounty-sorting-type|most-recent   {::bounty-sorting-type.name               "Most recent"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
-                                                                                   (:created-at bounty))
+                                                                                   (:updated-at bounty))
                                         ::bounty-sorting-type.sort-comparator-fn compare}
    ::bounty-sorting-type|lowest-value  {::bounty-sorting-type.name               "Lowest value"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
@@ -59,9 +59,9 @@
       (t/interval filter-from (t/now)))))
 (def bounty-filter-type-date-predicate
   (fn [filter-value-interval bounty]
-    (when-let [created-at-inst (:created-at bounty)]
-      (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
-        (t/within? filter-value-interval created-at-date)))))
+    (when-let [date-inst (:updated-at bounty)]
+      (let [date (-> date-inst inst-ms t-coerce/from-long)]
+        (t/within? filter-value-interval date)))))
 
 (def bounty-filter-type-claims-options-def {::bounty-filter-type-claims-option|no-claims "Not claimed yet"})
 
