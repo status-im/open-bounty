@@ -83,7 +83,7 @@
         on-max-change-fn  (fn [new-max]
                             (let [new-min (min current-min (max default-min new-max))]
                               (on-change-fn new-min new-max)))]
-    [:div
+    [:div.open-bounties-filter-list
      (::ui-model/bounty-filter.type.header filter-type-def)
      [bounties-filter-tooltip-value-input-view "Min" tooltip-open? (merge common-range-opts
                                                                           {:current-val   current-min
