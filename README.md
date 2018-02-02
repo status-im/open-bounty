@@ -16,7 +16,7 @@ The `develop` branch is automatically deployed here.
 
 ## Prerequisites
 
-You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above installed.
+You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above installed. Also, make sure that you have [wkhtmltoimage](https://wkhtmltopdf.org/downloads.html) available in your PATH. On macOS, it can be installed via `brew cask install wkhtmltopdf`.
 
 ### PostgreSQL
 
