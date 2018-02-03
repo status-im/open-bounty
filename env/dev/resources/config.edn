@@ -11,7 +11,7 @@
  :eth-password           "XXX"
 
  ;; RPC URL to ethereum node to be used
- :eth-rpc-url            "http://localhost:8547"
+ :eth-rpc-url            "http://localhost:8545"
  :eth-wallet-file        "/some/location"
 
  ;; address of token registry to be used
@@ -42,6 +42,8 @@
 
  ;; needeed when :hubspot-contact-create-enabled
  :hubspot-api-key "xxxxxxx-xxxx-x-xxxx-xxxx"
+
+ :user-whitelist #{}
 
  ;; used for blacklisting tokens from token registry data
  :token-blacklist #{}}
