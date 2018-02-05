@@ -9,8 +9,8 @@
 (def bounty-sorting-types-def
   {::bounty-sorting-type|most-recent   {::bounty-sorting-type.name               "Most recent"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
-                                                                                   (:updated-at bounty))
-                                        ::bounty-sorting-type.sort-comparator-fn compare}
+                                                                                   (:updated bounty))
+                                        ::bounty-sorting-type.sort-comparator-fn (comp - compare)}
    ::bounty-sorting-type|lowest-value  {::bounty-sorting-type.name               "Lowest value"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
                                                                                    (js/parseFloat (:value-usd bounty)))
@@ -59,7 +59,7 @@
       (t/interval filter-from (t/now)))))
 (def bounty-filter-type-date-predicate
   (fn [filter-value-interval bounty]
-    (when-let [date-inst (:updated-at bounty)]
+    (when-let [date-inst (:updated bounty)]
       (let [date (-> date-inst inst-ms t-coerce/from-long)]
         (t/within? filter-value-interval date)))))
 
