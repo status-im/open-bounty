@@ -25,7 +25,7 @@ def dockerreponame = "statusim/openbounty-app"
 		}
 
 		stage('Deploy') {
-
+			build job: 'status-openbounty/openbounty-cluster', parameters: [[$class: 'StringParameterValue', name: 'DEPLOY_ENVIRONMENT', value: "dev"], [$class: 'StringParameterValue', name: 'BRANCH', value: env.BRANCH_NAME]]
 		}
 
 	} catch (e) {
