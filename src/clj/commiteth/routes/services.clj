@@ -155,8 +155,7 @@
                    :value_usd :value-usd
                    :claim_count :claim-count
                    :balance_eth :balance-eth
-                   :user_has_address :user-has-address
-                   :created_at :created-at}]
+                   :user_has_address :user-has-address}]
     (map #(-> %
               (rename-keys renames)
               (update :value-usd usd-decimal->str)

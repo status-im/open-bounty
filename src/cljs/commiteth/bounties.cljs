@@ -83,8 +83,8 @@
         on-max-change-fn  (fn [new-max]
                             (let [new-min (min current-min (max default-min new-max))]
                               (on-change-fn new-min new-max)))]
-    [:div
-     "$0 - $1000+"
+    [:div.open-bounties-filter-list
+     (::ui-model/bounty-filter.type.header filter-type-def)
      [bounties-filter-tooltip-value-input-view "Min" tooltip-open? (merge common-range-opts
                                                                           {:current-val   current-min
                                                                            :on-change-val on-min-change-fn})]
@@ -98,10 +98,12 @@
    (for [[option-type option-text] (::ui-model/bounty-filter-type.options filter-type-def)]
      ^{:key (str option-type)}
      [:div.open-bounties-filter-list-option
-      (merge {:on-click #(do (rf/dispatch [::handlers/set-open-bounty-filter-type
-                                           filter-type
-                                           option-type])
-                             (reset! tooltip-open? false))}
+      (merge {:on-click  #(do (rf/dispatch [::handlers/set-open-bounty-filter-type
+                                            filter-type
+                                            option-type])
+                              (reset! tooltip-open? false))
+              :tab-index 0
+              :on-focus  #(reset! tooltip-open? true)}
              (when (= option-type current-filter-value)
                {:class "active"}))
       option-text])])

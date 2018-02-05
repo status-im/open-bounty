@@ -475,7 +475,6 @@
         position: absolute;
         min-width: 227px;
         margin-top: 12px;
-        padding: 24px 16px;
         border-radius: 10px;
         background-color: #ffffff;
         box-shadow: 0 15px 12px 0 rgba(161, 174, 182, 0.53), 0 0 38px 0 rgba(0, 0, 0, 0.05);
@@ -483,6 +482,8 @@
         font-size: 16px;
         line-height: 1.5;
         z-index: 999;
+        max-height: 300px;
+        overflow: scroll;
 
         .open-bounties-filter-element-tooltip-value-input-container {
             display: flex;
@@ -591,6 +592,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            margin: 24px 16px;
         }
 
         .open-bounties-filter-list-option {

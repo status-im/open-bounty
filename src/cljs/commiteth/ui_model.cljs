@@ -9,8 +9,8 @@
 (def bounty-sorting-types-def
   {::bounty-sorting-type|most-recent   {::bounty-sorting-type.name               "Most recent"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
-                                                                                   (:created-at bounty))
-                                        ::bounty-sorting-type.sort-comparator-fn compare}
+                                                                                   (:updated bounty))
+                                        ::bounty-sorting-type.sort-comparator-fn (comp - compare)}
    ::bounty-sorting-type|lowest-value  {::bounty-sorting-type.name               "Lowest value"
                                         ::bounty-sorting-type.sort-key-fn        (fn [bounty]
                                                                                    (js/parseFloat (:value-usd bounty)))
@@ -59,11 +59,11 @@
       (t/interval filter-from (t/now)))))
 (def bounty-filter-type-date-predicate
   (fn [filter-value-interval bounty]
-    (when-let [created-at-inst (:created-at bounty)]
-      (let [created-at-date (-> created-at-inst inst-ms t-coerce/from-long)]
-        (t/within? filter-value-interval created-at-date)))))
+    (when-let [date-inst (:updated bounty)]
+      (let [date (-> date-inst inst-ms t-coerce/from-long)]
+        (t/within? filter-value-interval date)))))
 
-(def bounty-filter-type-claims-options-def {::bounty-filter-type-claims-option|no-claims "With no claims"})
+(def bounty-filter-type-claims-options-def {::bounty-filter-type-claims-option|no-claims "Not claimed yet"})
 
 (def bounty-filter-type-claims-options (keys bounty-filter-type-claims-options-def))
 
@@ -75,7 +75,8 @@
    {::bounty-filter-type.name      "Value"
     ::bounty-filter-type.category  ::bounty-filter-type-category|range
     ::bounty-filter-type.min-val   0
-    ::bounty-filter-type.max-val   1000
+    ::bounty-filter-type.max-val   10000
+    ::bounty-filter.type.header    "$0 - $10000+"
     ::bounty-filter-type.predicate (fn [filter-value bounty]
                                      (let [min-val (first filter-value)
                                            max-val (second filter-value)]
@@ -101,7 +102,7 @@
    ::bounty-filter-type|owner
    {::bounty-filter-type.name                          "Owner"
     ::bounty-filter-type.category                      ::bounty-filter-type-category|multiple-dynamic-options
-    ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-owners
+    ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-owners-sorted
     ::bounty-filter-type.predicate                     (fn [filter-value bounty]
                                                          (->> filter-value
                                                               (some #{(:repo-owner bounty)})

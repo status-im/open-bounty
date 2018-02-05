@@ -465,11 +465,11 @@
   ::set-open-bounties-sorting-type
   (fn [db [_ sorting-type]]
     (merge db {::db/open-bounties-sorting-type sorting-type
-               :bounty-page-number 1})))
+               :page-number 1})))
 
 (reg-event-db
   ::set-open-bounty-filter-type
   (fn [db [_ filter-type filter-value]]
     (-> db
         (assoc-in [::db/open-bounties-filters filter-type] filter-value)
-        (assoc :bounty-page-number 1))))
+        (assoc :page-number 1))))
