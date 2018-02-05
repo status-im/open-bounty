@@ -136,7 +136,20 @@ class ForkedRepoText(BaseText):
         super(ForkedRepoText, self).__init__(driver)
         self.locator = self.Locator.css_selector(".commit-tease")
 
+class DeleteRepo(BaseButton):
+    def __init__(self, driver):
+        super(DeleteRepo, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector("//button[text()[contains(.,' Delete this repository')]]")
 
+class RepoNameBoxInPopup(BaseEditBox):
+    def __init__(self, driver):
+        super(RepoNameBoxInPopup, self).__init__(driver)
+        self.locator = self.Locator.css_selector("input[aria-label='Type in the name of the repository to confirm that you want to delete this repository.']")
+
+class ConfirmDeleteButton(BaseButton):
+    def __init__(self, driver):
+        super(ConfirmDeleteButton, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector("//button[text()[contains(.,'I understand the consequences, delete')]]")
 
 class GithubPage(BasePageObject):
     def __init__(self, driver):
@@ -168,6 +181,10 @@ class GithubPage(BasePageObject):
         self.header_in_fork_popup = HeaderInForkPopup(self.driver)
         self.user_account_in_fork_popup = UserAccountInForkPopup(self.driver)
         self.forked_repo_text = ForkedRepoText(self.driver)
+
+        self.delete_repo = DeleteRepo(self.driver)
+        self.repo_name_confirm_delete = RepoNameBoxInPopup(self.driver)
+        self.confirm_delete = ConfirmDeleteButton(self.driver)
 
 
     def get_issues_page(self):
@@ -205,7 +222,6 @@ class GithubPage(BasePageObject):
         self.cross_button.click()
         self.submit_new_issue_button.click()
         test_data.issue['id'] = self.issue_id.text[1:]
-        logging.info("Issue id is %s" %  test_data.issue['id'])
         logging.info("Issue title is %s" %  test_data.issue['title'])
 
     def fork_repo(self, initial_repo, wait=60):
@@ -247,6 +263,14 @@ class GithubPage(BasePageObject):
         logging.info('Removing %s' % test_data.local_repo_path)
         if test_data.local_repo_path:
             shutil.rmtree(test_data.local_repo_path)
+
+    def delete_fork(self):
+        self.get_url(test_data.config['DEV']['gh_forked_repo'] + 'settings')
+        self.delete_repo.click()
+        self.repo_name_confirm_delete.send_keys(test_data.config['ORG']['gh_repo_name'])
+        self.confirm_delete.click()
+
+
 
 
 

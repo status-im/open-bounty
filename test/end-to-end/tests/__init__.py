@@ -3,6 +3,7 @@ import configparser
 class TestData(object):
 
     def __init__(self):
+        self.test_name = None
         self.config = configparser.ConfigParser()
 
         # define here path to your config.ini file

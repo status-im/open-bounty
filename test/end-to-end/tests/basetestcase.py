@@ -4,63 +4,25 @@ from selenium.common.exceptions import WebDriverException
 from tests.postconditions import remove_application, remove_installation
 from os import environ, path
 from tests import test_data
-
+from pages.thirdparty.github import GithubPage
+from pages.openbounty.landing import LandingPage
 
 class BaseTestCase:
 
-    @property
-    def sauce_username(self):
-        return environ.get('SAUCE_USERNAME')
-
-
-    @property
-    def sauce_access_key(self):
-        return environ.get('SAUCE_ACCESS_KEY')
-
-
-    @property
-    def executor_sauce_lab(self):
-        return 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (self.sauce_username, self.sauce_access_key)
 
     def print_sauce_lab_info(self, driver):
         sys.stdout = sys.stderr
         print("SauceOnDemandSessionID=%s job-name=%s" % (driver.session_id,
                                                          pytest.config.getoption('build')))
-
-    @property
-    def capabilities_sauce_lab(self):
-
-        desired_caps = dict()
-        desired_caps['name'] = test_data.test_name
-        desired_caps['build'] = pytest.config.getoption('build')
-        desired_caps['platform'] = "MAC"
-        desired_caps['browserName'] = 'Chrome'
-        desired_caps['screenResolution'] = '2048x1536'
-        desired_caps['captureHtml'] = False
-        return desired_caps
-
-    @property
-    def environment(self):
-        return pytest.config.getoption('env')
-
-    def setup_method(self):
-
-        self.errors = []
-        self.cleanup = None
-
-        if self.environment == 'local':
-            options = webdriver.ChromeOptions()
-            options.add_argument('--start-fullscreen')
-            options.add_extension(
-            path.abspath(test_data.config['Paths']['tests_absolute'] + 'resources/metamask3_12_0.crx'))
-            # for chromedriver 2.35
-            self.driver = webdriver.Chrome(chrome_options=options)
-        if self.environment == 'sauce':
-            self.driver = webdriver.Remote(self.executor_sauce_lab,
-                                           desired_capabilities=self.capabilities_sauce_lab)
-        self.driver.implicitly_wait(5)
-
-
+    def return_caps(self):
+        sauce_lab_cap = dict()
+        sauce_lab_cap['name'] = test_data.test_name
+        sauce_lab_cap['build'] = pytest.config.getoption('build')
+        sauce_lab_cap['platform'] = "MAC"
+        sauce_lab_cap['browserName'] = 'Chrome'
+        sauce_lab_cap['screenResolution'] = '2048x1536'
+        sauce_lab_cap['captureHtml'] = False
+        return sauce_lab_cap
 
     def verify_no_errors(self):
         if self.errors:
@@ -69,13 +31,116 @@ class BaseTestCase:
                 msg += (error + '\n')
             pytest.fail(msg, pytrace=False)
 
-    def teardown_method(self):
-        if self.cleanup:
-            remove_application(self.driver)
-            remove_installation(self.driver)
+    @classmethod
+    def setup_class(cls):
+        cls.errors = []
+        cls.environment =  pytest.config.getoption('env')
 
+##########################################################################################################################################################
+######### Drivers setup
+##########################################################################################################################################################
+
+        #
+        # Dev Chrome options
+        #
+        cls.capabilities_dev = webdriver.ChromeOptions()
+        cls.capabilities_dev.add_argument('--start-fullscreen')
+
+        #
+        # Org Chrome options
+        #
+        cls.capabilities_org = webdriver.ChromeOptions()
+        # doesn't work on sauce env
+        # cls.capabilities_org.add_extension(path.abspath(test_data.config['Paths']['tests_absolute'] + 'resources/metamask3_12_0.crx'))
+
+        #
+        # SauceLab capabilities
+        #
+        cls.executor_sauce_lab = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
+        environ.get('SAUCE_USERNAME'), environ.get('SAUCE_ACCESS_KEY'))
+
+        cls.return_caps(cls)
+        sauce_lab_cap_dev = cls.capabilities_dev.to_capabilities()
+        cls.capabilities_sauce_lab_dev = sauce_lab_cap_dev
+
+        cls.return_caps(cls)
+        sauce_lab_cap_org = cls.capabilities_org.to_capabilities()
+        cls.capabilities_sauce_lab_org = sauce_lab_cap_org
+
+
+        if cls.environment == 'local':
+            cls.driver_dev = webdriver.Chrome(chrome_options=cls.capabilities_dev)
+            cls.driver_org = webdriver.Chrome(chrome_options=cls.capabilities_org)
+
+        if cls.environment == 'sauce':
+            cls.driver_dev = webdriver.Remote(cls.executor_sauce_lab,
+                                              desired_capabilities=cls.capabilities_sauce_lab_dev)
+            cls.print_sauce_lab_info(cls, cls.driver_dev)
+            cls.driver_org = webdriver.Remote(cls.executor_sauce_lab,
+                                              desired_capabilities=cls.capabilities_sauce_lab_org)
+            cls.print_sauce_lab_info(cls, cls.driver_org)
+
+        for driver in cls.driver_dev, cls.driver_org:
+             driver.implicitly_wait(10)
+
+##########################################################################################################################################################
+######### Actions for each driver before class
+##########################################################################################################################################################
+
+        ######ORG
+        landing = LandingPage(cls.driver_org)
+        landing.get_landing_page()
+
+         # Sign Up to SOB
+        cls.github_org = landing.login_button.click()
+        cls.github_org.sign_in(test_data.config['ORG']['gh_login'],
+                                test_data.config['ORG']['gh_password'])
+        assert cls.github_org.permission_type.text == 'Personal user data'
+        bounties_page = cls.github_org.authorize_sob.click()
+
+        # SOB Plugin installation and navigate to "Open bounties"
+        cls.github_org.install_sob_plugin()
+        assert bounties_page.bounties_header.text == 'Bounties'
+        assert bounties_page.top_hunters_header.text == 'Top 5 hunters'
+
+        ######DEV
+        cls.github_dev = GithubPage(cls.driver_dev)
+        # Sign In to GH as Developer
+        cls.github_dev.get_login_page()
+        cls.github_dev.sign_in(test_data.config['DEV']['gh_login'],
+                        test_data.config['DEV']['gh_password'])
+
+         # Fork repo as Developer from Organization
+        cls.github_dev.fork_repo(test_data.config['ORG']['gh_repo'])
+
+         # Cloning repo to local git as Developer and set upstream to Organization (via HTTPS)
+        cls.github_dev.clone_repo(test_data.config['ORG']['gh_repo'],
+                           test_data.config['DEV']['gh_username'],
+                           test_data.config['ORG']['gh_repo_name'],
+                           'git_repo')
+        cls.verify_no_errors(cls)
+
+
+
+
+    @classmethod
+    def teardown_class(cls):
+
+        ######ORG
+
+        # SOB Plugin remove installation
+        remove_application(cls.driver_org)
+        remove_installation(cls.driver_org)
+
+        ######DEV
+
+        cls.github_dev.delete_fork()
+        cls.github_dev.clean_repo_local_folder()
         try:
-            self.print_sauce_lab_info(self.driver)
-            self.driver.quit()
+            cls.driver_dev.quit()
+            cls.driver_org.quit()
         except WebDriverException:
             pass
+
+
+
