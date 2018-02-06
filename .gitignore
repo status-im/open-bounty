@@ -24,4 +24,3 @@ profiles.clj
 resources/contracts
 node_modules
 .DS_Store
-env/dev/resources/config.edn
