@@ -62,6 +62,10 @@
  (fn [db [_ path value]]
    (assoc-in db path value)))
 
+(reg-event-db
+ :update-in
+ (fn [db [_ path func & args]]
+   (apply update-in db path func args)))
 
 (reg-event-db
  :set-active-page
@@ -311,48 +315,35 @@
    {:db db
     :dispatch [:set-active-page :update-address]}))
 
-(reg-event-fx
- :save-user-address
- (fn [{:keys [db]} [_ user-id address]]
-   (prn "save-user-address" user-id address)
-   {:db   (assoc db :updating-address true)
-    :http {:method     POST
-           :url        "/api/user/address"
-           :on-success #(do
-                          (dispatch [:assoc-in [:user :address] address])
-                          (dispatch [:set-flash-message
-                                     :success
-                                     "Address saved"]))
-           :on-error   #(do
-                          (println %)
-                          (dispatch [:set-flash-message
-                                     :error
-                                     (:response %)]))
-           :finally    #(dispatch [:clear-updating-address])
-           :params     {:user-id user-id :address address}}}))
 
 (reg-event-fx
- :mark-user-hidden
- (fn [{:keys [db]} [_ user-id hidden]]
-   {:http {:method     POST
-           :url        "/api/user/hidden"
+ :save-user-fields
+ (fn [{:keys [db]} [_ user-id fields]]
+   (prn (merge {:user-id user-id} fields))
+   {:dispatch [:set-updating-user]
+    :http {:method     POST
+           :url        "/api/user"
            :on-success #(do
-                          (dispatch [:assoc-in [:user :is_hidden] hidden])
+                          (dispatch [:update-in [:user] merge fields])
                           (dispatch [:set-flash-message
                                      :success
                                      "Settings saved"]))
-           :on-error   #(do
-                          (dispatch [:set-flash-message
-                                     :error (:response %)]))
-           :params     {:user-id user-id :hidden hidden}}}))
-
+           :on-error #(dispatch [:set-flash-message
+                                 :error
+                                 (:response %)])
+           :finally #(dispatch [:clear-updating-user])
+           :params (merge {:user-id user-id} fields)}}))
 
 
 (reg-event-db
- :clear-updating-address
+ :set-updating-user
  (fn [db _]
-   (dissoc db :updating-address)))
+   (assoc db :updating-user true)))
 
+(reg-event-db
+ :clear-updating-user
+ (fn [db _]
+   (dissoc db :updating-user)))
 
 (reg-event-fx
  :save-payout-hash

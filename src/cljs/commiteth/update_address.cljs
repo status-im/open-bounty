@@ -8,7 +8,7 @@
 (defn update-address-page []
   (let [db (rf/subscribe [:db])
         user (rf/subscribe [:user])
-        updating-address (rf/subscribe [:get-in [:updating-address]])
+        updating-user (rf/subscribe [:get-in [:updating-user]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
         hidden (rf/subscribe [:get-in [:user :is_hidden]])]
 
@@ -35,11 +35,9 @@
                               :max-length 42}]])]
           [:button
            (merge {:on-click
-                   #(rf/dispatch [:save-user-address
-                                  (:id @user)
-                                  @address])
+                   #(rf/dispatch [:save-user-fields (:id @user) {:address @address}])
                    :class (str "ui button small update-address-button"
-                               (when @updating-address
+                               (when @updating-user
                                  " busy loading"))})
            "UPDATE"]
 
@@ -48,11 +46,12 @@
 
            [:input
             {:type :checkbox
+             :disabled @updating-user
              :id :input-hidden
              :checked @hidden
              :on-change
              (fn [e]
                (let [value (-> e .-target .-checked)]
-                 (rf/dispatch [:mark-user-hidden (:id @user) value])))}]
+                 (rf/dispatch [:save-user-fields (:id @user) {:is_hidden value}])))}]
 
            [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))
