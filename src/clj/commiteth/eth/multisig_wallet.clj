@@ -29,7 +29,7 @@
    :confirmation (eth/event-sig->topic-id "Confirmation(address,uint256)")})
 
 (defn factory-contract-addr []
-  (env :contract-factory-addr "0x47F56FD26EEeCda4FdF5DB5843De1fe75D2A64A6"))
+  (env :contract-factory-addr))
 
 (defn tokenreg-base-format
   ;; status tokenreg uses eg :base 18, while parity uses :base 1000000000000

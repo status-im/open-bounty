@@ -55,7 +55,7 @@ Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required an
 
 ## Application config
 
-Make sure that `env/dev/resources/config.edn` is correctly populated. Description of config fields is given below:
+Make sure to create `/config-dev.edn` and populate it correctly, which is based on `env/dev/resources/config.edn`. Description of config fields is given below:
 
 Key | Description
 --- | ---
@@ -81,7 +81,7 @@ testnet-token-data | Token data map, useful if there are Geth connectivity probl
 Open Bounty uses both OAuth App and GitHub App integration.
 
 ### OAuth App
-Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/). Specify the value of `:server-address` as "Homepage URL", and `:server-address` + `/callback` as "Authorization callback URL". Be sure to copy Client ID and Client Secret values to `config.edn`.
+Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/). Specify the value of `:server-address` as "Homepage URL", and `:server-address` + `/callback` as "Authorization callback URL". Be sure to copy Client ID and Client Secret values in the config file.
 
 ### GitHub App
 Follow the steps [here](https://developer.github.com/apps/building-github-apps/creating-a-github-app/). Be sure to specify `:server-address` + `/webhook-app` as "Webhook URL", and `:webhook-secret` as "Webhook Secret".
