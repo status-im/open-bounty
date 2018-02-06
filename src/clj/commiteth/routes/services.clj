@@ -248,7 +248,7 @@
 
                             (db/with-trx
 
-                              (when-not (db/user-exists? {:user-id user})
+                              (when-not (db/user-exists? {:id user-id})
                                 (not-found! "No such a user."))
 
                               (db/update! :users fields ["id = ?" user-id]))
