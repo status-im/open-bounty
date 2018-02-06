@@ -20,6 +20,13 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
+(defn fetch-transaction-hash [repo-id owner-address]
+  "Attempt to fetch transaction hash from contract pool
+   for current repo owner. If nothing found, deploy a new contract"
+  (let [contract-from-pool (issues/contract-from-pool owner-address)]
+    (or (:transaction_hash contract-from-pool)
+        (multisig/deploy-multisig owner-address))))
+
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
          issue-number :number
@@ -31,10 +38,10 @@
     (if (= 1 created-issue)
       (if (empty? owner-address)
         (log/error "Unable to deploy bounty contract because"
-                   "repo owner has no Ethereum addres")
+                   "repo owner has no Ethereum address")
         (do
           (log/debug "deploying contract to " owner-address)
-          (let [transaction-hash (multisig/deploy-multisig owner-address)]
+          (let [transaction-hash (fetch-transaction-hash repo-id owner-address)]
             (if (nil? transaction-hash)
               (log/error "Failed to deploy contract to" owner-address)
               (do

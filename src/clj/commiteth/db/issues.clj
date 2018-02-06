@@ -109,3 +109,8 @@
         first
         :exists
         boolean)))
+
+(defn contract-from-pool
+  [owner-address]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/contract-from-pool con-db {:address owner-address})))
