@@ -14,9 +14,9 @@ def dockerreponame = "statusim/openbounty-app"
 				def openbountyApp = docker.build("${dockerreponame}:${env.BUILD_NUMBER}")
 				openbountyApp.push("${env.BRANCH_NAME}")
 		        if (env.BRANCH_NAME == 'develop') {
-		            openbountyApp.push("${dockerreponame}:develop")
+		            openbountyApp.push("develop")
 		        } else if (env.BRANCH_NAME == 'master') {
-		            openbountyApp.push("${dockerreponame}:master")
+		            openbountyApp.push("master")
 		        } else {
 		            println "Not named branch have no custom tag"
 		        }
