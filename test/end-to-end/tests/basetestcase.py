@@ -14,7 +14,7 @@ class BaseTestCase:
         sys.stdout = sys.stderr
         print("SauceOnDemandSessionID=%s job-name=%s" % (driver.session_id,
                                                          pytest.config.getoption('build')))
-    def return_caps(self):
+    def get_remote_caps(self):
         sauce_lab_cap = dict()
         sauce_lab_cap['name'] = test_data.test_name
         sauce_lab_cap['build'] = pytest.config.getoption('build')
@@ -36,9 +36,9 @@ class BaseTestCase:
         cls.errors = []
         cls.environment =  pytest.config.getoption('env')
 
-##########################################################################################################################################################
+###################################################################################################################
 ######### Drivers setup
-##########################################################################################################################################################
+###################################################################################################################
 
         #
         # Dev Chrome options
@@ -58,34 +58,33 @@ class BaseTestCase:
         #
         cls.executor_sauce_lab = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
         environ.get('SAUCE_USERNAME'), environ.get('SAUCE_ACCESS_KEY'))
-
-        cls.return_caps(cls)
-        sauce_lab_cap_dev = cls.capabilities_dev.to_capabilities()
-        cls.capabilities_sauce_lab_dev = sauce_lab_cap_dev
-
-        cls.return_caps(cls)
-        sauce_lab_cap_org = cls.capabilities_org.to_capabilities()
-        cls.capabilities_sauce_lab_org = sauce_lab_cap_org
-
+        drivers = []
 
         if cls.environment == 'local':
-            cls.driver_dev = webdriver.Chrome(chrome_options=cls.capabilities_dev)
-            cls.driver_org = webdriver.Chrome(chrome_options=cls.capabilities_org)
+            for caps in cls.capabilities_dev, cls.capabilities_org:
+                driver = webdriver.Chrome(chrome_options=caps)
+                drivers.append(driver)
 
         if cls.environment == 'sauce':
-            cls.driver_dev = webdriver.Remote(cls.executor_sauce_lab,
-                                              desired_capabilities=cls.capabilities_sauce_lab_dev)
-            cls.print_sauce_lab_info(cls, cls.driver_dev)
-            cls.driver_org = webdriver.Remote(cls.executor_sauce_lab,
-                                              desired_capabilities=cls.capabilities_sauce_lab_org)
-            cls.print_sauce_lab_info(cls, cls.driver_org)
+            for caps in cls.capabilities_dev, cls.capabilities_org:
+                cls.get_remote_caps(cls)
+                new_caps = caps.to_capabilities()
+                driver = webdriver.Remote(cls.executor_sauce_lab,
+                                          desired_capabilities=new_caps)
+                drivers.append(driver)
 
-        for driver in cls.driver_dev, cls.driver_org:
+            for driver in drivers:
+                cls.print_sauce_lab_info(cls, driver)
+
+        cls.driver_dev = drivers[0]
+        cls.driver_org = drivers[1]
+
+        for driver in drivers:
              driver.implicitly_wait(10)
 
-##########################################################################################################################################################
+###################################################################################################################
 ######### Actions for each driver before class
-##########################################################################################################################################################
+###################################################################################################################
 
         ######ORG
         landing = LandingPage(cls.driver_org)
