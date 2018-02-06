@@ -215,33 +215,45 @@
                 (do
                   (log/debug "/usage-metrics" user)
                   (ok (usage-metrics/usage-metrics-by-day))))
+
            (context "/user" []
+
                     (GET "/" {:keys [params]}
                          :auth-rules authenticated?
                          :current-user user
                          (ok (handle-get-user user (:token params))))
-                    (POST "/address" []
-                          :auth-rules authenticated?
-                          :body-params [user-id :- Long, address :- String]
-                          :summary "Update user address"
-                          (if-not (eth/valid-address? address)
-                            (do
-                              (log/debug "POST /address: invalid input" address)
-                              {:status 400
-                               :body (str "Invalid Ethereum address '" address "'")})
-                            (let [result (users/update-user-address
-                                          user-id
-                                          address)]
-                              (if (= 1 result)
-                                (ok)
-                                (internal-server-error)))))
 
-                    (POST "/hidden" []
+                    (POST "/" []
                           :auth-rules authenticated?
-                          :body-params [user-id :- Long, hidden :- Boolean]
-                          :summary "(Un)mark a user as being hidden (not visible in rating tables)."
-                          (db/update! :users {:is_hidden hidden} ["id = ?" user-id])
-                          (ok))
+                          :current-user user
+                          :body [body {:user-id s/Int
+                                       (s/optional-key :address) s/Str
+                                       (s/optional-key :is_hidden) s/Bool}]
+                          :summary "Updates user's fields."
+
+                          (let [{:keys [user-id]} body
+                                fields (select-keys body [:address :is_hidden])]
+
+                            (when-not (= (:id user) user-id)
+                              (log/debugf "User %s tries to update user's %s fields" (:id user) user-id)
+                              (forbidden! (format "Cannot access a user %s" user-id)))
+
+                            (when (empty? fields)
+                              (bad-request! "No incoming fields were found."))
+
+                            (when-let [address (:address fields)]
+                              (when-not (eth/valid-address? address)
+                                (log/debugf "POST /user: Wrong address %s" address)
+                                (bad-request! (format "Invalid Ethereum address: %s" address))))
+
+                            (db/with-trx
+
+                              (when-not (db/user-exists? {:user-id user})
+                                (not-found! "No such a user."))
+
+                              (db/update! :users fields ["id = ?" user-id]))
+
+                            (ok)))
 
                     (GET "/repositories" {:keys [params]}
                          :auth-rules authenticated?
