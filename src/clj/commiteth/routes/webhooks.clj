@@ -217,7 +217,9 @@
       "edited"
       (handle-issue-edited webhook-payload)
       "reopened"
-      (handle-issue-reopened webhook-payload))
+      (handle-issue-reopened webhook-payload)
+      ; Default case
+      (log/debug "Not handling action '" action "'"))
   (ok)))
 
 (defn enable-repo-2 [repo-id full-repo]
