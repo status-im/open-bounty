@@ -1,6 +1,7 @@
 import time, pytest
 from pages.base_element import *
 from pages.base_page import BasePageObject
+from tests import test_data
 
 
 class EmailEditbox(BaseEditBox):
@@ -84,7 +85,7 @@ class LabelsButton(BaseButton):
     class BountyLabel(BaseButton):
         def __init__(self, driver):
             super(LabelsButton.BountyLabel, self).__init__(driver)
-            self.locator = self.Locator.css_selector("[data-name='bounty']")
+            self.locator = self.Locator.css_selector("[data-name='748942015']")
 
     class CrossButton(BaseButton):
         def __init__(self, driver):
@@ -156,11 +157,14 @@ class GithubPage(BasePageObject):
     def create_new_bounty(self):
         self.get_issues_page()
         self.new_issue_button.click()
-        self.issue_title_input.send_keys('auto_test_bounty_%s' % self.time_now)
+        test_data.issue = dict()
+        test_data.issue['title'] = 'auto_test_bounty_%s' % self.time_now
+        self.issue_title_input.send_keys(test_data.issue['title'])
         self.labels_button.click()
         self.bounty_label.click()
         self.cross_button.click()
         self.submit_new_issue_button.click()
+        return test_data.issue['title']
 
     def get_deployed_contract(self, wait=120):
         for i in range(wait):

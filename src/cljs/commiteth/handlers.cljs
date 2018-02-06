@@ -11,7 +11,8 @@
             [cljs-web3.eth :as web3-eth]
             [akiroz.re-frame.storage
              :as rf-storage
-             :refer [reg-co-fx!]]))
+             :refer [reg-co-fx!]]
+            [commiteth.ui-model :as ui-model]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -37,7 +38,6 @@
  (fn [{:keys [path]}]
    (println "redirecting to" path)
    (set! (.-pathname js/location) path)))
-
 
 (reg-event-fx
  :initialize-db
@@ -70,7 +70,15 @@
 (reg-event-db
  :set-active-page
  (fn [db [_ page]]
-   (assoc db :page page)))
+   (assoc db :page page
+             :page-number 1
+             ::db/open-bounties-filters {}
+             ::db/open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent)))
+
+(reg-event-db
+  :set-page-number
+  (fn [db [_ page]]
+    (assoc db :page-number page)))
 
 (reg-event-fx
  :set-flash-message
@@ -84,7 +92,6 @@
  :clear-flash-message
  (fn [db _]
    (dissoc db :flash-message)))
-
 
 (defn assoc-in-if-not-empty [m path val]
   (if (seq val)
@@ -459,3 +466,16 @@
  (fn [db [_]]
    (.removeEventListener js/window "click" close-dropdown)
    (assoc db :user-dropdown-open? false)))
+
+(reg-event-db
+  ::set-open-bounties-sorting-type
+  (fn [db [_ sorting-type]]
+    (merge db {::db/open-bounties-sorting-type sorting-type
+               :page-number 1})))
+
+(reg-event-db
+  ::set-open-bounty-filter-type
+  (fn [db [_ filter-type filter-value]]
+    (-> db
+        (assoc-in [::db/open-bounties-filters filter-type] filter-value)
+        (assoc :page-number 1))))

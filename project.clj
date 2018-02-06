@@ -93,7 +93,8 @@
 
 
   :profiles
-  {:uberjar       {:omit-source    true
+  {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
+                   :omit-source    true
                    :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
@@ -115,11 +116,8 @@
                    :uberjar-name   "commiteth.jar"
                    :source-paths   ["env/prod/clj"]
                    :resource-paths ["env/prod/resources"]}
-   ;; :precomp profile allows to compile classes from commiteth.eth.contracts
-   ;; namespace before compiling clojure code. Otherwise ClassNotFound exception
-   ;; will be thrown
-   :precomp {:target-path "target/base+system+user+dev/" }
-   :dev   {:dependencies   [[prone "1.1.4"]
+   :dev   {:jvm-opts ["-server" "-Dconf=config-dev.edn"]
+           :dependencies   [[prone "1.1.4"]
                             [ring/ring-mock "0.3.1"]
                             [ring/ring-devel "1.6.2"]
                             [pjstadig/humane-test-output "0.8.3"]
@@ -145,7 +143,7 @@
                :optimizations :none
                :pretty-print  true}}]}
 
-           :prep-tasks     ["build-contracts" ["with-profile" "precomp" "javac"]]
+           :prep-tasks     ["build-contracts" "javac"]
            :doo            {:build "test"}
            :source-paths   ["env/dev/clj" "test/clj"]
            :resource-paths ["env/dev/resources"]
@@ -153,7 +151,8 @@
                             :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
-   :test  {:resource-paths ["env/dev/resources" "env/test/resources"]
+   :test  {:jvm-opts ["-server" "-Dconf=config-test.edn"]
+           :resource-paths ["env/dev/resources" "env/test/resources"]
            :dependencies   [[devcards "0.2.4"]]
            :cljsbuild
            {:builds
