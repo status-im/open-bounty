@@ -1,0 +1,47 @@
+{:dev                    true
+ :port                   3000
+ ;; when :nrepl-port is set the application starts the nREPL server on load
+ :nrepl-port             7000
+ :jdbc-database-url      "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
+ ;; this needs to resolve to your local machine from the public internet
+ :server-address         "http://PUBLIC-DNS:3000"
+
+ ;; eth address of bot account
+ :eth-account            "0x..."
+ :eth-password           "XXX"
+
+ ;; RPC URL to ethereum node to be used
+ :eth-rpc-url            "http://localhost:8547"
+ :eth-wallet-file        "/some/location"
+
+ ;; address of token registry to be used
+ :tokenreg-addr "0x..."
+ ;; format of tokenreg records' base field, possible values :status, :parity
+ :tokenreg-base-format :parity
+
+ ;; address of factory contract used for deploying bounty contracts
+ :contract-factory-addr "0x..."
+
+ ;; commiteth-test-tpatja
+ :github-client-id       "CLIENT ID"
+ :github-client-secret   "CLIENT SECRET"
+
+ ;; github username + password for bot account
+ :github-user            "commiteth"
+ :github-password        "XXX"
+
+ ;; Add Github App webhook secret here to verify GH origin
+ :webhook-secret "XXX"
+
+ ;; set to true when on Ropsten testnet
+ :on-testnet             true
+
+ ;; feature toggles
+ :add-bounties-for-existing-issues false
+ :hubspot-contact-create-enabled false
+
+ ;; needeed when :hubspot-contact-create-enabled
+ :hubspot-api-key "xxxxxxx-xxxx-x-xxxx-xxxx"
+
+ ;; used for blacklisting tokens from token registry data
+ :token-blacklist #{}}
