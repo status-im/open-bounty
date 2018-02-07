@@ -508,7 +508,10 @@
             margin: 14.5px 0;
         }
         input[type=range]:focus {
-            outline: none;
+            outline: 0;
+        }
+        input[type=range]::-moz-focus-outer {
+            border: 0;
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
@@ -633,11 +636,6 @@
 
             label:focus {
                 outline: none;
-            }
-
-            input {
-                background: green;
-                transform: scale(1.3);
             }
 
             input:hover {
