@@ -207,8 +207,10 @@
     [:div
      (let [left  (inc (* (dec page-number) items-per-page))
            right (dec (+ left item-count))]
-       [:div.item-counts-label
-        [:span (str "Showing " left "-" right " of " total-count)]])
+       [:div.item-counts-label-and-sorting-container
+        [:div.item-counts-label
+         [:span (str "Showing " left "-" right " of " total-count)]]
+        [bounties-sort-view]])
      (display-data-page bounty-page-data bounty-item container-element)]))
 
 (defn bounties-page []
@@ -224,7 +226,6 @@
          {:ref #(reset! container-element %1)}
          [:div.open-bounties-header "Bounties"]
          [:div.open-bounties-filter-and-sort
-          [bounty-filters-view]
-          [bounties-sort-view]]
+          [bounty-filters-view]]
          [bounties-list @bounty-page-data container-element]]))
     ))
