@@ -325,7 +325,7 @@
 
 (reg-event-fx
  :save-user-fields
- (fn [{:keys [db]} [_ user-id fields]]
+ (fn [{:keys [db]} [_ fields]]
    {:dispatch [:set-updating-user]
     :http {:method     POST
            :url        "/api/user"
@@ -338,7 +338,7 @@
                                  :error
                                  (:response %)])
            :finally #(dispatch [:clear-updating-user])
-           :params (merge {:user-id user-id} fields)}}))
+           :params fields}}))
 
 
 (reg-event-db

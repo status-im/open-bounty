@@ -7,7 +7,6 @@
 
 (defn update-address-page []
   (let [db (rf/subscribe [:db])
-        user (rf/subscribe [:user])
         updating-user (rf/subscribe [:get-in [:updating-user]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
         hidden (rf/subscribe [:get-in [:user :is_hidden]])]
@@ -35,7 +34,7 @@
                               :max-length 42}]])]
           [:button
            (merge {:on-click
-                   #(rf/dispatch [:save-user-fields (:id @user) {:address @address}])
+                   #(rf/dispatch [:save-user-fields {:address @address}])
                    :class (str "ui button small update-address-button"
                                (when @updating-user
                                  " busy loading"))})
@@ -52,6 +51,6 @@
              :on-change
              (fn [e]
                (let [value (-> e .-target .-checked)]
-                 (rf/dispatch [:save-user-fields (:id @user) {:is_hidden value}])))}]
+                 (rf/dispatch [:save-user-fields {:is_hidden value}])))}]
 
            [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))

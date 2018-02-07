@@ -226,17 +226,12 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {:user-id s/Int
-                                       (s/optional-key :address) s/Str
+                          :body [body {(s/optional-key :address) s/Str
                                        (s/optional-key :is_hidden) s/Bool}]
                           :summary "Updates user's fields."
 
-                          (let [{:keys [user-id]} body
+                          (let [user-id (:id user)
                                 fields (select-keys body [:address :is_hidden])]
-
-                            (when-not (= (:id user) user-id)
-                              (log/debugf "User %s tries to update user's %s fields" (:id user) user-id)
-                              (forbidden! (format "Cannot access a user %s" user-id)))
 
                             (when (empty? fields)
                               (bad-request! "No incoming fields were found."))
