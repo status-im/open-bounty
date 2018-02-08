@@ -577,7 +577,7 @@ WHERE
 pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
-AND NOT u.is_hidden
+AND NOT u.is_hidden_in_hunters
 GROUP BY u.id
 ORDER BY total_usd DESC
 LIMIT 5;
