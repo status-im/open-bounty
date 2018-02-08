@@ -85,7 +85,7 @@
   IPersistentVector
   (sql-value [value] (to-pg-json value)))
 
-(defmacro with-trx [& body]
+(defmacro with-tx [& body]
   "Performs a set of queries in transaction."
   `(conman/with-transaction [*db*]
      ~@body))

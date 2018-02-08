@@ -1,7 +1,7 @@
 BEGIN;
 
 ALTER TABLE users
-    ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE;
+    ADD COLUMN is_hidden_in_hunters BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE OR REPLACE VIEW "public"."claims_view" AS
 SELECT
@@ -29,7 +29,7 @@ SELECT
   AND p.user_id = u.id
   AND i.contract_address IS NOT NULL
   AND i.comment_id IS NOT NULL
-  AND NOT u.is_hidden -- added
+  AND NOT u.is_hidden_in_hunters -- added
   ORDER BY p.updated;
 
 COMMIT;

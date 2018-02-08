@@ -10,7 +10,7 @@
   (let [db (rf/subscribe [:db])
         updating-user (rf/subscribe [:get-in [:updating-user]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
-        hidden (rf/subscribe [:get-in [:user :is_hidden]])]
+        is-hidden (rf/subscribe [:get-in [:user :is_hidden_in_hunters]])]
 
     (fn []
       (let [web3 (:web3 @db)
@@ -23,7 +23,7 @@
           [:div.field
            (if-not (empty? web3-accounts)
              ; Add value of address if it's missing from items list.
-             ; If address is empty, add title 
+             ; If address is empty, add title
              (let [accounts (map str/lower-case web3-accounts)
                    addr @address
                    title "Select address"
@@ -35,7 +35,7 @@
                    items (cond->> web3-accounts
                            addr-not-in-web3?  (into [addr])
                            (not addr) (into [title]))]
-               [dropdown {:class "address-input"} 
+               [dropdown {:class "address-input"}
                 title
                 address
                 items])
@@ -55,15 +55,14 @@
 
           [:h3 "Settings"]
           [:div
-
            [:input
             {:type :checkbox
              :disabled @updating-user
              :id :input-hidden
-             :checked @hidden
+             :checked @is-hidden
              :on-change
              (fn [e]
                (let [value (-> e .-target .-checked)]
-                 (rf/dispatch [:save-user-fields {:is_hidden value}])))}]
+                 (rf/dispatch [:save-user-fields {:is_hidden_in_hunters value}])))}]
 
            [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))

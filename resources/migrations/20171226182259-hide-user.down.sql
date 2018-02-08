@@ -1,8 +1,5 @@
 BEGIN;
 
-ALTER TABLE users
-    DROP COLUMN is_hidden;
-
 -- restore the previous version of the view
 CREATE OR REPLACE VIEW "public"."claims_view" AS
 SELECT
@@ -31,5 +28,8 @@ SELECT
   AND i.contract_address IS NOT NULL
   AND i.comment_id IS NOT NULL
   ORDER BY p.updated;
+
+ALTER TABLE users
+    DROP COLUMN is_hidden_in_hunters;
 
 COMMIT;

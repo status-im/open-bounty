@@ -63,11 +63,6 @@
    (assoc-in db path value)))
 
 (reg-event-db
- :update-in
- (fn [db [_ path func & args]]
-   (apply update-in db path func args)))
-
-(reg-event-db
  :set-active-page
  (fn [db [_ page]]
    (assoc db :page page
@@ -322,6 +317,10 @@
    {:db db
     :dispatch [:set-active-page :update-address]}))
 
+(reg-event-db
+ :update-user
+ (fn [db [_ fields]]
+   (update db :user merge fields)))
 
 (reg-event-fx
  :save-user-fields
@@ -330,7 +329,7 @@
     :http {:method     POST
            :url        "/api/user"
            :on-success #(do
-                          (dispatch [:update-in [:user] merge fields])
+                          (dispatch [:update-user fields])
                           (dispatch [:set-flash-message
                                      :success
                                      "Settings saved"]))
