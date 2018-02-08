@@ -48,7 +48,7 @@
          repo-name :name} (:repository webhook-payload)]
     (if label-added?
       (bounties/maybe-add-bounty-for-issue repo-name repo-id issue)
-      (bounties/remove-bounty-for-issue repo-name repo-id issue))))
+      (bounties/remove-bounty-for-issue! repo-name repo-id issue))))
 
 (defn handle-issue-closed
   [{{{owner :login} :owner repo :name}   :repository

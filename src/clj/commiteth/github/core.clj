@@ -275,7 +275,7 @@
     (log/debug "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
     (issues/create-comment owner repo issue-number comment (self-auth-params))))
 
-(defn remove-deploying-comment
+(defn remove-deploying-comment!
   [owner repo comment-id]
   (issues/delete-comment owner repo comment-id (self-auth-params)))
 

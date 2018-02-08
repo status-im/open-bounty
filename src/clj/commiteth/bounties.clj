@@ -65,15 +65,15 @@
       (log/debug "Total issues for repo limit reached " repo " " count)
       (add-bounty-for-issue repo repo-id issue))))
 
-(defn remove-bounty-for-issue [repo repo-id issue]
+(defn remove-bounty-for-issue! [repo repo-id issue]
   (let [{issue-id     :id
          issue-number :number} issue
-        removed-issue (issues/remove repo-id issue-id)
+        removed-issue (issues/remove! repo-id issue-id)
         {owner-address :address
          owner :owner} (users/get-repo-owner repo-id) ]
     (log/debug "Removing bounty for issue " repo issue-number "owner address: " owner-address)
     (if-let [comment-id (:comment_id removed-issue)]
-      (github/remove-deploying-comment owner repo comment-id)
+      (github/remove-deploying-comment! owner repo comment-id)
       (log/debug "Cannot remove Github bounty comment as it has non-zero value"))))
 
 ;; We have a max-limit to ensure people can't add more issues and
@@ -91,7 +91,9 @@
      (map (partial maybe-add-bounty-for-issue repo repo-id) max-bounties))))
 
 
-(defn update-bounty-comment-image [issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens]
+(defn update-bounty-comment-image [issue-id owner repo 
+                                   issue-number contract-address 
+                                   eth-balance eth-balance-str tokens]
   (let [hash (github/github-comment-hash owner repo issue-number eth-balance)
         issue-url (str owner "/" repo "/issues/" (str issue-number))
         png-data (png-rendering/gen-comment-image

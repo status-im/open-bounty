@@ -1,2 +1,2 @@
 DROP TABLE archive;
-DROP TABLE data_types;
+DROP TYPE data_enum;

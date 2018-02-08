@@ -12,7 +12,7 @@
                               :issue_number issue-number
                               :title        issue-title})))
 
-(defn remove
+(defn remove!
   "Removes issue"
   [repo-id issue-id]
   (jdbc/with-db-connection [con-db *db*]
