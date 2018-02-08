@@ -64,5 +64,4 @@
              (fn [e]
                (let [value (-> e .-target .-checked)]
                  (rf/dispatch [:save-user-fields {:is_hidden_in_hunters value}])))}]
-
            [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))
