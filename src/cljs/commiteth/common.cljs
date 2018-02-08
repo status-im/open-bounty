@@ -12,16 +12,17 @@
                    :on-change #(reset! val-ratom (-> % .-target .-value))})]))
 
 (defn dropdown [props title val-ratom items]
+  "If val-ratom is set, preselect it in the dropdown.
+   Otherwise, prepend title as a disabled option."
   (fn []
-    (if (= 1 (count items))
-      (reset! val-ratom (first items)))
     [:select.ui.basic.selection.dropdown
      (merge props {:on-change
-                   #(reset! val-ratom (-> % .-target .-value))})
-     (doall (for [item items]
-              ^{:key item} [:option
-                            {:value item}
-                            item]))]))
+                   #(reset! val-ratom (-> % .-target .-value))
+                   :default-value (or @val-ratom title)})
+     (for [item items]
+       ^{:key item} [:option {:value item
+                              :disabled (= item title)} 
+                     item])]))
 
 (defn moment-timestamp [time]
   (let [now (.now js/Date.)
