@@ -3,6 +3,7 @@
 (def default-db
   {:page             :bounties
    :user             nil
+   :user-profile-loaded? false
    :repos-loading?   false
    :repos            {}
    :activity-feed-loading? false

@@ -222,7 +222,8 @@
  :set-user-profile
  (fn [{:keys [db]} [_ user-profile]]
    {:db
-    (assoc db :user (:user user-profile))
+    (assoc db :user (:user user-profile)
+              :user-profile-loaded? true)
     :dispatch-n [[:load-user-repos]
                  [:load-owner-bounties]]}))
 

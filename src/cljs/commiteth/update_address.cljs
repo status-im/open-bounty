@@ -6,8 +6,7 @@
             [clojure.string :as str]
             [cljs-web3.eth :as web3-eth]))
 
-
-(defn update-address-page []
+(defn update-address-page-contents []
   (let [db (rf/subscribe [:db])
         user (rf/subscribe [:user])
         updating-address (rf/subscribe [:get-in [:updating-address]])
@@ -55,3 +54,11 @@
                                (when @updating-address
                                  " busy loading"))})
            "UPDATE"]]]))))
+
+(defn update-address-page []
+  (let [loaded? @(rf/subscribe [:user-profile-loaded?])]
+    (if loaded?
+      [update-address-page-contents]
+      [:div.view-loading-container
+       [:div.ui.active.inverted.dimmer
+        [:div.ui.text.loader.view-loading-label "Loading"]]])))
