@@ -1,7 +1,7 @@
 (ns commiteth.core
   (:require [commiteth.handler :as handler]
             [clojure.tools.nrepl.server :as nrepl-server]
-            [cider.nrepl :refer [cider-nrepl-handler]]
+            [luminus.repl-server :as repl]
             [luminus.http-server :as http]
             [luminus-migrations.core :as migrations]
             [commiteth.config :refer [env]]
@@ -31,7 +31,7 @@ repl-server
   (when-let [nrepl-port (env :nrepl-port)]
     (log/info "Starting NREPL server on port" nrepl-port)
     (nrepl-server/start-server :port nrepl-port
-                               :handler cider-nrepl-handler))
+                               :handler nrepl-server/default-handler))
   :stop
   (when repl-server
     (nrepl-server/stop-server repl-server)))
