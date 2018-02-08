@@ -1,2 +1,2 @@
-ALTER TABLE archive rename to archive_bak;
+DROP TABLE archive;
 DROP TABLE data_types;
