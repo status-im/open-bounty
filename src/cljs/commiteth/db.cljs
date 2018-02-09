@@ -21,4 +21,3 @@
    :owner-bounties              {}
    :top-hunters                 []
    :activity-feed               []})
->>>>>>> develop
