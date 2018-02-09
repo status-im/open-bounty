@@ -422,6 +422,11 @@ label[for="input-hidden"] {
         color: #42505c;
     }
 
+    .item-counts-label-and-sorting-container {
+        display: flex;
+        justify-content: space-between;
+    }
+
     .open-bounties-filter-and-sort {
         margin-top: 24px;
         display: flex;
@@ -450,6 +455,7 @@ label[for="input-hidden"] {
         margin-right: 10px;
         position: relative;
         display: flex;
+        z-index: 1000;
 
         .text {
             margin: 8px 12px;
@@ -677,7 +683,7 @@ label[for="input-hidden"] {
         font-weight: 500;
         line-height: 1.0;
         color: #8d99a4;
-        padding: 8px 12px;
+        padding: 16px 12px 0;
         display: flex;
         align-items: center;
     }
@@ -717,6 +723,10 @@ label[for="input-hidden"] {
         justify-content: center;
         align-content: center;
     }
+}
+
+.open-bounty-item:first-child {
+    border-top: #eaecee 1px solid !important;
 }
 
 .open-bounty-item {
@@ -1275,12 +1285,11 @@ body {
 }
 
 .item-counts-label {
-  margin: auto;
+  //margin: auto;
 	font-family: "PostGrotesk-Book";
 	font-size: 15px;
 	color: #8d99a4;
-  padding-top: 8px;
-  padding-bottom: 8px;
+    padding-top: 20px;
 }
 
 

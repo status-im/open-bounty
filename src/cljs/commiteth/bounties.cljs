@@ -8,7 +8,8 @@
             [commiteth.handlers :as handlers]
             [commiteth.db :as db]
             [commiteth.ui-model :as ui-model]
-            [commiteth.subscriptions :as subs]))
+            [commiteth.subscriptions :as subs]
+            [commiteth.util :as util]))
 
 
 (defn bounty-item [bounty]
@@ -207,8 +208,11 @@
     [:div
      (let [left  (inc (* (dec page-number) items-per-page))
            right (dec (+ left item-count))]
-       [:div.item-counts-label
-        [:span (str "Showing " left "-" right " of " total-count)]])
+       [:div.item-counts-label-and-sorting-container
+        [:div.item-counts-label
+         [:span (str "Showing " left "-" right " of " total-count)]]
+        (when-not (util/os-windows?)
+          [bounties-sort-view])])
      (display-data-page bounty-page-data bounty-item container-element)]))
 
 (defn bounties-page []
@@ -223,8 +227,7 @@
         [:div.ui.container.open-bounties-container
          {:ref #(reset! container-element %1)}
          [:div.open-bounties-header "Bounties"]
-         [:div.open-bounties-filter-and-sort
-          [bounty-filters-view]
-          [bounties-sort-view]]
-         [bounties-list @bounty-page-data container-element]]))
-    ))
+         (when-not (util/os-windows?)
+           [:div.open-bounties-filter-and-sort
+            [bounty-filters-view]])
+         [bounties-list @bounty-page-data container-element]]))))
