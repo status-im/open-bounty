@@ -33,6 +33,8 @@
                               :spell-check "false"
                               :max-length 42}]])]
 
+          [:h3 "Settings"]
+
           [:div
            [:input
             {:type :checkbox
