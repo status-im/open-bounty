@@ -59,3 +59,11 @@ To remove issue from the Bounties list you can close it in GitHub.
 All bugs should be reported as issues in the [OpenBounty Github repository](https://github.com/status-im/open-bounty/issues).
 
 Please first check that there is not already a duplicate issue. Issues should contain exact and minimal step-by-step instructions for reproducing the problem.
+
+### Status Open Bounty end-to-end tests
+
+Framework for testing located in: `open-bounty/test/end-to-end`
+
+Full installation and configuring manual: [Status Open Bounty end-to-end tests](https://wiki.status.im/Status_Open_Bounty_end-to-end_tests)
+
+Currently supports local and Jenkins environment running (you can find example of JenkinsFile in `open-bounty/test` )

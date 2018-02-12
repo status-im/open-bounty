@@ -1,10 +1,13 @@
 (ns commiteth.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
-            [commiteth.common :refer [items-per-page]]))
+            [commiteth.db :as db]
+            [commiteth.ui-model :as ui-model]
+            [commiteth.common :refer [items-per-page]]
+            [clojure.string :as string]))
 
 (reg-sub
- :db
- (fn [db _] db))
+  :db
+  (fn [db _] db))
 
 (reg-sub
   :page
@@ -43,7 +46,7 @@
 
 (reg-sub
   :open-bounties-page
-  :<- [:open-bounties]
+  :<- [::filtered-and-sorted-open-bounties]
   :<- [:page-number]
   (fn [[open-bounties page-number] _]
     (let [total-count (count open-bounties)
@@ -105,16 +108,62 @@
     (get-in db path)))
 
 (reg-sub
- :usage-metrics
-   (fn [db _]
-     (:usage-metrics db)))
+  :usage-metrics
+  (fn [db _]
+    (:usage-metrics db)))
 
 (reg-sub
- :metrics-loading?
-   (fn [db _]
-     (:metrics-loading? db)))
+  :metrics-loading?
+  (fn [db _]
+    (:metrics-loading? db)))
 
 (reg-sub
-    :user-dropdown-open?
+  :user-dropdown-open?
   (fn [db _]
     (:user-dropdown-open? db)))
+
+(reg-sub
+  ::open-bounties-sorting-type
+  (fn [db _]
+    (::db/open-bounties-sorting-type db)))
+
+(reg-sub
+  ::open-bounties-filters
+  (fn [db _]
+    (::db/open-bounties-filters db)))
+
+(reg-sub
+  ::open-bounties-owners
+  :<- [:open-bounties]
+  (fn [open-bounties _]
+    (->> open-bounties
+         (map :repo-owner)
+         set)))
+
+(reg-sub
+  ::open-bounties-owners-sorted
+  :<- [::open-bounties-owners]
+  (fn [owners _]
+    (sort-by string/lower-case owners)))
+
+(reg-sub
+  ::open-bounties-currencies
+  :<- [:open-bounties]
+  (fn [open-bounties _]
+    (let [token-ids (->> open-bounties
+                         (map :tokens)
+                         (mapcat keys)
+                         (filter identity)
+                         set)]
+      (into #{"ETH"} token-ids))))
+
+(reg-sub
+  ::filtered-and-sorted-open-bounties
+  :<- [:open-bounties]
+  :<- [::open-bounties-filters]
+  :<- [::open-bounties-sorting-type]
+  (fn [[open-bounties filters sorting-type] _]
+    (cond->> open-bounties
+             true (ui-model/filter-bounties filters)
+             sorting-type (ui-model/sort-bounties-by-sorting-type sorting-type)
+             true vec)))
