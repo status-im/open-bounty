@@ -226,25 +226,21 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {(s/optional-key :address) s/Str
-                                       (s/optional-key :is_hidden_in_hunters) s/Bool}]
+                          :body [body {:address s/Str
+                                       :is_hidden_in_hunters s/Bool}]
                           :summary "Updates user's fields."
 
                           (let [user-id (:id user)
-                                fields (select-keys body [:address :is_hidden_in_hunters])]
+                                {:keys [address]} body]
 
-                            (when (empty? fields)
-                              (bad-request! "No incoming fields were found."))
-
-                            (when-let [address (:address fields)]
-                              (when-not (eth/valid-address? address)
-                                (log/debugf "POST /user: Wrong address %s" address)
-                                (bad-request! (format "Invalid Ethereum address: %s" address))))
+                            (when-not (eth/valid-address? address)
+                              (log/debugf "POST /user: Wrong address %s" address)
+                              (bad-request! (format "Invalid Ethereum address: %s" address)))
 
                             (db/with-tx
                               (when-not (db/user-exists? {:id user-id})
                                 (not-found! "No such a user."))
-                              (db/update! :users fields ["id = ?" user-id]))
+                              (db/update! :users body ["id = ?" user-id]))
 
                             (ok)))
 

@@ -10,7 +10,7 @@
   (let [db (rf/subscribe [:db])
         updating-user (rf/subscribe [:get-in [:updating-user]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
-        is-hidden (rf/subscribe [:get-in [:user :is_hidden_in_hunters]])]
+        hidden (r/atom @(rf/subscribe [:get-in [:user :is_hidden_in_hunters]]))]
 
     (fn []
       (let [web3 (:web3 @db)
@@ -45,23 +45,27 @@
                               :auto-correct "off"
                               :spell-check "false"
                               :max-length 42}]])]
-          [:button
-           (merge {:on-click
-                   #(rf/dispatch [:save-user-fields {:address @address}])
-                   :class (str "ui button small update-address-button"
-                               (when @updating-user
-                                 " busy loading"))})
-           "UPDATE"]
 
-          [:h3 "Settings"]
           [:div
            [:input
             {:type :checkbox
              :disabled @updating-user
              :id :input-hidden
-             :checked @is-hidden
+             :checked @hidden
              :on-change
              (fn [e]
                (let [value (-> e .-target .-checked)]
-                 (rf/dispatch [:save-user-fields {:is_hidden_in_hunters value}])))}]
-           [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]]]))))
+                 (reset! hidden value)))}]
+
+           [:label {:for :input-hidden} "Disguise myself from the top hunters and activity lists."]]
+
+          [:button
+           (merge {:on-click
+                   #(rf/dispatch [:save-user-fields {:address @address
+                                                     :is_hidden_in_hunters @hidden}])
+                   :class (str "ui button small update-address-button"
+                               (when @updating-user
+                                 " busy loading"))})
+           "UPDATE"]
+
+          ]]))))
