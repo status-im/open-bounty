@@ -22,8 +22,6 @@
           [:div.field
            (if-not (empty? web3-accounts)
              [dropdown {:class "address-input"} "Select address"
-             ; If address is empty, add title
-               [dropdown {:class "address-input"}
               address
               (vec
                (for [acc web3-accounts]
