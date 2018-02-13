@@ -23,8 +23,8 @@ You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 
 ```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
+psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
+psql postgres -c "CREATE DATABASE commiteth;"
 ```
 
 ## Running
@@ -35,14 +35,6 @@ Launch following commands each in its own shell:
 lein run
 lein figwheel
 lein less auto
-```
-
-
-Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
-
-```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
 ```
 
 ### solc
