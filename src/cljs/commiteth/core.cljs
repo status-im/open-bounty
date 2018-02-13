@@ -218,7 +218,7 @@
               [:h3.top-hunters-header "Top 5 hunters"]
               [:div.top-hunters-subheader "All time"]
               [top-hunters]]])]]
-        [footer]]])))
+        ][footer]])))
 
 (secretary/set-config! :prefix "#")
 
