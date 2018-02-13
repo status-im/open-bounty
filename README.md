@@ -27,6 +27,17 @@ psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
 psql postgres -c "CREATE DATABASE commiteth;"
 ```
 
+### solc
+
+Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
+Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
+
+### web3j
+
+Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
+Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
+
+
 ## Running
 
 Launch following commands each in its own shell:
@@ -36,14 +47,6 @@ lein run
 lein figwheel
 lein less auto
 ```
-
-### solc
-
-Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
-
-### web3j
-
-Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
 
 ## Application config
 
