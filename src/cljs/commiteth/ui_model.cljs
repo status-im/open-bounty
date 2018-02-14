@@ -87,11 +87,12 @@
     ::bounty-filter-type.category                      ::bounty-filter-type-category|multiple-dynamic-options
     ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-currencies
     ::bounty-filter-type.predicate                     (fn [filter-value bounty]
-                                                         (or (and (some #{"ETH"} filter-value)
+                                                         (or (and (contains? #{"ETH"} filter-value)
                                                                   (< 0 (:balance-eth bounty)))
-                                                             (not-empty (set/intersection
-                                                                          (->> filter-value (remove #{"ETH"}) set)
-                                                                          (-> bounty :tokens keys set)))))}
+                                                             (not-empty
+                                                               (set/intersection
+                                                                 (->> filter-value (remove #{"ETH"}) set)
+                                                                 (-> bounty :tokens keys set)))))}
 
    ::bounty-filter-type|date
    {::bounty-filter-type.name                          "Date"
