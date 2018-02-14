@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from tests import test_data
 
 
 def remove_application(driver):
@@ -13,7 +14,7 @@ def remove_application(driver):
 
 def remove_installation(driver):
     try:
-        driver.get('https://github.com/organizations/Org4/settings/installations')
+        driver.get(test_data.config['ORG']['gh_org_profile'] + 'settings/installations')
         driver.find_element(By.CSS_SELECTOR, '.iconbutton').click()
         driver.find_element(By.XPATH, "//a[@class='btn btn-danger']").click()
         driver.find_element(By.CSS_SELECTOR, '.facebox-popup .btn-danger').click()
