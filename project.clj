@@ -69,7 +69,6 @@
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
             [lein-shell "0.5.0"]
-            [cider/cider-nrepl "0.15.0-SNAPSHOT"]
             [lein-sha-version "0.1.1"]]
 
 
