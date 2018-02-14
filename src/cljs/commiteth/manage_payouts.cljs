@@ -1,6 +1,6 @@
 (ns commiteth.manage-payouts
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [moment-timestamp]]))
+            [commiteth.common :refer [relative-time]]))
 
 
 
@@ -33,7 +33,7 @@
        [:div.description (if paid?
                            (str "(paid to " winner-login ")")
                            (str "(" (if merged? "merged" "open") ")"))]
-       [:div.time (moment-timestamp updated)]
+       [:div.time (relative-time updated)]
        [:button.ui.button
         (merge (if (and merged? (not paid?))
                  {}
