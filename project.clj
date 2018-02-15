@@ -69,7 +69,6 @@
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
             [lein-shell "0.5.0"]
-            [cider/cider-nrepl "0.15.0-SNAPSHOT"]
             [lein-sha-version "0.1.1"]]
 
 
@@ -94,7 +93,8 @@
 
 
   :profiles
-  {:uberjar       {:omit-source    true
+  {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
+                   :omit-source    true
                    :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
@@ -116,7 +116,8 @@
                    :uberjar-name   "commiteth.jar"
                    :source-paths   ["env/prod/clj"]
                    :resource-paths ["env/prod/resources"]}
-   :dev   {:dependencies   [[prone "1.1.4"]
+   :dev   {:jvm-opts ["-server" "-Dconf=config-dev.edn"]
+           :dependencies   [[prone "1.1.4"]
                             [ring/ring-mock "0.3.1"]
                             [ring/ring-devel "1.6.2"]
                             [pjstadig/humane-test-output "0.8.3"]
@@ -150,7 +151,8 @@
                             :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
-   :test  {:resource-paths ["env/dev/resources" "env/test/resources"]
+   :test  {:jvm-opts ["-server" "-Dconf=config-test.edn"]
+           :resource-paths ["env/dev/resources" "env/test/resources"]
            :dependencies   [[devcards "0.2.4"]]
            :cljsbuild
            {:builds

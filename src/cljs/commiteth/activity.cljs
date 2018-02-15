@@ -4,7 +4,6 @@
             [commiteth.common :refer [moment-timestamp
                                       items-per-page
                                       display-data-page
-                                      scroll-div
                                       issue-url]]))
 
 
@@ -58,7 +57,8 @@
      [:div.time (moment-timestamp updated)]]]])
 
 (defn activity-list [{:keys [items item-count page-number total-count] 
-                      :as activity-page-data}]
+                      :as activity-page-data}
+                     container-element]
   (if (empty? (:items activity-page-data))
     [:div.view-no-data-container
      [:p "No recent activity yet"]]
@@ -67,7 +67,7 @@
            right (dec (+ left item-count))]
        [:div.item-counts-label
         [:span (str "Showing " left "-" right " of " total-count)]])
-     (display-data-page activity-page-data activity-item)]))
+     (display-data-page activity-page-data activity-item container-element)]))
 
 (defn activity-page []
   (let [activity-page-data (rf/subscribe [:activities-page])
@@ -80,6 +80,5 @@
           [:div.ui.text.loader.view-loading-label "Loading"]]]
         [:div.ui.container.activity-container
          {:ref #(reset! container-element %1)} 
-         [scroll-div container-element]
          [:div.activity-header "Activities"]
-         [activity-list @activity-page-data]]))))
+         [activity-list @activity-page-data container-element]]))))
