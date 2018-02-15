@@ -23,8 +23,28 @@ You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 
 ```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
+psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
+psql postgres -c "CREATE DATABASE commiteth;"
+```
+
+### solc
+
+Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
+Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
+
+```
+brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/de1da16f7972a899fc8dd1f3f04299eced6f4312/solidity.rb
+brew pin solidity
+```
+
+### web3j
+
+Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
+Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
+
+```
+brew install https://raw.githubusercontent.com/web3j/homebrew-web3j/881cf369b551a5f2557bd8fb02fa8b7b970256ca/web3j.rb
+brew pin web3j
 ```
 
 ## Running
@@ -36,22 +56,6 @@ lein run
 lein figwheel
 lein less auto
 ```
-
-
-Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
-
-```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
-```
-
-### solc
-
-Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
-
-### web3j
-
-Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
 
 ## Application config
 
