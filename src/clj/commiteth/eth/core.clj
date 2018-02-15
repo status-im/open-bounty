@@ -132,15 +132,15 @@
   [account digits]
   (hex->eth (get-balance-hex account) digits))
 
-(defn get-transaction-receipt
-  [hash]
-  (eth-rpc "eth_getTransactionReceipt" [hash]))
-
 (defn- format-param
   [param]
   (if (number? param)
     (format "%064x" param)
-    (clojure.string/replace (format "%64s" (subs param 2)) " " "0")))
+    (clojure.string/replace (format "0x%64s" (subs param 2)) " " "0")))
+
+(defn get-transaction-receipt
+  [hash]
+  (eth-rpc "eth_getTransactionReceipt" [(format-param hash)]))
 
 (defn format-call-params
   [method-id & params]
@@ -166,12 +166,12 @@
                  (merge {:to contract}))
         gas (if gas-limit gas-limit 
               (estimate-gas from contract value params))
-        params (cond-> (assoc params :gas gas)
-                 (offline-signing?) 
+        params (if (offline-signing?)
                  (web3j/get-signed-tx (biginteger gas-price)
                                       (hex->big-integer gas)
                                       contract
-                                      data))]
+                                      data) 
+                 (assoc params :gas gas))]
     (if (offline-signing?)
       (eth-rpc
         "eth_sendRawTransaction"
