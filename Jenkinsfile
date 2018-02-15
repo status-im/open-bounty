@@ -28,7 +28,7 @@ def dockerreponame = "statusim/openbounty-app"
 			if ( currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause') ){
 				build job: 'status-openbounty/openbounty-cluster', parameters: [[$class: 'StringParameterValue', name: 'DEPLOY_ENVIRONMENT', value: "dev"], [$class: 'StringParameterValue', name: 'BRANCH', value: env.BRANCH_NAME]]
 			} else {
-				echo "no deployment on automatic trigger"
+				echo "No deployment on automatic trigger"
 			}
 		}
 
