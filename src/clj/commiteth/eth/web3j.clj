@@ -1,10 +1,14 @@
 (ns commiteth.eth.web3j
-    (:require [commiteth.eth.core :as eth]
-            [commiteth.config :refer [env]])
+    (:require [commiteth.config :refer [env]])
   (:import [org.web3j
             protocol.Web3j
             protocol.http.HttpService
+            protocol.core.DefaultBlockParameterName
+            protocol.core.methods.response.EthGetTransactionCount
+            protocol.core.methods.request.RawTransaction
+            utils.Numeric
             crypto.Credentials
+            crypto.TransactionEncoder
             crypto.WalletUtils]))
 
 
@@ -25,4 +29,26 @@
                       {:password password :file-path file-path})))))
 
 (defn create-web3j []
-  (Web3j/build (HttpService. (eth/eth-rpc-url))))
+  (Web3j/build (HttpService. (env :eth-rpc-url "http://localhost:8545"))))
+
+(defn get-signed-tx [gas-price gas-limit to data]
+  "Create a sign a raw transaction.
+   'From' argument is not needed as it's already
+   encoded in credentials.
+   See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
+  (let [web3j (create-web3j)
+        nonce (.. (.ethGetTransactionCount web3j 
+                                           (env :eth-account) 
+                                           DefaultBlockParameterName/LATEST)
+                  sendAsync
+                  get
+                  getTransactionCount)
+        tx (RawTransaction/createTransaction
+             nonce
+             gas-price
+             gas-limit
+             to
+             data)
+        signed (TransactionEncoder/signMessage tx (creds))
+        hex-string (Numeric/toHexString signed)]
+    hex-string))
