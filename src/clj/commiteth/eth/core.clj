@@ -3,6 +3,7 @@
             [org.httpkit.client :refer [post]]
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
+            [commiteth.eth.web3j :as web3j]
             [clojure.string :refer [join]]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
@@ -14,6 +15,7 @@
 (defn eth-password [] (:eth-password env))
 (defn gas-estimate-factor [] (env :gas-estimate-factor 1.0))
 (defn auto-gas-price? [] (env :auto-gas-price? false))
+(defn offline-signing? [] (env :offline-signing? false))
 
 (defn eth-gasstation-gas-price
   []
@@ -49,8 +51,10 @@
                                   :id      request-id})
         options  {:headers {"content-type" "application/json"}
                   :body body}
-        response (:body @(post (eth-rpc-url) options))
-        result   (json/read-str response :key-fn keyword)]
+        response  @(post (eth-rpc-url) options)
+        _ (log/info "eth-rpc method:" method)
+        _ (log/info "eth-rpc response:" response)
+        result   (json/read-str (:body response) :key-fn keyword)]
     (log/debug body "\n" result)
 
     (if (= (:id result) request-id)
@@ -128,44 +132,6 @@
   [account digits]
   (hex->eth (get-balance-hex account) digits))
 
-(defn send-transaction
-  "Send transaction using default commiteth bot account."
-  [from to value & [params]]
-  (let [args (merge params
-                    {:from  from
-                     :value value}
-                    (when-not (nil? (gas-price))
-                      {:gasPrice (integer->hex (gas-price))})
-                    (when-not (contains? params :gas)
-                      {:gas
-                       (estimate-gas from to value params)}))]
-    (log/debug "args:" args)
-    (eth-rpc
-     "personal_sendTransaction"
-     [(if-not (nil? to)
-        (merge args {:to to})
-        args)
-      (eth-password)])))
-
-(defn send-transaction-using-from-account
-  "Send transaction using account address in parameter from. Assumes
-  account has been unlocked."
-  [from to value & [params]]
-  (let [args (merge params
-                    {:from  from
-                     :value value}
-                    (when-not (nil? (gas-price))
-                      {:gasPrice (integer->hex (gas-price))})
-                    (when-not (contains? params :gas)
-                      {:gas
-                       (estimate-gas from to value params)}))]
-    (log/debug "args:" args)
-    (eth-rpc
-     "eth_sendTransaction"
-     [(if-not (nil? to)
-        (merge args {:to to})
-        args)])))
-
 (defn get-transaction-receipt
   [hash]
   (eth-rpc "eth_getTransactionReceipt" [hash]))
@@ -189,33 +155,30 @@
 (defn execute
   [from contract method-id gas-limit & params]
   (let [data (apply format-call-params method-id params)
-        value (format "0x%x" 0)]
-    (send-transaction from contract value (merge
-                                           {:data data}
-                                           (when gas-limit
-                                             {:gas gas-limit})))))
-
-(defn execute-using-addr
-  [from-addr from-passphrase contract method-id & params]
-  (eth-rpc "personal_unlockAccount" [from-addr from-passphrase 30])
-  (let [data (apply format-call-params method-id params)
-        value (format "0x%x" 0)]
-    (send-transaction-using-from-account from-addr
-                                         contract
-                                         value
-                                         {:data data})))
-
-(defn transfer-eth
-  "Transfer amount-wei of ETH from from-addr to to-addr."
-  [from-addr from-passphrase to-addr amount-wei]
-  (eth-rpc "personal_unlockAccount" [from-addr from-passphrase 30])
-  (let [data "0x"
-        value (integer->hex amount-wei)]
-    (send-transaction-using-from-account from-addr
-                                         to-addr
-                                         value
-                                         {:data data})))
-
+        gas-price (gas-price)
+        value (format "0x%x" 0)
+        params (cond-> {:data data
+                        :from  from
+                        :value value}
+                 gas-price
+                 (merge {:gasPrice (integer->hex gas-price)})
+                 contract
+                 (merge {:to contract}))
+        gas (if gas-limit gas-limit 
+              (estimate-gas from contract value params))
+        params (cond-> (assoc params :gas gas)
+                 (offline-signing?) 
+                 (web3j/get-signed-tx (biginteger gas-price)
+                                      (hex->big-integer gas)
+                                      contract
+                                      data))]
+    (if (offline-signing?)
+      (eth-rpc
+        "eth_sendRawTransaction"
+        [params])
+      (eth-rpc
+        "personal_sendTransaction"
+        [params (eth-password)]))))
 
 (defn hex-ch->num
   [ch]
