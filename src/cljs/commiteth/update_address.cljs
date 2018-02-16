@@ -5,7 +5,7 @@
             [reagent.crypt :as crypt]
             [cljs-web3.eth :as web3-eth]))
 
-(defn update-address-page []
+(defn update-address-page-contents []
   (let [db (rf/subscribe [:db])
         updating-user (rf/subscribe [:get-in [:updating-user]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
@@ -55,6 +55,12 @@
                    :class (str "ui button small update-address-button"
                                (when @updating-user
                                  " busy loading"))})
-           "UPDATE"]
+           "UPDATE"]]]))))
 
-          ]]))))
+(defn update-address-page []
+  (let [loaded? @(rf/subscribe [:user-profile-loaded?])]
+    (if loaded?
+      [update-address-page-contents]
+      [:div.view-loading-container
+       [:div.ui.active.inverted.dimmer
+        [:div.ui.text.loader.view-loading-label "Loading"]]])))

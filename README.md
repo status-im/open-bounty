@@ -13,6 +13,15 @@ Live testnet (Ropsten) version:
 https://openbounty.status.im:444
 The `develop` branch is automatically deployed here.
 
+## Table of contents
+- [Prerequisites](#prerequisites)
+- [Application config](#application-config)
+- [GitHub integration](#github-integration)
+- [Running](#running)
+- [Testing](#testing)
+- [More info](#more-info)
+
+
 
 ## Prerequisites
 
@@ -23,35 +32,29 @@ You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 
 ```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
-```
-
-## Running
-
-Launch following commands each in its own shell:
-
-```
-lein run
-lein figwheel
-lein less auto
-```
-
-
-Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
-
-```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
+psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
+psql postgres -c "CREATE DATABASE commiteth;"
 ```
 
 ### solc
 
 Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
+Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
+
+```
+brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/de1da16f7972a899fc8dd1f3f04299eced6f4312/solidity.rb
+brew pin solidity
+```
 
 ### web3j
 
 Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
+Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
+
+```
+brew install https://raw.githubusercontent.com/web3j/homebrew-web3j/881cf369b551a5f2557bd8fb02fa8b7b970256ca/web3j.rb
+brew pin web3j
+```
 
 ## Application config
 
@@ -88,20 +91,32 @@ Follow the steps [here](https://developer.github.com/apps/building-github-apps/c
 
 ## Running
 
-Lauch a local geth node with the bot account unlocked:
+### Geth
+Launch a local geth node with the bot account unlocked:
 
 ```
 #!/bin/bash
 geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port 50100 --ipcpath ~/.ropsten/geth.ipc --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi db,eth,net,web3,personal --rpccorsdomain "https://wallet.ethereum.org" --unlock "0xYOUR_ADDR" --password <(echo "YOUR_PASSPHRASE")
 ```
 
+### CSS auto-compilation
 Launch the following command in a separate shell:
 
 ```
 lein less auto
 ```
 
-Next you want to start a REPL on the backend and the frontend.
+### Clojure app without REPL
+Launch following commands each in its own shell:
+
+```
+lein run
+lein figwheel
+```
+
+### Clojure app with REPL
+
+You'll have to start a REPL on the backend and the frontend.
 
 ```
 lein repl
@@ -170,8 +185,8 @@ Landing page is static and different CSS and JS due to time constraints.
 This copies over necessary artifacts to `resources` dir.
 
 
-### Troubleshooting
-See the [Cookbook](doc/cookbook.md).
+## More info
+Detailed information on code structure, troubleshooting, etc. can be found [here](doc/README.md).
 
 ## License
 
