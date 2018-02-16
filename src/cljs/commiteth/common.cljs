@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
-            [cljsjs.moment]))
+            [goog.date.relative]))
 
 (defn input [val-ratom props]
   (fn []
@@ -24,10 +24,10 @@
                               :disabled (= item title)} 
                      item])]))
 
-(defn moment-timestamp [time]
-  (let [now (.now js/Date.)
-        js-time (clj->js time)]
-    (.to (js/moment.utc) js-time)))
+(defn relative-time [time]
+  "converts time in milliseconds to a relative form of '1 hour ago'"
+  (let [js-time (clj->js time)]
+    (goog.date.relative/format js-time)))
 
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))
