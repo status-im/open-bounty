@@ -41,16 +41,25 @@
 
 .update-address-button {
     background-color: #57a7ed!important;
+    margin-top: 10px !important;
     &:hover {
         background-color: #57a7ed!important;
     }
 }
 
+label[for="input-hidden"] {
+  padding-left: 8px;
+}
+
+#input-hidden {
+  vertical-align: bottom;
+  position: relative;
+  top: -4px;
+}
 
 .login-button {
     background-color: rgba(255,255,255,0.2)!important;
 }
-
 
 .commiteth-header {
     background-color: #57a7ed!important;
@@ -864,6 +873,8 @@
     box-shadow: none;
     border-radius: 0.3em;
 
+    min-height: calc(~"100vh - 400px");
+
     h3 {
         color: #474951;
     }
@@ -986,7 +997,6 @@
     z-index: -1;
     display: flex;
     justify-content: center;
-    margin-top: 20px;
 }
 
 
@@ -1285,5 +1295,3 @@ body {
 	color: #8d99a4;
     padding-top: 20px;
 }
-
-

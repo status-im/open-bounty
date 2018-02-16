@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
-            [cljsjs.moment]))
+            [goog.date.relative]))
 
 (defn input [val-ratom props]
   (fn []
@@ -12,21 +12,22 @@
                    :on-change #(reset! val-ratom (-> % .-target .-value))})]))
 
 (defn dropdown [props title val-ratom items]
+  "If val-ratom is set, preselect it in the dropdown.
+   Otherwise, prepend title as a disabled option."
   (fn []
-    (if (= 1 (count items))
-      (reset! val-ratom (first items)))
     [:select.ui.basic.selection.dropdown
      (merge props {:on-change
-                   #(reset! val-ratom (-> % .-target .-value))})
-     (doall (for [item items]
-              ^{:key item} [:option
-                            {:value item}
-                            item]))]))
+                   #(reset! val-ratom (-> % .-target .-value))
+                   :default-value (or @val-ratom title)})
+     (for [item items]
+       ^{:key item} [:option {:value item
+                              :disabled (= item title)} 
+                     item])]))
 
-(defn moment-timestamp [time]
-  (let [now (.now js/Date.)
-        js-time (clj->js time)]
-    (.to (js/moment.utc) js-time)))
+(defn relative-time [time]
+  "converts time in milliseconds to a relative form of '1 hour ago'"
+  (let [js-time (clj->js time)]
+    (goog.date.relative/format js-time)))
 
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))

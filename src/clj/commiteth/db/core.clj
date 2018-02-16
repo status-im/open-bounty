@@ -27,7 +27,6 @@
                          :migration-table-name "schema_migrations"
                          :db db}]
     (migratus/migrate migratus-config)
-    (conman/bind-connection db "sql/queries.sql")
     (conman/connect! {:jdbc-url db})
     db))
 
@@ -85,3 +84,11 @@
   (sql-value [value] (to-pg-json value))
   IPersistentVector
   (sql-value [value] (to-pg-json value)))
+
+(defmacro with-tx [& body]
+  "Performs a set of queries in transaction."
+  `(conman/with-transaction [*db*]
+     ~@body))
+
+(defn update! [& args]
+  (apply jdbc/update! *db* args))
