@@ -47,5 +47,6 @@
 
  :user-whitelist #{}
 
+ :session-timeout 21600
  ;; used for blacklisting tokens from token registry data
  :token-blacklist #{}}

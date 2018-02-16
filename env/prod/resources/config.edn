@@ -4,4 +4,5 @@
  :nrepl-port        7000
  :server-address    "https://commiteth.com"
  :html2png-command  "/home/commiteth/html2png.sh"
+ :session-timeout   21600
 }

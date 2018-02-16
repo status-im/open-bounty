@@ -17,6 +17,8 @@
                  [ring/ring-json "0.4.0"]
                  [ring/ring-defaults "0.3.1"]
                  [ring/ring-codec "1.0.1"]
+                 [ring/ring-session-timeout "0.2.0"]
+                 [jdbc-ring-session "1.0"]
                  [metosin/ring-http-response "0.9.0"]
                  [bouncer "1.0.1"
                   :exclusions [joda-time]]
