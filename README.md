@@ -106,7 +106,7 @@ geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port
 ```
 
 #### Remote
-Specify Infura URL in `config.edn` under `:eth-rpc-url` key, and set `:offline-signing?` to true.
+Register at [Infura](https://infura.io/signup). You will receive an email with provider URLs. Paste an URL for the network you're connecting to (Mainnet/Ropsten) into `config.edn` under `:eth-rpc-url` key, and set `:offline-signing?` to true.
 
 
 ### CSS auto-compilation
