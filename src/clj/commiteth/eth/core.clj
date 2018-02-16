@@ -14,8 +14,8 @@
 (defn eth-account [] (:eth-account env))
 (defn eth-password [] (:eth-password env))
 (defn gas-estimate-factor [] (env :gas-estimate-factor 1.0))
-(defn auto-gas-price? [] (env :auto-gas-price? false))
-(defn offline-signing? [] (env :offline-signing? false))
+(defn auto-gas-price? [] (env :auto-gas-price false))
+(defn offline-signing? [] (env :offline-signing false))
 
 (defn eth-gasstation-gas-price
   []
