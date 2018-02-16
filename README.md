@@ -72,6 +72,7 @@ eth-account | Ethereum account ID for the bot
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
+offline-signing? | Specifies whether to sign transactions locally before sending. Default is false. Set to true when connecting to Infura
 tokenreg-base-format | Should be set to `:status`
 github-client-id | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
 github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
