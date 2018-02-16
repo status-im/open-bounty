@@ -136,11 +136,11 @@
   [param]
   (if (number? param)
     (format "%064x" param)
-    (clojure.string/replace (format "0x%64s" (subs param 2)) " " "0")))
+    (clojure.string/replace (format "%64s" (subs param 2)) " " "0")))
 
 (defn get-transaction-receipt
   [hash]
-  (eth-rpc "eth_getTransactionReceipt" [(format-param hash)]))
+  (eth-rpc "eth_getTransactionReceipt" [hash]))
 
 (defn format-call-params
   [method-id & params]
