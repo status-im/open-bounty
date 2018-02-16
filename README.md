@@ -93,13 +93,21 @@ Follow the steps [here](https://developer.github.com/apps/building-github-apps/c
 
 ## Running
 
-### Geth
-Launch a local geth node with the bot account unlocked:
+### Ethereum node
+There are two options for connecting to an Ethereum node: either run a local node or connect to a remote one like Infura.
+
+#### Local
+
+In order to launch a local geth node with the bot account unlocked issue the following command:
 
 ```
 #!/bin/bash
 geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port 50100 --ipcpath ~/.ropsten/geth.ipc --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi db,eth,net,web3,personal --rpccorsdomain "https://wallet.ethereum.org" --unlock "0xYOUR_ADDR" --password <(echo "YOUR_PASSPHRASE")
 ```
+
+#### Remote
+Specify Infura URL in `config.edn` under `:eth-rpc-url` key, and set `:offline-signing?` to true.
+
 
 ### CSS auto-compilation
 Launch the following command in a separate shell:
