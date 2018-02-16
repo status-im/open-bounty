@@ -42,7 +42,6 @@
                  [cheshire "5.8.0"]
                  [mpg "1.3.0"]
                  [pandect "0.6.1"]
-                 [cljsjs/moment "2.17.1-1"]
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.cemerick/piggieback "0.2.2"]
                  [jarohen/chime "0.2.2"]
