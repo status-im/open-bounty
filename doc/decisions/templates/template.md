@@ -9,6 +9,8 @@
 
 STATUS
 
+Common states: proposed, accepted, rejected, deprecated, superseded
+
 ## Context
 
 Describe the context in which the decision has been made.
