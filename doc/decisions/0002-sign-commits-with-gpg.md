@@ -17,6 +17,11 @@ Naturally security is a concern that should be taken into consideration.
 Currently an attacker might get access to an account of a team member
 and pose as that developer, merging PRs and pushing changes.
 
+Status.im as a company is also encouraging the use of GPG signing and
+has a Pull Request check in place on Github. This check will mark PRs
+as failing if the commits come from an organization member and have not
+been GPG-signed.
+
 ## Decision
 
 In order to verify that commits in the repository are actually authored by the specified
@@ -28,6 +33,9 @@ a Git commit and make workflows like deploying on push safer.
 It also introduces some complexity because contributors who want to sign
 their commits need to set up the appropriate tooling. Due to that we will
 not require outside contributors to sign their commits for now.
+
+Adopting GPG signing for contributors will also make our PR checks pass
+allowing us to more easily discern actually broken and working PRs.
 
 ## Consequences
 
