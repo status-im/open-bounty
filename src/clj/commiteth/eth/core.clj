@@ -3,12 +3,21 @@
             [org.httpkit.client :refer [post]]
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
-            [commiteth.eth.web3j :as web3j]
             [clojure.string :refer [join]]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
             [pandect.core :as pandect]
-            [commiteth.util.util :refer [json-api-request]]))
+            [commiteth.util.util :refer [json-api-request]])
+  (:import [org.web3j
+            protocol.Web3j
+            protocol.http.HttpService
+            protocol.core.DefaultBlockParameterName
+            protocol.core.methods.response.EthGetTransactionCount
+            protocol.core.methods.request.RawTransaction
+            utils.Numeric
+            crypto.Credentials
+            crypto.TransactionEncoder
+            crypto.WalletUtils]))
 
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
@@ -17,6 +26,46 @@
 (defn auto-gas-price? [] (env :auto-gas-price false))
 (defn offline-signing? [] (env :offline-signing false))
 
+(defn wallet-file-path []
+  (env :eth-wallet-file))
+
+(defn wallet-password []
+  (env :eth-password))
+
+(defn creds []
+  (let [password  (wallet-password)
+        file-path (wallet-file-path)]
+    (if (and password file-path)
+      (WalletUtils/loadCredentials
+       password
+       file-path)
+      (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
+                      {:password password :file-path file-path})))))
+
+(defn create-web3j []
+  (Web3j/build (HttpService. (eth-rpc-url))))
+
+(defn get-signed-tx [gas-price gas-limit to data]
+  "Create a sign a raw transaction.
+   'From' argument is not needed as it's already
+   encoded in credentials.
+   See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
+  (let [web3j (create-web3j)
+        nonce (.. (.ethGetTransactionCount web3j 
+                                           (env :eth-account) 
+                                           DefaultBlockParameterName/LATEST)
+                  sendAsync
+                  get
+                  getTransactionCount)
+        tx (RawTransaction/createTransaction
+             nonce
+             gas-price
+             gas-limit
+             to
+             data)
+        signed (TransactionEncoder/signMessage tx (creds))
+        hex-string (Numeric/toHexString signed)]
+    hex-string))
 (defn eth-gasstation-gas-price
   []
   (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
@@ -167,7 +216,7 @@
         gas (if gas-limit gas-limit 
               (estimate-gas from contract value params))
         params (if (offline-signing?)
-                 (web3j/get-signed-tx (biginteger gas-price)
+                 (get-signed-tx (biginteger gas-price)
                                       (hex->big-integer gas)
                                       contract
                                       data) 
