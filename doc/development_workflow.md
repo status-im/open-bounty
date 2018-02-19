@@ -17,18 +17,21 @@ Issues can be added to this project by any core team member.
 This is backlog for all features/issues/enhancements which we want to include to development process. 
 
 All issues here should be marked with:
-* type - `bug`, `tech-debt`,` enhancement` labels. Issues with `proposal` label should be converted to `bug`, `tech-debt`,` enhancement` before addidng to project.
-* priority - `Prio: high`, `Prio: med`, `Prio: low` labels. On the board inside issues with same priority sorting from higher to lower priority is applied.
+
+* **type** - `bug`, `tech-debt`,` enhancement` labels. Issues with `proposal` label should be converted to `bug`, `tech-debt`,` enhancement` before addidng to project.
+* **priority** - `Prio: high`, `Prio: med`, `Prio: low` labels. On the board inside issues with same priority sorting from higher to lower priority is applied.
 
 #### Defining
 The column is intended for issues not completely clear or for features, that should be splitted to smaller issues in order to go ahead.
 After defining all issues that are intended to develop should have size label
-*`Size: XS` - 1-2 hours, 
-*`Size: S` - 2-4 hours,
-*`Size: M` - 4-8 hours, 
-*`Size: L` - 8-20 hours,
-*`Size: XL` - 20-40 hours,
-*`Size: XXL` - 40-60 hours.
+
+* `Size: XS` - 1-2 hours,
+* `Size: S` - 2-4 hours,
+* `Size: M` - 4-8 hours,
+* `Size: L` - 8-20 hours,
+* `Size: XL` - 20-40 hours,
+* `Size: XXL` - 40-60 hours.
+
 #### To design
 It is used for issues that are already defined and require designing process.
 #### Designing
