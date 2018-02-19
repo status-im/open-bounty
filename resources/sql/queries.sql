@@ -17,6 +17,12 @@ WHERE NOT exists(SELECT 1
                  WHERE id = :id)
 RETURNING id, login, name, email, avatar_url, address, created;
 
+-- :name user-exists? :? :1
+-- :doc Checks where a user exists in the database.
+select 1
+from users u
+where u.id = :id;
+
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users
@@ -571,6 +577,7 @@ WHERE
 pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
+AND NOT u.is_hidden_in_hunters
 GROUP BY u.id
 ORDER BY total_usd DESC
 LIMIT 5;
