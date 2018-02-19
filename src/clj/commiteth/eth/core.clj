@@ -24,7 +24,7 @@
 (defn eth-password [] (:eth-password env))
 (defn gas-estimate-factor [] (env :gas-estimate-factor 1.0))
 (defn auto-gas-price? [] (env :auto-gas-price false))
-(defn offline-signing? [] (env :offline-signing false))
+(defn offline-signing? [] (env :offline-signing true))
 
 (defn wallet-file-path []
   (env :eth-wallet-file))
