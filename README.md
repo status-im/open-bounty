@@ -71,7 +71,7 @@ eth-account | Ethereum account ID for the bot
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
-offline-signing | Specifies whether to sign transactions locally before sending. Default is false. Set to true when connecting to Infura
+offline-signing | Specifies whether to sign transactions locally before sending. Default is false. Set to true when connecting to e.g. Infura or any remote Geth node that does not unlock accounts
 tokenreg-base-format | Should be set to `:status`
 github-client-id | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
 github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
@@ -93,7 +93,7 @@ Follow the steps [here](https://developer.github.com/apps/building-github-apps/c
 ## Running
 
 ### Ethereum node
-There are two options for connecting to an Ethereum node: either run a local node or connect to a remote one like Infura.
+There are two options for connecting to an Ethereum node: either run a local node with an unlocked account, or connect to a remote Geth node or Infura. We will be connecting to Ropsten which is a test Ethereum network.
 
 #### Local
 
@@ -105,7 +105,7 @@ geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port
 ```
 
 #### Remote
-Register at [Infura](https://infura.io/signup). You will receive an email with provider URLs. Paste an URL for the network you're connecting to (Mainnet/Ropsten) into `config.edn` under `:eth-rpc-url` key, and set `:offline-signing` to true.
+Register at [Infura](https://infura.io/signup). You will receive an email with provider URLs. Paste an URL for the Ropsten network into `config.edn` under `:eth-rpc-url` key, and set `:offline-signing` to true.
 
 
 ### CSS auto-compilation
