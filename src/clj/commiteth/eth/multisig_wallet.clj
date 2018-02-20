@@ -1,8 +1,7 @@
 (ns commiteth.eth.multisig-wallet
-  (:require [commiteth.eth.core :as eth]
-            [commiteth.config :refer [env]]
-            [commiteth.eth.web3j
+  (:require [commiteth.eth.core :as eth
              :refer [create-web3j creds]]
+            [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
