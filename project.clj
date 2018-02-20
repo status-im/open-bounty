@@ -124,6 +124,7 @@
                             [binaryage/devtools "0.9.7"]
                             [figwheel-sidecar "0.5.14"]
                             [org.clojure/tools.nrepl "0.2.13"]
+                            [org.clojure/tools.namespace "0.2.11"]
                             [com.cemerick/piggieback "0.2.2"]
                             [sablono "0.8.1"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
