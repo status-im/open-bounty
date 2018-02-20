@@ -211,8 +211,7 @@
        [:div.item-counts-label-and-sorting-container
         [:div.item-counts-label
          [:span (str "Showing " left "-" right " of " total-count)]]
-        (when-not (util/os-windows?)
-          [bounties-sort-view])])
+        [bounties-sort-view]])
      (display-data-page bounty-page-data bounty-item container-element)]))
 
 (defn bounties-page []
@@ -227,7 +226,6 @@
         [:div.ui.container.open-bounties-container
          {:ref #(reset! container-element %1)}
          [:div.open-bounties-header "Bounties"]
-         (when-not (util/os-windows?)
-           [:div.open-bounties-filter-and-sort
-            [bounty-filters-view]])
+         [:div.open-bounties-filter-and-sort
+          [bounty-filters-view]]
          [bounties-list @bounty-page-data container-element]]))))
