@@ -15,7 +15,7 @@
  :eth-wallet-file        "/some/location"
 
  ;; Specifies whether to sign transactions before sending. Should be false for local Geth, true for remote Infura
- :offline-signing false
+ :offline-signing true
 
  ;; address of token registry to be used
  ;; this is the default value for ropsten
