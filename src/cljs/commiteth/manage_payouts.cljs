@@ -57,6 +57,19 @@
                        (:claims bounty))]
             [claim-card bounty claim]))))
 
+(defn bounty-stats [{:keys [paid unpaid]}]
+  (let [sum-dollars (fn [bounties]
+                      (reduce + (map #(js/parseFloat (:value_usd %)) bounties)))]
+    [:div.cf.pv4
+     [:div.fl.w-50.tc
+      [:div.ttu.tracked "Open"]
+      [:div.f2.pa2 "$" (sum-dollars unpaid)]
+      [:div (count unpaid) " bounties"]]
+
+     [:div.fl.w-50.tc
+      [:div.ttu.tracked "Paid"]
+      [:div.f2.pa2 "$" (sum-dollars paid)]
+      [:div (count paid) " bounties"]]]))
 
 (defn manage-payouts-page []
   (let [owner-bounties (rf/subscribe [:owner-bounties])
@@ -68,15 +81,16 @@
           [:div.ui.text.loader "Loading"]]]
         (let [web3 (.-web3 js/window)
               bounties (vals @owner-bounties)
-              unpaid? #(empty? (:payout_hash %))
-              paid? #(not-empty (:payout_hash %))
-              unpaid-bounties (filter unpaid? bounties)
-              paid-bounties (filter paid? bounties)]
+              paid?  :payout_hash
+              unpaid-bounties (filter (complement paid?) bounties)
+              paid-bounties   (filter paid? bounties)]
           [:div.ui.container
            (when (nil? web3)
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
+           [bounty-stats {:paid paid-bounties
+                          :unpaid unpaid-bounties}]
            [:h3 "New claims"]
            [claim-list unpaid-bounties]
            [:h3 "Old claims"]
