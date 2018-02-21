@@ -1,6 +1,6 @@
 (ns commiteth.manage-payouts
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [human-time]]))
+            [commiteth.common :as common :refer [human-time]]))
 
 
 
@@ -58,21 +58,20 @@
             [claim-card bounty claim]))))
 
 (defn bounty-stats [{:keys [paid unpaid]}]
-  (let [sum-dollars (fn [bounties]
-                      (reduce + (map #(js/parseFloat (:value_usd %)) bounties)))]
-    [:div.cf.pv4
-     [:div.fl.w-50.tc
-      [:div.ttu.tracked "Open"]
-      [:div.f2.pa2 "$" (sum-dollars unpaid)]
-      [:div (count unpaid) " bounties"]]
+  [:div.cf.pv4
+   [:div.fl.w-50.tc
+    [:div.ttu.tracked "Open"]
+    [:div.f2.pa2 (common/usd-string (:combined-usd-value unpaid))]
+    [:div (:count unpaid) " bounties"]]
 
-     [:div.fl.w-50.tc
-      [:div.ttu.tracked "Paid"]
-      [:div.f2.pa2 "$" (sum-dollars paid)]
-      [:div (count paid) " bounties"]]]))
+   [:div.fl.w-50.tc
+    [:div.ttu.tracked "Paid"]
+    [:div.f2.pa2 (common/usd-string (:combined-usd-value paid))]
+    [:div (:count paid) " bounties"]]])
 
 (defn manage-payouts-page []
   (let [owner-bounties (rf/subscribe [:owner-bounties])
+        bounty-stats-data (rf/subscribe [:owner-bounties-stats])
         owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
     (fn []
       (if @owner-bounties-loading?
@@ -80,18 +79,14 @@
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader "Loading"]]]
         (let [web3 (.-web3 js/window)
-              bounties (vals @owner-bounties)
-              paid?  :payout_hash
-              unpaid-bounties (filter (complement paid?) bounties)
-              paid-bounties   (filter paid? bounties)]
+              bounties (vals @owner-bounties)]
           [:div.ui.container
            (when (nil? web3)
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
-           [bounty-stats {:paid paid-bounties
-                          :unpaid unpaid-bounties}]
+           [bounty-stats @bounty-stats-data]
            [:h3 "New claims"]
-           [claim-list unpaid-bounties]
+           [claim-list (filter (complement :paid?) bounties)]
            [:h3 "Old claims"]
-           [claim-list paid-bounties]])))))
+           [claim-list (filter :paid? bounties)]])))))
