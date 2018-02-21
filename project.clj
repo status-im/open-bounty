@@ -83,13 +83,12 @@
 
   :uberjar-exclusions [#"public/README.md" #"public/cards.html"]
   :clean-targets ^{:protect false}
-  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+  [:target-path :java-source-paths [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
-
 
   :profiles
   {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
@@ -124,6 +123,7 @@
                             [binaryage/devtools "0.9.7"]
                             [figwheel-sidecar "0.5.14"]
                             [org.clojure/tools.nrepl "0.2.13"]
+                            [org.clojure/tools.namespace "0.2.11"]
                             [com.cemerick/piggieback "0.2.2"]
                             [sablono "0.8.1"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
@@ -142,7 +142,6 @@
                :optimizations :none
                :pretty-print  true}}]}
 
-           :prep-tasks     ["build-contracts" "javac"]
            :doo            {:build "test"}
            :source-paths   ["env/dev/clj" "test/clj"]
            :resource-paths ["env/dev/resources"]
