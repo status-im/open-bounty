@@ -105,3 +105,14 @@
         (do
           (log/info "Updating changed title for issue" (:id gh-issue))
           (issues/update-issue-title (:id gh-issue) (:title gh-issue)))))))
+
+(defn bounty-state [bounty]
+  (cond
+    (:payout_hash bounty)                :paid
+    (nil? (:confirm_hash bounty))        :pending-maintainer-confirmation
+    (nil? (:payout_address bounty))      :pending-contributor-address
+    (:winner_login bounty)               :merged
+    (some-> (:claim_count bounty) (< 1)) :multiple_claims
+    (= 1 (:claim_count bounty))          :claimed
+    (seq (:tokens bounty))               :funded
+    (:contract_address bounty)           :opened))
