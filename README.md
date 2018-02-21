@@ -106,6 +106,12 @@ Launch the following command in a separate shell:
 lein less auto
 ```
 
+### Solidity compilation
+Invoke `build-contracts` Leiningen task to compile Solidity files into Java classes:
+```
+lein build-contracts
+```
+
 ### Clojure app without REPL
 Launch following commands each in its own shell:
 
@@ -146,7 +152,10 @@ To create a standalone uberjar:
 lein uberjar
 ```
 
-This creates `target/uberjar/commiteth-<git-sha>.jar`
+This creates `target/uberjar/commiteth.jar`. You can run it with the following command from within project root:
+```
+java -Dconf=<path_to_config.edn> -jar target/uberjar/commiteth.jar
+```
 
 
 ## Testing
