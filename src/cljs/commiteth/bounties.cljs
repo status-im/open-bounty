@@ -1,7 +1,7 @@
 (ns commiteth.bounties
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
-            [commiteth.common :refer [moment-timestamp
+            [commiteth.common :refer [human-time
                                       display-data-page
                                       items-per-page
                                       issue-url]]
@@ -33,7 +33,7 @@
      [:div.open-bounty-item-content
       [:div.header issue-link]
       [:div.bounty-item-row
-       [:div.time (moment-timestamp updated)]
+       [:div.time (human-time updated)]
        [:span.bounty-repo-label repo-link]]
 
       [:div.footer-row

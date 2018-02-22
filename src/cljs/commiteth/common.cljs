@@ -2,7 +2,9 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
-            [cljsjs.moment]))
+            [goog.date.relative]
+            [goog.i18n.DateTimePatterns :as DateTimePatterns])
+  (:import (goog.i18n DateTimeFormat)))
 
 (defn input [val-ratom props]
   (fn []
@@ -12,21 +14,32 @@
                    :on-change #(reset! val-ratom (-> % .-target .-value))})]))
 
 (defn dropdown [props title val-ratom items]
+  "If val-ratom is set, preselect it in the dropdown.
+   Otherwise, prepend title as a disabled option."
   (fn []
-    (if (= 1 (count items))
-      (reset! val-ratom (first items)))
     [:select.ui.basic.selection.dropdown
      (merge props {:on-change
-                   #(reset! val-ratom (-> % .-target .-value))})
-     (doall (for [item items]
-              ^{:key item} [:option
-                            {:value item}
-                            item]))]))
+                   #(reset! val-ratom (-> % .-target .-value))
+                   :default-value (or @val-ratom title)})
+     (for [item items]
+       ^{:key item} [:option {:value item
+                              :disabled (= item title)} 
+                     item])]))
 
-(defn moment-timestamp [time]
-  (let [now (.now js/Date.)
-        js-time (clj->js time)]
-    (.to (js/moment.utc) js-time)))
+(def ^:private long-ago-fmt
+  (DateTimeFormat. DateTimePatterns/MONTH_DAY_FULL))
+
+(defn human-time [date]
+  "Shows a given date in a human-friendly way. For dates less than
+   two weeks ago this means a relative '3 hours ago' kind of thing.
+   For dates longer ago we return 'January 01'."
+  (let [ms       (.getTime date)
+        relative (goog.date.relative/format ms)]
+    ;; Dates older than 2 weeks will not be shown as relative
+    ;; https://github.com/google/closure-library/blob/99d7fa323f4c9e35ce7a97ea3cb08fc1d97d9e92/closure/goog/date/relative.js#L206
+    (if-not (empty? relative)
+      relative
+      (goog.date.relative/formatDay ms #(.format long-ago-fmt %)))))
 
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))

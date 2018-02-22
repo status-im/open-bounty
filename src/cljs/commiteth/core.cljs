@@ -217,8 +217,8 @@
              [:div.ui.container.top-hunters
               [:h3.top-hunters-header "Top 5 hunters"]
               [:div.top-hunters-subheader "All time"]
-              [top-hunters]]])]]
-        [footer]]])))
+              [top-hunters]]])]]]
+       [footer]])))
 
 (secretary/set-config! :prefix "#")
 

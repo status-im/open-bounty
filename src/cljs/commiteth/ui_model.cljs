@@ -87,8 +87,8 @@
     ::bounty-filter-type.category                      ::bounty-filter-type-category|multiple-dynamic-options
     ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-currencies
     ::bounty-filter-type.predicate                     (fn [filter-value bounty]
-                                                         (or (and (contains? #{"ETH"} filter-value)
-                                                                  (< 0 (:balance-eth bounty)))
+                                                         (or (and (contains? filter-value "ETH")
+                                                                  (< 0 (js/parseFloat (:balance-eth bounty))))
                                                              (not-empty
                                                                (set/intersection
                                                                  (->> filter-value (remove #{"ETH"}) set)
