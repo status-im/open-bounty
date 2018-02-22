@@ -62,6 +62,8 @@
      :value     (:current-val opts)
      :on-change (when-let [f (:on-change-val opts)]
                   #(-> % .-target .-value int f))
+     :on-mouse-up (when-let [f (:on-change-val opts)]
+                    #(-> % .-target .-value int f))
      :on-focus  #(reset! tooltip-open? true)}]])
 
 (defmulti bounties-filter-tooltip-view #(-> %2 ::ui-model/bounty-filter-type.category))

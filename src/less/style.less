@@ -504,7 +504,7 @@ label[for="input-hidden"] {
 
         .open-bounties-filter-element-tooltip-value-input-container {
             display: flex;
-            margin-top: 10px;
+            margin-top: 25px;
         }
 
         .open-bounties-filter-element-tooltip-value-input-label {
@@ -512,94 +512,83 @@ label[for="input-hidden"] {
         }
 
         .open-bounties-filter-element-tooltip-value-input {
-            margin-top: 24px;
-            width: 288.5px;
-            height: 4px;
-            background-color: #55a5ea;
+            padding-top: 2px;
+            width: 289px;
         }
 
-        // generated with http://danielstern.ca/range.css/#/
         input[type=range] {
             -webkit-appearance: none;
-            //width: 100%;
-            margin: 14.5px 0;
-        }
-        input[type=range]:focus {
-            outline: 0;
-        }
-        input[type=range]::-moz-focus-outer {
-            border: 0;
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
-            height: 4px;
-            cursor: pointer;
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            height: 5px;
             background: #55a5ea;
-            border-radius: 0px;
-            border: 0px solid #010101;
+            border: none;
+            border-radius: 3px;
         }
         input[type=range]::-webkit-slider-thumb {
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
-            border: 0px solid #000000;
+            -webkit-appearance: none;
+            cursor: pointer;
+            border: none;
             height: 33px;
             width: 33px;
-            border-radius: 50px;
+            border-radius: 50%;
             background: #55a5ea;
-            cursor: pointer;
-            -webkit-appearance: none;
             margin-top: -14.5px;
+        }
+        input[type=range]:focus {
+            outline: none;
         }
         input[type=range]:focus::-webkit-slider-runnable-track {
             background: #5aa7eb;
         }
+
         input[type=range]::-moz-range-track {
-            width: 100%;
-            height: 4px;
             cursor: pointer;
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            width: 100%;
+            height: 5px;
             background: #55a5ea;
-            border-radius: 0px;
-            border: 0px solid #010101;
+            border: none;
+            border-radius: 3px;
         }
         input[type=range]::-moz-range-thumb {
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
-            border: 0px solid #000000;
+            border: none;
             height: 33px;
             width: 33px;
-            border-radius: 50px;
+            border-radius: 50%;
             background: #55a5ea;
-            cursor: pointer;
         }
+
+        input[type=range]:-moz-focusring{
+            outline: 1px solid white;
+            outline-offset: -1px;
+        }
+
         input[type=range]::-ms-track {
-            width: 100%;
-            height: 4px;
             cursor: pointer;
+            width: 300px;
+            height: 5px;
             background: transparent;
             border-color: transparent;
+            border-width: 6px 0;
             color: transparent;
         }
         input[type=range]::-ms-fill-lower {
             background: #50a3e9;
-            border: 0px solid #010101;
-            border-radius: 0px;
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            border-radius: 10px;
         }
         input[type=range]::-ms-fill-upper {
             background: #55a5ea;
-            border: 0px solid #010101;
-            border-radius: 0px;
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+            border-radius: 10px;
         }
         input[type=range]::-ms-thumb {
-            box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
-            border: 0px solid #000000;
-            height: 33px;
-            width: 33px;
-            border-radius: 50px;
-            background: #55a5ea;
             cursor: pointer;
-            height: 4px;
+            border: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 8px;
+            background: #55a5ea;
+            margin-top: 1px;
         }
         input[type=range]:focus::-ms-fill-lower {
             background: #55a5ea;
