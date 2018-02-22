@@ -1,10 +1,10 @@
 (ns commiteth.core
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
-            [secretary.core :as secretary]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
             [commiteth.ajax :refer [load-interceptors!]]
+            [commiteth.routes]
             [commiteth.handlers]
             [commiteth.subscriptions]
             [commiteth.activity :refer [activity-page]]
@@ -89,7 +89,7 @@
               (for [[page caption] tabs]
                 (let [props {:class (str "ui item"
                                          (when (= @current-page page) " active"))
-                             :on-click #(rf/dispatch [:set-active-page page])}]
+                             :on-click #(commiteth.routes/nav! page)}]
                   ^{:key page} [:div props caption])))))))
 
 
@@ -122,15 +122,6 @@
          [tabs true]]]
        (when @flash-message
          [flash-message-pane])])))
-
-
-(def pages
-  {:activity #'activity-page
-   :bounties #'bounties-page
-   :repos #'repos-page
-   :manage-payouts #'manage-payouts-page
-   :update-address #'update-address-page
-   :usage-metrics #'usage-metrics-page})
 
 
 (defn top-hunters []
@@ -211,7 +202,13 @@
           [:div {:class (str (if (show-top-hunters?) "eleven" "sixteen")
                              " wide computer sixteen wide tablet column")}
            [:div.ui.container
-            [(pages @current-page)]]]
+            (case @current-page
+              :activity       [activity-page]
+              :bounties       [bounties-page]
+              :repos          [repos-page]
+              :manage-payouts [manage-payouts-page]
+              :update-address [update-address-page]
+              :usage-metrics  [usage-metrics-page])]]
           (when (show-top-hunters?)
             [:div.five.wide.column.computer.only
              [:div.ui.container.top-hunters
@@ -219,28 +216,6 @@
               [:div.top-hunters-subheader "All time"]
               [top-hunters]]])]]]
        [footer]])))
-
-(secretary/set-config! :prefix "#")
-
-(secretary/defroute "/" []
-  (rf/dispatch [:set-active-page :bounties]))
-
-(secretary/defroute "/activity" []
-  (rf/dispatch [:set-active-page :activity]))
-
-
-(secretary/defroute "/repos" []
-  (if js/user
-    (rf/dispatch [:set-active-page :repos])
-    (secretary/dispatch! "/")))
-
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-     HistoryEventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
 
 (defn mount-components []
   (r/render [#'page] (.getElementById js/document "app")))
@@ -286,7 +261,7 @@
   (when config/debug?
     (enable-re-frisk!))
   (load-interceptors!)
-  (hook-browser-navigation!)
+  (commiteth.routes/setup-nav!)
   (load-data true)
   (.addEventListener js/window "click" #(rf/dispatch [:clear-flash-message]))
   (on-js-load))

@@ -5,7 +5,7 @@
                   :exclusions [joda-time]]
                  [re-frame "0.10.2"]
                  [cljs-ajax "0.7.2"]
-                 [secretary "1.2.3"]
+                 [funcool/bide "1.6.0"]
                  [reagent-utils "0.2.1"]
                  [reagent "0.7.0"]
                  [org.clojure/clojurescript "1.9.946"]
