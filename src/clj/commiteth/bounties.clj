@@ -118,3 +118,31 @@
       (= 1 (:claim_count bounty))          :claimed
       (seq (:tokens bounty))               :funded
       (:contract_address bounty)           :opened)))
+
+(comment
+  (clojure.pprint/pprint
+   (bounties/get-bounty "martinklepsch" "RepoSOB" 28))
+
+  ;; STATES
+  ;; - tx submitted
+  ;; - waiting for contract to be mined
+  ;; - waiting for confirmation
+  ;; - confirmation received, etc.
+  (clojure.pprint/pprint
+   (bounties/closed-bounties))
+
+  (clojure.pprint/pprint
+   (count (bounties/owner-bounties 97496)))
+
+  (clojure.pprint/pprint
+   (frequencies (map bounty-state (bounties/owner-bounties 97496))))
+
+  (clojure.pprint/pprint
+   (remove #(let [s (bounty-state %)]
+              (#{:paid :funded} s))
+           (bounties/owner-bounties 97496)))
+
+
+  [:opened :funded :claimed (:claimed_multiple) ]
+
+  )
