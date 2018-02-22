@@ -103,43 +103,36 @@
           (log/info "Updating changed title for issue" (:id gh-issue))
           (issues/update-issue-title (:id gh-issue) (:title gh-issue)))))))
 
-(defn bounty-state [bounty]
+(defn bounty-state
+  "Given a map as returned by `owner-bounties` return the state the provided bounty is in.
+
+  The lifecycle of a bounty is a sequence of the following states:
+  :opened > :funded > :claimed > :merged > :paid
+
+  As well as various states that are only reached under specific conditins:
+  - :multiple-claims
+  - :pending-contributor-address
+  - :pending-maintainer-confirmation"
+  [bounty]
   (if-let [merged? (:winner_login bounty)]
     (cond
       (nil? (:payout_address bounty)) :pending-contributor-address
       (nil? (:confirm_hash bounty))   :pending-maintainer-confirmation
       (:payout_hash bounty)           :paid
-      :else :merged)
+      :else                           :merged)
     (cond ; not yet merged
-      (some-> (:claim_count bounty) (< 1)) :multiple_claims
+      (some-> (:claim_count bounty) (< 1)) :multiple-claims
       (= 1 (:claim_count bounty))          :claimed
       (seq (:tokens bounty))               :funded
       (:contract_address bounty)           :opened)))
 
 (comment
-  (clojure.pprint/pprint
-   (bounties/get-bounty "martinklepsch" "RepoSOB" 28))
-
-  ;; STATES
-  ;; - tx submitted
-  ;; - waiting for contract to be mined
-  ;; - waiting for confirmation
-  ;; - confirmation received, etc.
-  (clojure.pprint/pprint
-   (bounties/closed-bounties))
+  (def user 97496)
 
   (clojure.pprint/pprint
-   (count (bounties/owner-bounties 97496)))
+   (count (bounties/owner-bounties user)))
 
   (clojure.pprint/pprint
-   (frequencies (map bounty-state (bounties/owner-bounties 97496))))
-
-  (clojure.pprint/pprint
-   (remove #(let [s (bounty-state %)]
-              (#{:paid :funded} s))
-           (bounties/owner-bounties 97496)))
-
-
-  [:opened :funded :claimed (:claimed_multiple) ]
+   (frequencies (map bounty-state (bounties/owner-bounties user))))
 
   )
