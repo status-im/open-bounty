@@ -65,6 +65,7 @@
            (merge {:on-click
                    #(rf/dispatch [:save-user-fields {:address @address
                                                      :is_hidden_in_hunters @hidden}])
+                   :disabled (str/blank? @address)
                    :class (str "ui button small update-address-button"
                                (when @updating-user
                                  " busy loading"))})
