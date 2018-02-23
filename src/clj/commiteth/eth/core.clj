@@ -101,8 +101,6 @@
         options  {:headers {"content-type" "application/json"}
                   :body body}
         response  @(post (eth-rpc-url) options)
-        _ (log/info "eth-rpc method:" method)
-        _ (log/info "eth-rpc response:" response)
         result   (json/read-str (:body response) :key-fn keyword)]
     (log/debug body "\n" result)
 
