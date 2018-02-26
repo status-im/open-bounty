@@ -91,6 +91,21 @@
         (gas-price-from-config)))
     (gas-price-from-config)))
 
+(defn safe-read-str [s]
+  (if (nil? s)
+    (do
+      (log/error "JSON response is nil")
+      nil)
+    (try
+      (json/read-str s :key-fn keyword)
+      (catch Exception ex
+        (do (log/error "Exception when parsing json string:"
+                       s
+                       "message:"
+                       ex)
+
+            nil)))))
+
 (defn eth-rpc
   [method params]
   (let [request-id (rand-int 4096)
@@ -101,7 +116,7 @@
         options  {:headers {"content-type" "application/json"}
                   :body body}
         response  @(post (eth-rpc-url) options)
-        result   (json/read-str (:body response) :key-fn keyword)]
+        result   (safe-read-str (:body response))]
     (log/debug body "\n" result)
 
     (if (= (:id result) request-id)
