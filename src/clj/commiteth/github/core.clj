@@ -368,7 +368,7 @@
   "Find all issues with a bounty label in provided repos"
   (let [get-last-part (fn get-last-part [s]
                         (subs s (inc (str/last-index-of s "/"))))
-        get-issue-info (fn get-issue-info [issue]
+        get-issue-info (fn get-issue-info [r issue]
                          (hash-map :owner r
                                    :repo (get-last-part (:repository_url issue))
                                    :id (:id issue)
@@ -387,6 +387,8 @@
                                            params)
                                          :items)]
                      (if (first issues-page)
-                       (recur (into repo-issues (map get-issue-info issues-page)) (inc i))
+                       (recur (into repo-issues 
+                                    (map (partial get-issue-info r) issues-page)) 
+                              (inc i))
                        repo-issues))))]
     (apply concat issues)))
