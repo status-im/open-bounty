@@ -3,6 +3,7 @@
              [core :as tentacles]
              [repos :as repos]
              [oauth :as oauth]
+             [search :as search]
              [users :as users]
              [repos :as repos]
              [issues :as issues]
@@ -26,6 +27,8 @@
 (defn self-password [] (:github-password env))
 (defn on-testnet? [] (env :on-testnet))
 (defn webhook-secret [] (env :webhook-secret))
+
+
 
 (defn authorize-url [scope]
   (let [params (codec/form-encode {:client_id    (client-id)
@@ -360,3 +363,30 @@
   (let [[owner repo] (str/split full-repo #"/")]
     (log/debug "creating bounty label" (str owner "/" repo) token)
     (issues/create-label owner repo "bounty" "fafad2" (auth-params token))))
+
+(defn get-labeled-issues-for-repos [repos auth-params]
+  "Find all issues with a bounty label in provided repos"
+  (let [get-last-part (fn get-last-part [s]
+                        (subs s (inc (str/last-index-of s "/"))))
+        get-issue-info (fn get-issue-info [issue]
+                         (hash-map :owner r
+                                   :repo (get-last-part (:repository_url issue))
+                                   :id (:id issue)
+                                   :number (:number issue)
+                                   :title (:title issue)
+                                   :url (:html_url issue)
+                                   :created_at (:created_at issue)
+                                   :closed_at (:closed_at issue))) 
+        issues (for [r repos]
+                 (loop [repo-issues [] i 1]
+                   (let [params (into auth-params
+                                      {:sort "created" :order "desc" :page i})
+                         issues-page (-> (search/search-issues 
+                                           nil
+                                           {:label "bounty" :user r :type "issue"}
+                                           params)
+                                         :items)]
+                     (if (first issues-page)
+                       (recur (into repo-issues (map get-issue-info issues-page)) (inc i))
+                       repo-issues))))]
+    (apply concat issues)))
