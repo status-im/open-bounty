@@ -102,19 +102,16 @@ WHERE i.repo_id = :repo_id
 AND i.confirm_hash is null
 AND i.is_open = true;
 
--- :name update-repo-generic :! :n
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+-- :name update-repo-name :! :n
 UPDATE repositories
-SET
-/*~
-(string/join ","
-  (for [[field _] (:updates params)]
-    (str (identifier-param-quote (name field) options)
-      " = :v:updates." (name field))))
-~*/
-where repo_id = :repo_id;
+SET repo = :repo_name
+WHERE repo_id = :repo_id 
+AND repo != :repo_name
 
+-- :name update-repo-state :! :n
+UPDATE repositories
+SET state = :repo_state
+WHERE repo_id = :repo_id 
 
 
 -- Issues --------------------------------------------------------------------------
