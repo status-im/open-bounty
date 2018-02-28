@@ -103,6 +103,11 @@
           (log/info "Updating changed title for issue" (:id gh-issue))
           (issues/update-issue-title (:id gh-issue) (:title gh-issue)))))))
 
+(defn assert-keys [m ks]
+  (doseq [k ks]
+    (when-not (find m k)
+      (throw (ex-info (format "Expected key missing from provided map: %s" k) {:map m})))))
+
 (defn bounty-state
   "Given a map as returned by `owner-bounties` return the state the provided bounty is in.
 
@@ -114,6 +119,8 @@
   - :pending-contributor-address
   - :pending-maintainer-confirmation"
   [bounty]
+  (assert-keys bounty [:winner_login :payout_address :confirm_hash :payout_hash
+                       :claims :tokens :contract_address])
   (if-let [merged? (:winner_login bounty)]
     (cond
       (nil? (:payout_address bounty)) :pending-contributor-address
@@ -121,10 +128,10 @@
       (:payout_hash bounty)           :paid
       :else                           :merged)
     (cond ; not yet merged
-      (some-> (:claim_count bounty) (< 1)) :multiple-claims
-      (= 1 (:claim_count bounty))          :claimed
-      (seq (:tokens bounty))               :funded
-      (:contract_address bounty)           :opened)))
+      (< 1 (count (:claims bounty)))  :multiple-claims
+      (= 1 (count (:claims bounty)))  :claimed
+      (seq (:tokens bounty))          :funded
+      (:contract_address bounty)      :opened)))
 
 (comment
   (def user 97496)
