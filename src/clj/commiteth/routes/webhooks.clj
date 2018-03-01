@@ -109,26 +109,17 @@
             (extract pr-title))))
 
 
-(defn ensure-bounty-issue
-  "Checks if an issue has a bounty label attached and returns its number"
-  [user repo issue-number]
-  (when-let [issue (github/get-issue user repo issue-number)]
-    (when (bounties/has-bounty-label? issue)
-      issue-number)))
-
-
 (defn handle-claim
-  [user-id login name avatar_url owner repo repo-id bounty-issue-number pr-id pr-number head-sha merged? event-type]
+  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number head-sha merged? event-type]
   (users/create-user user-id login name nil avatar_url)
-  (let [issue (github/get-issue owner repo bounty-issue-number)
-        open-or-edit? (contains? #{:opened :edited} event-type)
+  (let [open-or-edit? (contains? #{:opened :edited} event-type)
         close? (= :closed event-type)
         pr-data {:repo_id   repo-id
                  :pr_id     pr-id
                  :pr_number pr-number
                  :user_id   user-id
-                 :issue_number bounty-issue-number
-                 :issue_id (:id issue)
+                 :issue_number (:issue_number issue)
+                 :issue_id (:issue_id issue)
                  :state event-type}]
 
     ;; TODO: in the opened case if the submitting user has no
@@ -138,18 +129,18 @@
     (cond
       open-or-edit? (do
                       (log/info "PR with reference to bounty issue"
-                                bounty-issue-number "opened")
+                                 (:issue_number issue) "opened")
                       (pull-requests/save (merge pr-data {:state :opened
                                                           :commit_sha head-sha})))
       close? (if merged?
                (do (log/info "PR with reference to bounty issue"
-                             bounty-issue-number "merged")
+                             (:issue_number issue) "merged")
                    (pull-requests/save
                     (merge pr-data {:state :merged
                                     :commit_sha head-sha}))
-                   (issues/update-commit-sha (:id issue) head-sha))
+                   (issues/update-commit-sha (:issue_id issue) head-sha))
                (do (log/info "PR with reference to bounty issue"
-                             bounty-issue-number "closed with no merge")
+                             (:issue_number issue) "closed with no merge")
                    (pull-requests/save
                     (merge pr-data {:state :closed
                                     :commit_sha head-sha})))))))
@@ -177,26 +168,27 @@
      pr-number       :number
      pr-body         :body
      pr-title        :title} :pull_request}]
-  (log/debug "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (log/debug (extract-issue-number pr-body pr-title))
-  (if-let [bounty-issue-number (->>
-                                  (extract-issue-number pr-body pr-title)
-                                  (first)
-                                  (ensure-bounty-issue owner repo))]
-    (do
-      (log/debug "Referenced bounty issue found" owner repo bounty-issue-number)
-      (handle-claim user-id
-                    login name
-                    avatar_url
-                    owner repo
-                    repo-id
-                    bounty-issue-number
-                    pr-id
-                    pr-number
-                    head-sha
-                    merged?
-                    event-type))
+  (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
+  (if-let [issue (some->> (extract-issue-number pr-body pr-title)
+                          (first)
+                          (issues/get-issue repo-id))]
+    (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
+      (do
+        (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
+        (handle-claim issue
+                      user-id
+                      login name
+                      avatar_url
+                      owner repo
+                      repo-id
+                      pr-id
+                      pr-number
+                      head-sha
+                      merged?
+                      event-type))
+      (log/info "PR for issue already merged"))
     (when (= :edited event-type)
+      ; Remove PR if it does not reference any issue
       (pull-requests/remove pr-id))))
 
 
