@@ -63,12 +63,6 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/list-pending-deployments con-db)))
 
-
-(defn list-failed-deployments
-  []
-  (jdbc/with-db-connection [con-db *db*]
-    (db/list-failed-deployments con-db)))
-
 (defn update-eth-balance
   [contract-address balance-eth]
   (jdbc/with-db-connection [con-db *db*]

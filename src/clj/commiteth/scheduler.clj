@@ -54,33 +54,16 @@
         (log/error "Failed to find contract address in tx logs")))))
 
 
-(defn deploy-contract [owner-address issue-id]
-  (let [transaction-hash (multisig/deploy-multisig owner-address)]
-    (if (nil? transaction-hash)
-      (log/error "Failed to deploy contract to" owner-address)
-      (log/info "Contract deployed, transaction-hash:"
-                transaction-hash ))
-    (issues/update-transaction-hash issue-id transaction-hash)))
-
-
-(defn redeploy-failed-contracts
-  "If the bot account runs out of gas, we end up with transaction-id in db, but with nothing written to blockchain. In this case we should try to re-deploy the contract."
-  []
-  (doseq [{issue-id :issue_id
-           transaction-hash :transaction_hash
-           owner-address :owner_address} (issues/list-failed-deployments)]
-    (when (nil? (eth/get-transaction-receipt transaction-hash))
-      (log/info "Detected nil transaction receipt for pending contract deployment for issue" issue-id ", re-deploying contract")
-      (deploy-contract owner-address issue-id))))
-
-
 (defn deploy-pending-contracts
   "Under high-concurrency circumstances or in case geth is in defunct state, a bounty contract may not deploy successfully when the bounty label is addded to an issue. This function deploys such contracts."
   []
   (doseq [{issue-id :issue_id
-           owner-address :owner_address} (db-bounties/pending-contracts)]
+           issue-number :issue_number
+           owner :owner
+           owner-address :owner_address
+           repo :repo} (db-bounties/pending-contracts)]
     (log/debug "Trying to re-deploy failed bounty contract deployment, issue-id:" issue-id)
-    (deploy-contract owner-address issue-id)))
+    (bounties/deploy-contract owner owner-address repo issue-id issue-number)))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
@@ -327,8 +310,7 @@
     ;; TODO: disabled for now. looks like it may cause extraneus
     ;; contract deployments and costs
     (run-tasks
-     [;;redeploy-failed-contracts
-      deploy-pending-contracts
+     [deploy-pending-contracts
       update-issue-contract-address
       update-confirm-hash
       update-payout-receipt

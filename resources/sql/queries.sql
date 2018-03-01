@@ -196,20 +196,6 @@ AND i.contract_address IS NULL
 AND i.transaction_hash IS NOT NULL;
 
 
--- :name list-failed-deployments :? :*
--- :doc retrieves failed contract deployments
-SELECT
-  i.issue_id as issue_id,
-  i.transaction_hash as transaction_hash,
-  u.address as owner_address
-FROM issues i, users u, repositories r
-WHERE r.user_id = u.id
-AND i.repo_id = r.repo_id
-AND i.contract_address IS NULL
-AND i.transaction_hash IS NOT NULL
-AND i.updated < now() at time zone 'UTC' - interval '1 hour';
-
-
 -- Pull Requests -------------------------------------------------------------------
 
 -- :name save-pull-request! :! :n
@@ -252,7 +238,10 @@ WHERE pr_id = :pr_id;
 -- :doc bounty issues where deploy contract has failed
 SELECT
   i.issue_id         AS issue_id,
-  u.address          AS owner_address
+  i.issue_number     AS issue_number,
+  u.login            AS owner,
+  u.address          AS owner_address,
+  r.repo             AS repo
 FROM issues i, users u, repositories r
 WHERE
 r.user_id = u.id
