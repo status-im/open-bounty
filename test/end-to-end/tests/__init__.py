@@ -9,7 +9,7 @@ class TestData(object):
         # define here path to your config.ini file
         # example - config_example.ini
 
-        self.config.read('config.ini')
+        self.config.read("tests/config.ini")
 
         # self.issue['title'] is set in GithubPage::create_new_bounty
         # self.issue['id'] is set in GithubPage::create_new_bounty
