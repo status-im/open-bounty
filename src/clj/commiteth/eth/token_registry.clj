@@ -55,13 +55,3 @@
                             .get)))
                   ;; ignore empty records
                   (filter (fn [[tla _]] (not= ":" (str tla))))))))))
-
-(defn deploy-parity-tokenreg
-  "Deploy an instance of parity token-registry to current network"
-  []
-  (let [web3j (create-web3j)]
-    (TokenReg/deploy web3j
-                     (creds)
-                     (eth/gas-price)
-                     (BigInteger/valueOf 4000000) ;; gas limit
-                     BigInteger/ZERO)))
