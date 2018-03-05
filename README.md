@@ -41,10 +41,21 @@ psql postgres -c "CREATE DATABASE commiteth;"
 Solidity compiler (latest version, currently [0.4.20](https://github.com/ethereum/solidity/releases/tag/v0.4.20)) is required and needs to be in $PATH.
 Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
 
+In order to install version 0.4.20 on macOS using Homebrew:
+```
+brew tap ethereum/ethereum
+brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/76432c9aa279b6907e5b1323b9195f2681c30844/solidity.rb
+```
+
 ### web3j
 
 Web3j (latest version, currently [3.3.1](https://github.com/web3j/web3j/releases/tag/v3.3.1)) is required and the command line tools need to be in $PATH.
 Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
+
+In order to install version 3.3.1 on macOS using Homebrew:
+```
+brew install https://raw.githubusercontent.com/web3j/homebrew-web3j/master/web3j.rb
+```
 
 
 ## Application config
