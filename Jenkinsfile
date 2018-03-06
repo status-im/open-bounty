@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-node('master') {
+node('linux') {
 checkout scm
 
 def dockerreponame = "statusim/openbounty-app"
