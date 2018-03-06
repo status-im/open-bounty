@@ -236,7 +236,7 @@
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
   [issue-id bounty-addr watch-hash]
-  (log/info "In update-bounty-token-balances for issue" issue-id)
+  #_(log/info "In update-bounty-token-balances for issue" issue-id)
   (doseq [[tla token-data] (token-data/as-map)]
     (try
       (let [balance (multisig/token-balance bounty-addr tla)]
@@ -252,7 +252,7 @@
       (catch Throwable ex 
         (do (log/error "update-bounty-token-balances exception:" ex)
             (clojure.stacktrace/print-stack-trace ex)))))
-  (log/info "Exit update-bounty-token-balances"))
+  #_(log/info "Exit update-bounty-token-balances"))
   
 
 (defn update-contract-internal-balances
