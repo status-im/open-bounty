@@ -74,10 +74,10 @@
   :less {:source-paths ["src/less"]
          :target-path "resources/public/css"}
 
-  :auto {"build-contracts" {:file-pattern #"\.(sol)\n"
-                            :paths ["./contracts"]}}
+  ;; :auto {"build-contracts" {:file-pattern #"\.(sol)\n"
+  ;;                           :paths ["./contracts"]}}
 
-  :aliases {"build-contracts" ["shell" "./build_contracts.sh"]}
+  ;; :aliases {"build-contracts" ["shell" "./build_contracts.sh"]}
 
   :ring {:destroy commiteth.scheduler/stop-scheduler}
 
@@ -93,7 +93,7 @@
   :profiles
   {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
                    :omit-source    true
-                   :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
+                   :prep-tasks     [#_"build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
                     {:min
