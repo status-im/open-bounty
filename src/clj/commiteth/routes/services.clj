@@ -149,7 +149,7 @@
     (let [format-float (fn [balance]
                          (try 
                            (format "%.2f" (float balance))
-                           (catch Exception ex 
+                           (catch Throwable ex 
                              (do
                                (log/error "Failed to convert token value:" balance)
                                "0.00"))))
