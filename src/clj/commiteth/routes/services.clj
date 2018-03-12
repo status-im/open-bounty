@@ -148,8 +148,8 @@
 (defn prettify-bounty-items [bounty-items]
     (let [format-float (fn [balance]
                          (try 
-                           (format "%.2f" balance)
-                           (catch java.util.IllegalFormatConversionException ex "0.00")))
+                           (format "%.2f" (float balance))
+                           (catch Exception ex "0.00")))
           renames {:user_name :display-name
                    :user_avatar_url :avatar-url
                    :issue_title :issue-title
