@@ -150,9 +150,8 @@
                          (try 
                            (format "%.2f" (float balance))
                            (catch Throwable ex 
-                             (do
-                               (log/error "Failed to convert token value:" balance)
-                               "0.00"))))
+                             (log/error "Failed to convert token value:" balance)
+                             "0.00")))
           renames {:user_name :display-name
                    :user_avatar_url :avatar-url
                    :issue_title :issue-title
