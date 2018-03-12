@@ -1,4 +1,5 @@
 # Status Open Bounty
+[![Riot Chat Badge](https://img.shields.io/badge/join%20%23openbounty-riot-green.svg)](https://chat.status.im/#/room/#openbounty:status.im)
 
 Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
