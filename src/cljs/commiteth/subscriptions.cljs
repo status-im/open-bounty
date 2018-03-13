@@ -20,6 +20,11 @@
     (:user db)))
 
 (reg-sub
+  :user-profile-loaded?
+  (fn [db _]
+    (:user-profile-loaded? db)))
+
+(reg-sub
   :repos-loading?
   (fn [db _]
     (:repos-loading? db)))

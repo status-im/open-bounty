@@ -25,7 +25,11 @@ def dockerreponame = "statusim/openbounty-app"
 		}
 
 		stage('Deploy') {
-			build job: 'status-openbounty/openbounty-cluster', parameters: [[$class: 'StringParameterValue', name: 'DEPLOY_ENVIRONMENT', value: "dev"], [$class: 'StringParameterValue', name: 'BRANCH', value: env.BRANCH_NAME]]
+			if ( currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause') ){
+				build job: 'status-openbounty/openbounty-cluster', parameters: [[$class: 'StringParameterValue', name: 'DEPLOY_ENVIRONMENT', value: "dev"], [$class: 'StringParameterValue', name: 'BRANCH', value: env.BRANCH_NAME]]
+			} else {
+				echo "No deployment on automatic trigger, go to Jenkins and push build button to deliver it."
+			}
 		}
 
 	} catch (e) {

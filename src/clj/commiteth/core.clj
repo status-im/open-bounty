@@ -54,10 +54,9 @@ repl-server
   (cond
     (some #{"migrate" "rollback"} args)
     (do
-      (mount/start
-        #'commiteth.config/env
-        #'commiteth.db.core/*db*)
-      (migrations/migrate args (select-keys env [:jdbc-database-url]))
+      (mount/start #'commiteth.config/env)
+      (migrations/migrate args {:database-url (:jdbc-database-url env)})
+      (log/info "Successfully ran" (first args))
       (System/exit 0))
     :else
     (start-app args)))

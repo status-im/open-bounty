@@ -8,7 +8,7 @@ For testing you will need:
 * a web browser (Chrome is known to work, testing with others appreciated)
 * an Ethereum account on the Ropsten testnet
 * a Github account with administrative access to one or more repositories
-* for approving bounty payouts you will additionally need access to an Ethereum wallet. So far, Mist and [MetaMask](https://metamask.io/) have been used, but anything that provides the web3 javascript interface should work.
+* for approving bounty payouts you will additionally need access to an Ethereum wallet. ([MetaMask](https://metamask.io/) plugin)
 
 The developers can be reached on the `#openbounty` channel in the [Status slack](http://slack.status.im/).
 

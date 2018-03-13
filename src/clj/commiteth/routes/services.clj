@@ -5,6 +5,7 @@
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
+            [commiteth.db.core :as db]
             [commiteth.db.users :as users]
             [commiteth.db.usage-metrics :as usage-metrics]
             [commiteth.db.repositories :as repositories]
@@ -145,26 +146,40 @@
 
 
 (defn prettify-bounty-items [bounty-items]
-    (let [renames {:user_name :display-name
-                   :user_avatar_url :avatar-url
-                   :issue_title :issue-title
-                   :type :item-type
-                   :repo_name :repo-name
-                   :repo_owner :repo-owner
-                   :issue_number :issue-number
-                   :value_usd :value-usd
-                   :claim_count :claim-count
-                   :balance_eth :balance-eth
-                   :user_has_address :user-has-address}]
+  (let [format-float (fn [bounty balance]
+                       (try 
+                         (format "%.2f" (double balance))
+                         (catch Throwable ex 
+                           (log/error (str (:repo-owner bounty)
+                                           "/"
+                                           (:repo-name bounty)
+                                           "/"
+                                           (:issue-number bounty)) 
+                                      "Failed to convert token value:" balance)
+                           "0.00")))
+        update-token-values (fn [bounty]
+                              (->> bounty
+                                   :tokens
+                                   (map (fn [[tla balance]]
+                                          [tla (format-float bounty balance)]))
+                                   (into {})
+                                   (assoc bounty :tokens)))
+        renames {:user_name :display-name
+                 :user_avatar_url :avatar-url
+                 :issue_title :issue-title
+                 :type :item-type
+                 :repo_name :repo-name
+                 :repo_owner :repo-owner
+                 :issue_number :issue-number
+                 :value_usd :value-usd
+                 :claim_count :claim-count
+                 :balance_eth :balance-eth
+                 :user_has_address :user-has-address}]
     (map #(-> %
               (rename-keys renames)
               (update :value-usd usd-decimal->str)
               (update :balance-eth eth-decimal->str)
-              (update :tokens (fn [tokens]
-                                (into {}
-                                      (map (fn [[tla balance]]
-                                             [tla (format "%.2f" balance)])
-                                           tokens)))))
+              update-token-values)
          bounty-items)))
 
 (defn activity-feed []
@@ -214,26 +229,35 @@
                 (do
                   (log/debug "/usage-metrics" user)
                   (ok (usage-metrics/usage-metrics-by-day))))
+
            (context "/user" []
+
                     (GET "/" {:keys [params]}
                          :auth-rules authenticated?
                          :current-user user
                          (ok (handle-get-user user (:token params))))
-                    (POST "/address" []
+
+                    (POST "/" []
                           :auth-rules authenticated?
-                          :body-params [user-id :- Long, address :- String]
-                          :summary "Update user address"
-                          (if-not (eth/valid-address? address)
-                            (do
-                              (log/debug "POST /address: invalid input" address)
-                              {:status 400
-                               :body (str "Invalid Ethereum address '" address "'")})
-                            (let [result (users/update-user-address
-                                          user-id
-                                          address)]
-                              (if (= 1 result)
-                                (ok)
-                                (internal-server-error)))))
+                          :current-user user
+                          :body [body {:address s/Str
+                                       :is_hidden_in_hunters s/Bool}]
+                          :summary "Updates user's fields."
+
+                          (let [user-id (:id user)
+                                {:keys [address]} body]
+
+                            (when-not (eth/valid-address? address)
+                              (log/debugf "POST /user: Wrong address %s" address)
+                              (bad-request! (format "Invalid Ethereum address: %s" address)))
+
+                            (db/with-tx
+                              (when-not (db/user-exists? {:id user-id})
+                                (not-found! "No such a user."))
+                              (db/update! :users body ["id = ?" user-id]))
+
+                            (ok)))
+
                     (GET "/repositories" {:keys [params]}
                          :auth-rules authenticated?
                          :current-user user
