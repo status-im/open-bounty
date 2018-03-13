@@ -57,7 +57,7 @@ class BaseTestCase:
 
         #
         # SauceLab capabilities
-        #testcommit to check GPG signature
+        #testcommit to check GPG signature 2
         cls.executor_sauce_lab = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
         environ.get('SAUCE_USERNAME'), environ.get('SAUCE_ACCESS_KEY'))
         drivers = []
