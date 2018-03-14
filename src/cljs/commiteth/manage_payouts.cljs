@@ -58,13 +58,13 @@
             [claim-card bounty claim]))))
 
 (defn bounty-stats [{:keys [paid unpaid]}]
-  [:div.cf.pv4
-   [:div.fl.w-50.tc
+  [:div.cf
+   [:div.fl-ns.w-50-ns.tc.pv4
     [:div.ttu.tracked "Open"]
     [:div.f2.pa2 (common/usd-string (:combined-usd-value unpaid))]
     [:div (:count unpaid) " bounties"]]
 
-   [:div.fl.w-50.tc
+   [:div.fl-ns.w-50-ns.tc.pv4
     [:div.ttu.tracked "Paid"]
     [:div.f2.pa2 (common/usd-string (:combined-usd-value paid))]
     [:div (:count paid) " bounties"]]])
