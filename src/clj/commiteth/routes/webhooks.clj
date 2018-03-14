@@ -118,18 +118,19 @@
 
 
 (defn handle-claim
-  [user-id login name avatar_url owner repo repo-id bounty-issue-number pr-id pr-number head-sha merged? event-type]
+  [user-id login name avatar_url owner repo repo-id bounty-issue-number pr-id pr-number pr-title head-sha merged? event-type]
   (users/create-user user-id login name nil avatar_url)
-  (let [issue (github/get-issue owner repo bounty-issue-number)
+  (let [issue         (github/get-issue owner repo bounty-issue-number)
         open-or-edit? (contains? #{:opened :edited} event-type)
-        close? (= :closed event-type)
-        pr-data {:repo_id   repo-id
-                 :pr_id     pr-id
-                 :pr_number pr-number
-                 :user_id   user-id
-                 :issue_number bounty-issue-number
-                 :issue_id (:id issue)
-                 :state event-type}]
+        close?        (= :closed event-type)
+        pr-data       {:repo_id      repo-id
+                       :pr_id        pr-id
+                       :pr_number    pr-number
+                       :title        pr-title
+                       :user_id      user-id
+                       :issue_number bounty-issue-number
+                       :issue_id     (:id issue)
+                       :state        event-type}]
 
     ;; TODO: in the opened case if the submitting user has no
     ;; Ethereum address stored, we could post a comment to the
@@ -193,6 +194,7 @@
                     bounty-issue-number
                     pr-id
                     pr-number
+                    pr-title
                     head-sha
                     merged?
                     event-type))
