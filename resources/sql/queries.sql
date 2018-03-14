@@ -592,6 +592,7 @@ SELECT
   issue_title,
   repo_name,
   repo_owner,
+  pr_title,
   issue_number,
   user_name,
   user_avatar_url,
