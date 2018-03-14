@@ -485,6 +485,16 @@
    (assoc db :user-dropdown-open? false)))
 
 (reg-event-db
+ ::open-bounty-claim
+ (fn [db [_ opening-issue-id]]
+   (update db ::db/open-bounty-claims #(conj % opening-issue-id))))
+
+(reg-event-db
+ ::close-bounty-claim
+ (fn [db [_ closing-issue-id]]
+   (update db ::db/open-bounty-claims #(disj % closing-issue-id))))
+
+(reg-event-db
   ::set-open-bounties-sorting-type
   (fn [db [_ sorting-type]]
     (merge db {::db/open-bounties-sorting-type sorting-type
