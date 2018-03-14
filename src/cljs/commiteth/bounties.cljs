@@ -62,6 +62,8 @@
      :value     (:current-val opts)
      :on-change (when-let [f (:on-change-val opts)]
                   #(-> % .-target .-value int f))
+     :on-mouse-up (when-let [f (:on-change-val opts)]
+                    #(-> % .-target .-value int f))
      :on-focus  #(reset! tooltip-open? true)}]])
 
 (defmulti bounties-filter-tooltip-view #(-> %2 ::ui-model/bounty-filter-type.category))
@@ -211,8 +213,7 @@
        [:div.item-counts-label-and-sorting-container
         [:div.item-counts-label
          [:span (str "Showing " left "-" right " of " total-count)]]
-        (when-not (util/os-windows?)
-          [bounties-sort-view])])
+        [bounties-sort-view]])
      (display-data-page bounty-page-data bounty-item container-element)]))
 
 (defn bounties-page []
@@ -227,7 +228,6 @@
         [:div.ui.container.open-bounties-container
          {:ref #(reset! container-element %1)}
          [:div.open-bounties-header "Bounties"]
-         (when-not (util/os-windows?)
-           [:div.open-bounties-filter-and-sort
-            [bounty-filters-view]])
+         [:div.open-bounties-filter-and-sort
+          [bounty-filters-view]]
          [bounties-list @bounty-page-data container-element]]))))

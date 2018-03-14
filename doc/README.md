@@ -1,7 +1,9 @@
 # Table of contents
 
-- [Testing guide](doc/testing.md)
-- [Troubleshooting](doc/cookbook.md)
-- [Deployment flow](doc/deployment_flow.md)
-- [Payout flow](doc/payout_flow.md)
-- [Common sync issues](doc/sync_issues.md)
+- [Testing guide](testing.md)
+- [Troubleshooting](cookbook.md)
+- [Deployment flow](deployment_flow.md)
+- [Development workflow](development_workflow.md)
+- [Deployment flow](deployment_flow.md)
+- [Payout flow](payout_flow.md)
+- [Common sync issues](sync_issues.md)
