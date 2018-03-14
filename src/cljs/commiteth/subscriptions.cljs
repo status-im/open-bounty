@@ -53,17 +53,24 @@
   :open-bounties-page
   :<- [::filtered-and-sorted-open-bounties]
   :<- [:page-number]
-  (fn [[open-bounties page-number] _]
+  :<- [:activity-feed]
+  (fn [[open-bounties page-number activity-feed] _]
     (let [total-count (count open-bounties)
-          start (* (dec page-number) items-per-page)
-          end (min total-count (+ items-per-page start))
-          items (subvec open-bounties start end)]
-      {:items items
-       :item-count (count items)
+          start       (* (dec page-number) items-per-page)
+          end         (min total-count (+ items-per-page start))
+          items       (->> (subvec open-bounties start end)
+                           (map (fn [bounty]
+                                  (let [matching-claims (filter
+                                                         (fn [claim]
+                                                           (= (:issue-number claim)
+                                                              (:issue-number bounty)))
+                                                         activity-feed)]
+                                    (assoc bounty :claims matching-claims)))))]
+      {:items       items
+       :item-count  (count items)
        :total-count total-count
        :page-number page-number
-       :page-count (Math/ceil (/ total-count items-per-page))})))
-
+       :page-count  (Math/ceil (/ total-count items-per-page))})))
 
 (reg-sub
   :owner-bounties
@@ -145,6 +152,11 @@
   :user-dropdown-open?
   (fn [db _]
     (:user-dropdown-open? db)))
+
+(reg-sub
+  ::open-bounty-claims
+  (fn [db _]
+    (::db/open-bounty-claims db)))
 
 (reg-sub
   ::open-bounties-sorting-type
