@@ -219,7 +219,7 @@
     (str "Tokens: "
          (str/join " " (map (fn [[tla balance]] (format "%s: %.2f"
                                                        (subs (str tla) 1)
-                                                       (float balance)))
+                                                       (double balance)))
                             token-balances))
          "\n")))
 

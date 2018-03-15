@@ -101,3 +101,9 @@
         first
         :exists
         boolean)))
+
+(defn get-issue
+  [repo-id issue-number]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issue con-db {:repo_id repo-id
+                          :issue_number issue-number})))
