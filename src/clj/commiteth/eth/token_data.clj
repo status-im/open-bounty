@@ -15,7 +15,7 @@
 (defn update-data []
   (let [test-data (env :testnet-token-data)
         token-data
-        (if (and (env :on-testnet true)
+        (if (and #_(env :on-testnet true)
                  test-data)
           test-data
           (into {}

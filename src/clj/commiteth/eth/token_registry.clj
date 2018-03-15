@@ -1,6 +1,5 @@
 (ns commiteth.eth.token-registry
-  (:require [commiteth.eth.core :as eth]
-            [commiteth.eth.web3j
+  (:require [commiteth.eth.core :as eth
              :refer [create-web3j creds]]
             [commiteth.config :refer [env]]
             [clojure.tools.logging :as log])

@@ -85,26 +85,40 @@
 
 
 (defn prettify-bounty-items [bounty-items]
-    (let [renames {:user_name :display-name
-                   :user_avatar_url :avatar-url
-                   :issue_title :issue-title
-                   :type :item-type
-                   :repo_name :repo-name
-                   :repo_owner :repo-owner
-                   :issue_number :issue-number
-                   :value_usd :value-usd
-                   :claim_count :claim-count
-                   :balance_eth :balance-eth
-                   :user_has_address :user-has-address}]
+  (let [format-float (fn [bounty balance]
+                       (try 
+                         (format "%.2f" (double balance))
+                         (catch Throwable ex 
+                           (log/error (str (:repo-owner bounty)
+                                           "/"
+                                           (:repo-name bounty)
+                                           "/"
+                                           (:issue-number bounty)) 
+                                      "Failed to convert token value:" balance)
+                           "0.00")))
+        update-token-values (fn [bounty]
+                              (->> bounty
+                                   :tokens
+                                   (map (fn [[tla balance]]
+                                          [tla (format-float bounty balance)]))
+                                   (into {})
+                                   (assoc bounty :tokens)))
+        renames {:user_name :display-name
+                 :user_avatar_url :avatar-url
+                 :issue_title :issue-title
+                 :type :item-type
+                 :repo_name :repo-name
+                 :repo_owner :repo-owner
+                 :issue_number :issue-number
+                 :value_usd :value-usd
+                 :claim_count :claim-count
+                 :balance_eth :balance-eth
+                 :user_has_address :user-has-address}]
     (map #(-> %
               (rename-keys renames)
               (update :value-usd usd-decimal->str)
               (update :balance-eth eth-decimal->str)
-              (update :tokens (fn [tokens]
-                                (into {}
-                                      (map (fn [[tla balance]]
-                                             [tla (format "%.2f" balance)])
-                                           tokens)))))
+              update-token-values)
          bounty-items)))
 
 (defn activity-feed []
