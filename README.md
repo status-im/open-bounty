@@ -1,4 +1,5 @@
 # Status Open Bounty
+[![Riot Chat Badge](https://img.shields.io/badge/join%20%23openbounty-riot-green.svg)](https://chat.status.im/#/room/#openbounty:status.im)
 
 Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
@@ -73,6 +74,7 @@ eth-account | Ethereum account ID for the bot
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
+offline-signing | Specifies whether to sign transactions locally before sending. Default is true. Set to false when connecting to local Geth node that unlocks accounts
 tokenreg-base-format | Should be set to `:status`
 github-client-id | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
 github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
@@ -93,13 +95,21 @@ Follow the steps [here](https://developer.github.com/apps/building-github-apps/c
 
 ## Running
 
-### Geth
-Launch a local geth node with the bot account unlocked:
+### Ethereum node
+There are two options for connecting to an Ethereum node: either run a local node with an unlocked account, or connect to a remote Geth node or Infura. We will be connecting to Ropsten which is a test Ethereum network.
+
+#### Local
+
+In order to launch a local geth node with the bot account unlocked issue the following command:
 
 ```
 #!/bin/bash
 geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port 50100 --ipcpath ~/.ropsten/geth.ipc --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi db,eth,net,web3,personal --rpccorsdomain "https://wallet.ethereum.org" --unlock "0xYOUR_ADDR" --password <(echo "YOUR_PASSPHRASE")
 ```
+
+#### Remote
+Register at [Infura](https://infura.io/signup). You will receive an email with provider URLs. Paste an URL for the Ropsten network into `config.edn` under `:eth-rpc-url` key, and set `:offline-signing` to true.
+
 
 ### CSS auto-compilation
 Launch the following command in a separate shell:

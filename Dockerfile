@@ -23,7 +23,12 @@ RUN lein uberjar
 FROM clojure
 WORKDIR /root/
 
+RUN apt-get update
+RUN apt-get -y install xvfb
+RUN apt-get -y install wkhtmltopdf
+
 COPY --from=builder /usr/src/app/target/uberjar/commiteth.jar .
+COPY html2png.sh .
 
 CMD [""]
 ENTRYPOINT ["/usr/bin/java", "-Duser.timezone=UTC", "-Dconf=config-test.edn", "-jar", "/root/commiteth.jar"]

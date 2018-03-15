@@ -1,8 +1,7 @@
 (ns commiteth.eth.multisig-wallet
-  (:require [commiteth.eth.core :as eth]
-            [commiteth.config :refer [env]]
-            [commiteth.eth.web3j
+  (:require [commiteth.eth.core :as eth
              :refer [create-web3j creds]]
+            [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
@@ -190,30 +189,6 @@
                                (let [tla (first info)]
                                  [tla (token-balance bounty-addr tla)]))) addrs)))
       {})))
-
-(defn transfer-tokens
-  "Transfer mount of given ERC20 token from from-addr to
-  to-addr. Connected geth needs to have keys for the account and
-  passphrase needs to be supplied. Returns transaction ID."
-  [from-addr from-passphrase token to-addr amount]
-  (let [token-addr (get-token-address token)]
-    (eth/execute-using-addr from-addr
-                            from-passphrase
-                            token-addr
-                            (method-ids :transfer)
-                            to-addr
-                            amount)))
-
-(defn get-owners
-  "Return vector of multisig owner addresses."
-  [bounty-addr]
-  (let [bounty-contract (load-bounty-contract bounty-addr)
-        owner-addresses (-> bounty-contract
-                            (.getOwners)
-                            .get)]
-    (if owner-addresses
-      (mapv #(.toString %) (.getValue owner-addresses))
-      [])))
 
 (defn uint256 [x]
   (org.web3j.abi.datatypes.generated.Uint256. x))
