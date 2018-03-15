@@ -2,7 +2,9 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
-            [goog.date.relative]))
+            [goog.date.relative]
+            [goog.i18n.DateTimePatterns :as DateTimePatterns])
+  (:import (goog.i18n DateTimeFormat)))
 
 (defn input [val-ratom props]
   (fn []
@@ -24,10 +26,20 @@
                               :disabled (= item title)} 
                      item])]))
 
-(defn relative-time [time]
-  "converts time in milliseconds to a relative form of '1 hour ago'"
-  (let [js-time (clj->js time)]
-    (goog.date.relative/format js-time)))
+(def ^:private long-ago-fmt
+  (DateTimeFormat. DateTimePatterns/MONTH_DAY_FULL))
+
+(defn human-time [date]
+  "Shows a given date in a human-friendly way. For dates less than
+   two weeks ago this means a relative '3 hours ago' kind of thing.
+   For dates longer ago we return 'January 01'."
+  (let [ms       (.getTime date)
+        relative (goog.date.relative/format ms)]
+    ;; Dates older than 2 weeks will not be shown as relative
+    ;; https://github.com/google/closure-library/blob/99d7fa323f4c9e35ce7a97ea3cb08fc1d97d9e92/closure/goog/date/relative.js#L206
+    (if-not (empty? relative)
+      relative
+      (goog.date.relative/formatDay ms #(.format long-ago-fmt %)))))
 
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))
@@ -123,4 +135,10 @@
             [:div.page-nav-text [:span (str "Page " page-number " of " page-count)]]
             [draw-page-numbers page-number page-count container-element]]])))
 
+(defn usd-string
+  "Turn a given float into a USD currency string based on the browsers locale setting.
 
+  A more complex and customizable approach can be found in goog.i18n.NumberFormat:
+  https://google.github.io/closure-library/api/goog.i18n.NumberFormat.html"
+  [usd-float]
+  (.toLocaleString usd-float js/navigator.language #js {:style "currency" :currency "USD"}))

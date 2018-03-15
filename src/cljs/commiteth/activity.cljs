@@ -1,7 +1,7 @@
 (ns commiteth.activity
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
-            [commiteth.common :refer [relative-time
+            [commiteth.common :refer [human-time
                                       items-per-page
                                       display-data-page
                                       issue-url]]))
@@ -54,7 +54,7 @@
           ^{:key (random-uuid)}
           [:div.balance-badge.token
            (str (subs (str tla) 1) " " balance)])])
-     [:div.time (relative-time updated)]]]])
+     [:div.time (human-time updated)]]]])
 
 (defn activity-list [{:keys [items item-count page-number total-count] 
                       :as activity-page-data}
