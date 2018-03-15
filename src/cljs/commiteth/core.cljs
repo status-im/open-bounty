@@ -53,7 +53,7 @@
                               [:a
                                (merge props
                                       (if (keyword? target)
-                                        {:on-click #(rf/dispatch [target])}
+                                        {:on-click #(commiteth.routes/nav! target)}
                                         {:href target}))
                                caption]]))]]))
 
@@ -66,7 +66,7 @@
         [:div.ui.container.user-component
          [user-dropdown
           @user
-          [[:update-address "My Payment Details" {}]
+          [[:settings "My Payment Details" {}]
            ["/logout" "Sign Out" {:class "logout-link"}]]
           mobile?]]
         [:a.ui.button.small.login-button {:href js/authorizeUrl} (str "LOG IN"
@@ -207,7 +207,7 @@
               :bounties       [bounties-page]
               :repos          [repos-page]
               :manage-payouts [manage-payouts-page]
-              :update-address [update-address-page]
+              :settings       [update-address-page]
               :usage-metrics  [usage-metrics-page])]]
           (when (show-top-hunters?)
             [:div.five.wide.column.computer.only
