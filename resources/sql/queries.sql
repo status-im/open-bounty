@@ -401,6 +401,14 @@ SELECT exists(SELECT 1
   FROM issues
   WHERE issue_id = :issue_id);
 
+-- :name get-issue :? :1
+-- :doc get issue from DB by repo-id and issue-number
+SELECT issue_id, issue_number, is_open, winner_login, commit_sha
+FROM issues
+WHERE repo_id = :repo_id
+AND issue_number = :issue_number;
+
+
 
 -- :name open-bounties :? :*
 -- :doc all open bounty issues
