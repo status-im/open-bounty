@@ -7,7 +7,7 @@
                 ["/activity"       :activity]
                 ["/repos"          :repos]
                 ["/manage-payouts" :manage-payouts]
-                ["/update-address" :update-address]
+                ["/settings"       :settings]
                 ["/usage-metrics"  :usage-metrics]]))
 
 (defn on-navigate
