@@ -13,9 +13,9 @@
             protocol.http.HttpService
             protocol.core.DefaultBlockParameterName
             protocol.core.methods.response.EthGetTransactionCount
-            protocol.core.methods.request.RawTransaction
             utils.Numeric
             crypto.Credentials
+            crypto.RawTransaction
             crypto.TransactionEncoder
             crypto.WalletUtils]))
 
