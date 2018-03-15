@@ -468,6 +468,16 @@
    (assoc db :user-dropdown-open? false)))
 
 (reg-event-db
+ ::open-bounty-claims
+ (fn [db [_]]
+   (assoc db ::db/open-bounty-claims? true)))
+
+(reg-event-db
+ ::close-bounty-claims
+ (fn [db [_]]
+   (assoc db ::db/open-bounty-claims? false)))
+
+(reg-event-db
   ::set-open-bounties-sorting-type
   (fn [db [_ sorting-type]]
     (merge db {::db/open-bounties-sorting-type sorting-type

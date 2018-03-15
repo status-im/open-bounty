@@ -12,6 +12,28 @@
             [commiteth.util :as util]))
 
 
+;; we need pr number too
+;; fix pr_title to pr-title
+(defn relevant-activity-item [items]
+  [:div.bounty-claims-row
+   (for [item items]
+     ^{:key (random-uuid)}
+     [:div
+      [:div.bounty-claims-icon
+       [:div.ui.tiny.circular.image
+        [:img {:src (:avatar-url item)}]]]
+      [:span.bounty-claims-text (:pr_title item)
+       [:span.time.bounty-claims-time (human-time (:updated item))]]])])
+
+(defn find-relevant-activity [issue-number]
+  (let [activity-feed     (rf/subscribe [:activity-feed])
+        relevant-activity (filter #(= issue-number (:issue-number %))
+                                  @activity-feed)]
+    (when relevant-activity
+      (relevant-activity-item relevant-activity))))
+
+;; (find-relevant-activity 37)
+
 (defn bounty-item [bounty]
   (let [{avatar-url   :repo_owner_avatar_url
          owner        :repo-owner
@@ -28,27 +50,46 @@
         repo-link  [:a {:href repo-url} full-repo]
         issue-link [:a
                     {:href (issue-url owner repo-name issue-number)}
-                    issue-title]]
-    [:div.open-bounty-item
-     [:div.open-bounty-item-content
-      [:div.header issue-link]
-      [:div.bounty-item-row
-       [:div.time (human-time updated)]
-       [:span.bounty-repo-label repo-link]]
+                    issue-title]
+        ;; we probably also want the issue id here
+        open-claims-click (fn []
+                            (rf/dispatch [::handlers/open-bounty-claims]))
+        close-claims-click (fn []
+                             (rf/dispatch [::handlers/close-bounty-claims]))]
+    [:div 
+     [:div.open-bounty-item
+      [:div.open-bounty-item-content
+       [:div.header issue-link]
+       [:div.bounty-item-row
+        [:div.time (human-time updated)]
+        [:span.bounty-repo-label repo-link]]
 
-      [:div.footer-row
-       [:div.balance-badge "ETH " balance-eth]
-       (for [[tla balance] tokens]
-         ^{:key (random-uuid)}
-         [:div.balance-badge.token
-          (str (subs (str tla) 1) " " balance)])
-       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
-       (when (> claim-count 0)
-         [:span.open-claims-label (str claim-count " open claim"
-                                       (when (> claim-count 1) "s"))])]]
-     [:div.open-bounty-item-icon
-      [:div.ui.tiny.circular.image
-       [:img {:src avatar-url}]]]]))
+       [:div.footer-row
+        [:div.balance-badge "ETH " balance-eth]
+        (for [[tla balance] tokens]
+          ^{:key (random-uuid)}
+          [:div.balance-badge.token
+           (str (subs (str tla) 1) " " balance)])
+        [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
+        (when (> claim-count 0)
+          [:span.open-claims-label
+           (str claim-count " open claim"
+                (when (> claim-count 1) "s"))
+           (if @(rf/subscribe [::subs/open-bounty-claims?])
+             ;; once proper design assets are received
+             ;; these will be two different buttons
+             ;; an up arrow and a down arrow
+             [:span.icon-forward-white-box
+              {:on-click #(close-claims-click) }
+              [:img {:src "icon-forward-white.svg"}]]
+             [:span.icon-forward-white-box
+              {:on-click #(open-claims-click)}
+              [:img {:src "icon-forward-white.svg"}]])])]]
+      [:div.open-bounty-item-icon
+       [:div.ui.tiny.circular.image
+        [:img {:src avatar-url}]]]]
+     (when @(rf/subscribe [::subs/open-bounty-claims?])
+               (find-relevant-activity issue-number))]))
 
 (defn bounties-filter-tooltip-value-input-view [label tooltip-open? opts]
   [:div.open-bounties-filter-element-tooltip-value-input-container
