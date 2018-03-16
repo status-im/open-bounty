@@ -30,12 +30,13 @@
         (do
           (log/info "Contract deployed, transaction-hash:"
                     transaction-hash)
-          (->> (github/post-deploying-comment owner
-                                              repo
-                                              issue-number
-                                              transaction-hash)
-               :id
-               (issues/update-comment-id issue-id))
+          (let [resp (github/post-deploying-comment owner
+                                                    repo
+                                                    issue-number
+                                                    transaction-hash)
+                _ (log/info "post-deploying-comment response:" resp)
+                comment-id (:id resp)]
+            (issues/update-comment-id issue-id comment-id))
           (issues/update-transaction-hash issue-id transaction-hash))
         (log/error "Failed to deploy contract to" owner-address)))))
       
