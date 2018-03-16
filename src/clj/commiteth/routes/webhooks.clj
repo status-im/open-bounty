@@ -199,9 +199,15 @@
         new-title (:title gh-issue)]
     (issues/update-issue-title issue-id new-title)))
 
+(defn update-repo-name [webhook-payload]
+  "Update repo name in DB if changed"
+  (let [{repo-id :id
+         repo-name :name} (:repository webhook-payload)]
+    (repositories/update-repo-name repo-id repo-name)))
 
 (defn handle-issue
   [webhook-payload]
+  (update-repo-name webhook-payload)
   (when-let [action (:action webhook-payload)]
     (log/debug "handle-issue" action)
     (when (labeled-as-bounty? action webhook-payload)
@@ -216,17 +222,17 @@
       (handle-issue-reopened webhook-payload)))
   (ok))
 
-(defn enable-repo-2 [repo-id full-repo]
-  (log/debug "enable-repo-2" repo-id full-repo)
+(defn enable-repo [repo-id full-repo]
+  (log/debug "enable-repo" repo-id full-repo)
   ;; TODO(oskarth): Add granular permissions to enable creation of label
   #_(github/create-label full-repo)
-  (repositories/update-repo repo-id {:state 2})
+  (repositories/update-repo-state repo-id 2)
   (when (add-bounties-for-existing-issues?)
     (bounties/add-bounties-for-existing-issues full-repo)))
 
-(defn disable-repo-2 [repo-id full-repo]
-  (log/debug "disable-repo-2" repo-id full-repo)
-  (repositories/update-repo repo-id {:state 0}))
+(defn disable-repo [repo-id full-repo]
+  (log/debug "disable-repo" repo-id full-repo)
+  (repositories/update-repo-state repo-id 0))
 
 (defn full-repo->owner [full-repo]
   (try
@@ -236,8 +242,6 @@
       (log/error "exception when parsing repo" e)
       nil)))
 
-;; NOTE(oskarth): Together with {enable,disable}-repo-2 above, this replaces
-;; handle-toggle-repo for Github App.
 (defn handle-add-repo [user-id username owner-avatar-url repo can-create?]
   (let [repo-id   (:id repo)
         repo-name (:name repo)
@@ -277,14 +281,14 @@
                 _ (log/info "handle-add-repo db-item" db-item)
                 is-enabled (= 2 (:state db-item))]
             (if is-enabled
-              (disable-repo-2 repo-id full-repo)
-              (enable-repo-2 repo-id full-repo))
+              (disable-repo repo-id full-repo)
+              (enable-repo repo-id full-repo))
             (ok {:enabled (not is-enabled)
                  :id repo-id
                  :full_name full-repo}))
           (catch Exception e
             (log/error "exception when enabling repo" e)
-            (repositories/update-repo repo-id {:state -1})
+            (repositories/update-repo-state repo-id -1)
             (internal-server-error))))))
 
 (defn handle-installation [{:keys [action installation repositories sender]}]
@@ -327,12 +331,13 @@
   (ok))
 
 (defn handle-pull-request
-  [pull-request]
-  (let [action (keyword (:action pull-request))]
+  [webhook-payload]
+  (update-repo-name webhook-payload)
+  (let [action (keyword (:action webhook-payload))]
     (when (contains? #{:opened
                        :edited
                        :closed} action)
-      (handle-pull-request-event action pull-request))
+      (handle-pull-request-event action webhook-payload))
     (ok)))
 
 
@@ -385,14 +390,5 @@
                 "pull_request" (handle-pull-request payload)
                 "installation" (handle-installation payload)
                 "installation_repositories" (handle-installation-repositories payload)
-
-                ;; NOTE(oskarth): These two webhooks are / will be deprecated on
-                ;; November 22, 2017 but they keep being called. According to
-                ;; documentation they should contain same format.
-                ;; https://developer.github.com/webhooks/
-                "integration_installation" (handle-installation payload)
-                "integration_installation_repositories" (handle-installation-repositories payload)
                 (ok)))
             (forbidden)))))
-
-
