@@ -468,14 +468,17 @@
    (assoc db :user-dropdown-open? false)))
 
 (reg-event-db
- ::open-bounty-claims
- (fn [db [_]]
-   (assoc db ::db/open-bounty-claims? true)))
+ ::open-bounty-claim
+ (fn [db [_ opening-issue-number]]
+   (update db ::db/open-bounty-claims #(conj % opening-issue-number))))
 
 (reg-event-db
- ::close-bounty-claims
- (fn [db [_]]
-   (assoc db ::db/open-bounty-claims? false)))
+ ::close-bounty-claim
+ (fn [db [_ closing-issue-number]]
+   (update db
+           ::db/open-bounty-claims
+           #(remove (fn [issue-number]
+                     (= issue-number closing-issue-number)) %))))
 
 (reg-event-db
   ::set-open-bounties-sorting-type

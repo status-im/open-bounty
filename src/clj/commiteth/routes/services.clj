@@ -167,6 +167,8 @@
         renames {:user_name :display-name
                  :user_avatar_url :avatar-url
                  :issue_title :issue-title
+                 :pr_title :pr-title
+                 :pr_number :pr-number
                  :type :item-type
                  :repo_name :repo-name
                  :repo_owner :repo-owner

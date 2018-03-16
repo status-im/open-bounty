@@ -4,26 +4,33 @@
             [commiteth.common :refer [human-time
                                       display-data-page
                                       items-per-page
-                                      issue-url]]
+                                      issue-url
+                                      pull-request-url]]
             [commiteth.handlers :as handlers]
             [commiteth.db :as db]
             [commiteth.ui-model :as ui-model]
             [commiteth.subscriptions :as subs]
             [commiteth.util :as util]))
 
-
-;; we need pr number too
-;; fix pr_title to pr-title
 (defn relevant-activity-item [items]
-  [:div.bounty-claims-row
+  [:div
    (for [item items]
-     ^{:key (random-uuid)}
-     [:div
-      [:div.bounty-claims-icon
-       [:div.ui.tiny.circular.image
-        [:img {:src (:avatar-url item)}]]]
-      [:span.bounty-claims-text (:pr_title item)
-       [:span.time.bounty-claims-time (human-time (:updated item))]]])])
+     (let [{:keys [avatar-url
+                   pr-title
+                   updated
+                   repo-owner
+                   repo-name
+                   pr-number]} item]
+       ^{:key (random-uuid)}
+       [:div.bounty-claims-row.open-bounty-item-content
+        [:div.bounty-claims-icon
+         [:div.ui.tiny.circular.image
+          [:img {:src avatar-url}]]]
+        [:span.bounty-claims-text
+         [:a
+          {:href (pull-request-url repo-owner repo-name pr-number)}
+          pr-title]
+         [:span.time.bounty-claims-time (human-time updated)]]]))])
 
 (defn find-relevant-activity [issue-number]
   (let [activity-feed     (rf/subscribe [:activity-feed])
@@ -45,17 +52,17 @@
          balance-eth  :balance-eth
          value-usd    :value-usd
          claim-count  :claim-count} bounty
-        full-repo  (str owner "/" repo-name)
-        repo-url   (str "https://github.com/" full-repo)
-        repo-link  [:a {:href repo-url} full-repo]
-        issue-link [:a
-                    {:href (issue-url owner repo-name issue-number)}
-                    issue-title]
-        ;; we probably also want the issue id here
-        open-claims-click (fn []
-                            (rf/dispatch [::handlers/open-bounty-claims]))
-        close-claims-click (fn []
-                             (rf/dispatch [::handlers/close-bounty-claims]))]
+        full-repo                   (str owner "/" repo-name)
+        repo-url                    (str "https://github.com/" full-repo)
+        repo-link                   [:a {:href repo-url} full-repo]
+        issue-link                  [:a
+                                     {:href (issue-url owner repo-name issue-number)}
+                                     issue-title]
+        open-claims-click           (fn []
+                                      (rf/dispatch [::handlers/open-bounty-claim issue-number]))
+        close-claims-click          (fn []
+                                      (rf/dispatch [::handlers/close-bounty-claim issue-number]))
+        matches-current-issue?      (some #{issue-number} @(rf/subscribe [::subs/open-bounty-claims]))]
     [:div 
      [:div.open-bounty-item
       [:div.open-bounty-item-content
@@ -75,7 +82,8 @@
           [:span.open-claims-label
            (str claim-count " open claim"
                 (when (> claim-count 1) "s"))
-           (if @(rf/subscribe [::subs/open-bounty-claims?])
+           ;; contains the current issue-number
+           (if matches-current-issue?
              ;; once proper design assets are received
              ;; these will be two different buttons
              ;; an up arrow and a down arrow
@@ -88,8 +96,8 @@
       [:div.open-bounty-item-icon
        [:div.ui.tiny.circular.image
         [:img {:src avatar-url}]]]]
-     (when @(rf/subscribe [::subs/open-bounty-claims?])
-               (find-relevant-activity issue-number))]))
+     (when matches-current-issue?
+       (find-relevant-activity issue-number))]))
 
 (defn bounties-filter-tooltip-value-input-view [label tooltip-open? opts]
   [:div.open-bounties-filter-element-tooltip-value-input-container

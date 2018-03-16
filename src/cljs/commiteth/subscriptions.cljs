@@ -128,9 +128,9 @@
     (:user-dropdown-open? db)))
 
 (reg-sub
-  ::open-bounty-claims?
+  ::open-bounty-claims
   (fn [db _]
-    (::db/open-bounty-claims? db)))
+    (::db/open-bounty-claims db)))
 
 (reg-sub
   ::open-bounties-sorting-type
