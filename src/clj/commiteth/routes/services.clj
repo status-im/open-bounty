@@ -62,14 +62,13 @@
 
 
 (defn ^:private enrich-owner-bounties [owner-bounty]
-  (let [state  (bounties/bounty-state owner-bounty)
-        claims (map
-                #(update % :value_usd usd-decimal->str)
-                (bounties-db/bounty-claims (:issue_id owner-bounty)))]
-    (-> owner-bounty
+  (let [claims      (map
+                     #(update % :value_usd usd-decimal->str)
+                     (bounties-db/bounty-claims (:issue_id owner-bounty)))
+        with-claims (assoc owner-bounty :claims claims)]
+    (-> with-claims
         (update :value_usd usd-decimal->str)
-        (assoc :claims claims)
-        (assoc :state state))))
+        (assoc :state (bounties/bounty-state with-claims)))))
 
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
