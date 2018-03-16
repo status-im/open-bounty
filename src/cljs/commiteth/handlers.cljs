@@ -312,12 +312,6 @@
                              (:status-text response)))]}))
 
 
-(reg-event-fx
- :update-address
- (fn [{:keys [db]} [_]]
-   {:db db
-    :dispatch [:set-active-page :update-address]}))
-
 (reg-event-db
  :update-user
  (fn [db [_ fields]]
