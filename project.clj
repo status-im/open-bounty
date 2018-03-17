@@ -11,6 +11,7 @@
                  [org.clojure/clojurescript "1.9.946"]
                  [org.clojure/clojure "1.8.0"]
                  [selmer "1.11.1"]
+                 [com.taoensso/tufte "1.3.0"]
                  [markdown-clj "1.0.1"]
                  [ring-middleware-format "0.7.2"]
                  [ring/ring-core "1.6.2"]
