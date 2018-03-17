@@ -169,7 +169,7 @@
     adjusted-gas))
 
 
-(defn from-wei
+(defn wei->eth
   [wei]
   (/ wei 1000000000000000000))
 
@@ -177,10 +177,9 @@
   [eth]
   (biginteger (* eth 1000000000000000000)))
 
-
 (defn hex->eth
   [hex digits]
-  (->> hex hex->big-integer from-wei double (format (str "%." digits "f"))))
+  (->> hex hex->big-integer wei->eth double (format (str "%." digits "f"))))
 
 (defn get-balance-hex
   [account]
@@ -192,7 +191,7 @@
 
 (defn get-balance-eth
   [account digits]
-  (hex->eth (get-balance-hex account) digits))
+  (hex->eth-str (get-balance-hex account) digits))
 
 (defn- format-param
   [param]
@@ -296,3 +295,11 @@
             (filter true?)
             (empty?)))
           true))))
+
+(defn bot-account-eth-threshold-overtaken? []
+  (let [eth (-> (get-balance-wei (eth-account)) wei->eth)]
+    (< eth (env :eth-account-eth-threshold-warning))))
+
+(defn check-bot-account-eth-threshold []
+  (when (bot-account-eth-threshold-overtaken?)
+    (post "NOTIFICATION_URL")))

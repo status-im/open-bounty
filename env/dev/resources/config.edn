@@ -10,6 +10,8 @@
  :eth-account            "0x..."
  :eth-password           "XXX"
 
+ :eth-account-eth-threshold-warning 0.1
+
  ;; RPC URL to ethereum node to be used
  :eth-rpc-url            "http://localhost:8545"
  :eth-wallet-file        "/some/location"
