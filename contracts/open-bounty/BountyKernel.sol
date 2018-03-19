@@ -22,17 +22,20 @@ contract BountyKernel is InstanceStorage, MultiSigTokenWallet {
 
     
     /// @dev Instance constructor sets initial owners and required number of confirmations.
-    /// @param _owners List of initial owners.
-    /// @param _required Number of required confirmations.
-    function initBounty(address[] _owners, uint _required) external {
+    function initBounty(address _pivot, address _repoOwner) external {
         require(owners.length == 0 && required == 0);
-        uint len = _owners.length;
-        for (uint i = 0; i < len; i++) {
-            require(!isOwner[_owners[i]] && _owners[i] != 0);
-            isOwner[_owners[i]] = true;
-        }
-        owners = _owners;
-        required = _required;
+        
+        require(!isOwner[_pivot]);
+        require(_pivot != address(0));
+        isOwner[_pivot] = true;
+        owners.push(_pivot);
+
+        require(!isOwner[_repoOwner]);
+        require(_repoOwner != address(0));
+        isOwner[_repoOwner] = true;
+        owners.push(_repoOwner);
+
+        required = 2;
     }
 
 }

@@ -7,7 +7,7 @@ import "./BountyKernel.sol";
 
 contract BountyFactory is Factory {
 
-    event IdentityCreated(address instance);
+    event BountyCreated(address indexed pivot, address indexed repoOwner, address instance, address kernel);
 
     function BountyFactory(bytes _infohash) 
         public
@@ -26,11 +26,8 @@ contract BountyFactory is Factory {
         public 
     {
         BountyKernel instance = BountyKernel(new UpdatableInstance(address(latestKernel)));
-        address[] memory multisigOwners = new address[](2);
-        multisigOwners[0] = _pivot;
-        multisigOwners[1] = _repoOwner;
-        instance.initBounty(multisigOwners, 2);
-        IdentityCreated(address(instance));
+        instance.initBounty(_pivot, _repoOwner);
+        BountyCreated(_pivot, _repoOwner, address(instance), address(latestKernel));
     }
 
 }
