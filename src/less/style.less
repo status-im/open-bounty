@@ -41,16 +41,25 @@
 
 .update-address-button {
     background-color: #57a7ed!important;
+    margin-top: 10px !important;
     &:hover {
         background-color: #57a7ed!important;
     }
 }
 
+label[for="input-hidden"] {
+  padding-left: 8px;
+}
+
+#input-hidden {
+  vertical-align: bottom;
+  position: relative;
+  top: -4px;
+}
 
 .login-button {
     background-color: rgba(255,255,255,0.2)!important;
 }
-
 
 .commiteth-header {
     background-color: #57a7ed!important;
@@ -413,6 +422,302 @@
         font-weight: 500;
         color: #42505c;
     }
+
+    .item-counts-label-and-sorting-container {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .open-bounties-filter-and-sort {
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    @media (max-width: 767px) {
+        .open-bounties-filter-and-sort {
+            display: none;
+        }
+    }
+
+    .open-bounties-filter {
+        display: flex;
+    }
+
+    .open-bounties-filter-element {
+        font-family: "PostGrotesk-Book";
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.0;
+        color: #8d99a4;
+        //padding: 8px 12px;
+        border-radius: 8px;
+        border: solid 1px rgba(151, 151, 151, 0.2);
+        margin-right: 10px;
+        position: relative;
+        display: flex;
+        z-index: 1000;
+        height: 100%;
+        align-items: center;
+
+        .text {
+            margin: 8px 12px;
+        }
+
+        .remove-container {
+            display: flex;
+        }
+
+        .remove {
+            margin-left: -6px;
+            margin-right: 5px;
+        }
+    }
+
+    .open-bounties-filter-element:hover {
+        cursor: pointer;
+    }
+
+    .open-bounties-filter-element-active
+    {
+        background-color: #57a7ed;
+        color: #ffffff;
+    }
+
+    .open-bounties-filter-element-container:focus {
+        outline: none;
+    }
+
+    .open-bounties-filter-element-tooltip {
+        position: absolute;
+        min-width: 227px;
+        margin-top: 12px;
+        border-radius: 10px;
+        background-color: #ffffff;
+        box-shadow: 0 15px 12px 0 rgba(161, 174, 182, 0.53), 0 0 38px 0 rgba(0, 0, 0, 0.05);
+        font-family: "PostGrotesk-Book";
+        font-size: 16px;
+        line-height: 1.5;
+        z-index: 999;
+        max-height: 300px;
+        overflow: auto;
+
+        .open-bounties-filter-element-tooltip-value-input-container {
+            display: flex;
+            margin-top: 25px;
+        }
+
+        .open-bounties-filter-element-tooltip-value-input-label {
+            width: 60px;
+        }
+
+        .open-bounties-filter-element-tooltip-value-input {
+            padding-top: 2px;
+            width: 289px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 5px;
+            background: #55a5ea;
+            border: none;
+            border-radius: 3px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            cursor: pointer;
+            border: none;
+            height: 33px;
+            width: 33px;
+            border-radius: 50%;
+            background: #55a5ea;
+            margin-top: -14.5px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #5aa7eb;
+        }
+
+        input[type=range]::-moz-range-track {
+            cursor: pointer;
+            width: 100%;
+            height: 5px;
+            background: #55a5ea;
+            border: none;
+            border-radius: 3px;
+        }
+        input[type=range]::-moz-range-thumb {
+            border: none;
+            height: 33px;
+            width: 33px;
+            border-radius: 50%;
+            background: #55a5ea;
+        }
+
+        input[type=range]:-moz-focusring{
+            outline: 1px solid white;
+            outline-offset: -1px;
+        }
+
+        input[type=range]::-ms-track {
+            cursor: pointer;
+            width: 300px;
+            height: 5px;
+            background: transparent;
+            border-color: transparent;
+            border-width: 6px 0;
+            color: transparent;
+        }
+        input[type=range]::-ms-fill-lower {
+            background: #50a3e9;
+            border-radius: 10px;
+        }
+        input[type=range]::-ms-fill-upper {
+            background: #55a5ea;
+            border-radius: 10px;
+        }
+        input[type=range]::-ms-thumb {
+            cursor: pointer;
+            border: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 8px;
+            background: #55a5ea;
+            margin-top: 1px;
+        }
+        input[type=range]:focus::-ms-fill-lower {
+            background: #55a5ea;
+        }
+        input[type=range]:focus::-ms-fill-upper {
+            background: #5aa7eb;
+        }
+
+        .open-bounties-filter-list {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin: 24px 16px;
+        }
+
+        .open-bounties-filter-list-option {
+            font-family: "PostGrotesk-Book";
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.0;
+            color: #42505c;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: solid 1px rgba(151, 151, 151, 0.2);
+        }
+
+        .open-bounties-filter-list-option.active {
+            background-color: #57a7ed;
+            color: #ffffff;
+        }
+
+        .open-bounties-filter-list-option:not(:first-child) {
+            margin-top: 8px;
+        }
+
+        .open-bounties-filter-list-option:hover {
+            cursor: pointer;
+            background-color: #57a7ed;
+            color: #ffffff;
+        }
+
+        .open-bounties-filter-list-option-checkbox {
+            label {
+                display: flex;
+                align-items: baseline;
+            }
+
+            label:hover {
+                cursor: pointer;
+            }
+
+            label:focus {
+                outline: none;
+            }
+
+            input:hover {
+                cursor: pointer;
+            }
+
+            .text {
+                font-size: 15px;
+                font-weight: 500;
+                line-height: 1.0;
+                margin-left: 12px;
+            }
+        }
+
+        .open-bounties-filter-list-option-checkbox:not(:first-child) {
+            margin-top: 12px;
+        }
+    }
+
+    .open-bounties-sort {
+        position: relative;
+    }
+
+    .open-bounties-sort:focus {
+        outline: none;
+    }
+
+    .open-bounties-sort-element {
+        display: flex;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.0;
+        color: #8d99a4;
+        padding: 16px 12px 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .open-bounties-sort-element:hover {
+        cursor: pointer;
+    }
+
+    .open-bounties-sort-element-tooltip {
+        position: absolute;
+        right: 0;
+        //padding: 16px 0;
+        min-width: 200px;
+        border-radius: 8px;
+        background-color: #1e3751;
+        font-family: "PostGrotesk-Book";
+        font-size: 15px;
+        line-height: 1.0;
+        text-align: left;
+        color: #ffffff;
+        z-index: 999;
+    }
+
+    .open-bounties-sort-type {
+        padding: 19px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .open-bounties-sort-type:hover {
+        cursor: pointer;
+    }
+
+    .icon-forward-white-box {
+        width: 24px;
+        height: 24px;
+        padding: 4px;
+        text-align: center;
+    }
+}
+
+.open-bounty-item:first-child {
+    border-top: #eaecee 1px solid !important;
 }
 
 .open-bounty-item {
@@ -496,7 +801,7 @@
 }
 
 .open-claims-label {
-    padding-left: 5px;
+    padding-left: 15px;
     font-size: 15px;
     color: #57a7ed;
 }
@@ -555,6 +860,8 @@
     border: #e7e7e7 solid 0.1em;
     box-shadow: none;
     border-radius: 0.3em;
+
+    min-height: calc(~"100vh - 400px");
 
     h3 {
         color: #474951;
@@ -678,7 +985,6 @@
     z-index: -1;
     display: flex;
     justify-content: center;
-    margin-top: 20px;
 }
 
 
@@ -897,6 +1203,10 @@ body {
   cursor: pointer;
 }
 
+.page-num-active {
+  cursor: auto;
+}
+
 .grayed-out-page-num {
   color: #8d99a4;
   background-color: #f2f5f8;
@@ -967,12 +1277,9 @@ body {
 }
 
 .item-counts-label {
-  margin: auto;
+  //margin: auto;
 	font-family: "PostGrotesk-Book";
 	font-size: 15px;
 	color: #8d99a4;
-  padding-top: 8px;
-  padding-bottom: 8px;
+    padding-top: 20px;
 }
-
-

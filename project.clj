@@ -42,7 +42,6 @@
                  [cheshire "5.8.0"]
                  [mpg "1.3.0"]
                  [pandect "0.6.1"]
-                 [cljsjs/moment "2.17.1-1"]
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.cemerick/piggieback "0.2.2"]
                  [jarohen/chime "0.2.2"]
@@ -69,7 +68,6 @@
             [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
             [lein-shell "0.5.0"]
-            [cider/cider-nrepl "0.15.0-SNAPSHOT"]
             [lein-sha-version "0.1.1"]]
 
 
@@ -85,16 +83,16 @@
 
   :uberjar-exclusions [#"public/README.md" #"public/cards.html"]
   :clean-targets ^{:protect false}
-  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+  [:target-path :java-source-paths [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
-
   :profiles
-  {:uberjar       {:omit-source    true
+  {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
+                   :omit-source    true
                    :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
@@ -116,7 +114,8 @@
                    :uberjar-name   "commiteth.jar"
                    :source-paths   ["env/prod/clj"]
                    :resource-paths ["env/prod/resources"]}
-   :dev   {:dependencies   [[prone "1.1.4"]
+   :dev   {:jvm-opts ["-server" "-Dconf=config-dev.edn"]
+           :dependencies   [[prone "1.1.4"]
                             [ring/ring-mock "0.3.1"]
                             [ring/ring-devel "1.6.2"]
                             [pjstadig/humane-test-output "0.8.3"]
@@ -124,6 +123,7 @@
                             [binaryage/devtools "0.9.7"]
                             [figwheel-sidecar "0.5.14"]
                             [org.clojure/tools.nrepl "0.2.13"]
+                            [org.clojure/tools.namespace "0.2.11"]
                             [com.cemerick/piggieback "0.2.2"]
                             [sablono "0.8.1"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
@@ -142,7 +142,6 @@
                :optimizations :none
                :pretty-print  true}}]}
 
-           :prep-tasks     ["build-contracts" "javac"]
            :doo            {:build "test"}
            :source-paths   ["env/dev/clj" "test/clj"]
            :resource-paths ["env/dev/resources"]
@@ -150,7 +149,8 @@
                             :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
-   :test  {:resource-paths ["env/dev/resources" "env/test/resources"]
+   :test  {:jvm-opts ["-server" "-Dconf=config-test.edn"]
+           :resource-paths ["env/dev/resources" "env/test/resources"]
            :dependencies   [[devcards "0.2.4"]]
            :cljsbuild
            {:builds

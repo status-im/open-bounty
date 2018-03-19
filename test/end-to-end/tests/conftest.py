@@ -11,6 +11,10 @@ def pytest_addoption(parser):
                      action='store',
                      default=True,
                      help='Display each test step in terminal as plain text: True/False')
+    parser.addoption('--env',
+                     action='store',
+                     default='sauce',
+                     help='Specify environment, sauce or local')
 
 
 def pytest_configure(config):

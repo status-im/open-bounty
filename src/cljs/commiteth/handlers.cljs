@@ -11,7 +11,8 @@
             [cljs-web3.eth :as web3-eth]
             [akiroz.re-frame.storage
              :as rf-storage
-             :refer [reg-co-fx!]]))
+             :refer [reg-co-fx!]]
+            [commiteth.ui-model :as ui-model]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -61,12 +62,13 @@
  (fn [db [_ path value]]
    (assoc-in db path value)))
 
-
 (reg-event-db
-  :set-active-page
-  (fn [db [_ page]]
-    (assoc db :page page
-           :page-number 1)))
+ :set-active-page
+ (fn [db [_ page]]
+   (assoc db :page page
+             :page-number 1
+             ::db/open-bounties-filters {}
+             ::db/open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent)))
 
 (reg-event-db
   :set-page-number
@@ -222,7 +224,8 @@
  :set-user-profile
  (fn [{:keys [db]} [_ user-profile]]
    {:db
-    (assoc db :user (:user user-profile))
+    (assoc db :user (:user user-profile)
+              :user-profile-loaded? true)
     :dispatch-n [[:load-user-repos]
                  [:load-owner-bounties]]}))
 
@@ -315,32 +318,38 @@
    {:db db
     :dispatch [:set-active-page :update-address]}))
 
+(reg-event-db
+ :update-user
+ (fn [db [_ fields]]
+   (update db :user merge fields)))
 
 (reg-event-fx
- :save-user-address
- (fn [{:keys [db]} [_ user-id address]]
-   (prn "save-user-address" user-id address)
-   {:db   (assoc db :updating-address true)
+ :save-user-fields
+ (fn [{:keys [db]} [_ fields]]
+   {:dispatch [:set-updating-user]
     :http {:method     POST
-           :url        "/api/user/address"
+           :url        "/api/user"
            :on-success #(do
-                          (dispatch [:assoc-in [:user [:address] address]])
+                          (dispatch [:update-user fields])
                           (dispatch [:set-flash-message
                                      :success
-                                     "Address saved"]))
-           :on-error   #(do
-                          (println %)
-                          (dispatch [:set-flash-message
-                                     :error
-                                     (:response %)]))
-           :finally    #(dispatch [:clear-updating-address])
-           :params     {:user-id user-id :address address}}}))
+                                     "Settings saved"]))
+           :on-error #(dispatch [:set-flash-message
+                                 :error
+                                 (:response %)])
+           :finally #(dispatch [:clear-updating-user])
+           :params fields}}))
+
 
 (reg-event-db
- :clear-updating-address
+ :set-updating-user
  (fn [db _]
-   (dissoc db :updating-address)))
+   (assoc db :updating-user true)))
 
+(reg-event-db
+ :clear-updating-user
+ (fn [db _]
+   (dissoc db :updating-user)))
 
 (reg-event-fx
  :save-payout-hash
@@ -457,3 +466,16 @@
  (fn [db [_]]
    (.removeEventListener js/window "click" close-dropdown)
    (assoc db :user-dropdown-open? false)))
+
+(reg-event-db
+  ::set-open-bounties-sorting-type
+  (fn [db [_ sorting-type]]
+    (merge db {::db/open-bounties-sorting-type sorting-type
+               :page-number 1})))
+
+(reg-event-db
+  ::set-open-bounty-filter-type
+  (fn [db [_ filter-type filter-value]]
+    (-> db
+        (assoc-in [::db/open-bounties-filters filter-type] filter-value)
+        (assoc :page-number 1))))

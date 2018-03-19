@@ -208,17 +208,17 @@
        [:div.ui.vertical.segment
         [:div.ui.container
          [:div.ui.grid.stackable
-          [:div {:class (str (if (show-top-hunters?) "ten" "sixteen")
+          [:div {:class (str (if (show-top-hunters?) "eleven" "sixteen")
                              " wide computer sixteen wide tablet column")}
            [:div.ui.container
             [(pages @current-page)]]]
           (when (show-top-hunters?)
-            [:div.six.wide.column.computer.only
+            [:div.five.wide.column.computer.only
              [:div.ui.container.top-hunters
               [:h3.top-hunters-header "Top 5 hunters"]
               [:div.top-hunters-subheader "All time"]
-              [top-hunters]]])]]
-        [footer]]])))
+              [top-hunters]]])]]]
+       [footer]])))
 
 (secretary/set-config! :prefix "#")
 

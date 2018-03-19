@@ -23,4 +23,7 @@ profiles.clj
 .idea
 resources/contracts
 node_modules
-.DS_Store
+/config-prod.edn
+/config-dev.edn
+/config-test.edn
+/src/java

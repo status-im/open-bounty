@@ -1,10 +1,9 @@
 (ns commiteth.activity
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
-            [commiteth.common :refer [moment-timestamp
+            [commiteth.common :refer [human-time
                                       items-per-page
                                       display-data-page
-                                      scroll-div
                                       issue-url]]))
 
 
@@ -55,10 +54,11 @@
           ^{:key (random-uuid)}
           [:div.balance-badge.token
            (str (subs (str tla) 1) " " balance)])])
-     [:div.time (moment-timestamp updated)]]]])
+     [:div.time (human-time updated)]]]])
 
 (defn activity-list [{:keys [items item-count page-number total-count] 
-                      :as activity-page-data}]
+                      :as activity-page-data}
+                     container-element]
   (if (empty? (:items activity-page-data))
     [:div.view-no-data-container
      [:p "No recent activity yet"]]
@@ -67,7 +67,7 @@
            right (dec (+ left item-count))]
        [:div.item-counts-label
         [:span (str "Showing " left "-" right " of " total-count)]])
-     (display-data-page activity-page-data activity-item)]))
+     (display-data-page activity-page-data activity-item container-element)]))
 
 (defn activity-page []
   (let [activity-page-data (rf/subscribe [:activities-page])
@@ -80,6 +80,5 @@
           [:div.ui.text.loader.view-loading-label "Loading"]]]
         [:div.ui.container.activity-container
          {:ref #(reset! container-element %1)} 
-         [scroll-div container-element]
          [:div.activity-header "Activities"]
-         [activity-list @activity-page-data]]))))
+         [activity-list @activity-page-data container-element]]))))

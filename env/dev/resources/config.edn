@@ -11,16 +11,21 @@
  :eth-password           "XXX"
 
  ;; RPC URL to ethereum node to be used
- :eth-rpc-url            "http://localhost:8547"
+ :eth-rpc-url            "http://localhost:8545"
  :eth-wallet-file        "/some/location"
 
+ ;; Specifies whether to sign transactions before sending. Should be false for local Geth, true for remote Infura
+ :offline-signing true
+
  ;; address of token registry to be used
- :tokenreg-addr "0x..."
+ ;; this is the default value for ropsten
+ :tokenreg-addr "0x7d127a3e3b5e72cd8f15e7dee650abe4fcced2b9"
  ;; format of tokenreg records' base field, possible values :status, :parity
- :tokenreg-base-format :parity
+ :tokenreg-base-format :status
 
  ;; address of factory contract used for deploying bounty contracts
- :contract-factory-addr "0x..."
+ ;; this is the default value for ropsten
+ :contract-factory-addr "0x3B9A3c062Bdb640b5039C0cCda4157737d732F95"
 
  ;; commiteth-test-tpatja
  :github-client-id       "CLIENT ID"
@@ -42,6 +47,8 @@
 
  ;; needeed when :hubspot-contact-create-enabled
  :hubspot-api-key "xxxxxxx-xxxx-x-xxxx-xxxx"
+
+ :user-whitelist #{}
 
  ;; used for blacklisting tokens from token registry data
  :token-blacklist #{}}

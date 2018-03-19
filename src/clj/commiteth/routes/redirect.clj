@@ -39,6 +39,7 @@
           body         (keywordize-keys (codec/form-decode (:body resp)))
           scope        (:scope body)
           access-token (:access_token body)]
+      (log/info "access-token:" access-token)
       (log/debug "github sign-in callback, response body:" body)
       (if (:error body)
         ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
@@ -53,8 +54,8 @@
                      new-user?)
             (try
               (hubspot/create-hubspot-contact (:email user)
-                                                 (:name user "")
-                                                 (:login user))
+                                              (:name user "")
+                                              (:login user))
               (catch Throwable t
                 (log/error "Failed to create hubspot contact" t))))
           (assoc (found (str (env :server-address) "/app"))
