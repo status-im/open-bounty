@@ -1,7 +1,9 @@
-pragma solidity ^0.4.14;
+pragma solidity ^0.4.18;
+
+import "./ERC20Token.sol";
 
 /// @title Test token contract - Allows testing of token transfers with multisig wallet.
-contract TestToken {
+contract TestToken is ERC20Token {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -14,7 +16,7 @@ contract TestToken {
     string public symbol;
     uint8 public decimals;
 
-    function TestToken(string _name, string _symbol, uint8 _decimals) {
+    function TestToken(string _name, string _symbol, uint8 _decimals) public {
         require(bytes(_name).length > 0);
         require(bytes(_symbol).length > 0);
         name = _name;

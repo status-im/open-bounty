@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-import "./ERC20Token.sol";
+import "../token/ERC20Token.sol";
 
 contract MultiSigTokenWallet {
 
