@@ -120,8 +120,9 @@ contract MultiSigTokenWallet {
     {
         require(_data.length == 0);
         require(isWatched[_token]); //prevent call to untrusted contracts
-        uint amount = ERC20Token(_token).allowance(msg.sender, this);
-        ERC20Token(_token).transferFrom(msg.sender, this, amount);
+        ERC20Token token = ERC20Token(_token);
+        uint amount = token.allowance(msg.sender, this);
+        require(token.transferFrom(msg.sender, this, amount));
     }
         
     /**
@@ -133,11 +134,9 @@ contract MultiSigTokenWallet {
         ownerExists(msg.sender) 
     {   
         if (!isWatched[_tokenAddr]) {
-            require(ERC20Token(_tokenAddr).balanceOf(address(this)) > 0);
             emit Watching(_tokenAddr, true);
             tokens.push(_tokenAddr);
         }
-        
     }
     
     /** 
