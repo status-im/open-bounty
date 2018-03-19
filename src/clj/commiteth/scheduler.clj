@@ -254,12 +254,6 @@
     (neg? n) (- n)
     :else n))
 
-(defn float=
-  ([x y] (float= x y 0.0000001))
-  ([x y epsilon]
-   (log/debug x y epsilon)
-   (let [scale (if (or (zero? x) (zero? y)) 1 (abs x))]
-     (<= (abs (- x y)) (* scale epsilon)))))
 
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
@@ -322,6 +316,17 @@
           (db-bounties/open-bounty-contracts)]
     (update-issue-usd-value bounty-addr))))
 
+(defn float=
+  ([x y] (float= x y 0.0000001))
+  ([x y epsilon]
+   (log/debug x y epsilon)
+   (let [scale (if (or (zero? x) (zero? y)) 1 (abs x))]
+     (<= (abs (- x y)) (* scale epsilon)))))
+
+(defn map-float= [m1 m2]
+  (and (= (set (keys m1)) (set (keys m2)))
+       (every? #(float= (get m1 %1) (get m2 %1)) (keys m1))))
+
 (defn update-balances
   []
   (log/info "In update-balances")
@@ -344,13 +349,13 @@
 
           (when (or
                   (not (float= db-balance-eth balance-eth))
-                  (not= db-tokens token-balances))
-            (log/debug "balances differ")
-            (log/debug "ETH (db):" db-balance-eth (type db-balance-eth) )
-            (log/debug "ETH (chain):" balance-eth (type balance-eth) )
-            (log/debug "ETH cmp:" (float= db-balance-eth balance-eth))
-            (log/debug "tokens (db):" db-tokens (type db-tokens) (type (:SNT db-tokens)))
-            (log/debug "tokens (chain):" token-balances (type token-balances) (type (:SNT token-balances)))
+                  (not (map-float= db-tokens token-balances)))
+            (log/info "balances differ")
+            (log/info "ETH (db):" db-balance-eth (type db-balance-eth) )
+            (log/info "ETH (chain):" balance-eth (type balance-eth) )
+            (log/info "ETH cmp:" (float= db-balance-eth balance-eth))
+            (log/info "tokens (db):" db-tokens (type db-tokens) (type (:SNT db-tokens)))
+            (log/info "tokens (chain):" token-balances (type token-balances) (type (:SNT token-balances)))
             (log/debug "tokens cmp:" (= db-tokens token-balances))
 
             (issues/update-eth-balance contract-address balance-eth)

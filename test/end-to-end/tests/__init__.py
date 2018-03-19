@@ -1,4 +1,5 @@
 import configparser
+import os
 
 class TestData(object):
 
@@ -9,7 +10,7 @@ class TestData(object):
         # define here path to your config.ini file
         # example - config_example.ini
 
-        self.config.read("tests/config.ini")
+        self.config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'config.ini'))
 
         # self.issue['title'] is set in GithubPage::create_new_bounty
         # self.issue['id'] is set in GithubPage::create_new_bounty
