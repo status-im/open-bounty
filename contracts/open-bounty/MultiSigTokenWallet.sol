@@ -8,7 +8,7 @@ contract MultiSigTokenWallet {
     address[] public owners;
     address[] public tokens;
     mapping (address => bool) public isOwner;
-    mapping (address => bool) public isWatched;
+    mapping (address => bool) public isTrusted;
     mapping (uint => Transaction) public transactions;
     mapping (uint => mapping (address => bool)) public confirmations;
     
@@ -30,7 +30,7 @@ contract MultiSigTokenWallet {
     event Execution(uint indexed _transactionId);
     event ExecutionFailure(uint indexed _transactionId);
     event Deposit(address indexed _sender, uint _value);
-    event Watching(address _token, bool _enabled);
+    event TrustingToken(address _token, bool _enabled);
     event OwnerAddition(address indexed _owner);
     event OwnerRemoval(address indexed _owner);
     event RequirementChange(uint _required);
@@ -119,23 +119,24 @@ contract MultiSigTokenWallet {
         public 
     {
         require(_data.length == 0);
-        require(isWatched[_token]); //prevent call to untrusted contracts
+        require(isTrusted[_token]); //prevent call to untrusted contracts
         ERC20Token token = ERC20Token(_token);
         uint amount = token.allowance(msg.sender, this);
         require(token.transferFrom(msg.sender, this, amount));
     }
         
     /**
-    * @notice watches for balance in a token contract
+    * @notice trustes for balance in a token contract
     * @param _tokenAddr the token contract address
     **/   
-    function watch(address _tokenAddr)
+    function trustToken(address _tokenAddr)
         public
         ownerExists(msg.sender) 
     {   
-        if (!isWatched[_tokenAddr]) {
-            emit Watching(_tokenAddr, true);
+        if (!isTrusted[_tokenAddr]) {
+            isTrusted[_tokenAddr] = true;
             tokens.push(_tokenAddr);
+            emit TrustingToken(_tokenAddr, true);
         }
     }
     
@@ -155,11 +156,11 @@ contract MultiSigTokenWallet {
         public
     {
         require(_data.length == 0); //we dont use _data
-        require(isWatched[_token]);
+        require(isTrusted[_token]);
         if (_amount > 0) {
             ERC20Token token = ERC20Token(_token);
             token.transferFrom(_from, address(this), _amount);
-        }     
+        }
     }
     
 
@@ -287,12 +288,12 @@ contract MultiSigTokenWallet {
     }
 
     /**
-    * @notice withdraw all watched tokens and ether to `_dest`
-    * @param _dest the address of receiver
+    * @notice withdraw all trusted tokens and ether to `_dest`
+    * @param _destination the address of receiver
     **/    
-    function withdraw(address _dest) 
+    function withdrawTrusted(address _destination) 
         public
-        notNull(_dest)
+        notNull(_destination)
         onlyWallet
     {
         uint len = tokens.length;
@@ -300,10 +301,22 @@ contract MultiSigTokenWallet {
             address _tokenAddr = tokens[i];
             uint _amount = ERC20Token(_tokenAddr).balanceOf(address(this));
             if (_amount > 0) {
-                ERC20Token(_tokenAddr).transfer(_dest, _amount);
+                ERC20Token(_tokenAddr).transfer(_destination, _amount);
             }
         }
-        _dest.transfer(address(this).balance);
+        _destination.transfer(address(this).balance);
+    }
+
+    /**
+    * @notice withdraw all trusted tokens and ether to `_dest`
+    * @param _destinations the address of receivers
+    * @param _shares amount of participation each address have
+    **/    
+    function withdrawTrustedMultiple(address[] _destinations, uint256[] _shares) 
+        public
+        onlyWallet
+    {
+        withdrawAdvanced(_destinations, _shares, tokens, true);
     }
 
     /**
