@@ -37,10 +37,12 @@ contract Factory is Controlled {
                 address kernel,
                 bytes infohash)
     {
-        return (versionLog[index].blockNumber, 
-                versionLog[index].timestamp, 
-                versionLog[index].kernel, 
-                versionLog[index].infohash);
+        return (
+            versionLog[index].blockNumber, 
+            versionLog[index].timestamp, 
+            versionLog[index].kernel, 
+            versionLog[index].infohash
+            );
     }
 
     function _setKernel(address _kernel, bytes _infohash) 
@@ -51,7 +53,7 @@ contract Factory is Controlled {
         versionLog.push(Version({blockNumber: block.number, timestamp: block.timestamp, kernel: _kernel, infohash: _infohash}));
         latestUpdate = block.timestamp;
         latestKernel = _kernel;
-        NewKernel(_kernel, _infohash);
+        emit NewKernel(_kernel, _infohash);
     }
 
 }
