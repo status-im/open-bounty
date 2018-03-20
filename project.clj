@@ -77,7 +77,7 @@
 
   :uberjar-exclusions [#"public/README.md" #"public/cards.html"]
   :clean-targets ^{:protect false}
-  [:target-path :java-source-paths [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
    :nrepl-port       7002
