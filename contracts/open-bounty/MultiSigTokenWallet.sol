@@ -79,17 +79,7 @@ contract MultiSigTokenWallet {
         require (ownerCount <= MAX_OWNER_COUNT && _required <= ownerCount && _required != 0 && ownerCount != 0);
         _;
     }
-
-    /// @dev Fallback function allows to deposit ether.
-    function()
-        public
-        payable
-    {
-        if (msg.value > 0)
-            require(owners.length > 0); //prevents kernel misdeposit
-            emit Deposit(msg.sender, msg.value);
-    }
-
+    
     /**
     * Public functions
     * 
@@ -110,34 +100,28 @@ contract MultiSigTokenWallet {
         required = _required;
     }
 
+    /// @dev Fallback function allows to deposit ether.
+    function()
+        public
+        payable
+    {
+        if (msg.value > 0)
+            require(owners.length > 0); //prevents kernel misdeposit
+            emit Deposit(msg.sender, msg.value);
+    }
+
     /**
-    * @notice deposit a ERC20 token. The amount of deposit is the allowance set to this contract.
-    * @param _token the token contract address
-    * @param _data might be used by child implementations
-    **/ 
-    function depositToken(address _token, bytes _data) 
+     * @notice deposit a ERC20 token through allowance.
+     *         The amount of deposit is the allowance set to this contract.
+     * @param _token the token contract address
+     **/ 
+    function depositToken(address _token) 
         public 
     {
-        require(_data.length == 0);
         require(isTrusted[_token]); //prevent call to untrusted contracts
         ERC20Token token = ERC20Token(_token);
         uint amount = token.allowance(msg.sender, this);
         require(token.transferFrom(msg.sender, this, amount));
-    }
-        
-    /**
-    * @notice trustes for balance in a token contract
-    * @param _tokenAddr the token contract address
-    **/   
-    function trustToken(address _tokenAddr)
-        public
-        ownerExists(msg.sender) 
-    {   
-        if (!isTrusted[_tokenAddr]) {
-            isTrusted[_tokenAddr] = true;
-            tokens.push(_tokenAddr);
-            emit TrustingToken(_tokenAddr, true);
-        }
     }
     
     /** 
@@ -145,7 +129,7 @@ contract MultiSigTokenWallet {
     * @param _from address incoming token
     * @param _amount incoming amount
     * @param _token the token contract address
-    * @param _data (might be used by child classes)
+    * @param _data 
     */ 
     function receiveApproval(
         address _from,
@@ -156,10 +140,163 @@ contract MultiSigTokenWallet {
         public
     {
         require(_data.length == 0); //we dont use _data
-        require(isTrusted[_token]);
+        require(isTrusted[_token]); //only consider for trusted tokens
         if (_amount > 0) {
             ERC20Token token = ERC20Token(_token);
             token.transferFrom(_from, address(this), _amount);
+        }
+    }
+
+    /// @dev Allows an owner to submit and confirm a transaction.
+    /// @param destination Transaction target address.
+    /// @param value Transaction ether value.
+    /// @param data Transaction data payload.
+    /// @return Returns transaction ID.
+    function submitTransaction(address destination, uint value, bytes data)
+        public
+        returns (uint transactionId)
+    {
+        transactionId = addTransaction(destination, value, data);
+        confirmTransaction(transactionId);
+    }
+
+    /// @dev Allows an owner to confirm a transaction.
+    /// @param transactionId Transaction ID.
+    function confirmTransaction(uint transactionId)
+        public
+        ownerExists(msg.sender)
+        transactionExists(transactionId)
+        notConfirmed(transactionId, msg.sender)
+    {
+        confirmations[transactionId][msg.sender] = true;
+        emit Confirmation(msg.sender, transactionId);
+        executeTransaction(transactionId);
+    }
+
+    /// @dev Allows an owner to revoke a confirmation for a transaction.
+    /// @param transactionId Transaction ID.
+    function revokeConfirmation(uint transactionId)
+        public
+        ownerExists(msg.sender)
+        confirmed(transactionId, msg.sender)
+        notExecuted(transactionId)
+    {
+        confirmations[transactionId][msg.sender] = false;
+        emit Revocation(msg.sender, transactionId);
+    }
+
+    /// @dev Allows anyone to execute a confirmed transaction.
+    /// @param transactionId Transaction ID.
+    function executeTransaction(uint transactionId)
+        public
+        notExecuted(transactionId)
+    {
+        if (isConfirmed(transactionId)) {
+            Transaction storage txx = transactions[transactionId];
+            txx.executed = true;
+            if (txx.destination.call.value(txx.value)(txx.data)) {
+                emit Execution(transactionId);
+            } else {
+                emit ExecutionFailure(transactionId);
+                txx.executed = false;
+            }
+        }
+    }
+
+        
+    /**
+     * @notice trustes for balance in a token contract
+     * @param _tokenAddr the token contract address
+     **/   
+    function trustToken(address _tokenAddr)
+        public
+        ownerExists(msg.sender) 
+    {   
+        if (!isTrusted[_tokenAddr]) {
+            isTrusted[_tokenAddr] = true;
+            tokens.push(_tokenAddr);
+            emit TrustingToken(_tokenAddr, true);
+        }
+    }
+
+    /**
+     * Only wallet
+     */
+
+    /**
+     * @notice withdraw all trusted tokens and ether to `_dest`
+     * @param _destination the address of receiver
+     **/    
+    function withdrawTrusted(address _destination) 
+        public
+        notNull(_destination)
+        onlyWallet
+    {
+        uint len = tokens.length;
+        for (uint i = 0; i < len; i++) {
+            address _tokenAddr = tokens[i];
+            uint _amount = ERC20Token(_tokenAddr).balanceOf(address(this));
+            if (_amount > 0) {
+                ERC20Token(_tokenAddr).transfer(_destination, _amount);
+            }
+        }
+        _destination.transfer(address(this).balance);
+    }
+
+    /**
+     * @notice withdraw all trusted tokens and ether to `_dest`
+     * @param _destinations the address of receivers
+     * @param _shares amount of participation each address have
+     **/    
+    function withdrawTrustedMultiple(address[] _destinations, uint256[] _shares) 
+        public
+        onlyWallet
+    {
+        withdrawAdvanced(_destinations, _shares, tokens, true);
+    }
+
+    /**
+     * @notice withdraw to multiple destinations multiple defined tokens
+     * @param _destinations the address of receivers
+     * @param _shares how much of shares each reciever get of the total tokens/ether owned by this wallet
+     * @param _tokens what tokens would be withdrawn
+     * @param _withdrawEther ether will be withdrawn
+     **/    
+    function withdrawAdvanced(address[] _destinations, uint256[] _shares, address[] _tokens, bool _withdrawEther) 
+        public
+        onlyWallet
+    {
+        //calculate total shares 
+        uint len = _destinations.length;
+        require(len > 0);
+        require(_shares.length == len);
+        uint shareTotal;
+        for (uint i = 0; i < len; i++) {
+            shareTotal += _shares[i];
+        }
+        
+        //withdraw each token
+        uint lenj = _tokens.length;
+        if (lenj > 0) {
+            uint balanceTotal;
+            for (uint j = 0; j < lenj; j++) {
+                ERC20Token token = ERC20Token(tokens[j]);
+                balanceTotal = token.balanceOf(address(this));
+                if (balanceTotal > 0) {
+                    for (i = 0; i < len; i++) {
+                        token.transfer(_destinations[i], (_shares[i] * balanceTotal) / shareTotal);
+                    }
+                }
+            }
+        }
+        
+        if (_withdrawEther) {
+            balanceTotal = address(this).balance;
+            if (balanceTotal > 0) {
+                for (i = 0; i < len; i++) {
+                    _destinations[i].transfer((_shares[i]*balanceTotal)/shareTotal);
+                }
+            }
         }
     }
     
@@ -231,139 +368,10 @@ contract MultiSigTokenWallet {
         emit RequirementChange(_required);
     }
 
-    /// @dev Allows an owner to submit and confirm a transaction.
-    /// @param destination Transaction target address.
-    /// @param value Transaction ether value.
-    /// @param data Transaction data payload.
-    /// @return Returns transaction ID.
-    function submitTransaction(address destination, uint value, bytes data)
-        public
-        returns (uint transactionId)
-    {
-        transactionId = addTransaction(destination, value, data);
-        confirmTransaction(transactionId);
-    }
 
-    /// @dev Allows an owner to confirm a transaction.
-    /// @param transactionId Transaction ID.
-    function confirmTransaction(uint transactionId)
-        public
-        ownerExists(msg.sender)
-        transactionExists(transactionId)
-        notConfirmed(transactionId, msg.sender)
-    {
-        confirmations[transactionId][msg.sender] = true;
-        emit Confirmation(msg.sender, transactionId);
-        executeTransaction(transactionId);
-    }
-
-    /// @dev Allows an owner to revoke a confirmation for a transaction.
-    /// @param transactionId Transaction ID.
-    function revokeConfirmation(uint transactionId)
-        public
-        ownerExists(msg.sender)
-        confirmed(transactionId, msg.sender)
-        notExecuted(transactionId)
-    {
-        confirmations[transactionId][msg.sender] = false;
-        emit Revocation(msg.sender, transactionId);
-    }
-
-    /// @dev Allows anyone to execute a confirmed transaction.
-    /// @param transactionId Transaction ID.
-    function executeTransaction(uint transactionId)
-        public
-        notExecuted(transactionId)
-    {
-        if (isConfirmed(transactionId)) {
-            Transaction storage txx = transactions[transactionId];
-            txx.executed = true;
-            if (txx.destination.call.value(txx.value)(txx.data)) {
-                emit Execution(transactionId);
-            } else {
-                emit ExecutionFailure(transactionId);
-                txx.executed = false;
-            }
-        }
-    }
-
-    /**
-    * @notice withdraw all trusted tokens and ether to `_dest`
-    * @param _destination the address of receiver
-    **/    
-    function withdrawTrusted(address _destination) 
-        public
-        notNull(_destination)
-        onlyWallet
-    {
-        uint len = tokens.length;
-        for (uint i = 0; i < len; i++) {
-            address _tokenAddr = tokens[i];
-            uint _amount = ERC20Token(_tokenAddr).balanceOf(address(this));
-            if (_amount > 0) {
-                ERC20Token(_tokenAddr).transfer(_destination, _amount);
-            }
-        }
-        _destination.transfer(address(this).balance);
-    }
-
-    /**
-    * @notice withdraw all trusted tokens and ether to `_dest`
-    * @param _destinations the address of receivers
-    * @param _shares amount of participation each address have
-    **/    
-    function withdrawTrustedMultiple(address[] _destinations, uint256[] _shares) 
-        public
-        onlyWallet
-    {
-        withdrawAdvanced(_destinations, _shares, tokens, true);
-    }
-
-    /**
-    * @notice withdraw to multiple destinations multiple defined tokens
-    * @param _destinations the address of receivers
-    * @param _shares how much of shares each reciever get of the total tokens/ether owned by this wallet
-    * @param _tokens what tokens would be withdrawn
-    * @param _withdrawEther ether will be withdrawn
-    **/    
-    function withdrawAdvanced(address[] _destinations, uint256[] _shares, address[] _tokens, bool _withdrawEther) 
-        public
-        onlyWallet
-    {
-        //calculate total shares 
-        uint len = _destinations.length;
-        require(len > 0);
-        require(_shares.length == len);
-        uint shareTotal;
-        for (uint i = 0; i < len; i++) {
-            shareTotal += _shares[i];
-        }
-        
-        //withdraw each token
-        uint lenj = _tokens.length;
-        if (lenj > 0) {
-            uint balanceTotal;
-            for (uint j = 0; j < lenj; j++) {
-                ERC20Token token = ERC20Token(tokens[j]);
-                balanceTotal = token.balanceOf(address(this));
-                if (balanceTotal > 0) {
-                    for (i = 0; i < len; i++) {
-                        token.transfer(_destinations[i], (_shares[i] * balanceTotal) / shareTotal);
-                    }
-                }
-            }
-        }
-        
-        if (_withdrawEther) {
-            balanceTotal = address(this).balance;
-            if (balanceTotal > 0) {
-                for (i = 0; i < len; i++) {
-                    _destinations[i].transfer((_shares[i]*balanceTotal)/shareTotal);
-                }
-            }
-        }
-    }
-
+    /*
+     * Public constant call functions
+     */
     /// @dev Returns the confirmation status of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Confirmation status.
@@ -381,33 +389,6 @@ contract MultiSigTokenWallet {
         }
     }
 
-    /*
-    * Internal functions
-    */
-    /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
-    /// @param destination Transaction target address.
-    /// @param value Transaction ether value.
-    /// @param data Transaction data payload.
-    /// @return Returns transaction ID.
-    function addTransaction(address destination, uint value, bytes data)
-        internal
-        notNull(destination)
-        returns (uint transactionId)
-    {
-        transactionId = transactionCount;
-        transactions[transactionId] = Transaction({
-            destination: destination,
-            value: value,
-            data: data,
-            executed: false
-        });
-        transactionCount += 1;
-        emit Submission(transactionId);
-    }
-    
-    /*
-    * Web3 call functions
-    */
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
     /// @return Number of confirmations.
@@ -506,4 +487,28 @@ contract MultiSigTokenWallet {
         }
     }
 
+    /*
+    * Internal functions
+    */
+    /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
+    /// @param destination Transaction target address.
+    /// @param value Transaction ether value.
+    /// @param data Transaction data payload.
+    /// @return Returns transaction ID.
+    function addTransaction(address destination, uint value, bytes data)
+        internal
+        notNull(destination)
+        returns (uint transactionId)
+    {
+        transactionId = transactionCount;
+        transactions[transactionId] = Transaction({
+            destination: destination,
+            value: value,
+            data: data,
+            executed: false
+        });
+        transactionCount += 1;
+        emit Submission(transactionId);
+    }
+    
 }
