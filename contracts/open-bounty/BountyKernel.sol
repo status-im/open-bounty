@@ -1,15 +1,15 @@
 pragma solidity ^0.4.17;
 
 import "../deploy/InstanceStorage.sol";
-import "./MultiSigTokenWallet.sol";
+import "./MultiSigBountyWallet.sol";
 
 /**
- *
+ * @notice Bounty Instance Kernel using MultiSigBountyWallet
  */
-contract BountyKernel is InstanceStorage, MultiSigTokenWallet {
+contract BountyKernel is InstanceStorage, MultiSigBountyWallet {
 
 
-    function BountyKernel(address[] _dummyOwners) MultiSigTokenWallet(_dummyOwners,1) public {
+    function BountyKernel(address[] _dummyOwners) MultiSigWallet(_dummyOwners,1) public {
         //remove ownership of Kernel 
         uint len = _dummyOwners.length;
         for (uint i = 0; i < len; i++) {
