@@ -3,6 +3,7 @@
              :refer [create-web3j creds]]
             [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]
+            [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
             abi.datatypes.Address
@@ -147,20 +148,22 @@
   "Query (internal) ERC20 token balance from bounty contract for given
   token TLA."
   [bounty-addr token]
-  (let [bounty-contract (load-bounty-contract bounty-addr)
+  (p :token-balance-in-bounty
+     (let [bounty-contract (load-bounty-contract bounty-addr)
         token-address (get-token-address token)
         token-addr-web3j (Address. token-address)]
     (-> bounty-contract
         (.tokenBalances token-addr-web3j)
         .get
         .getValue
-        (convert-token-value token))))
+        (convert-token-value token)))))
 
 (defn token-balance
   "Query balance of given ERC20 token TLA for given address from ERC20
   contract."
   [bounty-addr token]
-  (let [token-address (get-token-address token)]
+  (p :token-balance
+     (let [token-address (get-token-address token)]
     (log/debug "token-balance" bounty-addr token token-address)
     (try
       (-> (eth/call token-address
@@ -170,25 +173,26 @@
           (convert-token-value token))
       (catch Throwable t
         (log/debug "Failed to query token balance " t)
-        0))))
+        0)))))
 
 
 (defn token-balances
   "Get a given bounty contract's token balances. Assumes contract's
   internal balances have been updated."
   [bounty-addr]
-  (let [bounty-contract (load-bounty-contract bounty-addr)
-        token-addresses (-> bounty-contract
+  (p :token-balances
+     (let [bounty-contract (p :load-bounty-contract (load-bounty-contract bounty-addr))
+        token-addresses (p :getTokenList (-> bounty-contract
                             (.getTokenList)
-                            .get)]
+                            .get))]
     (if token-addresses
       (let [addrs (map str
-                       (.getValue token-addresses))]
+                       (p :getValue (.getValue token-addresses)))]
         (into {}
               (map (fn [addr] (if-let [info (token-data/token-info-by-addr addr)]
                                (let [tla (first info)]
                                  [tla (token-balance bounty-addr tla)]))) addrs)))
-      {})))
+      {}))))
 
 (defn uint256 [x]
   (org.web3j.abi.datatypes.generated.Uint256. x))
