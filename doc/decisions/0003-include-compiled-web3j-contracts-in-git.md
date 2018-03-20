@@ -40,3 +40,5 @@ revert the decision outlined in this document.
 
 - The compiled Java interfaces may get out of date.  
   This could perhaps be addressed by some clever use of checksums.
+- By having changes to the contract interfaces be part of a changeset it may
+  be easier to spot what changes are required/how APIs are changing.
