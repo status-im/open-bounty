@@ -25,13 +25,17 @@
     (jdbc/with-db-connection [con-db *db*]
       (db/get-enabled-repositories con-db {:user_id user-id}))))
 
-(defn update-repo
-  [repo-id updates]
+(defn update-repo-name
+  [repo-id repo-name]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-repo-generic con-db {:repo_id repo-id
-                                    :updates updates})))
+    (db/update-repo-name con-db {:repo_id repo-id
+                                 :repo_name repo-name})))
 
-
+(defn update-repo-state
+  [repo-id repo-state]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-repo-name con-db {:repo_id repo-id
+                                 :repo_state repo-state})))
 (defn get-repo
   "Get a repo from DB given it's full name (owner/repo-name)"
   [full-name]

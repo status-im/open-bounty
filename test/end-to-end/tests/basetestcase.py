@@ -18,6 +18,8 @@ class BaseTestCase:
         sauce_lab_cap = dict()
         sauce_lab_cap['name'] = test_data.test_name
         sauce_lab_cap['build'] = pytest.config.getoption('build')
+        sauce_lab_cap['idleTimeout'] = 900
+        sauce_lab_cap['commandTimeout'] = 500
         sauce_lab_cap['platform'] = "MAC"
         sauce_lab_cap['browserName'] = 'Chrome'
         sauce_lab_cap['screenResolution'] = '2048x1536'
@@ -67,8 +69,9 @@ class BaseTestCase:
 
         if cls.environment == 'sauce':
             for caps in cls.capabilities_dev, cls.capabilities_org:
-                cls.get_remote_caps(cls)
+                remote = cls.get_remote_caps(cls)
                 new_caps = caps.to_capabilities()
+                new_caps.update(remote)
                 driver = webdriver.Remote(cls.executor_sauce_lab,
                                           desired_capabilities=new_caps)
                 drivers.append(driver)
@@ -78,6 +81,7 @@ class BaseTestCase:
 
         cls.driver_dev = drivers[0]
         cls.driver_org = drivers[1]
+
 
         for driver in drivers:
              driver.implicitly_wait(10)
@@ -132,9 +136,9 @@ class BaseTestCase:
         remove_installation(cls.driver_org)
 
         ######DEV
-
-        cls.github_dev.delete_fork()
         cls.github_dev.clean_repo_local_folder()
+        cls.github_dev.delete_fork()
+
         try:
             cls.driver_dev.quit()
             cls.driver_org.quit()

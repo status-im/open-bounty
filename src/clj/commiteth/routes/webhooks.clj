@@ -104,26 +104,17 @@
             (extract pr-title))))
 
 
-(defn ensure-bounty-issue
-  "Checks if an issue has a bounty label attached and returns its number"
-  [user repo issue-number]
-  (when-let [issue (github/get-issue user repo issue-number)]
-    (when (bounties/has-bounty-label? issue)
-      issue-number)))
-
-
 (defn handle-claim
-  [user-id login name avatar_url owner repo repo-id bounty-issue-number pr-id pr-number head-sha merged? event-type]
+  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number head-sha merged? event-type]
   (users/create-user user-id login name nil avatar_url)
-  (let [issue (github/get-issue owner repo bounty-issue-number)
-        open-or-edit? (contains? #{:opened :edited} event-type)
+  (let [open-or-edit? (contains? #{:opened :edited} event-type)
         close? (= :closed event-type)
         pr-data {:repo_id   repo-id
                  :pr_id     pr-id
                  :pr_number pr-number
                  :user_id   user-id
-                 :issue_number bounty-issue-number
-                 :issue_id (:id issue)
+                 :issue_number (:issue_number issue)
+                 :issue_id (:issue_id issue)
                  :state event-type}]
 
     ;; TODO: in the opened case if the submitting user has no
@@ -133,18 +124,18 @@
     (cond
       open-or-edit? (do
                       (log/info "PR with reference to bounty issue"
-                                bounty-issue-number "opened")
+                                 (:issue_number issue) "opened")
                       (pull-requests/save (merge pr-data {:state :opened
                                                           :commit_sha head-sha})))
       close? (if merged?
                (do (log/info "PR with reference to bounty issue"
-                             bounty-issue-number "merged")
+                             (:issue_number issue) "merged")
                    (pull-requests/save
                     (merge pr-data {:state :merged
                                     :commit_sha head-sha}))
-                   (issues/update-commit-sha (:id issue) head-sha))
+                   (issues/update-commit-sha (:issue_id issue) head-sha))
                (do (log/info "PR with reference to bounty issue"
-                             bounty-issue-number "closed with no merge")
+                             (:issue_number issue) "closed with no merge")
                    (pull-requests/save
                     (merge pr-data {:state :closed
                                     :commit_sha head-sha})))))))
@@ -172,26 +163,27 @@
      pr-number       :number
      pr-body         :body
      pr-title        :title} :pull_request}]
-  (log/debug "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (log/debug (extract-issue-number pr-body pr-title))
-  (if-let [bounty-issue-number (->>
-                                  (extract-issue-number pr-body pr-title)
-                                  (first)
-                                  (ensure-bounty-issue owner repo))]
-    (do
-      (log/debug "Referenced bounty issue found" owner repo bounty-issue-number)
-      (handle-claim user-id
-                    login name
-                    avatar_url
-                    owner repo
-                    repo-id
-                    bounty-issue-number
-                    pr-id
-                    pr-number
-                    head-sha
-                    merged?
-                    event-type))
+  (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
+  (if-let [issue (some->> (extract-issue-number pr-body pr-title)
+                          (first)
+                          (issues/get-issue repo-id))]
+    (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
+      (do
+        (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
+        (handle-claim issue
+                      user-id
+                      login name
+                      avatar_url
+                      owner repo
+                      repo-id
+                      pr-id
+                      pr-number
+                      head-sha
+                      merged?
+                      event-type))
+      (log/info "PR for issue already merged"))
     (when (= :edited event-type)
+      ; Remove PR if it does not reference any issue
       (pull-requests/remove pr-id))))
 
 
@@ -202,9 +194,15 @@
         new-title (:title gh-issue)]
     (issues/update-issue-title issue-id new-title)))
 
+(defn update-repo-name [webhook-payload]
+  "Update repo name in DB if changed"
+  (let [{repo-id :id
+         repo-name :name} (:repository webhook-payload)]
+    (repositories/update-repo-name repo-id repo-name)))
 
 (defn handle-issue
   [webhook-payload]
+  (update-repo-name webhook-payload)
   (when-let [action (:action webhook-payload)]
     (log/debug "handle-issue" action)
     (case action
@@ -222,17 +220,17 @@
       (log/debug "Not handling action '" action "'"))
   (ok)))
 
-(defn enable-repo-2 [repo-id full-repo]
-  (log/debug "enable-repo-2" repo-id full-repo)
+(defn enable-repo [repo-id full-repo]
+  (log/debug "enable-repo" repo-id full-repo)
   ;; TODO(oskarth): Add granular permissions to enable creation of label
   #_(github/create-label full-repo)
-  (repositories/update-repo repo-id {:state 2})
+  (repositories/update-repo-state repo-id 2)
   (when (add-bounties-for-existing-issues?)
     (bounties/add-bounties-for-existing-issues full-repo)))
 
-(defn disable-repo-2 [repo-id full-repo]
-  (log/debug "disable-repo-2" repo-id full-repo)
-  (repositories/update-repo repo-id {:state 0}))
+(defn disable-repo [repo-id full-repo]
+  (log/debug "disable-repo" repo-id full-repo)
+  (repositories/update-repo-state repo-id 0))
 
 (defn full-repo->owner [full-repo]
   (try
@@ -242,8 +240,6 @@
       (log/error "exception when parsing repo" e)
       nil)))
 
-;; NOTE(oskarth): Together with {enable,disable}-repo-2 above, this replaces
-;; handle-toggle-repo for Github App.
 (defn handle-add-repo [user-id username owner-avatar-url repo can-create?]
   (let [repo-id   (:id repo)
         repo-name (:name repo)
@@ -283,14 +279,14 @@
                 _ (log/info "handle-add-repo db-item" db-item)
                 is-enabled (= 2 (:state db-item))]
             (if is-enabled
-              (disable-repo-2 repo-id full-repo)
-              (enable-repo-2 repo-id full-repo))
+              (disable-repo repo-id full-repo)
+              (enable-repo repo-id full-repo))
             (ok {:enabled (not is-enabled)
                  :id repo-id
                  :full_name full-repo}))
           (catch Exception e
             (log/error "exception when enabling repo" e)
-            (repositories/update-repo repo-id {:state -1})
+            (repositories/update-repo-state repo-id -1)
             (internal-server-error))))))
 
 (defn handle-installation [{:keys [action installation repositories sender]}]
@@ -333,12 +329,13 @@
   (ok))
 
 (defn handle-pull-request
-  [pull-request]
-  (let [action (keyword (:action pull-request))]
+  [webhook-payload]
+  (update-repo-name webhook-payload)
+  (let [action (keyword (:action webhook-payload))]
     (when (contains? #{:opened
                        :edited
                        :closed} action)
-      (handle-pull-request-event action pull-request))
+      (handle-pull-request-event action webhook-payload))
     (ok)))
 
 
@@ -391,14 +388,5 @@
                 "pull_request" (handle-pull-request payload)
                 "installation" (handle-installation payload)
                 "installation_repositories" (handle-installation-repositories payload)
-
-                ;; NOTE(oskarth): These two webhooks are / will be deprecated on
-                ;; November 22, 2017 but they keep being called. According to
-                ;; documentation they should contain same format.
-                ;; https://developer.github.com/webhooks/
-                "integration_installation" (handle-installation payload)
-                "integration_installation_repositories" (handle-installation-repositories payload)
                 (ok)))
             (forbidden)))))
-
-
