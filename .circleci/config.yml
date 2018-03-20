@@ -42,6 +42,8 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "project.clj" }}
 
+      - run: echo $ETH_WALLET_JSON > $ETH_WALLET_FILE
+
       # run tests!
       - run: lein test
       - run: lein with-profile test doo phantom test
