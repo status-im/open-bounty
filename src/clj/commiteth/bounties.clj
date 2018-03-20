@@ -20,6 +20,13 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
+(defn fetch-transaction-hash [repo-id owner-address]
+  "Attempt to fetch transaction hash from contract pool
+   for current repo owner. If nothing found, deploy a new contract"
+  (let [contract-from-pool (issues/contract-from-pool owner-address)]
+    (or (:transaction_hash contract-from-pool)
+        (multisig/deploy-multisig owner-address))))
+
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
          issue-number :number
@@ -31,10 +38,10 @@
     (if (= 1 created-issue)
       (if (empty? owner-address)
         (log/error "Unable to deploy bounty contract because"
-                   "repo owner has no Ethereum addres")
+                   "repo owner has no Ethereum address")
         (do
           (log/debug "deploying contract to " owner-address)
-          (let [transaction-hash (multisig/deploy-multisig owner-address)]
+          (let [transaction-hash (fetch-transaction-hash repo-id owner-address)]
             (if (nil? transaction-hash)
               (log/error "Failed to deploy contract to" owner-address)
               (do
@@ -58,6 +65,16 @@
       (log/debug "Total issues for repo limit reached " repo " " count)
       (add-bounty-for-issue repo repo-id issue))))
 
+(defn remove-bounty-for-issue! [repo repo-id issue]
+  (let [{issue-id     :id
+         issue-number :number} issue
+        removed-issue (issues/remove! repo-id issue-id)
+        {owner-address :address
+         owner :owner} (users/get-repo-owner repo-id) ]
+    (log/debug "Removing bounty for issue " repo issue-number "owner address: " owner-address)
+    (if-let [comment-id (:comment_id removed-issue)]
+      (github/remove-deploying-comment! owner repo comment-id)
+      (log/debug "Cannot remove Github bounty comment as it has non-zero value"))))
 
 ;; We have a max-limit to ensure people can't add more issues and
 ;; drain bot account until we have economic design in place
@@ -74,7 +91,9 @@
      (map (partial maybe-add-bounty-for-issue repo repo-id) max-bounties))))
 
 
-(defn update-bounty-comment-image [issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens]
+(defn update-bounty-comment-image [issue-id owner repo 
+                                   issue-number contract-address 
+                                   eth-balance eth-balance-str tokens]
   (let [hash (github/github-comment-hash owner repo issue-number eth-balance)
         issue-url (str owner "/" repo "/issues/" (str issue-number))
         png-data (png-rendering/gen-comment-image

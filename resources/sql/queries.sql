@@ -1,3 +1,4 @@
+
 -- Users ---------------------------------------------------------------------------
 
 -- :name create-user! :<! :1
@@ -44,7 +45,7 @@ FROM users
 WHERE id = :id;
 
 -- :name get-repo-owner :? :1
-SELECT *
+SELECT u.login as owner, u.address
 FROM users u, repositories r
 WHERE r.repo_id = :repo_id
 AND r.user_id = u.id;
@@ -127,6 +128,23 @@ INSERT INTO issues (repo_id, issue_id, issue_number, title)
   WHERE NOT exists(SELECT 1
                    FROM issues
                    WHERE repo_id = :repo_id AND issue_id = :issue_id);
+
+-- :name remove-issue! :<! :1
+-- :doc removes issue
+WITH archived AS (
+  INSERT INTO archive(type,data)
+    SELECT 'issue',to_jsonb(i)
+      FROM issues i
+      WHERE i.repo_id = :repo_id 
+      AND i.issue_id = :issue_id
+      AND i.value_usd = 0.0
+)
+DELETE FROM issues
+  WHERE repo_id = :repo_id 
+  AND issue_id = :issue_id
+  AND value_usd = 0.0
+  RETURNING comment_id;
+
 
 -- :name update-commit-sha :<! :1
 -- :doc updates issue with commit_sha
@@ -632,3 +650,15 @@ SELECT * FROM (
   ORDER BY 1 desc
   LIMIT :limit_days) AS a
 ORDER BY a.day ASC;
+
+-- :name contract-from-pool :? :1
+-- :doc return first contract from archive for given owner
+SELECT a.data->>'transaction_hash' as transaction_hash
+  FROM archive a
+  JOIN repositories r ON ((a.data->>'repo_id')::int=r.repo_id)
+  JOIN users u ON (r.user_id=u.id)
+  LEFT JOIN issues i ON (a.data->>'transaction_hash' = i.transaction_hash)
+  WHERE a.type='issue'
+  AND u.address = :address
+  AND i.transaction_hash is null
+  LIMIT 1;
