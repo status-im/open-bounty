@@ -74,19 +74,17 @@
 
 (defn tabs [mobile?]
   (let [user (rf/subscribe [:user])
+        owner-bounties (rf/subscribe [:owner-bounties])
         current-page (rf/subscribe [:page])]
-    (fn []
-      (let [tabs (apply conj [[:bounties (str (when-not @user "Open ") "Bounties")]
-                              [:activity "Activity"]]
-                        (when @user
-                          [
-                           ;; NOTE(oskarth) Disabling this as repo management happens through GH app
-                           #_[:repos "Repositories"]
-                           [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")]
-                           (when (:status-team-member? @user)
-                             [:usage-metrics "Usage metrics"])]))]
+    (fn tabs-render []
+      (let [tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
+                  [:activity "Activity"]
+                  (when (seq @owner-bounties)
+                    [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")])
+                  (when (:status-team-member? @user)
+                    [:usage-metrics "Usage metrics"])]]
         (into [:div.ui.attached.tabular.menu.tiny]
-              (for [[page caption] tabs]
+              (for [[page caption] (remove nil? tabs)]
                 (let [props {:class (str "ui item"
                                          (when (= @current-page page) " active"))
                              :on-click #(commiteth.routes/nav! page)}]
