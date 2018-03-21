@@ -46,4 +46,3 @@ jobs:
 
       # run tests!
       - run: lein test
-      - run: lein with-profile test doo phantom test
