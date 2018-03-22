@@ -4,6 +4,7 @@
             [commiteth.eth.token-data :as token-data]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
+            [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
             [commiteth.util.crypto-fiat-value :as fiat-util]
@@ -15,13 +16,35 @@
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]))
 
+(tufte/add-basic-println-handler! {})
+(tufte/add-handler! :file (fn [{stats :stats}]
+                            (log/info "Profiling stats:" stats)))
 
+(comment
+
+  (profile {} (update-issue-contract-address))
+  (profile {} (deploy-pending-contracts))
+  (profile {} (self-sign-bounty))
+  (profile {} (update-confirm-hash))
+  (profile {} (update-watch-hash))
+  (profile {} (update-payout-receipt))
+  (profile {} (update-contract-internal-balances))
+  (profile {} (update-open-issue-usd-values))
+  (profile {} (update-balances))
+  (profile {}
+           (doseq [i (range 5)]
+             (update-contract-internal-balances) 
+             (update-open-issue-usd-values) 
+             (update-balances)))
+
+  )
 (defn update-issue-contract-address
   "For each pending deployment: gets transaction receipt, updates db
   state (contract-address, comment-id) and posts github comment"
   []
   (log/info "In update-issue-contract-address")
-  (doseq [{issue-id         :issue_id
+  (p :update-issue-contract-address
+     (doseq [{issue-id         :issue_id
            transaction-hash :transaction_hash} (issues/list-pending-deployments)]
     (log/info "pending deployment:" transaction-hash)
     (try 
@@ -57,7 +80,7 @@
           (log/error "Failed to find contract address in tx logs")))
       (catch Throwable ex 
         (do (log/error "update-issue-contract-address exception:" ex)
-            (clojure.stacktrace/print-stack-trace ex)))))
+            (clojure.stacktrace/print-stack-trace ex))))))
   (log/info "Exit update-issue-contract-address"))
 
 
@@ -84,16 +107,18 @@
 (defn deploy-pending-contracts
   "Under high-concurrency circumstances or in case geth is in defunct state, a bounty contract may not deploy successfully when the bounty label is addded to an issue. This function deploys such contracts."
   []
-  (doseq [{issue-id :issue_id
+  (p :deploy-pending-contracts
+     (doseq [{issue-id :issue_id
            owner-address :owner_address} (db-bounties/pending-contracts)]
     (log/debug "Trying to re-deploy failed bounty contract deployment, issue-id:" issue-id)
-    (deploy-contract owner-address issue-id)))
+    (deploy-contract owner-address issue-id))))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
   []
   (log/info "In self-sign-bounty")
-  (doseq [{contract-address :contract_address
+  (p :self-sign-bounty
+     (doseq [{contract-address :contract_address
            issue-id         :issue_id
            payout-address   :payout_address
            repo :repo
@@ -130,7 +155,7 @@
                                                 false))))
       (catch Throwable ex 
         (do (log/error "self-sign-bounty exception:" ex)
-            (clojure.stacktrace/print-stack-trace ex)))))
+            (clojure.stacktrace/print-stack-trace ex))))))
   (log/info "Exit self-sign-bounty")
   )
 
@@ -138,25 +163,27 @@
   "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
   []
   (log/info "In update-confirm-hash")
-  (doseq [{issue-id     :issue_id
+  (p :update-confirm-hash
+     (doseq [{issue-id     :issue_id
            execute-hash :execute_hash} (db-bounties/pending-payouts)]
     (log/info "pending payout:" execute-hash)
     (when-let [receipt (eth/get-transaction-receipt execute-hash)]
       (log/info "execution receipt for issue #" issue-id ": " receipt)
       (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
         (log/info "confirm hash:" confirm-hash)
-        (db-bounties/update-confirm-hash issue-id confirm-hash))))
+        (db-bounties/update-confirm-hash issue-id confirm-hash)))))
   (log/info "Exit update-confirm-hash"))
 
 
 (defn update-watch-hash
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
   []
-  (doseq [{issue-id :issue_id
+  (p :update-watch-hash
+     (doseq [{issue-id :issue_id
            watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
     (log/info "pending watch call" watch-hash)
     (when-let [receipt (eth/get-transaction-receipt watch-hash)]
-      (db-bounties/update-watch-hash issue-id nil))))
+      (db-bounties/update-watch-hash issue-id nil)))))
 
 
 (defn older-than-3h?
@@ -171,7 +198,8 @@
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (log/info "In update-payout-receipt")
-  (doseq [{issue-id    :issue_id
+  (p :update-payout-receipt
+     (doseq [{issue-id    :issue_id
            payout-hash :payout_hash
            contract-address :contract_address
            repo :repo
@@ -213,7 +241,7 @@
           (db-bounties/reset-payout-hash issue-id)))
       (catch Throwable ex 
         (do (log/error "update-payout-receipt exception:" ex)
-            (clojure.stacktrace/print-stack-trace ex)))))
+            (clojure.stacktrace/print-stack-trace ex))))))
   (log/info "Exit update-payout-receipt")
   )
 
@@ -252,12 +280,14 @@
 (defn update-contract-internal-balances
   "It is required in our current smart contract to manually update it's internal balance when some tokens have been added."
   []
-  (doseq [{issue-id :issue_id
-           bounty-address :contract_address
-           watch-hash :watch_hash}
-          (db-bounties/open-bounty-contracts)]
-    (update-bounty-token-balances issue-id bounty-address watch-hash)))
-
+  (log/info "In update-contract-internal-balances")
+  (p :update-contract-internal-balances
+     (doseq [{issue-id :issue_id
+              bounty-address :contract_address
+              watch-hash :watch_hash}
+             (db-bounties/open-bounty-contracts)]
+       (update-bounty-token-balances issue-id bounty-address watch-hash)))
+  (log/info "Exit update-contract-internal-balances"))
 
 (defn get-bounty-funds
   "Get funds in given bounty contract.
@@ -281,9 +311,10 @@
 (defn update-open-issue-usd-values
   "Sum up current USD values of all crypto assets in a bounty and store to DB"
   []
-  (doseq [{bounty-addr :contract_address}
+  (p :update-open-issue-usd-values
+     (doseq [{bounty-addr :contract_address}
           (db-bounties/open-bounty-contracts)]
-    (update-issue-usd-value bounty-addr)))
+    (update-issue-usd-value bounty-addr))))
 
 (defn float=
   ([x y] (float= x y 0.0000001))
@@ -299,7 +330,8 @@
 (defn update-balances
   []
   (log/info "In update-balances")
-  (doseq [{contract-address :contract_address
+  (p :update-balances
+     (doseq [{contract-address :contract_address
            owner            :owner
            repo             :repo
            comment-id       :comment_id
@@ -347,7 +379,7 @@
             (update-issue-usd-value contract-address))))
       (catch Throwable ex 
         (do (log/error "update-balances exception:" ex)
-            (clojure.stacktrace/print-stack-trace ex)))))
+            (clojure.stacktrace/print-stack-trace ex))))))
   (log/info "Exit update-balances"))
 
 
@@ -375,17 +407,18 @@
       update-payout-receipt
       update-watch-hash
       self-sign-bounty
-      update-contract-internal-balances
-      update-balances])
-    (log/debug "run-1-min-interval-tasks done")))
+      ])
+    (log/info "run-1-min-interval-tasks done")))
 
 
 (defn run-10-min-interval-tasks [time]
   (do
-    (log/debug "run-1-min-interval-tasks" time)
+    (log/info "run-10-min-interval-tasks" time)
     (run-tasks
-     [update-open-issue-usd-values])
-    (log/debug "run-10-min-interval-tasks done")))
+     [update-contract-internal-balances
+      update-balances
+      update-open-issue-usd-values])
+    (log/info "run-10-min-interval-tasks done")))
 
 
 (mount/defstate scheduler

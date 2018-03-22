@@ -4,8 +4,10 @@
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
             [clojure.string :refer [join]]
+            [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
+            [mount.core :as mount]
             [pandect.core :as pandect]
             [commiteth.util.util :refer [json-api-request]])
   (:import [org.web3j
@@ -26,24 +28,30 @@
 (defn auto-gas-price? [] (env :auto-gas-price false))
 (defn offline-signing? [] (env :offline-signing true))
 
+(def web3j-obj (atom nil))
+(def creds-obj (atom nil))
+
 (defn wallet-file-path []
   (env :eth-wallet-file))
 
 (defn wallet-password []
   (env :eth-password))
 
-(defn creds []
-  (let [password  (wallet-password)
-        file-path (wallet-file-path)]
-    (if (and password file-path)
-      (WalletUtils/loadCredentials
-       password
-       file-path)
-      (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
-                      {:password password :file-path file-path})))))
-
 (defn create-web3j []
-  (Web3j/build (HttpService. (eth-rpc-url))))
+ (or @web3j-obj
+      (swap! web3j-obj (constantly (Web3j/build (HttpService. (eth-rpc-url)))))))
+
+(defn creds []
+  (or @creds-obj
+      (let [password  (wallet-password)
+            file-path (wallet-file-path)]
+        (if (and password file-path)
+          (swap! creds-obj
+                 (constantly (WalletUtils/loadCredentials
+                               password
+                               file-path)))
+          (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
+                          {:password password :file-path file-path}))))))
 
 (defn get-signed-tx [gas-price gas-limit to data]
   "Create a sign a raw transaction.
@@ -192,7 +200,8 @@
 
 (defn get-balance-eth
   [account digits]
-  (hex->eth (get-balance-hex account) digits))
+  (p :get-balance-eth
+     (hex->eth (get-balance-hex account) digits)))
 
 (defn- format-param
   [param]
@@ -296,3 +305,15 @@
             (filter true?)
             (empty?)))
           true))))
+
+(mount/defstate
+  eth-core
+  :start
+  (do
+    (swap! web3j-obj (constantly nil))
+    (swap! creds-obj (constantly nil))
+    (log/info "eth/core started"))
+  :stop
+  (log/info "eth/core stopped"))
+
+
