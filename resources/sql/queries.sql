@@ -236,7 +236,7 @@ WHERE pr_id = :pr_id;
 SELECT
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
-  u.login            AS owner,
+  r.owner            AS owner,
   u.address          AS owner_address,
   r.repo             AS repo
 FROM issues i, users u, repositories r
