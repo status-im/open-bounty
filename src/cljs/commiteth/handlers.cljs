@@ -13,7 +13,8 @@
              :as rf-storage
              :refer [reg-co-fx!]]
             [commiteth.ui-model :as ui-model]
-            [commiteth.common :as common]))
+            [commiteth.common :as common]
+            [commiteth.routes :as routes]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -40,6 +41,20 @@
    (println "redirecting to" path)
    (set! (.-pathname js/location) path)))
 
+(reg-fx
+ :persist-bounty-filters-in-query
+ (fn [{:keys [bounty-filters]}]
+   (let [query
+         (->> bounty-filters
+              (remove (comp nil? val))
+              (map (fn [[k v]]
+                     [(ui-model/bounty-filter-type->query-param k)
+                      (ui-model/bounty-filter-value->query-param k v)]))
+              (into {}))]
+     (routes/nav! :bounties {} (if (= {} query)
+                                 nil
+                                 query)))))
+
 (reg-event-fx
  :initialize-db
  [(inject-cofx :store)]
@@ -65,10 +80,17 @@
 
 (reg-event-db
  :set-active-page
- (fn [db [_ page]]
+ (fn [db [_ page params query]]
    (assoc db :page page
              :page-number 1
-             ::db/open-bounties-filters {}
+             ::db/open-bounties-filters
+             (reduce-kv
+              #(let [type (ui-model/query-param->bounty-filter-type %2)]
+                 (assoc %1
+                  type
+                  (ui-model/query-param->bounty-filter-value type %3)))
+              {}
+              query)
              ::db/open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent)))
 
 (reg-event-db
@@ -468,9 +490,12 @@
     (merge db {::db/open-bounties-sorting-type sorting-type
                :page-number 1})))
 
-(reg-event-db
-  ::set-open-bounty-filter-type
-  (fn [db [_ filter-type filter-value]]
-    (-> db
-        (assoc-in [::db/open-bounties-filters filter-type] filter-value)
-        (assoc :page-number 1))))
+(reg-event-fx
+ ::set-open-bounty-filter-type
+ (fn [{:keys [event db]} [_ filter-type filter-value]]
+   (println "db" db)
+   (let [filters (::db/open-bounties-filters db)]
+     (println "filters" filters)
+     {:persist-bounty-filters-in-query
+      {:bounty-filters
+       (assoc filters filter-type filter-value)}})))

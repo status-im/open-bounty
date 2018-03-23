@@ -179,7 +179,7 @@
                          (mapcat keys)
                          (filter identity)
                          set)]
-      (into #{"ETH"} token-ids))))
+      (into #{:ETH} token-ids))))
 
 (reg-sub
   ::filtered-and-sorted-open-bounties
