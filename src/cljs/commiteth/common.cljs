@@ -2,9 +2,13 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
+            [goog.object :as gobj]
             [goog.date.relative]
             [goog.i18n.DateTimePatterns :as DateTimePatterns])
   (:import (goog.i18n DateTimeFormat)))
+
+(defn web3 []
+  (gobj/get js/window "web3"))
 
 (defn input [val-ratom props]
   (fn []
