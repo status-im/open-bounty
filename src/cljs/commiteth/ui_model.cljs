@@ -87,11 +87,11 @@
     ::bounty-filter-type.category                      ::bounty-filter-type-category|multiple-dynamic-options
     ::bounty-filter-type.re-frame-subs-key-for-options :commiteth.subscriptions/open-bounties-currencies
     ::bounty-filter-type.predicate                     (fn [filter-value bounty]
-                                                         (or (and (contains? filter-value "ETH")
+                                                         (or (and (contains? filter-value :ETH)
                                                                   (< 0 (js/parseFloat (:balance-eth bounty))))
                                                              (not-empty
                                                                (set/intersection
-                                                                 (->> filter-value (remove #{"ETH"}) set)
+                                                                 (->> filter-value (remove #{:ETH}) set)
                                                                  (-> bounty :tokens keys set)))))}
 
    ::bounty-filter-type|date
@@ -123,6 +123,50 @@
 
 (defn bounty-filter-type->name [filter-type]
   (-> bounty-filter-types-def (get filter-type) ::bounty-filter-type.name))
+
+(defn bounty-filter-type->query-param [filter-type]
+  (-> filter-type
+      name
+      (clojure.string/replace #".*\|" "")))
+
+(defn bounty-filter-value->query-param [type value]
+  (let [category (-> bounty-filter-types-def type ::bounty-filter-type.category)]
+    (cond
+      (= category ::bounty-filter-type-category|multiple-dynamic-options)
+      (vec value)
+
+      (= category ::bounty-filter-type-category|single-static-option)
+      (bounty-filter-type->query-param value)
+
+      (= category ::bounty-filter-type-category|range)
+      (str (first value) "-" (second value)))))
+
+(defn query-param->bounty-filter-type [query-param]
+  (keyword (namespace ::_) (str "bounty-filter-type|" (name query-param))))
+
+(defn query-param->bounty-filter-value [type value]
+  (let [category (-> bounty-filter-types-def type ::bounty-filter-type.category)]
+    (cond
+      (= type ::bounty-filter-type|currency)
+      (if (string? value)
+        #{(keyword value)}
+        (set (map keyword value)))
+
+      (= type ::bounty-filter-type|owner)
+      (if (string? value)
+        #{value}
+        (set value))
+
+      (= type ::bounty-filter-type|claims)
+      (keyword (namespace ::_)
+               (str "bounty-filter-type-claims-option|" (name value)))
+
+      (= type ::bounty-filter-type|date)
+      (keyword (namespace ::_)
+               (str "bounty-filter-type-date-option|" (name value)))
+
+      (= category ::bounty-filter-type-category|range)
+      (clojure.string/split value #"-"))))
 
 (defn bounty-filter-value->short-text [filter-type filter-value]
   (cond
