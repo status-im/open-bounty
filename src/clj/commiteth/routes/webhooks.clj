@@ -82,28 +82,33 @@
   (when (issues/is-bounty-issue? issue-id)
     (issues/update-open-status issue-id true)))
 
-(def ^:const keywords
-  [#"(?i)close:?\s+#(\d+)"
-   #"(?i)closes:?\s+#(\d+)"
-   #"(?i)closed:?\s+#(\d+)"
-   #"(?i)fix:?\s+#(\d+)"
-   #"(?i)fixes:?\s+#(\d+)"
-   #"(?i)fixed:?\s+#(\d+)"
-   #"(?i)resolve:?\s?#(\d+)"
-   #"(?i)resolves:?\s+#(\d+)"
-   #"(?i)resolved:?\s+#(\d+)"])
+(defn pr-keywords [prefix]
+  (mapv
+    #(re-pattern (str "(?i)" %1 ":?\\s+" prefix "(\\d+)"))
+    ["close"
+     "closes"
+     "closed"
+     "fix"
+     "fixes"
+     "fixed"
+     "resolve"
+     "resolves"
+     "resolved"]))
 
 (defn extract-issue-number
-  [pr-body pr-title]
+  [owner repo pr-body pr-title]
   (let [cleaned-body (str/replace pr-body #"(?m)^\[comment.*$" "")
+        keywords (concat (pr-keywords "#") 
+                         (when-not (or (str/blank? owner) (str/blank? repo))
+                           (pr-keywords (str "https://github.com/" owner "/" repo "/"))))
         extract (fn [source]
                   (mapcat #(keep
-                            (fn [s]
-                              (try (let [issue-number (Integer/parseInt (second s))]
-                                     (when (pos? issue-number)
-                                       issue-number))
-                                   (catch NumberFormatException _)))
-                            (re-seq % source)) keywords))]
+                             (fn [s]
+                               (try (let [issue-number (Integer/parseInt (second s))]
+                                      (when (pos? issue-number)
+                                        issue-number))
+                                    (catch NumberFormatException _)))
+                             (re-seq % source)) keywords))]
     (log/debug cleaned-body)
     (concat (extract cleaned-body)
             (extract pr-title))))
@@ -169,7 +174,7 @@
      pr-body         :body
      pr-title        :title} :pull_request}]
   (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (if-let [issue (some->> (extract-issue-number pr-body pr-title)
+  (if-let [issue (some->> (extract-issue-number owner repo pr-body pr-title)
                           (first)
                           (issues/get-issue repo-id))]
     (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
