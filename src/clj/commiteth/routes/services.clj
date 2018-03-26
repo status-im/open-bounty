@@ -240,8 +240,9 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {:address s/Str
-                                       :is_hidden_in_hunters s/Bool}]
+                          :body [body {:address (s/maybe s/Str)
+                                       :is_hidden_in_hunters (s/maybe s/Bool)
+                                       :show_gh_repos_warning (s/maybe s/Bool)}]
                           :summary "Updates user's fields."
 
                           (let [user-id (:id user)
@@ -254,7 +255,9 @@
                             (db/with-tx
                               (when-not (db/user-exists? {:id user-id})
                                 (not-found! "No such a user."))
-                              (db/update! :users body ["id = ?" user-id]))
+                              (users/update-user user-id 
+                                                 {:address (:address body)
+                                                  :opts (dissoc body :address)}))
 
                             (ok)))
 

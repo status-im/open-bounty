@@ -37,11 +37,19 @@ UPDATE users
 SET address = :address
 WHERE id = :id;
 
+-- :name update-user! :! :n
+UPDATE users
+SET address = coalesce(:address, address),
+    opts = coalesce(:opts, '{}'::jsonb) || coalesce(opts, '{}'::jsonb)
+WHERE id = :id;
+
 -- :name get-user :? :1
 -- :doc retrieve a user given the user-id.
-SELECT *
-FROM users
-WHERE id = :id;
+SELECT u.*, count(r.*) as repo_count
+FROM users u, repositories r
+WHERE u.id = :id
+AND u.id=r.user_id
+GROUP BY u.id;
 
 -- :name get-repo-owner :? :1
 SELECT *

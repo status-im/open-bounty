@@ -123,6 +123,11 @@
     (:metrics-loading? db)))
 
 (reg-sub
+  :warning-open?
+  (fn [db _]
+    (:warning-open? db)))
+
+(reg-sub
   :user-dropdown-open?
   (fn [db _]
     (:user-dropdown-open? db)))

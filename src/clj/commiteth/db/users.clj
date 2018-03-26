@@ -38,6 +38,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/get-repo-owner {:repo_id repo-id})))
 
+(defn update-user
+  [user-id body]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-user! con-db (into {:id user-id} body))))
+  
 (defn get-new-users-for-welcome-email
   []
   (jdbc/with-db-connection [con-db *db*]

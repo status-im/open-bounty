@@ -16,6 +16,7 @@
             [commiteth.common :refer [input]]
             [commiteth.config :as config]
             [commiteth.svg :as svg]
+            [clojure.string :as str]
             [clojure.set :refer [rename-keys]]
             [re-frisk.core :refer [enable-re-frisk!]])
   (:import goog.History))
@@ -33,13 +34,42 @@
             [:i.close.icon {:on-click #(rf/dispatch [:clear-flash-message])}]
             [:p message]]])))))
 
+(defn warning-icon []
+  (let [eth-address (rf/subscribe [:get-in [:user :address]])
+        repo-count (rf/subscribe [:get-in [:user :repo_count]])  
+        warning-open? (rf/subscribe [:warning-open?])]
+    (fn []
+      (let [warning-text (cond 
+                           (str/blank? @eth-address) 
+                           "Please set your Ethereum account address"
+                           (or (nil? @repo-count) (= 0 @repo-count)) 
+                           "Please add OpenBounty GitHub App to one of your repos"
+                           :else nil)
+            dialog (if @warning-open?
+                     [:div.ui.menu.transition.warning.visible {:tab-index -1}]
+                     [:div.ui.menu.transition.warning.hidden])]
+        (when warning-text
+          [:div#warning_tooltip.ui.inline.dropdown
+           {:on-click #(rf/dispatch [:warning-open])}
+           [:img {:src "warning.png"
+                  :height "32px"
+                  :width "32px" }] 
+           (into dialog 
+                 [ [:div warning-text]
+                  [:div [:input {:type "checkbox"
+                                         :id :show-gh-repos
+                                 :on-change (fn [e]
+                                              (let [value (-> e .-target .-checked)]
+                                                (rf/dispatch [:save-user-fields value])))}]
+                   [:label {:for :show-gh-repos} "Do not show this again"]]])])))))
+
 (defn user-dropdown [user items mobile?]
   (let [menu (if @(rf/subscribe [:user-dropdown-open?])
                [:div.ui.menu.transition.visible {:tab-index -1}]
                [:div.ui.menu.transition.hidden])
         avatar-url (:avatar_url user)]
     [:div.ui.inline.dropdown
-     {:on-click #(rf/dispatch [:user-dropdown-open])}
+     {:on-click #(rf/dispatch [:user-dropdown-open])} 
      [:div.header-dropdown-container
       [:div.item.header-avatar
        [:img.ui.mini.circular.image.user-dropdown-image {:src avatar-url}]]
@@ -64,6 +94,7 @@
     (fn []
       (if @user
         [:div.ui.container.user-component
+         [warning-icon]
          [user-dropdown
           @user
           [[:update-address "My Payment Details" {}]
@@ -269,6 +300,7 @@
   (doall (map rf/dispatch
         [[:load-open-bounties initial-load?]
          [:load-activity-feed initial-load?]
+         [:load-user-profile]
          [:load-top-hunters initial-load?]]))
   (load-user))
 
