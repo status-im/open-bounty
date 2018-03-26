@@ -453,8 +453,9 @@ SELECT
   i.updated          AS updated,
   i.winner_login     AS winner_login,
   r.repo             AS repo_name,
-  o.address          AS owner_address
-FROM issues i, users o, repositories r
+  o.address          AS owner_address,
+  u.address          AS payout_address
+FROM users o, repositories r, issues i LEFT OUTER JOIN users u ON u.login = i.winner_login
 WHERE
 r.repo_id = i.repo_id
 AND r.user_id = o.id

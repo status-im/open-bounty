@@ -9,7 +9,7 @@
                  [reagent-utils "0.2.1"]
                  [reagent "0.7.0"]
                  [org.clojure/clojurescript "1.9.946"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.9.0"]
                  [selmer "1.11.1"]
                  [com.taoensso/tufte "1.3.0"]
                  [markdown-clj "1.0.1"]
