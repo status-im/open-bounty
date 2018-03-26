@@ -179,7 +179,21 @@ lein with-profile test figwheel devcards
 
 Open http://localhost:3449/cards.html
 
-### Update landing page
+### CircleCI
+
+We use CircleCI to run unit tests. The following env vars need to be set for this to work:
+
+> These env vars override configuration parameters that are usually set using the `config.edn` file.
+
+- `ETH_ACCOUNT` - as in `config.edn`
+- `ETH_PASSWORD` - as in `config.edn`
+- `ETH_RPC_URL` - as in `config.edn`
+- `ETH_WALLET_FILE` - as in `config.edn`
+- `ETH_WALLET_JSON` - contents of this will be written to `ETH_WALLET_FILE`
+
+:bulb: Ideally we'd create those parameters in a script. PR welcome.
+
+## Update landing page
 
 Landing page is static and different CSS and JS due to time constraints.
 
