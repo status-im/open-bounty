@@ -18,6 +18,7 @@ The `develop` branch is automatically deployed here.
 - [Prerequisites](#prerequisites)
 - [Application config](#application-config)
 - [GitHub integration](#github-integration)
+- [Contracts](#contracts)
 - [Running](#running)
 - [Testing](#testing)
 - [More info](#more-info)
@@ -35,26 +36,6 @@ Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set
 ```
 psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
 psql postgres -c "CREATE DATABASE commiteth;"
-```
-
-### solc
-
-Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
-Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
-
-```
-brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/de1da16f7972a899fc8dd1f3f04299eced6f4312/solidity.rb
-brew pin solidity
-```
-
-### web3j
-
-Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
-Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
-
-```
-brew install https://raw.githubusercontent.com/web3j/homebrew-web3j/881cf369b551a5f2557bd8fb02fa8b7b970256ca/web3j.rb
-brew pin web3j
 ```
 
 ## Application config
@@ -90,6 +71,10 @@ Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/cr
 
 ### GitHub App
 Follow the steps [here](https://developer.github.com/apps/building-github-apps/creating-a-github-app/). Be sure to specify `:server-address` + `/webhook-app` as "Webhook URL", and `:webhook-secret` as "Webhook Secret".
+
+## Contracts
+
+All information related to development of OpenBounty smart contracts can be found in [`contracts/`](/contracts/)
 
 ## Running
 
