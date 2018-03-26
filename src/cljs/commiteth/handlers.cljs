@@ -12,7 +12,8 @@
             [akiroz.re-frame.storage
              :as rf-storage
              :refer [reg-co-fx!]]
-            [commiteth.ui-model :as ui-model]))
+            [commiteth.ui-model :as ui-model]
+            [commiteth.common :as common]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -49,7 +50,7 @@
 (reg-event-fx
  :initialize-web3
  (fn [{:keys [db]} [_]]
-      (let [injected-web3 (-> js/window .-web3)
+      (let [injected-web3 (common/web3)
             w3 (when (boolean injected-web3)
                 (do
                   (println "Using injected Web3 constructor with current provider")
