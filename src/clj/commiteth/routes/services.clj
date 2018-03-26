@@ -61,18 +61,21 @@
                github-repos))))
 
 
+(defn ^:private enrich-owner-bounties [owner-bounty]
+  (let [claims      (map
+                     #(update % :value_usd usd-decimal->str)
+                     (bounties-db/bounty-claims (:issue_id owner-bounty)))
+        with-claims (assoc owner-bounty :claims claims)]
+    (-> with-claims
+        (update :value_usd usd-decimal->str)
+        (assoc :state (bounties/bounty-state with-claims)))))
+
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
-    (into {}
-          (for [ob owner-bounties
-                :let [b (update ob :value_usd usd-decimal->str)]]
-            [(:issue_id b)
-             (conj b
-                   (let [claims (map
-                                 #(update % :value_usd usd-decimal->str)
-                                 (bounties-db/bounty-claims (:issue_id b)))]
-                     {:claims claims}))]))))
-
+    (->> owner-bounties
+         (map enrich-owner-bounties)
+         (map (juxt :issue_id identity))
+         (into {}))))
 
 (defn top-hunters []
   (let [renames {:user_name :display-name
