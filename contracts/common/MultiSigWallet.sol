@@ -1,7 +1,5 @@
 pragma solidity ^0.4.17;
 
-import "../token/ERC20Token.sol";
-
 contract MultiSigWallet {
 
     uint public transactionCount;
@@ -109,47 +107,6 @@ contract MultiSigWallet {
             emit Deposit(msg.sender, msg.value);
     }
 
-    /**
-     * Only owners
-     */
-    /// @dev Allows an owner to submit and confirm a transaction.
-    /// @param destination Transaction target address.
-    /// @param value Transaction ether value.
-    /// @param data Transaction data payload.
-    /// @return Returns transaction ID.
-    function submitTransaction(address destination, uint value, bytes data)
-        public
-        returns (uint transactionId)
-    {
-        transactionId = addTransaction(destination, value, data);
-        confirmTransaction(transactionId);
-    }
-
-    /// @dev Allows an owner to confirm a transaction.
-    /// @param transactionId Transaction ID.
-    function confirmTransaction(uint transactionId)
-        public
-        ownerExists(msg.sender)
-        transactionExists(transactionId)
-        notConfirmed(transactionId, msg.sender)
-    {
-        confirmations[transactionId][msg.sender] = true;
-        emit Confirmation(msg.sender, transactionId);
-        executeTransaction(transactionId);
-    }
-
-    /// @dev Allows an owner to revoke a confirmation for a transaction.
-    /// @param transactionId Transaction ID.
-    function revokeConfirmation(uint transactionId)
-        public
-        ownerExists(msg.sender)
-        confirmed(transactionId, msg.sender)
-        notExecuted(transactionId)
-    {
-        confirmations[transactionId][msg.sender] = false;
-        emit Revocation(msg.sender, transactionId);
-    }
-
     /// @dev Allows anyone to execute a confirmed transaction.
     /// @param transactionId Transaction ID.
     function executeTransaction(uint transactionId)
@@ -168,6 +125,38 @@ contract MultiSigWallet {
         }
     }
 
+      /**
+     * Only owners through signature check (msg.sender or ecrecover)
+     */
+    /// @dev Allows an owner to submit and confirm a transaction.
+    /// @param destination Transaction target address.
+    /// @param value Transaction ether value.
+    /// @param data Transaction data payload.
+    /// @return Returns transaction ID.
+    function submitTransaction(address destination, uint value, bytes data)
+        public
+        returns (uint transactionId)
+    {
+        transactionId = addTransaction(destination, value, data);
+        confirmTransaction(transactionId);
+    }
+
+    /// @dev Allows an owner to confirm a transaction.
+    /// @param transactionId Transaction ID.
+    function confirmTransaction(uint transactionId)
+        public
+    {
+        confirmTransaction(msg.sender, transactionId);
+    }
+
+    /// @dev Allows an owner to revoke a confirmation for a transaction.
+    /// @param transactionId Transaction ID.
+    function revokeConfirmation(uint transactionId)
+        public
+    {
+        revokeConfirmation(msg.sender, transactionId);
+    }
+   
     /**
      * Only wallet
      */
@@ -346,10 +335,51 @@ contract MultiSigWallet {
             _transactionIds[i - from] = transactionIdsTemp[i];
         }
     }
-
+    
     /*
     * Internal functions
     */
+    /**
+     * Only owners through signature check (msg.sender or ecrecover)
+     */
+    /// @dev Allows an owner to submit and confirm a transaction.
+    /// @param destination Transaction target address.
+    /// @param value Transaction ether value.
+    /// @param data Transaction data payload.
+    /// @return Returns transaction ID.
+    function submitTransaction(address _signer, address destination, uint value, bytes data)
+        internal
+        returns (uint transactionId)
+    {
+        transactionId = addTransaction(destination, value, data);
+        confirmTransaction(_signer, transactionId);
+    }
+
+    /// @dev Allows an owner to confirm a transaction.
+    /// @param transactionId Transaction ID.
+    function confirmTransaction(address _signer, uint transactionId)
+        internal
+        ownerExists(_signer)
+        transactionExists(transactionId)
+        notConfirmed(transactionId, _signer)
+    {
+        confirmations[transactionId][_signer] = true;
+        emit Confirmation(_signer, transactionId);
+        executeTransaction(transactionId);
+    }
+
+    /// @dev Allows an owner to revoke a confirmation for a transaction.
+    /// @param transactionId Transaction ID.
+    function revokeConfirmation(address _signer, uint transactionId)
+        internal
+        ownerExists(_signer)
+        confirmed(transactionId, _signer)
+        notExecuted(transactionId)
+    {
+        confirmations[transactionId][_signer] = false;
+        emit Revocation(_signer, transactionId);
+    }
+  
     /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
     /// @param destination Transaction target address.
     /// @param value Transaction ether value.

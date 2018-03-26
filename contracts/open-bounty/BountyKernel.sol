@@ -8,7 +8,6 @@ import "./MultiSigBountyWallet.sol";
  */
 contract BountyKernel is InstanceStorage, MultiSigBountyWallet {
 
-
     function BountyKernel(address[] _dummyOwners) MultiSigWallet(_dummyOwners,1) public {
         //remove ownership of Kernel 
         uint len = _dummyOwners.length;

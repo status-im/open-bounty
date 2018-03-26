@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-import "./MultiSigWallet.sol";
+import "../common/MultiSigWallet.sol";
 import "../token/ERC20Token.sol";
 
 contract MultiSigBountyWallet is MultiSigWallet {
@@ -47,6 +47,7 @@ contract MultiSigBountyWallet is MultiSigWallet {
         }
     }
             
+    
     /**
      * @notice trustes for balance in a token contract
      * @param _tokenAddr the token contract address
