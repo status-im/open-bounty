@@ -78,10 +78,9 @@
         [:container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader "Loading"]]]
-        (let [web3 (.-web3 js/window)
-              bounties (vals @owner-bounties)]
+        (let [bounties (vals @owner-bounties)]
           [:div.ui.container
-           (when (nil? web3)
+           (when (nil? (common/web3))
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
