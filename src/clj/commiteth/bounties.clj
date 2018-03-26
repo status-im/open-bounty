@@ -20,6 +20,26 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
+(defn deploy-contract [owner owner-address repo issue-id issue-number]
+  (if (empty? owner-address)
+    (log/error "Unable to deploy bounty contract because"
+               "repo owner has no Ethereum addres")
+    (do
+      (log/info "deploying contract to " owner-address)
+      (if-let [transaction-hash (multisig/deploy-multisig owner-address)]
+        (do
+          (log/info "Contract deployed, transaction-hash:"
+                    transaction-hash)
+          (let [resp (github/post-deploying-comment owner
+                                                    repo
+                                                    issue-number
+                                                    transaction-hash)
+                _ (log/info "post-deploying-comment response:" resp)
+                comment-id (:id resp)]
+            (issues/update-comment-id issue-id comment-id))
+          (issues/update-transaction-hash issue-id transaction-hash))
+        (log/error "Failed to deploy contract to" owner-address)))))
+      
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
          issue-number :number
@@ -29,24 +49,7 @@
          owner :owner} (users/get-repo-owner repo-id)]
     (log/debug "Adding bounty for issue " repo issue-number "owner address: " owner-address)
     (if (= 1 created-issue)
-      (if (empty? owner-address)
-        (log/error "Unable to deploy bounty contract because"
-                   "repo owner has no Ethereum addres")
-        (do
-          (log/debug "deploying contract to " owner-address)
-          (let [transaction-hash (multisig/deploy-multisig owner-address)]
-            (if (nil? transaction-hash)
-              (log/error "Failed to deploy contract to" owner-address)
-              (do
-                (log/info "Contract deployed, transaction-hash:"
-                          transaction-hash)
-                (->> (github/post-deploying-comment owner
-                                              repo
-                                              issue-number
-                                              transaction-hash)
-                     :id
-                     (issues/update-comment-id issue-id))))
-            (issues/update-transaction-hash issue-id transaction-hash))))
+      (deploy-contract owner owner-address repo issue-id issue-number)
       (log/debug "Issue already exists in DB, ignoring"))))
 
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
@@ -102,3 +105,44 @@
         (do
           (log/info "Updating changed title for issue" (:id gh-issue))
           (issues/update-issue-title (:id gh-issue) (:title gh-issue)))))))
+
+(defn assert-keys [m ks]
+  (doseq [k ks]
+    (when-not (find m k)
+      (throw (ex-info (format "Expected key missing from provided map: %s" k) {:map m})))))
+
+(defn bounty-state
+  "Given a map as returned by `owner-bounties` return the state the provided bounty is in.
+
+  The lifecycle of a bounty is a sequence of the following states:
+  :opened > :funded > :claimed > :merged > :paid
+
+  As well as various states that are only reached under specific conditins:
+  - :multiple-claims
+  - :pending-contributor-address
+  - :pending-maintainer-confirmation"
+  [bounty]
+  (assert-keys bounty [:winner_login :payout_address :confirm_hash :payout_hash
+                       :claims :tokens :contract_address])
+  (if-let [merged? (:winner_login bounty)]
+    (cond
+      (nil? (:payout_address bounty)) :pending-contributor-address
+      (nil? (:confirm_hash bounty))   :pending-maintainer-confirmation
+      (:payout_hash bounty)           :paid
+      :else                           :merged)
+    (cond ; not yet merged
+      (< 1 (count (:claims bounty)))  :multiple-claims
+      (= 1 (count (:claims bounty)))  :claimed
+      (seq (:tokens bounty))          :funded
+      (:contract_address bounty)      :opened)))
+
+(comment
+  (def user 97496)
+
+  (clojure.pprint/pprint
+   (count (bounties/owner-bounties user)))
+
+  (clojure.pprint/pprint
+   (frequencies (map bounty-state (bounties/owner-bounties user))))
+
+  )

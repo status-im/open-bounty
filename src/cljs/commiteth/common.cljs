@@ -2,9 +2,13 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
+            [goog.object :as gobj]
             [goog.date.relative]
             [goog.i18n.DateTimePatterns :as DateTimePatterns])
   (:import (goog.i18n DateTimeFormat)))
+
+(defn web3 []
+  (gobj/get js/window "web3"))
 
 (defn input [val-ratom props]
   (fn []
@@ -135,4 +139,10 @@
             [:div.page-nav-text [:span (str "Page " page-number " of " page-count)]]
             [draw-page-numbers page-number page-count container-element]]])))
 
+(defn usd-string
+  "Turn a given float into a USD currency string based on the browsers locale setting.
 
+  A more complex and customizable approach can be found in goog.i18n.NumberFormat:
+  https://google.github.io/closure-library/api/goog.i18n.NumberFormat.html"
+  [usd-float]
+  (.toLocaleString usd-float js/navigator.language #js {:style "currency" :currency "USD"}))
