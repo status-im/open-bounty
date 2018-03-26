@@ -127,13 +127,17 @@
         result   (safe-read-str (:body response))]
     (log/debug body "\n" result)
 
-    (if (= (:id result) request-id)
-      (:result result)
-      (do
-        (log/error "Geth returned an invalid json-rpc request ID,"
-                   "ignoring response")
-        (when-let [error (:error result)]
-          (log/error "Method: " method ", error: " error))))))
+    (cond
+      ;; Ignore any responses that have mismatching request ID
+      (not= (:id result) request-id)
+      (log/error "Geth returned an invalid json-rpc request ID, ignoring response")
+
+      ;; If request ID matches but contains error, throw
+      (:error result)
+      (throw (ex-info "Error submitting transaction via eth-rpc" (:error result)))
+
+      :else
+      (:result result))))
 
 (defn hex->big-integer
   [hex]
