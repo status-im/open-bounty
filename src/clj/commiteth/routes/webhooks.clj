@@ -100,7 +100,7 @@
   (let [cleaned-body (str/replace pr-body #"(?m)^\[comment.*$" "")
         keywords (concat (pr-keywords "#") 
                          (when-not (or (str/blank? owner) (str/blank? repo))
-                           (pr-keywords (str "https://github.com/" owner "/" repo "/"))))
+                           (pr-keywords (str "https://github.com/" owner "/" repo "/issues/"))))
         extract (fn [source]
                   (mapcat #(keep
                              (fn [s]
