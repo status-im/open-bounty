@@ -18,6 +18,6 @@
       (is (= #{1 2} res))))
   (testing "Use issue URL instead of number"
     (let [res (set (extract-issue-number "status-im" "status-react"
-                                         "Fixes https://github.com/status-im/status-react/1"
-                                         "Fixes https://github.com/status-im/status-react/2"))]
+                                         "Fixes https://github.com/status-im/status-react/issues/1"
+                                         "Fixes https://github.com/status-im/status-react/issues/2"))]
       (is (= #{1 2} res)))))
