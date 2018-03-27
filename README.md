@@ -18,6 +18,7 @@ The `develop` branch is automatically deployed here.
 - [Prerequisites](#prerequisites)
 - [Application config](#application-config)
 - [GitHub integration](#github-integration)
+- [Contracts](#contracts)
 - [Running](#running)
 - [Testing](#testing)
 - [More info](#more-info)
@@ -36,28 +37,6 @@ Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set
 psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
 psql postgres -c "CREATE DATABASE commiteth;"
 ```
-
-### solc
-
-Solidity compiler (latest version, currently [0.4.20](https://github.com/ethereum/solidity/releases/tag/v0.4.20)) is required and needs to be in $PATH.
-Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
-
-In order to install version 0.4.20 on macOS using Homebrew:
-```
-brew tap ethereum/ethereum
-brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/76432c9aa279b6907e5b1323b9195f2681c30844/solidity.rb
-```
-
-### web3j
-
-Web3j (latest version, currently [3.3.1](https://github.com/web3j/web3j/releases/tag/v3.3.1)) is required and the command line tools need to be in $PATH.
-Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
-
-In order to install version 3.3.1 on macOS using Homebrew:
-```
-brew install https://raw.githubusercontent.com/web3j/homebrew-web3j/master/web3j.rb
-```
-
 
 ## Application config
 
@@ -92,6 +71,10 @@ Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/cr
 
 ### GitHub App
 Follow the steps [here](https://developer.github.com/apps/building-github-apps/creating-a-github-app/). Be sure to specify `:server-address` + `/webhook-app` as "Webhook URL", and `:webhook-secret` as "Webhook Secret".
+
+## Contracts
+
+All information related to development of OpenBounty smart contracts can be found in [`contracts/`](/contracts/)
 
 ## Running
 
@@ -196,7 +179,21 @@ lein with-profile test figwheel devcards
 
 Open http://localhost:3449/cards.html
 
-### Update landing page
+### CircleCI
+
+We use CircleCI to run unit tests. The following env vars need to be set for this to work:
+
+> These env vars override configuration parameters that are usually set using the `config.edn` file.
+
+- `ETH_ACCOUNT` - as in `config.edn`
+- `ETH_PASSWORD` - as in `config.edn`
+- `ETH_RPC_URL` - as in `config.edn`
+- `ETH_WALLET_FILE` - as in `config.edn`
+- `ETH_WALLET_JSON` - contents of this will be written to `ETH_WALLET_FILE`
+
+:bulb: Ideally we'd create those parameters in a script. PR welcome.
+
+## Update landing page
 
 Landing page is static and different CSS and JS due to time constraints.
 
