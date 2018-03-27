@@ -1,4 +1,5 @@
 # Status Open Bounty
+[![Riot Chat Badge](https://img.shields.io/badge/join%20%23openbounty-riot-green.svg)](https://chat.status.im/#/room/#openbounty:status.im)
 
 Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
@@ -17,6 +18,7 @@ The `develop` branch is automatically deployed here.
 - [Prerequisites](#prerequisites)
 - [Application config](#application-config)
 - [GitHub integration](#github-integration)
+- [Contracts](#contracts)
 - [Running](#running)
 - [Testing](#testing)
 - [More info](#more-info)
@@ -36,26 +38,6 @@ psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
 psql postgres -c "CREATE DATABASE commiteth;"
 ```
 
-### solc
-
-Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
-Detailed [installation instructions for various platforms](https://solidity.readthedocs.io/en/develop/installing-solidity.html) can be found in the official Solidity documentation.
-
-```
-brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/de1da16f7972a899fc8dd1f3f04299eced6f4312/solidity.rb
-brew pin solidity
-```
-
-### web3j
-
-Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
-Installation instructions for the command line tools can be found in the [Web3j Command Line Tools documentation](https://docs.web3j.io/command_line.html).
-
-```
-brew install https://raw.githubusercontent.com/web3j/homebrew-web3j/881cf369b551a5f2557bd8fb02fa8b7b970256ca/web3j.rb
-brew pin web3j
-```
-
 ## Application config
 
 Make sure to create `/config-dev.edn` and populate it correctly, which is based on `env/dev/resources/config.edn`. Description of config fields is given below:
@@ -71,6 +53,7 @@ eth-account | Ethereum account ID for the bot
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
+offline-signing | Specifies whether to sign transactions locally before sending. Default is true. Set to false when connecting to local Geth node that unlocks accounts
 tokenreg-base-format | Should be set to `:status`
 github-client-id | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
 github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
@@ -89,15 +72,27 @@ Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/cr
 ### GitHub App
 Follow the steps [here](https://developer.github.com/apps/building-github-apps/creating-a-github-app/). Be sure to specify `:server-address` + `/webhook-app` as "Webhook URL", and `:webhook-secret` as "Webhook Secret".
 
+## Contracts
+
+All information related to development of OpenBounty smart contracts can be found in [`contracts/`](/contracts/)
+
 ## Running
 
-### Geth
-Launch a local geth node with the bot account unlocked:
+### Ethereum node
+There are two options for connecting to an Ethereum node: either run a local node with an unlocked account, or connect to a remote Geth node or Infura. We will be connecting to Ropsten which is a test Ethereum network.
+
+#### Local
+
+In order to launch a local geth node with the bot account unlocked issue the following command:
 
 ```
 #!/bin/bash
 geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port 50100 --ipcpath ~/.ropsten/geth.ipc --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi db,eth,net,web3,personal --rpccorsdomain "https://wallet.ethereum.org" --unlock "0xYOUR_ADDR" --password <(echo "YOUR_PASSPHRASE")
 ```
+
+#### Remote
+Register at [Infura](https://infura.io/signup). You will receive an email with provider URLs. Paste an URL for the Ropsten network into `config.edn` under `:eth-rpc-url` key, and set `:offline-signing` to true.
+
 
 ### CSS auto-compilation
 Launch the following command in a separate shell:
@@ -184,7 +179,21 @@ lein with-profile test figwheel devcards
 
 Open http://localhost:3449/cards.html
 
-### Update landing page
+### CircleCI
+
+We use CircleCI to run unit tests. The following env vars need to be set for this to work:
+
+> These env vars override configuration parameters that are usually set using the `config.edn` file.
+
+- `ETH_ACCOUNT` - as in `config.edn`
+- `ETH_PASSWORD` - as in `config.edn`
+- `ETH_RPC_URL` - as in `config.edn`
+- `ETH_WALLET_FILE` - as in `config.edn`
+- `ETH_WALLET_JSON` - contents of this will be written to `ETH_WALLET_FILE`
+
+:bulb: Ideally we'd create those parameters in a script. PR welcome.
+
+## Update landing page
 
 Landing page is static and different CSS and JS due to time constraints.
 

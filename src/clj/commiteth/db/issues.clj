@@ -63,12 +63,6 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/list-pending-deployments con-db)))
 
-
-(defn list-failed-deployments
-  []
-  (jdbc/with-db-connection [con-db *db*]
-    (db/list-failed-deployments con-db)))
-
 (defn update-eth-balance
   [contract-address balance-eth]
   (jdbc/with-db-connection [con-db *db*]
@@ -101,3 +95,9 @@
         first
         :exists
         boolean)))
+
+(defn get-issue
+  [repo-id issue-number]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issue con-db {:repo_id repo-id
+                          :issue_number issue-number})))
