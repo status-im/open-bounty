@@ -48,5 +48,5 @@ jobs:
       - run: lein uberjar
 
       - store_artifacts:
-        path: target/uberjar/commiteth.jar
-        destination: commiteth.jar
+          path: target/uberjar/commiteth.jar
+          destination: commiteth.jar
