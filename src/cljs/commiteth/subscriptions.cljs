@@ -20,6 +20,11 @@
     (:user db)))
 
 (reg-sub
+  :user-profile-loaded?
+  (fn [db _]
+    (:user-profile-loaded? db)))
+
+(reg-sub
   :repos-loading?
   (fn [db _]
     (:repos-loading? db)))
@@ -63,7 +68,26 @@
 (reg-sub
   :owner-bounties
   (fn [db _]
-    (:owner-bounties db)))
+    (->> (for [[id bounty] (:owner-bounties db)]
+           ;; TODO(martinklepsch) we might want to consider using a
+           ;; special prefix or namespace for derived properties that
+           ;; are added to domain records like this
+           ;; e.g. `derived/paid?`
+           [id (assoc bounty :paid? (boolean (:payout_hash bounty)))])
+         (into {}))))
+
+(reg-sub
+ :owner-bounties-stats
+ :<- [:owner-bounties]
+ (fn [owner-bounties _]
+   (let [sum-dollars (fn sum-dollars [bounties]
+                       (reduce + (map #(js/parseFloat (:value_usd %)) bounties)))
+         {:keys [paid unpaid]} (group-by #(if (:paid? %) :paid :unpaid)
+                                         (vals owner-bounties))]
+     {:paid {:count (count paid)
+             :combined-usd-value (sum-dollars paid)}
+      :unpaid {:count (count unpaid)
+               :combined-usd-value (sum-dollars unpaid)}})))
 
 (reg-sub
   :pagination

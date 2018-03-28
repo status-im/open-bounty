@@ -12,7 +12,8 @@
             [akiroz.re-frame.storage
              :as rf-storage
              :refer [reg-co-fx!]]
-            [commiteth.ui-model :as ui-model]))
+            [commiteth.ui-model :as ui-model]
+            [commiteth.common :as common]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -49,7 +50,7 @@
 (reg-event-fx
  :initialize-web3
  (fn [{:keys [db]} [_]]
-      (let [injected-web3 (-> js/window .-web3)
+      (let [injected-web3 (common/web3)
             w3 (when (boolean injected-web3)
                 (do
                   (println "Using injected Web3 constructor with current provider")
@@ -61,7 +62,6 @@
  :assoc-in
  (fn [db [_ path value]]
    (assoc-in db path value)))
-
 
 (reg-event-db
  :set-active-page
@@ -225,7 +225,8 @@
  :set-user-profile
  (fn [{:keys [db]} [_ user-profile]]
    {:db
-    (assoc db :user (:user user-profile))
+    (assoc db :user (:user user-profile)
+              :user-profile-loaded? true)
     :dispatch-n [[:load-user-repos]
                  [:load-owner-bounties]]}))
 
@@ -312,38 +313,38 @@
                              (:status-text response)))]}))
 
 
-(reg-event-fx
- :update-address
- (fn [{:keys [db]} [_]]
-   {:db db
-    :dispatch [:set-active-page :update-address]}))
-
+(reg-event-db
+ :update-user
+ (fn [db [_ fields]]
+   (update db :user merge fields)))
 
 (reg-event-fx
- :save-user-address
- (fn [{:keys [db]} [_ user-id address]]
-   (prn "save-user-address" user-id address)
-   {:db   (assoc db :updating-address true)
+ :save-user-fields
+ (fn [{:keys [db]} [_ fields]]
+   {:dispatch [:set-updating-user]
     :http {:method     POST
-           :url        "/api/user/address"
+           :url        "/api/user"
            :on-success #(do
-                          (dispatch [:assoc-in [:user [:address] address]])
+                          (dispatch [:update-user fields])
                           (dispatch [:set-flash-message
                                      :success
-                                     "Address saved"]))
-           :on-error   #(do
-                          (println %)
-                          (dispatch [:set-flash-message
-                                     :error
-                                     (:response %)]))
-           :finally    #(dispatch [:clear-updating-address])
-           :params     {:user-id user-id :address address}}}))
+                                     "Settings saved"]))
+           :on-error #(dispatch [:set-flash-message
+                                 :error
+                                 (:response %)])
+           :finally #(dispatch [:clear-updating-user])
+           :params fields}}))
+
 
 (reg-event-db
- :clear-updating-address
+ :set-updating-user
  (fn [db _]
-   (dissoc db :updating-address)))
+   (assoc db :updating-user true)))
 
+(reg-event-db
+ :clear-updating-user
+ (fn [db _]
+   (dissoc db :updating-user)))
 
 (reg-event-fx
  :save-payout-hash

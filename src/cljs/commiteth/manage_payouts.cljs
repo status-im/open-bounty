@@ -1,6 +1,6 @@
 (ns commiteth.manage-payouts
   (:require [re-frame.core :as rf]
-            [commiteth.common :refer [moment-timestamp]]))
+            [commiteth.common :as common :refer [human-time]]))
 
 
 
@@ -33,7 +33,7 @@
        [:div.description (if paid?
                            (str "(paid to " winner-login ")")
                            (str "(" (if merged? "merged" "open") ")"))]
-       [:div.time (moment-timestamp updated)]
+       [:div.time (human-time updated)]
        [:button.ui.button
         (merge (if (and merged? (not paid?))
                  {}
@@ -57,27 +57,35 @@
                        (:claims bounty))]
             [claim-card bounty claim]))))
 
+(defn bounty-stats [{:keys [paid unpaid]}]
+  [:div.cf
+   [:div.fl-ns.w-50-ns.tc.pv4
+    [:div.ttu.tracked "Open"]
+    [:div.f2.pa2 (common/usd-string (:combined-usd-value unpaid))]
+    [:div (:count unpaid) " bounties"]]
+
+   [:div.fl-ns.w-50-ns.tc.pv4
+    [:div.ttu.tracked "Paid"]
+    [:div.f2.pa2 (common/usd-string (:combined-usd-value paid))]
+    [:div (:count paid) " bounties"]]])
 
 (defn manage-payouts-page []
   (let [owner-bounties (rf/subscribe [:owner-bounties])
+        bounty-stats-data (rf/subscribe [:owner-bounties-stats])
         owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
     (fn []
       (if @owner-bounties-loading?
         [:container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader "Loading"]]]
-        (let [web3 (.-web3 js/window)
-              bounties (vals @owner-bounties)
-              unpaid? #(empty? (:payout_hash %))
-              paid? #(not-empty (:payout_hash %))
-              unpaid-bounties (filter unpaid? bounties)
-              paid-bounties (filter paid? bounties)]
+        (let [bounties (vals @owner-bounties)]
           [:div.ui.container
-           (when (nil? web3)
+           (when (nil? (common/web3))
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
+           [bounty-stats @bounty-stats-data]
            [:h3 "New claims"]
-           [claim-list unpaid-bounties]
+           [claim-list (filter (complement :paid?) bounties)]
            [:h3 "Old claims"]
-           [claim-list paid-bounties]])))))
+           [claim-list (filter :paid? bounties)]])))))

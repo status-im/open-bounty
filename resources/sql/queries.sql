@@ -17,6 +17,12 @@ WHERE NOT exists(SELECT 1
                  WHERE id = :id)
 RETURNING id, login, name, email, avatar_url, address, created;
 
+-- :name user-exists? :? :1
+-- :doc Checks where a user exists in the database.
+select 1
+from users u
+where u.id = :id;
+
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users
@@ -96,19 +102,16 @@ WHERE i.repo_id = :repo_id
 AND i.confirm_hash is null
 AND i.is_open = true;
 
--- :name update-repo-generic :! :n
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+-- :name update-repo-name :! :n
 UPDATE repositories
-SET
-/*~
-(string/join ","
-  (for [[field _] (:updates params)]
-    (str (identifier-param-quote (name field) options)
-      " = :v:updates." (name field))))
-~*/
-where repo_id = :repo_id;
+SET repo = :repo_name
+WHERE repo_id = :repo_id 
+AND repo != :repo_name
 
+-- :name update-repo-state :! :n
+UPDATE repositories
+SET state = :repo_state
+WHERE repo_id = :repo_id 
 
 
 -- Issues --------------------------------------------------------------------------
@@ -190,20 +193,6 @@ AND i.contract_address IS NULL
 AND i.transaction_hash IS NOT NULL;
 
 
--- :name list-failed-deployments :? :*
--- :doc retrieves failed contract deployments
-SELECT
-  i.issue_id as issue_id,
-  i.transaction_hash as transaction_hash,
-  u.address as owner_address
-FROM issues i, users u, repositories r
-WHERE r.user_id = u.id
-AND i.repo_id = r.repo_id
-AND i.contract_address IS NULL
-AND i.transaction_hash IS NOT NULL
-AND i.updated < now() at time zone 'UTC' - interval '1 hour';
-
-
 -- Pull Requests -------------------------------------------------------------------
 
 -- :name save-pull-request! :! :n
@@ -246,7 +235,10 @@ WHERE pr_id = :pr_id;
 -- :doc bounty issues where deploy contract has failed
 SELECT
   i.issue_id         AS issue_id,
-  u.address          AS owner_address
+  i.issue_number     AS issue_number,
+  r.owner            AS owner,
+  u.address          AS owner_address,
+  r.repo             AS repo
 FROM issues i, users u, repositories r
 WHERE
 r.user_id = u.id
@@ -406,6 +398,14 @@ SELECT exists(SELECT 1
   FROM issues
   WHERE issue_id = :issue_id);
 
+-- :name get-issue :? :1
+-- :doc get issue from DB by repo-id and issue-number
+SELECT issue_id, issue_number, is_open, winner_login, commit_sha
+FROM issues
+WHERE repo_id = :repo_id
+AND issue_number = :issue_number;
+
+
 
 -- :name open-bounties :? :*
 -- :doc all open bounty issues
@@ -453,8 +453,9 @@ SELECT
   i.updated          AS updated,
   i.winner_login     AS winner_login,
   r.repo             AS repo_name,
-  o.address          AS owner_address
-FROM issues i, users o, repositories r
+  o.address          AS owner_address,
+  u.address          AS payout_address
+FROM users o, repositories r, issues i LEFT OUTER JOIN users u ON u.login = i.winner_login
 WHERE
 r.repo_id = i.repo_id
 AND r.user_id = o.id
@@ -571,6 +572,7 @@ WHERE
 pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
+AND NOT u.is_hidden_in_hunters
 GROUP BY u.id
 ORDER BY total_usd DESC
 LIMIT 5;

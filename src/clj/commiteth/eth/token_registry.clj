@@ -1,6 +1,5 @@
 (ns commiteth.eth.token-registry
-  (:require [commiteth.eth.core :as eth]
-            [commiteth.eth.web3j
+  (:require [commiteth.eth.core :as eth
              :refer [create-web3j creds]]
             [commiteth.config :refer [env]]
             [clojure.tools.logging :as log])
@@ -38,6 +37,7 @@
   ([addr]
    (println "addr" addr)
    (let [contract (load-tokenreg-contract addr)]
+     (assert contract (format "Could not load contract for addr %s" addr))
      ;(assert (.isValid contract)) ;; web3j's isValid can't be trusted...
      (let [token-count (-> contract .tokenCount .get .getValue)]
        (log/debug "token-count" token-count)

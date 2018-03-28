@@ -1,4 +1,5 @@
 # Status Open Bounty
+[![Riot Chat Badge](https://img.shields.io/badge/join%20%23openbounty-riot-green.svg)](https://chat.status.im/#/room/#openbounty:status.im)
 
 Allows you to set bounties for Github issues, paid out in Ether or any ERC-20 token.
 
@@ -13,6 +14,16 @@ Live testnet (Ropsten) version:
 https://openbounty.status.im:444
 The `develop` branch is automatically deployed here.
 
+## Table of contents
+- [Prerequisites](#prerequisites)
+- [Application config](#application-config)
+- [GitHub integration](#github-integration)
+- [Contracts](#contracts)
+- [Running](#running)
+- [Testing](#testing)
+- [More info](#more-info)
+
+
 
 ## Prerequisites
 
@@ -23,35 +34,9 @@ You will need [Leiningen](https://github.com/technomancy/leiningen) 2.0 or above
 Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
 
 ```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
+psql postgres -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
+psql postgres -c "CREATE DATABASE commiteth;"
 ```
-
-## Running
-
-Launch following commands each in its own shell:
-
-```
-lein run
-lein figwheel
-lein less auto
-```
-
-
-Make sure you install [PostgreSQL](https://www.postgresql.org/) and properly set it up:
-
-```
-sudo -u postgres psql -c "CREATE USER commiteth WITH PASSWORD 'commiteth';"
-sudo -u postgres createdb commiteth
-```
-
-### solc
-
-Solidity compiler [0.4.15](https://github.com/ethereum/solidity/releases/tag/v0.4.15) is required and needs to be in $PATH.
-
-### web3j
-
-Web3j [2.3.0](https://github.com/web3j/web3j/releases/tag/v2.3.0) is required and the command line tools need to be in $PATH.
 
 ## Application config
 
@@ -68,6 +53,7 @@ eth-account | Ethereum account ID for the bot
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
+offline-signing | Specifies whether to sign transactions locally before sending. Default is true. Set to false when connecting to local Geth node that unlocks accounts
 tokenreg-base-format | Should be set to `:status`
 github-client-id | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
 github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
@@ -86,22 +72,52 @@ Follow the steps [here](https://developer.github.com/apps/building-oauth-apps/cr
 ### GitHub App
 Follow the steps [here](https://developer.github.com/apps/building-github-apps/creating-a-github-app/). Be sure to specify `:server-address` + `/webhook-app` as "Webhook URL", and `:webhook-secret` as "Webhook Secret".
 
+## Contracts
+
+All information related to development of OpenBounty smart contracts can be found in [`contracts/`](/contracts/)
+
 ## Running
 
-Lauch a local geth node with the bot account unlocked:
+### Ethereum node
+There are two options for connecting to an Ethereum node: either run a local node with an unlocked account, or connect to a remote Geth node or Infura. We will be connecting to Ropsten which is a test Ethereum network.
+
+#### Local
+
+In order to launch a local geth node with the bot account unlocked issue the following command:
 
 ```
 #!/bin/bash
 geth --fast --testnet --cache=1024 --datadir=$HOME/.ropsten --verbosity 4 --port 50100 --ipcpath ~/.ropsten/geth.ipc --rpc --rpcaddr 127.0.0.1 --rpcport 8545 --rpcapi db,eth,net,web3,personal --rpccorsdomain "https://wallet.ethereum.org" --unlock "0xYOUR_ADDR" --password <(echo "YOUR_PASSPHRASE")
 ```
 
+#### Remote
+Register at [Infura](https://infura.io/signup). You will receive an email with provider URLs. Paste an URL for the Ropsten network into `config.edn` under `:eth-rpc-url` key, and set `:offline-signing` to true.
+
+
+### CSS auto-compilation
 Launch the following command in a separate shell:
 
 ```
 lein less auto
 ```
 
-Next you want to start a REPL on the backend and the frontend.
+### Solidity compilation
+Invoke `build-contracts` Leiningen task to compile Solidity files into Java classes:
+```
+lein build-contracts
+```
+
+### Clojure app without REPL
+Launch following commands each in its own shell:
+
+```
+lein run
+lein figwheel
+```
+
+### Clojure app with REPL
+
+You'll have to start a REPL on the backend and the frontend.
 
 ```
 lein repl
@@ -131,7 +147,10 @@ To create a standalone uberjar:
 lein uberjar
 ```
 
-This creates `target/uberjar/commiteth-<git-sha>.jar`
+This creates `target/uberjar/commiteth.jar`. You can run it with the following command from within project root:
+```
+java -Dconf=<path_to_config.edn> -jar target/uberjar/commiteth.jar
+```
 
 
 ## Testing
@@ -160,7 +179,21 @@ lein with-profile test figwheel devcards
 
 Open http://localhost:3449/cards.html
 
-### Update landing page
+### CircleCI
+
+We use CircleCI to run unit tests. The following env vars need to be set for this to work:
+
+> These env vars override configuration parameters that are usually set using the `config.edn` file.
+
+- `ETH_ACCOUNT` - as in `config.edn`
+- `ETH_PASSWORD` - as in `config.edn`
+- `ETH_RPC_URL` - as in `config.edn`
+- `ETH_WALLET_FILE` - as in `config.edn`
+- `ETH_WALLET_JSON` - contents of this will be written to `ETH_WALLET_FILE`
+
+:bulb: Ideally we'd create those parameters in a script. PR welcome.
+
+## Update landing page
 
 Landing page is static and different CSS and JS due to time constraints.
 
@@ -170,8 +203,8 @@ Landing page is static and different CSS and JS due to time constraints.
 This copies over necessary artifacts to `resources` dir.
 
 
-### Troubleshooting
-See the [Cookbook](doc/cookbook.md).
+## More info
+Detailed information on code structure, troubleshooting, etc. can be found [here](doc/README.md).
 
 ## License
 

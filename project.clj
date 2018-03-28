@@ -5,12 +5,13 @@
                   :exclusions [joda-time]]
                  [re-frame "0.10.2"]
                  [cljs-ajax "0.7.2"]
-                 [secretary "1.2.3"]
+                 [funcool/bide "1.6.0"]
                  [reagent-utils "0.2.1"]
                  [reagent "0.7.0"]
                  [org.clojure/clojurescript "1.9.946"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.9.0"]
                  [selmer "1.11.1"]
+                 [com.taoensso/tufte "1.3.0"]
                  [markdown-clj "1.0.1"]
                  [ring-middleware-format "0.7.2"]
                  [ring/ring-core "1.6.2"]
@@ -42,7 +43,6 @@
                  [cheshire "5.8.0"]
                  [mpg "1.3.0"]
                  [pandect "0.6.1"]
-                 [cljsjs/moment "2.17.1-1"]
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.cemerick/piggieback "0.2.2"]
                  [jarohen/chime "0.2.2"]
@@ -66,19 +66,12 @@
   :plugins [[lein-cprop "1.0.1"]
             [migratus-lein "0.4.1"]
             [lein-cljsbuild "1.1.7"]
-            [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
-            [lein-shell "0.5.0"]
             [lein-sha-version "0.1.1"]]
 
 
   :less {:source-paths ["src/less"]
          :target-path "resources/public/css"}
-
-  :auto {"build-contracts" {:file-pattern #"\.(sol)\n"
-                            :paths ["./contracts"]}}
-
-  :aliases {"build-contracts" ["shell" "./build_contracts.sh"]}
 
   :ring {:destroy commiteth.scheduler/stop-scheduler}
 
@@ -91,11 +84,10 @@
    :css-dirs         ["resources/public/css"]
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
-
   :profiles
   {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
                    :omit-source    true
-                   :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
+                   :prep-tasks     ["javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
                     {:min
@@ -125,6 +117,7 @@
                             [binaryage/devtools "0.9.7"]
                             [figwheel-sidecar "0.5.14"]
                             [org.clojure/tools.nrepl "0.2.13"]
+                            [org.clojure/tools.namespace "0.2.11"]
                             [com.cemerick/piggieback "0.2.2"]
                             [sablono "0.8.1"]]
            :plugins        [[com.jakemccrary/lein-test-refresh "0.14.0"]
@@ -143,7 +136,6 @@
                :optimizations :none
                :pretty-print  true}}]}
 
-           :prep-tasks     ["build-contracts" "javac"]
            :doo            {:build "test"}
            :source-paths   ["env/dev/clj" "test/clj"]
            :resource-paths ["env/dev/resources"]
