@@ -44,6 +44,9 @@ jobs:
 
       - run: echo $ETH_WALLET_JSON > $ETH_WALLET_FILE
 
-      # run tests!
       - run: lein test
       - run: lein uberjar
+
+      - store_artifacts:
+        path: target/uberjar/commiteth.jar
+        destination: commiteth.jar
