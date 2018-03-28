@@ -174,9 +174,7 @@
      pr-body         :body
      pr-title        :title} :pull_request}]
   (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (if-let [issue (some->> (extract-issue-number owner repo pr-body pr-title)
-                          (first)
-                          (issues/get-issue repo-id))]
+  (if-let [issue (some #(issues/get-issue repo-id %1) (extract-issue-number owner repo pr-body pr-title))]
     (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
       (do
         (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
