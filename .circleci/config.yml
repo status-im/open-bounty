@@ -46,3 +46,4 @@ jobs:
 
       # run tests!
       - run: lein test
+      - run: lein uberjar
