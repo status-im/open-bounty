@@ -1,0 +1,17 @@
+.pg-book {font-family: "PostGrotesk-Book", sans-serif}
+.pg-med {font-family: "PostGrotesk-Medium", sans-serif}
+
+
+/* Color classes are generated using https://tachyons-tldr.now.sh/#/tools */
+
+.muted-blue { color: #42505c; }
+.bg-muted-blue { background-color: #42505c; }
+.b--muted-blue { border-color: #42505c; }
+.hover-muted-blue:hover, .hover-muted-blue:focus { color: #42505c; }
+.hover-bg-muted-blue:hover, .hover-bg-muted-blue:focus { background-color: #42505c; }
+
+.sob-blue { color: #5babed; }
+.bg-sob-blue { background-color: #5babed; }
+.b--sob-blue { border-color: #5babed; }
+.hover-sob-blue:hover, .hover-sob-blue:focus { color: #5babed; }
+.hover-bg-sob-blue:hover, .hover-bg-sob-blue:focus { background-color: #5babed; }
