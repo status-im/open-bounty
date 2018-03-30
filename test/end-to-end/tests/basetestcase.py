@@ -60,12 +60,12 @@ class BaseTestCase:
         #
         cls.executor_sauce_lab = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
         environ.get('SAUCE_USERNAME'), environ.get('SAUCE_ACCESS_KEY'))
-        drivers = []
+        cls.drivers = []
 
         if cls.environment == 'local':
             for caps in cls.capabilities_dev, cls.capabilities_org:
                 driver = webdriver.Chrome(chrome_options=caps)
-                drivers.append(driver)
+                cls.drivers.append(driver)
 
         if cls.environment == 'sauce':
             for caps in cls.capabilities_dev, cls.capabilities_org:
@@ -74,17 +74,15 @@ class BaseTestCase:
                 new_caps.update(remote)
                 driver = webdriver.Remote(cls.executor_sauce_lab,
                                           desired_capabilities=new_caps)
-                drivers.append(driver)
+                cls.drivers.append(driver)
 
-            for driver in drivers:
-                cls.print_sauce_lab_info(cls, driver)
-
-        cls.driver_dev = drivers[0]
-        cls.driver_org = drivers[1]
+        cls.driver_dev = cls.drivers[0]
+        cls.driver_org = cls.drivers[1]
 
 
-        for driver in drivers:
+        for driver in cls.drivers:
              driver.implicitly_wait(10)
+
 
 ###################################################################################################################
 ######### Actions for each driver before class
@@ -140,8 +138,10 @@ class BaseTestCase:
         cls.github_dev.delete_fork()
 
         try:
-            cls.driver_dev.quit()
-            cls.driver_org.quit()
+            for driver in cls.drivers:
+                cls.print_sauce_lab_info(cls, driver)
+                driver.quit()
+
         except WebDriverException:
             pass
 
