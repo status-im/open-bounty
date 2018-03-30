@@ -41,8 +41,10 @@
 (defn update-user
   [user-id body]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-user! con-db (into {:id user-id} body))))
-  
+    (db/update-user! con-db {:id user-id
+                             :address (:address body)
+                             :opts (dissoc body :address)})))
+
 (defn get-new-users-for-welcome-email
   []
   (jdbc/with-db-connection [con-db *db*]

@@ -23,29 +23,31 @@ select 1
 from users u
 where u.id = :id;
 
--- :name update-user! :! :n
--- :doc updates an existing user record
-UPDATE users
-SET login = :login,
-name = :name,
-email = :email,
-address = :address
-WHERE id = :id;
-
 -- :name update-user-address! :! :n
 UPDATE users
 SET address = :address
 WHERE id = :id;
 
 -- :name update-user! :! :n
+-- :doc updates an existing user record
 UPDATE users
-SET address = coalesce(:address, address),
-    opts = coalesce(:opts, '{}'::jsonb) || coalesce(opts, '{}'::jsonb)
+SET address = :address,
+    opts = coalesce(opts, '{}'::jsonb) || coalesce(:opts, '{}'::jsonb)
 WHERE id = :id;
 
 -- :name get-user :? :1
 -- :doc retrieve a user given the user-id.
-SELECT u.*, count(r.*) as repo_count
+SELECT  u.id,
+        u.login,
+        u.name,
+        u.email,
+        u.address,
+        u.created,
+        u.avatar_url,
+        u.opts->'is_hidden_in_hunters' as is_hidden_in_hunters,
+        u.opts->'hide_address_warning' as hide_address_warning,
+        u.opts->'hide_gh_repos_warning' as hide_gh_repos_warning,
+        count(r.*) as repo_count
 FROM users u, repositories r
 WHERE u.id = :id
 AND u.id=r.user_id
@@ -585,7 +587,7 @@ WHERE
 pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
-AND NOT u.is_hidden_in_hunters
+AND NOT (u.opts->>'is_hidden_in_hunters')::boolean
 GROUP BY u.id
 ORDER BY total_usd DESC
 LIMIT 5;

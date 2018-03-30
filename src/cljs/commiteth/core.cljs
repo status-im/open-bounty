@@ -37,17 +37,23 @@
 (defn warning-icon []
   (let [eth-address (rf/subscribe [:get-in [:user :address]])
         repo-count (rf/subscribe [:get-in [:user :repo_count]])  
+        hide-address-warning (rf/subscribe [:get-in [:user :hide_address_warning]])
+        hide-gh-repos-warning (rf/subscribe [:get-in [:user :hide_gh_repos_warning]])
         warning-open? (rf/subscribe [:warning-open?])]
     (fn []
-      (let [warning-text (cond 
-                           (str/blank? @eth-address) 
-                           "Please set your Ethereum account address"
-                           (or (nil? @repo-count) (= 0 @repo-count)) 
-                           "Please add OpenBounty GitHub App to one of your repos"
-                           :else nil)
+      (let [[warning-kw warning-text] 
+            (cond 
+              (and (not @hide-address-warning) (str/blank? @eth-address)) 
+              [:hide_address_warning "Please set your Ethereum account address"]
+              (and (not @hide-gh-repos-warning) (or (nil? @repo-count) (= 0 @repo-count))) 
+              [:hide_gh_repos_warning "Please add OpenBounty GitHub App to one of your repos"]
+              :else nil)
             dialog (if @warning-open?
                      [:div.ui.menu.transition.warning.visible {:tab-index -1}]
-                     [:div.ui.menu.transition.warning.hidden])]
+                     [:div.ui.menu.transition.warning.hidden])
+            on-change-fn (fn [e]
+                           (let [value (-> e .-target .-checked)]
+                             (rf/dispatch [:save-user-fields {warning-kw value}])))]
         (when warning-text
           [:div#warning_tooltip.ui.inline.dropdown
            {:on-click #(rf/dispatch [:warning-open])}
@@ -57,11 +63,9 @@
            (into dialog 
                  [ [:div warning-text]
                   [:div [:input {:type "checkbox"
-                                         :id :show-gh-repos
-                                 :on-change (fn [e]
-                                              (let [value (-> e .-target .-checked)]
-                                                (rf/dispatch [:save-user-fields value])))}]
-                   [:label {:for :show-gh-repos} "Do not show this again"]]])])))))
+                                 :id :hide-warning
+                                 :on-change on-change-fn}]
+                   [:label {:for :hide-warning} "Do not show this again"]]])])))))
 
 (defn user-dropdown [user items mobile?]
   (let [menu (if @(rf/subscribe [:user-dropdown-open?])
