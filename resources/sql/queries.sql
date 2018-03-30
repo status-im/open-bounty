@@ -463,6 +463,8 @@ SELECT
   i.updated          AS updated,
   i.winner_login     AS winner_login,
   r.repo             AS repo_name,
+  r.owner            AS repo_owner,
+  r.owner_avatar_url AS repo_owner_avatar_url,
   o.address          AS owner_address,
   u.address          AS payout_address
 FROM users o, repositories r, issues i LEFT OUTER JOIN users u ON u.login = i.winner_login
