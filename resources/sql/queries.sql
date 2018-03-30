@@ -23,11 +23,6 @@ select 1
 from users u
 where u.id = :id;
 
--- :name update-user-address! :! :n
-UPDATE users
-SET address = :address
-WHERE id = :id;
-
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users

@@ -26,12 +26,6 @@
   (jdbc/with-db-connection [con-db *db*]
     (some? (db/get-user con-db {:id user-id}))))
 
-(defn update-user-address
-  [user-id address]
-  (log/debug "update-user-address" user-id address)
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-user-address! con-db {:id user-id :address address})))
-
 (defn get-repo-owner
   "Gets repository owner by given repository id"
   [repo-id]
