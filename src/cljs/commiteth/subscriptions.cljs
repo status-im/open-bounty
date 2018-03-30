@@ -88,7 +88,7 @@
  :<- [:owner-bounties]
  (fn [owner-bounties _]
    (let [sum-dollars (fn sum-dollars [bounties]
-                       (reduce + (map #(js/parseFloat (:value_usd %)) bounties)))
+                       (reduce + (map #(js/parseFloat (:value-usd %)) bounties)))
          {:keys [paid unpaid]} (group-by #(if (:paid? %) :paid :unpaid)
                                          (vals owner-bounties))]
      {:paid {:count (count paid)
