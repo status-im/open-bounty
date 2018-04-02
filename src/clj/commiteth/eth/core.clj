@@ -77,8 +77,11 @@
 (defn eth-gasstation-gas-price
   []
   (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
-        avg-price (-> (get data "average")
-                      bigint)
+        avg-price (max
+                    (-> (get data "average")
+                        bigint)
+                    (-> (get data "average_calc")
+                        bigint))
         avg-price-gwei (/ avg-price (bigint 10))]
     (->> (* (bigint (Math/pow 10 9)) avg-price-gwei) ;; for some reason the API returns 10x gwei price
         .toBigInteger)))
