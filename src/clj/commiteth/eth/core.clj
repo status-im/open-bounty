@@ -74,7 +74,12 @@
         signed (TransactionEncoder/signMessage tx (creds))
         hex-string (Numeric/toHexString signed)]
     hex-string))
+
 (defn eth-gasstation-gas-price
+  "Get max of average and average_calc from gas station and use that
+   as gas price. average_calc is computed from a larger time period than average,
+   so the idea is to account for both temporary dips (when average_calc > average)
+   and temporary rises (average_calc < average) of gas price"
   []
   (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
         avg-price (max
