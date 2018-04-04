@@ -174,22 +174,23 @@
      pr-body         :body
      pr-title        :title} :pull_request}]
   (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (if-let [issue (some #(issues/get-issue repo-id %1) (extract-issue-number owner repo pr-body pr-title))]
-    (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
-      (do
-        (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
-        (handle-claim issue
-                      user-id
-                      login name
-                      avatar_url
-                      owner repo
-                      repo-id
-                      pr-id
-                      pr-number
-                      head-sha
-                      merged?
-                      event-type))
-      (log/info "PR for issue already merged"))
+  (if-let [issues (remove nil? (map #(issues/get-issue repo-id %1) (extract-issue-number owner repo pr-body pr-title)))]
+    (doseq [issue issues]
+      (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
+        (do
+          (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
+          (handle-claim issue
+                        user-id
+                        login name
+                        avatar_url
+                        owner repo
+                        repo-id
+                        pr-id
+                        pr-number
+                        head-sha
+                        merged?
+                        event-type))
+        (log/info "PR for issue already merged")))
     (when (= :edited event-type)
       ; Remove PR if it does not reference any issue
       (pull-requests/remove pr-id))))
