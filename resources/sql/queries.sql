@@ -43,6 +43,13 @@ SELECT *
 FROM users
 WHERE id = :id;
 
+-- :name get-user-by-login :? :1
+-- :doc retrieve a user given GitHub login.
+SELECT *
+FROM users
+WHERE login = :login;
+
+
 -- :name get-repo-owner :? :1
 SELECT *
 FROM users u, repositories r
