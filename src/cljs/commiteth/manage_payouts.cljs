@@ -118,23 +118,6 @@
            {:href (pr-url claim)}
            "View Claim"]]])]]))
 
-#_(defn claim-list [bounties]
-  ;; TODO: exclude bounties with no claims
-  (if (empty? bounties)
-    [:div.ui.text "No items"]
-    (into [:div]
-          (for [bounty bounties]
-            ^{:key (:issue_id bounty)}
-            [:div.mb2.br3
-             [:div.pa3.bg-white.bb.b--light-gray.br3.br--top
-              [bounty-card bounty]]
-             [:div.pa3.bg-white.br3.br--bottom
-              (if (seq (:claims bounty))
-                (for [claim  (:claims bounty)]
-                  ^{:key (:pr_id claim)}
-                  [claim-card bounty claim])
-                [:div.f4.muted-blue "No claims yet."])]]))))
-
 (defn to-confirm-list [bounties]
   (if (empty? bounties)
     [:div.ui.text "No items"]
@@ -165,7 +148,7 @@
     [:div.ui.text "No items"]
     (into [:div]
           (for [bounty bounties
-                :let [claims (:claims bounty)]] ; TODO identify winning claim
+                :let [claims (:claims bounty)]]
             ^{:key (:issue_id bounty)}
             [:div.mb2
              [:div.pa3.bg-white.bb.b--light-gray
@@ -232,6 +215,7 @@
        [:div.cf.nl2.nr2
         (for [bounty (cond->> bounties
                        (not @expanded?) (take 3))]
+          ^{:key (:issue_id bounty)}
           [bounty-component bounty])]
        [:div.tr
         [:span.f5.sob-blue.pointer
@@ -241,8 +225,14 @@
            "Collapse ↑"
            "See all ↓")]]])))
 
+;; TODO For status related bounties there are 133 which have paid? flag set
+;; but the bounty-state function only returns :paid for 130 — why?
+
 (defn manage-payouts-page []
-  (let [page          (rf/subscribe [:page]) ; TODO fix this to subscribe to route subscription
+  ;; TODO fix `page` subscription to subscribe to full route info
+  ;; do this after @msuess PR with some related routing changes has
+  ;; been merged
+  (let [page          (rf/subscribe [:page])
         owner-bounties (rf/subscribe [:owner-bounties])
         bounty-stats-data (rf/subscribe [:owner-bounties-stats])
         owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
@@ -259,15 +249,15 @@
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
            [bounty-stats @bounty-stats-data]
-           [:div.cf.ba.b--white.mb2
+           [:div.cf.ba.bw2.b--white.mb2
             [:div.f4.fl.w-50-ns.pa4.tc
              {:role "button"
-              :class (if (= @page :issuer-dashboard/to-confirm) "bg-white" "bg-near-white pointer")
+              :class (if (= @page :issuer-dashboard/to-confirm) "bg-white pg-med" "bg-near-white pointer")
               :on-click #(routes/nav! :issuer-dashboard/to-confirm)}
              "To confirm payment (" (count (get grouped :pending-maintainer-confirmation)) ")"]
             [:div.f4.fl.w-50-ns.pa4.tc.pointer.bl.b--white
              {:role "button"
-              :class (if (= @page :issuer-dashboard/to-merge) "bg-white" "bg-near-white pointer")
+              :class (if (= @page :issuer-dashboard/to-merge) "bg-white pg-med" "bg-near-white pointer")
               :on-click #(routes/nav! :issuer-dashboard/to-merge)}
              "To merge (" (count (get grouped :claimed)) ")"]]
            [:div
@@ -297,18 +287,4 @@
             [:h4.f3 "Revoked bounties (" (count (get grouped :paid)) ")"]
             [expandable-bounty-list unclaimed-bounty (get grouped :paid)]]
 
-           [:div.mb5]
-           #_[:div.cf
-            [:button.pa2.tl.bn.bg-white.muted-blue
-             {:on-click #(routes/nav! :issuer-dashboard/paid)}
-             [:span.f4 "Paid"] [:br]
-             (count (get grouped :paid)) " bounties"]]
-           #_(for [[k v] grouped]
-             [:div
-              {:key (name k)}
-              [:h3 (name k) " — " (count v)]
-              [claim-list (take 10 v)]])
-           #_[:h3 "New claims"]
-           #_[claim-list (filter (complement :paid?) bounties)]
-           #_[:h3 "Old claims"]
-           #_[claim-list (filter :paid? bounties)]])))))
+           [:div.mb5]])))))
