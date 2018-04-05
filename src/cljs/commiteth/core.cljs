@@ -80,7 +80,7 @@
       (let [tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
                   [:activity "Activity"]
                   (when (seq @owner-bounties)
-                    [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")])
+                    [:dashboard "Dashboard"])
                   (when (:status-team-member? @user)
                     [:usage-metrics "Usage metrics"])]]
         (into [:div.ui.attached.tabular.menu.tiny]
@@ -204,7 +204,9 @@
               :activity       [activity-page]
               :bounties       [bounties-page]
               :repos          [repos-page]
-              :manage-payouts [manage-payouts-page]
+              (:dashboard
+               :issuer-dashboard/to-confirm
+               :issuer-dashboard/to-merge) [manage-payouts-page]
               :settings       [update-address-page]
               :usage-metrics  [usage-metrics-page])]]
           (when (show-top-hunters?)

@@ -6,13 +6,9 @@
   (bide/router [["/"               :bounties]
                 ["/activity"       :activity]
                 ["/repos"          :repos]
-                ["/manage-payouts" :manage-payouts]
-                ["/manage-payouts/open" :issuer-dashboard/open]
-                ["/manage-payouts/funded" :issuer-dashboard/funded]
-                ["/manage-payouts/claimed" :issuer-dashboard/claimed]
-                ["/manage-payouts/merged" :issuer-dashboard/merged]
-                ["/manage-payouts/pending" :issuer-dashboard/pending-maintainer-confirmation]
-                ["/manage-payouts/paid" :issuer-dashboard/paid]
+                ["/dashboard"      :dashboard]
+                ["/dashboard/to-confirm" :issuer-dashboard/to-confirm]
+                ["/dashboard/to-merge"   :issuer-dashboard/to-merge]
                 ["/settings"       :settings]
                 ["/usage-metrics"  :usage-metrics]]))
 
