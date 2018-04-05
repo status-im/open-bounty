@@ -123,7 +123,10 @@
   [bounty]
   (assert-keys bounty [:winner_login :payout_address :confirm_hash :payout_hash
                        :claims :tokens :contract_address])
-  (if-let [merged? (:winner_login bounty)]
+  ;; Some bounties have been paid out manually, the payout hash
+  ;; was set properly but winner_login was not
+  (if-let [merged-or-paid? (or (:winner_login bounty)
+                               (:payout_hash bounty))]
     (cond
       (nil? (:payout_address bounty)) :pending-contributor-address
       (nil? (:confirm_hash bounty))   :pending-maintainer-confirmation
