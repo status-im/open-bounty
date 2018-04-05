@@ -1,6 +1,7 @@
 (ns commiteth.manage-payouts
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
+            [commiteth.util :as util]
             [commiteth.routes :as routes]
             [commiteth.model.bounty :as bnt]
             [commiteth.common :as common :refer [human-time]]))
@@ -139,7 +140,17 @@
     [:div.ui.text "No items"]
     (into [:div]
           (for [bounty bounties
-                :let [winning-claim (first (:claims bounty))]] ; TODO identify winning claim
+                ;; Identifying the winning claim like this is a bit
+                ;; imprecise if there have been two PRs for the same
+                ;; bounty by the same contributor
+                ;; Since the resulting payout is the same we can probably
+                ;; ignore this edge case for a first version
+                :let [winning-claim (->> (:claims bounty)
+                                         (filter #(do (prn bounty)
+                                                      (prn %)
+                                                      (= (:user_login %)
+                                                         (:winner_login bounty))))
+                                         util/assert-first)]]
             ^{:key (:issue_id bounty)}
             [:div.mb2
              [:div.pa3.bg-white.bb.b--light-gray
