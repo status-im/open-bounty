@@ -217,13 +217,14 @@
                        (not @expanded?) (take 3))]
           ^{:key (:issue_id bounty)}
           [bounty-component bounty])]
-       [:div.tr
-        [:span.f5.sob-blue.pointer
-         {:role "button"
-          :on-click #(reset! expanded? (not @expanded?))}
-         (if @expanded?
-           "Collapse ↑"
-           "See all ↓")]]])))
+       (when (> (count bounties) 3)
+         [:div.tr
+          [:span.f5.sob-blue.pointer
+           {:role "button"
+            :on-click #(reset! expanded? (not @expanded?))}
+           (if @expanded?
+             "Collapse ↑"
+             "See all ↓")]])])))
 
 ;; TODO For status related bounties there are 133 which have paid? flag set
 ;; but the bounty-state function only returns :paid for 130 — why?
