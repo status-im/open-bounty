@@ -23,6 +23,11 @@
 (defn confirming? [bounty]
   (:confirming? bounty))
 
+(defn issue-url
+  [bounty]
+  {:pre [(:repo-owner bounty) (:repo-name bounty) (:issue-number bounty)]}
+  (str "https://github.com/" (:repo-owner bounty) "/" (:repo-name bounty) "/issues/" (:issue-number bounty)))
+
 (defn crypto-balances [bounty]
   ;; TODO add some assertions
   (cond-> (:tokens bounty)
