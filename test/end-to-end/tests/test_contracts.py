@@ -1,9 +1,6 @@
 import pytest
-# from os import environ
-# from pages.openbounty.landing import LandingPage
 from pages.openbounty.bounties import BountiesPage
 from pages.openbounty.activity import ActivityPage
-# from pages.thirdparty.github import GithubPage
 from tests.basetestcase import BaseTestCase
 from tests import test_data
 
