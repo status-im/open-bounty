@@ -240,8 +240,10 @@
         [:div.pa5
          [:div.ui.active.inverted.dimmer.bg-none
           [:div.ui.text.loader "Loading"]]]
-        (let [bounties (vals @owner-bounties)
-              grouped  (group-by (comp state-mapping :state) bounties)]
+        (let [bounties  (vals @owner-bounties)
+              grouped   (group-by (comp state-mapping :state) bounties)
+              unclaimed (into (get grouped :funded)
+                              (get grouped :open))]
           [:div.center.mw7
            (when (nil? (common/web3))
              [:div.ui.warning.message
@@ -272,15 +274,19 @@
 
                 :else (routes/nav! :issuer-dashboard/to-confirm)))]
            [:div.mt4
-            [:h4.f3.sob-muted-blue "Bounties not claimed yet (" (count (get grouped :funded)) ")"]
+            [:h4.f3.sob-muted-blue "Bounties not claimed yet (" (count unclaimed) ")"]
             [expandable-bounty-list
              unclaimed-bounty
-             (reverse (sort-by :updated (get grouped :funded)))]]
+             (->> unclaimed (sort-by :updated) (reverse))]]
 
            [:div.mt4
             [:h4.f3.sob-muted-blue "Paid out bounties (" (count (get grouped :paid)) ")"]
             [expandable-bounty-list paid-bounty (get grouped :paid)]]
 
+           [:div.mt4
+            [:h4.f3.sob-muted-blue "Merged bounties (" (count (get grouped :merged)) ")"]
+            [:p "I'm not sure why these exist. They have a :payout-address and a :confirm-hash so why are they missing the :payout-hash?"]
+            [expandable-bounty-list paid-bounty (get grouped :merged)]]
 
            #_[:div.mt4
             [:h4.f3 "Revoked bounties (" (count (get grouped :paid)) ")"]
