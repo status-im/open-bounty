@@ -128,9 +128,9 @@
   (if-let [merged-or-paid? (or (:winner_login bounty)
                                (:payout_hash bounty))]
     (cond
+      (:payout_hash bounty)           :paid
       (nil? (:payout_address bounty)) :pending-contributor-address
       (nil? (:confirm_hash bounty))   :pending-maintainer-confirmation
-      (:payout_hash bounty)           :paid
       :else                           :merged)
     (cond ; not yet merged
       (< 1 (count (:claims bounty)))  :multiple-claims
