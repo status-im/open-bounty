@@ -52,7 +52,7 @@
                     :as bounty}
                    {:keys [style] :as opts}]
   [:div
-   [:a {:href (common/issue-url owner repo-name issue-number)}
+   [:a {:href (bnt/issue-url bounty)}
     [:div.cf
      [:div.fl.w-80
       [:span.db.f4.muted-blue.hover-black issue-title]
@@ -129,10 +129,8 @@
                 ;; Since the resulting payout is the same we can probably
                 ;; ignore this edge case for a first version
                 :let [winning-claim (->> (:claims bounty)
-                                         (filter #(do (prn bounty)
-                                                      (prn %)
-                                                      (= (:user_login %)
-                                                         (:winner_login bounty))))
+                                         (filter #(= (:user_login %)
+                                                     (:winner_login bounty)))
                                          util/assert-first)]]
             ^{:key (:issue_id bounty)}
             [:div.mb2
