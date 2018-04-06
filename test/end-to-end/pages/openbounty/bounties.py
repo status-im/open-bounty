@@ -2,7 +2,6 @@ from pages.base_page import BasePageObject
 from pages.base_element import *
 from tests import test_data
 
-
 class BountiesHeader(BaseText):
 
     def __init__(self, driver):
@@ -36,6 +35,14 @@ class BountyFooters(BaseText):
         self.locator = self.Locator.css_selector('.open-bounty-item-content .footer-row')
 
 
+class BountyClaimsAmount(BaseText):
+
+    def __init__(self, driver, issue_title, claims_text):
+        super(BaseText, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector(
+            '//div[@class="header"]/a[contains(.,"' + issue_title +'")]/../../div[@class="footer-row"]/span[contains(.,"' + claims_text + '")]')
+
+
 class BountiesPage(BasePageObject):
     def __init__(self, driver):
         super(BountiesPage, self).__init__(driver)
@@ -50,4 +57,8 @@ class BountiesPage(BasePageObject):
 
     def get_bounties_page(self):
         self.driver.get(test_data.config['Common']['url'] + 'app')
+
+    def check_bounty_claims_amount(self, issue_title, claims_text):
+        logging.info('Check that bounty "' + issue_title + '" has "' + claims_text + '"')
+        BountyClaimsAmount(self.driver, issue_title, claims_text).find_element()
 

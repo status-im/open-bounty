@@ -1,4 +1,4 @@
-import pytest, sys
+import pytest, sys, os
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from tests.postconditions import remove_application, remove_installation
@@ -52,8 +52,7 @@ class BaseTestCase:
         # Org Chrome options
         #
         cls.capabilities_org = webdriver.ChromeOptions()
-        # doesn't work on sauce env
-        # cls.capabilities_org.add_extension(path.abspath(test_data.config['Paths']['tests_absolute'] + 'resources/metamask3_12_0.crx'))
+        cls.capabilities_org.add_extension(os.path.join(test_data.tests_path, os.pardir, 'resources', 'metamask3_12_0.crx'))
 
         #
         # SauceLab capabilities
@@ -116,9 +115,8 @@ class BaseTestCase:
 
          # Cloning repo to local git as Developer and set upstream to Organization (via HTTPS)
         cls.github_dev.clone_repo(test_data.config['ORG']['gh_repo'],
-                           test_data.config['DEV']['gh_username'],
-                           test_data.config['ORG']['gh_repo_name'],
-                           'git_repo')
+                                  test_data.config['DEV']['gh_username'],
+                                  test_data.config['ORG']['gh_repo_name'])
         cls.verify_no_errors(cls)
 
 
