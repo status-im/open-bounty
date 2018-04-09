@@ -1,5 +1,5 @@
 from pages.base_page import BasePageObject
-from pages.base_element import *
+from pages.base_element import BaseButton
 from tests import test_data
 
 

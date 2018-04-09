@@ -20,4 +20,3 @@ def remove_installation(driver):
         driver.find_element(By.CSS_SELECTOR, '.facebox-popup .btn-danger').click()
     except NoSuchElementException:
         pass
-
