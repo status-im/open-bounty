@@ -2,18 +2,19 @@ import pytest, sys, os
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from tests.postconditions import remove_application, remove_installation
-from os import environ, path
+from os import environ
 from tests import test_data
 from pages.thirdparty.github import GithubPage
 from pages.openbounty.landing import LandingPage
 
-class BaseTestCase:
 
+class BaseTestCase:
 
     def print_sauce_lab_info(self, driver):
         sys.stdout = sys.stderr
         print("SauceOnDemandSessionID=%s job-name=%s" % (driver.session_id,
                                                          pytest.config.getoption('build')))
+
     def get_remote_caps(self):
         sauce_lab_cap = dict()
         sauce_lab_cap['name'] = test_data.test_name
@@ -36,11 +37,11 @@ class BaseTestCase:
     @classmethod
     def setup_class(cls):
         cls.errors = []
-        cls.environment =  pytest.config.getoption('env')
+        cls.environment = pytest.config.getoption('env')
 
-###################################################################################################################
-######### Drivers setup
-###################################################################################################################
+        ################################################################################################################
+        ######### Drivers setup
+        ################################################################################################################
 
         #
         # Dev Chrome options
@@ -52,13 +53,14 @@ class BaseTestCase:
         # Org Chrome options
         #
         cls.capabilities_org = webdriver.ChromeOptions()
-        cls.capabilities_org.add_extension(os.path.join(test_data.tests_path, os.pardir, 'resources', 'metamask3_12_0.crx'))
+        cls.capabilities_org.add_extension(
+            os.path.join(test_data.tests_path, os.pardir, 'resources', 'metamask3_12_0.crx'))
 
         #
         # SauceLab capabilities
         #
         cls.executor_sauce_lab = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
-        environ.get('SAUCE_USERNAME'), environ.get('SAUCE_ACCESS_KEY'))
+            environ.get('SAUCE_USERNAME'), environ.get('SAUCE_ACCESS_KEY'))
         cls.drivers = []
 
         if cls.environment == 'local':
@@ -78,23 +80,21 @@ class BaseTestCase:
         cls.driver_dev = cls.drivers[0]
         cls.driver_org = cls.drivers[1]
 
-
         for driver in cls.drivers:
-             driver.implicitly_wait(10)
+            driver.implicitly_wait(10)
 
-
-###################################################################################################################
-######### Actions for each driver before class
-###################################################################################################################
+        ################################################################################################################
+        ######### Actions for each driver before class
+        ################################################################################################################
 
         ######ORG
         landing = LandingPage(cls.driver_org)
         landing.get_landing_page()
 
-         # Sign Up to SOB
+        # Sign Up to SOB
         cls.github_org = landing.login_button.click()
         cls.github_org.sign_in(test_data.config['ORG']['gh_login'],
-                                test_data.config['ORG']['gh_password'])
+                               test_data.config['ORG']['gh_password'])
         assert cls.github_org.permission_type.text == 'Personal user data'
         bounties_page = cls.github_org.authorize_sob.click()
 
@@ -108,19 +108,16 @@ class BaseTestCase:
         # Sign In to GH as Developer
         cls.github_dev.get_login_page()
         cls.github_dev.sign_in(test_data.config['DEV']['gh_login'],
-                        test_data.config['DEV']['gh_password'])
+                               test_data.config['DEV']['gh_password'])
 
-         # Fork repo as Developer from Organization
+        # Fork repo as Developer from Organization
         cls.github_dev.fork_repo(test_data.config['ORG']['gh_repo'])
 
-         # Cloning repo to local git as Developer and set upstream to Organization (via HTTPS)
+        # Cloning repo to local git as Developer and set upstream to Organization (via HTTPS)
         cls.github_dev.clone_repo(test_data.config['ORG']['gh_repo'],
                                   test_data.config['DEV']['gh_username'],
                                   test_data.config['ORG']['gh_repo_name'])
         cls.verify_no_errors(cls)
-
-
-
 
     @classmethod
     def teardown_class(cls):
@@ -142,6 +139,3 @@ class BaseTestCase:
 
         except WebDriverException:
             pass
-
-
-
