@@ -213,12 +213,13 @@
 (reg-event-fx
  :load-user-profile
  (fn [{:keys [db]} [_]]
-   {:db   db
-    :http {:method     GET
-           :url        "/api/user"
-           :params {:token (get-admin-token db)}
-           :on-success #(dispatch [:set-user-profile %])
-           :on-error #(dispatch [:sign-out])}}))
+   (when (:user db)
+     {:db   db
+      :http {:method     GET
+             :url        "/api/user"
+             :params {:token (get-admin-token db)}
+             :on-success #(dispatch [:set-user-profile %])
+             :on-error #(dispatch [:sign-out])}})))
 
 (reg-event-fx
  :set-user-profile
