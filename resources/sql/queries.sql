@@ -220,7 +220,7 @@ VALUES(:pr_id,
   :commit_sha,
   :user_id,
   :state)
-ON CONFLICT (pr_id) DO UPDATE
+ON CONFLICT (pr_id,issue_id) DO UPDATE
 SET
   state = :state,
   issue_number = :issue_number,
