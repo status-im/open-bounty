@@ -171,6 +171,8 @@
                 (do
                   (log/debug "/usage-metrics" user)
                   (ok (usage-metrics/usage-metrics-by-day))))
+           (POST "/watchTokens" {:keys [params]}
+                 (ok (bounties/watch-tokens (:issue_id params) (:contract_address params))))
 
            (context "/user" []
 

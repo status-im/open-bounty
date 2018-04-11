@@ -400,11 +400,29 @@
   (str/replace x #"^0x" ""))
 
 (reg-event-fx
+  :watch-and-confirm-payout
+  (fn [{:keys [db]} [_ {issue-id         :issue_id
+                        contract-address :contract_address 
+                        :as issue}]]
+    {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)
+     :http {:method POST
+            :url "/api/watchTokens"
+            :params {:contract_address contract-address
+                     :issue_id issue-id}
+            :on-success #(dispatch [:confirm-payout issue])
+            :on-error #(do
+                         (dispatch [:payout-confirm-failed issue-id %1])
+                         (dispatch [:set-flash-message
+                                    :error
+                                    (str "Failed to execute watch " %1)]))}}))
+
+(reg-event-fx
  :confirm-payout
  (fn [{:keys [db]} [_ {issue-id         :issue_id
                       owner-address    :owner_address
                       contract-address :contract_address
-                      confirm-hash     :confirm_hash} issue]]
+                      confirm-hash     :confirm_hash 
+                      :as issue}]]
    (println (:web3 db))
    (let [w3 (:web3 db)
          confirm-method-id (sig->method-id w3 "confirmTransaction(uint256)")
@@ -417,11 +435,10 @@
                   :gas-price 20000000000
                   :value 0
                   :data data}]
-     (println "data:" data)
      (try
        (web3-eth/send-transaction! w3 payload
                                    (send-transaction-callback issue-id))
-       {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
+       {:db db}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
           :dispatch-n [[:payout-confirm-failed issue-id e]

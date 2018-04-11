@@ -38,7 +38,7 @@
         (merge (if (and merged? (not paid?))
                  {}
                  {:disabled true})
-               {:on-click #(rf/dispatch [:confirm-payout claim])}
+               {:on-click #(rf/dispatch [:watch-and-confirm-payout claim])}
                (when (and (or confirming? bot-confirm-unmined?)
                           merged?)
                  {:class "busy loading" :disabled true}))
