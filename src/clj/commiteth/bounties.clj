@@ -22,24 +22,22 @@
 
 (defn deploy-contract [owner owner-address repo issue-id issue-number]
   (if (empty? owner-address)
-    (log/error "Unable to deploy bounty contract because"
-               "repo owner has no Ethereum addres")
+    (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
     (do
-      (log/info "deploying contract to " owner-address)
+      (log/infof "issue %s: Deploying contract to %s" issue-id owner-address)
       (if-let [transaction-hash (multisig/deploy-multisig owner-address)]
         (do
-          (log/info "Contract deployed, transaction-hash:"
-                    transaction-hash)
+          (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id transaction-hash)
           (let [resp (github/post-deploying-comment owner
                                                     repo
                                                     issue-number
                                                     transaction-hash)
-                _ (log/info "post-deploying-comment response:" resp)
                 comment-id (:id resp)]
+            (log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
             (issues/update-comment-id issue-id comment-id))
           (issues/update-transaction-hash issue-id transaction-hash))
-        (log/error "Failed to deploy contract to" owner-address)))))
-      
+        (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address)))))
+
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
          issue-number :number
@@ -47,16 +45,17 @@
         created-issue (issues/create repo-id issue-id issue-number issue-title)
         {owner-address :address
          owner :owner} (users/get-repo-owner repo-id)]
-    (log/debug "Adding bounty for issue " repo issue-number "owner address: " owner-address)
+    (log/debug "issue %s: Adding bounty for issue %s/%s - owner address: %s"
+               issue-id repo issue-number owner-address)
     (if (= 1 created-issue)
       (deploy-contract owner owner-address repo issue-id issue-number)
-      (log/debug "Issue already exists in DB, ignoring"))))
+      (log/debug "issue %s: Issue already exists in DB, ignoring"))))
 
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
   (let [res (issues/get-issues-count repo-id)
         {count :count} res
-        limit-reached? (> count max-issues-limit)
-        _ (log/debug "*** get-issues-count" repo-id " " res " " count " " limit-reached?)]
+        limit-reached? (> count max-issues-limit)]
+    (log/debug "*** get-issues-count" repo-id " " res " " count " " limit-reached?)
     (if limit-reached?
       (log/debug "Total issues for repo limit reached " repo " " count)
       (add-bounty-for-issue repo repo-id issue))))
@@ -102,9 +101,7 @@
         (issues/get-issue-titles)]
     (let [gh-issue (github/get-issue owner repo issue_number)]
       (if-not (= title (:title gh-issue))
-        (do
-          (log/info "Updating changed title for issue" (:id gh-issue))
-          (issues/update-issue-title (:id gh-issue) (:title gh-issue)))))))
+        (issues/update-issue-title (:id gh-issue) (:title gh-issue))))))
 
 (defn assert-keys [m ks]
   (doseq [k ks]
