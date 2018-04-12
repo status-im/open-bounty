@@ -60,6 +60,8 @@ github-client-id | Related to OAuth. Copied from GitHub account Settings->Develo
 github-client-secret | Related to OAuth. Copied from GitHub account Settings->Developer settings->OAuth Apps
 github-user | GitHub username for bot account. It is used for posting bounty comments
 github-password | GitHub password for bot account
+github-token | GitHub token for bot account. (see
+https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/ for details)
 webhook-secret | Secret string to be used when creating a GitHub App
 user-whitelist | Set of GitHub user/org IDs to be whitelisted. E.g. `#{"status-im" "your_org"}`
 testnet-token-data | Token data map, useful if there are Geth connectivity problems
