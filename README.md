@@ -46,6 +46,7 @@ Key | Description
 --- | ---
 dev | Currently specifies whether Swagger UI endpoints should be added to routes
 port | HTTP port for the Ring web app
+dev-login | Local development only. Set it to GitHub name of your dev user in order to login into the system bypassing OAuth. `server-address` has to be then correspondingly set to your localhost address.
 nrepl-port | nREPL port for development
 jdbc-database-url | PostgreSQL database URL. For instance, URL to local db would be `jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth`
 server-address | URL and port of local server that can be resolved from public internet. It will be used as a redirect URI during GitHub OAuth authorization process

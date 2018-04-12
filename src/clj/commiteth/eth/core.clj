@@ -74,11 +74,19 @@
         signed (TransactionEncoder/signMessage tx (creds))
         hex-string (Numeric/toHexString signed)]
     hex-string))
+
 (defn eth-gasstation-gas-price
+  "Get max of average and average_calc from gas station and use that
+   as gas price. average_calc is computed from a larger time period than average,
+   so the idea is to account for both temporary dips (when average_calc > average)
+   and temporary rises (average_calc < average) of gas price"
   []
   (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
-        avg-price (-> (get data "average")
-                      bigint)
+        avg-price (max
+                    (-> (get data "average")
+                        bigint)
+                    (-> (get data "average_calc")
+                        bigint))
         avg-price-gwei (/ avg-price (bigint 10))]
     (->> (* (bigint (Math/pow 10 9)) avg-price-gwei) ;; for some reason the API returns 10x gwei price
         .toBigInteger)))
