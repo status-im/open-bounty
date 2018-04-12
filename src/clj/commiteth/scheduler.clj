@@ -95,8 +95,8 @@
        (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
        (try
          (bounties/deploy-contract owner owner-address repo issue-id issue-number)
-         (catch Throwable ex
-           (log/errorf ex "issue %s: deploy-pending-contracts exception:" issue-id))))))
+         (catch Throwable t
+           (log/errorf t "issue %s: deploy-pending-contracts exception: %s" issue-id (ex-data t)))))))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
