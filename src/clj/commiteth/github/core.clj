@@ -25,6 +25,7 @@
 (defn hook-secret [] (:github-hook-secret env))
 (defn self [] (:github-user env))
 (defn self-password [] (:github-password env))
+(defn self-token [] (:github-token env))
 (defn on-testnet? [] (env :on-testnet))
 (defn webhook-secret [] (env :webhook-secret))
 
@@ -279,14 +280,15 @@
     (issues/create-comment owner repo issue-number comment (self-auth-params))))
 
 (defn make-patch-request [end-point positional query]
-  (let [{:keys [auth oauth-token]
+  (let [{:keys [auth oauth-token x-github-otp]
          :as   query} query
         req          (merge-with merge
                                  {:url        (tentacles/format-url end-point positional)
                                   :basic-auth auth
                                   :method     :patch}
-                                 (when oauth-token
-                                   {:headers {"Authorization" (str "token " oauth-token)}}))
+                                 (when (or oauth-token x-github-otp)
+                                   {:headers {"Authorization" (str "token " oauth-token)
+                                              "X-GitHub-OTP" x-github-otp}}))
         raw-query    (:raw query)
         proper-query (tentacles/query-map (dissoc query :auth
                                                   :oauth-token
@@ -310,7 +312,9 @@
                     " comment #" comment-id " with contents: " comment))
     (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
                                   [owner repo comment-id]
-                                  (assoc (self-auth-params) :body comment))]
+                                  (assoc (self-auth-params)
+                                         :body comment
+                                         :x-github-otp (self-token)))]
       (tentacles/safe-parse (http/request req)))))
 
 
