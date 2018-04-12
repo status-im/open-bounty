@@ -1,7 +1,8 @@
 (ns commiteth.db.issues
   (:require [commiteth.db.core :refer [*db*] :as db]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :refer [rename-keys]]))
+            [clojure.set :refer [rename-keys]]
+            [clojure.tools.logging :as log]))
 
 (defn create
   "Creates issue"
@@ -31,6 +32,7 @@
 
 (defn update-issue-title
   [issue-id title]
+  (log/info "issue %s: Updating changed title \"%s\"" issue-id title)
   (jdbc/with-db-connection [con-db *db*]
     (db/update-issue-title con-db {:issue_id issue-id
                                    :title title})))
