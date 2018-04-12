@@ -68,7 +68,7 @@ port | HTTP port for the Ring web app
 nrepl-port | nREPL port for development
 jdbc-database-url | PostgreSQL database URL. For instance, URL to local db would be `jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth`
 server-address | URL and port of local server that can be resolved from public internet. It will be used as a redirect URI during GitHub OAuth authorization process
-eth-account | Ethereum account ID for the bot
+eth-account | Ethereum account ID for the bot. Make sure it has some test ether to cover the cost of gas for deploying contracts
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of wallet file. If Geth is run with the parameters as given below, it will reside under `$HOME/.ropsten/keystore`
@@ -148,10 +148,10 @@ Now you can start a CLJS repl with:
 
 (Alternatively, if you use emacs and CIDER, you can run cider-jack-in. Details [here](https://cider.readthedocs.io/en/latest/up_and_running/))
 
-Next start the application from the clojure REPL with:
+Next [start](https://github.com/tolitius/mount) the application from the clojure REPL with:
 
 ```
-(user/start)
+(reset)
 ```
 
 ## Uberjar build
