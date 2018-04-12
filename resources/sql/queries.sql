@@ -599,6 +599,7 @@ SELECT
   pr_title,
   pr_id,
   issue_number,
+  issue_id,
   user_name,
   user_avatar_url,
   balance_eth,
