@@ -7,6 +7,7 @@ CREATE VIEW "public"."claims_view" AS SELECT i.title AS issue_title,
     p.title AS pr_title, -- added
     p.pr_number AS pr_number, -- added
     p.pr_id AS pr_id, -- added
+    i.issue_id AS issue_id, -- added
     COALESCE(u.name, u.login) AS user_name,
     u.avatar_url AS user_avatar_url,
     i.payout_receipt,
@@ -39,6 +40,7 @@ CREATE VIEW "public"."activity_feed_view" AS -- altered
     claims_view.pr_number, -- added
     claims_view.pr_id, -- added
     claims_view.issue_number,
+    claims_view.issue_id, -- added
     claims_view.user_name,
     claims_view.user_avatar_url,
     claims_view.balance_eth,
@@ -59,6 +61,7 @@ UNION
     claims_view.pr_number, -- added
     claims_view.pr_id, -- added
     claims_view.issue_number,
+    claims_view.issue_id, -- added    
     claims_view.user_name,
     claims_view.user_avatar_url,
     claims_view.balance_eth,
@@ -78,6 +81,7 @@ UNION
     claims_view.pr_number, -- added
     claims_view.pr_id, -- added
     claims_view.issue_number,
+    claims_view.issue_id, -- added    
     claims_view.user_name,
     claims_view.user_avatar_url,
     claims_view.balance_eth,

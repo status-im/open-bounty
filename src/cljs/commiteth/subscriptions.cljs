@@ -62,8 +62,8 @@
                            (map (fn [bounty]
                                   (let [matching-claims (filter
                                                          (fn [claim]
-                                                           (= (:issue-number claim)
-                                                              (:issue-number bounty)))
+                                                           (= (:issue-id claim)
+                                                              (:issue-id bounty)))
                                                          activity-feed)]
                                     (assoc bounty :claims matching-claims)))))]
       {:items       items
