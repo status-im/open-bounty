@@ -3,7 +3,9 @@
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repos]
             [commiteth.db.comment-images :as comment-images]
+            [commiteth.db.bounties :as db-bounties]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.token-data :as token-data]
             [commiteth.github.core :as github]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.util.png-rendering :as png-rendering]
@@ -39,6 +41,26 @@
             (issues/update-comment-id issue-id comment-id))
           (issues/update-transaction-hash issue-id transaction-hash))
         (log/error "Failed to deploy contract to" owner-address)))))
+
+(defn watch-tokens [issue-id contract-address watch-hash]
+  "Helper function for updating internal ERC20 token balances to token multisig contract.
+   Will be called periodically for all open bounty contracts, or on-demand via /api/watchTokens endpoint."
+  (try
+    (doseq [[tla token-data] (token-data/as-map)]
+      (let [balance (multisig/token-balance contract-address tla)]
+        (log/info "balance for " tla ":" balance)
+        (when (> balance 0)
+          (do
+            (log/info "bounty at" contract-address "has" balance "of token" tla)
+            (let [internal-balance (multisig/token-balance-in-bounty contract-address tla)]
+              (when (and (nil? watch-hash) 
+                         (not= balance internal-balance))
+                (log/info "balances not in sync, calling watch")
+                (let [watch-hash (multisig/watch-token contract-address tla)]
+                  (db-bounties/update-watch-hash issue-id watch-hash))))))))
+    (catch Throwable ex 
+      (log/error "watch-tokens exception:" ex)
+      (clojure.stacktrace/print-stack-trace ex))))
       
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id

@@ -38,6 +38,8 @@
              (update-balances)))
 
   )
+
+
 (defn update-issue-contract-address
   "For each pending deployment: gets transaction receipt, updates db
   state (contract-address, comment-id) and posts github comment"
@@ -157,16 +159,26 @@
         (db-bounties/update-confirm-hash issue-id confirm-hash)))))
   (log/info "Exit update-confirm-hash"))
 
+;; These define a (contract_addr -> attempt_cnt) map
+;; used for tracking how many times we have checked for the particular
+;; watch tx to be mined. If it hasn't been mined after a predefined number of checks,
+;; reset the counter and schedule it for re-execution in update-contract-internal-balances
+(def watch-attempts (atom {}))
+(def max-watch-attempts 5)
 
 (defn update-watch-hash
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
   []
   (p :update-watch-hash
      (doseq [{issue-id :issue_id
-           watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
-    (log/info "pending watch call" watch-hash)
-    (when-let [receipt (eth/get-transaction-receipt watch-hash)]
-      (db-bounties/update-watch-hash issue-id nil)))))
+              contract-address :contract_address
+              watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
+       (log/info "pending watch call" watch-hash)
+       (swap! watch-attempts update contract-address #(inc (or %1 0)))
+       (when (or (< max-watch-attempts (get @watch-attempts contract-address 0))
+                 (eth/get-transaction-receipt watch-hash))
+         (swap! watch-attempts dissoc contract-address)
+         (db-bounties/update-watch-hash issue-id nil)))))
 
 
 (defn older-than-3h?
@@ -177,54 +189,65 @@
     (println "hour diff:" diff)
     (> diff 3)))
 
+;; These define a (contract_addr -> attempt_cnt) map
+;; used for tracking how many times we attempted to withdraw funds from 
+;; a particular account. All attempts above a predefined threshold are blocked,
+;; as this may ensue in excessive bot fund drainage
+(def execute-attempts (atom {}))
+(def max-execute-attempts 3)
+
 (defn update-payout-receipt
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (log/info "In update-payout-receipt")
   (p :update-payout-receipt
      (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash
-           contract-address :contract_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
-           confirm-id :confirm_hash
-           payee-login :payee_login
-           updated :updated} (db-bounties/confirmed-payouts)]
-    (log/debug "confirmed payout:" payout-hash)
-    (try
-      (if-let [receipt (eth/get-transaction-receipt payout-hash)]
-        (let [contract-tokens (multisig/token-balances contract-address)
-              contract-eth-balance (eth/get-balance-wei contract-address)]
-          (if (or
-                (some #(> (second %) 0.0) contract-tokens)
-                (> contract-eth-balance 0))
-            (do
-              (log/info "Contract still has funds")
-              (when (multisig/is-confirmed? contract-address confirm-id)
-                (log/info "Detected bounty with funds and confirmed payout, calling executeTransaction")
-                (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
-                  (log/info "execute tx:" execute-tx-hash))))
+              payout-hash :payout_hash
+              contract-address :contract_address
+              repo :repo
+              owner :owner
+              comment-id :comment_id
+              issue-number :issue_number
+              balance-eth :balance_eth
+              tokens :tokens
+              confirm-id :confirm_hash
+              payee-login :payee_login
+              updated :updated} (db-bounties/confirmed-payouts)]
+       (log/debug "confirmed payout:" payout-hash)
+       (try
+         (if-let [receipt (eth/get-transaction-receipt payout-hash)]
+           (let [contract-tokens (multisig/token-balances contract-address)
+                 contract-eth-balance (eth/get-balance-wei contract-address)]
+             (if (or
+                   (some #(> (second %) 0.0) contract-tokens)
+                   (> contract-eth-balance 0))
+               (do
+                 (log/info "Contract still has funds")
+                 (if  (< (get @execute-attempts contract-address 0) max-execute-attempts)
+                   (when (multisig/is-confirmed? contract-address confirm-id)
+                     (log/info "Detected bounty with funds and confirmed payout, calling executeTransaction")
+                     (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
+                       (swap! execute-attempts update contract-address #(inc (or %1 0)))
+                       (log/info "execute tx:" execute-tx-hash)))
+                   (log/error "Max execute attempt count for " contract-address ", blocked")))
 
-            (do
-              (log/info "Payout has succeeded, saving payout receipt for issue #" issue-id ": " receipt)
-              (db-bounties/update-payout-receipt issue-id receipt)
-              (github/update-paid-issue-comment owner
-                                                repo
-                                                comment-id
-                                                contract-address
-                                                (eth-decimal->str balance-eth)
-                                                tokens
-                                                payee-login))))
-        (when (older-than-3h? updated)
-          (log/info "Resetting payout hash for issue" issue-id "as it has not been mined in 3h")
-          (db-bounties/reset-payout-hash issue-id)))
-      (catch Throwable ex 
-        (do (log/error "update-payout-receipt exception:" ex)
-            (clojure.stacktrace/print-stack-trace ex))))))
+               (do
+                 (log/info "Payout has succeeded, saving payout receipt for issue #" issue-id ": " receipt)
+                 (swap! execute-attempts dissoc contract-address)
+                 (db-bounties/update-payout-receipt issue-id receipt)
+                 (github/update-paid-issue-comment owner
+                                                   repo
+                                                   comment-id
+                                                   contract-address
+                                                   (eth-decimal->str balance-eth)
+                                                   tokens
+                                                   payee-login))))
+           (when (older-than-3h? updated)
+             (log/info "Resetting payout hash for issue" issue-id "as it has not been mined in 3h")
+             (db-bounties/reset-payout-hash issue-id)))
+         (catch Throwable ex 
+           (do (log/error "update-payout-receipt exception:" ex)
+               (clojure.stacktrace/print-stack-trace ex))))))
   (log/info "Exit update-payout-receipt")
   )
 
@@ -238,28 +261,6 @@
     :else n))
 
 
-(defn update-bounty-token-balances
-  "Helper function for updating internal ERC20 token balances to token multisig contract. Will be called periodically for all open bounty contracts."
-  [issue-id bounty-addr watch-hash]
-  #_(log/info "In update-bounty-token-balances for issue" issue-id)
-  (doseq [[tla token-data] (token-data/as-map)]
-    (try
-      (let [balance (multisig/token-balance bounty-addr tla)]
-        (when (> balance 0)
-          (do
-            (log/info "bounty at" bounty-addr "has" balance "of token" tla)
-            (let [internal-balance (multisig/token-balance-in-bounty bounty-addr tla)]
-              (when (and (nil? watch-hash)
-                         (not= balance internal-balance))
-                (log/info "balances not in sync, calling watch")
-                (let [hash (multisig/watch-token bounty-addr tla)]
-                  (db-bounties/update-watch-hash issue-id hash)))))))
-      (catch Throwable ex 
-        (do (log/error "update-bounty-token-balances exception:" ex)
-            (clojure.stacktrace/print-stack-trace ex)))))
-  #_(log/info "Exit update-bounty-token-balances"))
-  
-
 (defn update-contract-internal-balances
   "It is required in our current smart contract to manually update it's internal balance when some tokens have been added."
   []
@@ -269,7 +270,7 @@
               bounty-address :contract_address
               watch-hash :watch_hash}
              (db-bounties/open-bounty-contracts)]
-       (update-bounty-token-balances issue-id bounty-address watch-hash)))
+       (bounties/watch-tokens issue-id bounty-address watch-hash)))
   (log/info "Exit update-contract-internal-balances"))
 
 (defn get-bounty-funds

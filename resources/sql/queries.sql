@@ -348,6 +348,7 @@ WHERE issue_id = :issue_id;
 -- :doc issues with a pending watch transaction
 SELECT
 issue_id,
+contract_address,
 watch_hash
 FROM issues
 WHERE watch_hash IS NOT NULL;
