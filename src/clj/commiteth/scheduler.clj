@@ -93,7 +93,10 @@
               owner-address :owner_address
               repo :repo} (db-bounties/pending-contracts)]
        (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
-       (bounties/deploy-contract owner owner-address repo issue-id issue-number))))
+       (try
+         (bounties/deploy-contract owner owner-address repo issue-id issue-number)
+         (catch Throwable ex
+           (log/errorf ex "issue %s: deploy-pending-contracts exception:" issue-id))))))
 
 (defn self-sign-bounty
   "Walks through all issues eligible for bounty payout and signs corresponding transaction"
@@ -147,11 +150,14 @@
      (doseq [{issue-id     :issue_id
               execute-hash :execute_hash} (db-bounties/pending-payouts)]
        (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
-       (when-let [receipt (eth/get-transaction-receipt execute-hash)]
-         (log/infof "issue %s: execution receipt for issue " issue-id receipt)
-         (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
-           (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
-           (db-bounties/update-confirm-hash issue-id confirm-hash)))))
+       (try 
+         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
+           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
+           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
+             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
+             (db-bounties/update-confirm-hash issue-id confirm-hash)))
+         (catch Throwable ex
+           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id)))))
   (log/info "Exit update-confirm-hash"))
 
 
@@ -162,8 +168,11 @@
      (doseq [{issue-id :issue_id
               watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
        (log/infof "issue %s: pending watch call %s" issue-id watch-hash)
-       (when-let [receipt (eth/get-transaction-receipt watch-hash)]
-         (db-bounties/update-watch-hash issue-id nil)))))
+       (try
+         (when-let [receipt (eth/get-transaction-receipt watch-hash)]
+           (db-bounties/update-watch-hash issue-id nil))
+         (catch Throwable ex
+           (log/errorf ex "issue %s: update-watch-hash exception:" issue-id))))))
 
 
 (defn older-than-3h?
@@ -238,7 +247,7 @@
   multisig contract. Will be called periodically for all open bounty
   contracts."
   [issue-id bounty-addr watch-hash]
-  #_(log/info "In update-bounty-token-balances for issue" issue-id)
+  (log/info "In update-bounty-token-balances for issue" issue-id)
   (doseq [[tla token-data] (token-data/as-map)]
     (try
       (let [balance (multisig/token-balance bounty-addr tla)]
@@ -253,7 +262,7 @@
                   (db-bounties/update-watch-hash issue-id hash)))))))
       (catch Throwable ex
         (log/error ex "bounty %s: update-bounty-token-balances exception" bounty-addr))))
-  #_(log/info "Exit update-bounty-token-balances"))
+  (log/info "Exit update-bounty-token-balances"))
 
 
 (defn update-contract-internal-balances
