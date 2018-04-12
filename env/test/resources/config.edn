@@ -1,4 +1,5 @@
 {
  :test              true
  :jdbc-database-url "jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth"
+ :session-timeout   21600
 }
