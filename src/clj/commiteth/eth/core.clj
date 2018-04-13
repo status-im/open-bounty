@@ -73,7 +73,8 @@
              data)
         signed (TransactionEncoder/signMessage tx (creds))
         hex-string (Numeric/toHexString signed)]
-    (log/info "Signing TX: nonce: %s, gas-price: %s, gas-limit: %s, data: %s" nonce gas-price gas-limit data)
+    (log/infof "Signing TX: nonce: %s, gas-price: %s, gas-limit: %s, data: %s"
+               nonce gas-price gas-limit data)
     hex-string))
 
 (defn eth-gasstation-gas-price
