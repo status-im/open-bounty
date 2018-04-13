@@ -53,18 +53,27 @@
           (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
                           {:password password :file-path file-path}))))))
 
+(defn get-nonce []
+  (let [current-nonce (atom nil)]
+    (fn []
+      (let [nonce (.. (.ethGetTransactionCount (create-web3j) 
+                                               (env :eth-account) 
+                                               DefaultBlockParameterName/LATEST)
+                      sendAsync
+                      get
+                      getTransactionCount)]
+        (if (= nonce @current-nonce)
+          (throw (Exception. (str "Attempting to create transaction with the same nonce: " nonce)))
+          (swap! current-nonce (constantly nonce)))
+        (log/info "Current nonce:" nonce)
+        nonce))))
+
 (defn get-signed-tx [gas-price gas-limit to data]
   "Create a sign a raw transaction.
    'From' argument is not needed as it's already
    encoded in credentials.
    See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (let [web3j (create-web3j)
-        nonce (.. (.ethGetTransactionCount web3j 
-                                           (env :eth-account) 
-                                           DefaultBlockParameterName/LATEST)
-                  sendAsync
-                  get
-                  getTransactionCount)
+  (let [nonce ((get-nonce))
         tx (RawTransaction/createTransaction
              nonce
              gas-price
