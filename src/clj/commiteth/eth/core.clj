@@ -122,18 +122,24 @@
 
             nil)))))
 
+(def req-id-tracker
+  ;; HACK to ensure previous random-number approach doesn't lead to
+  ;; unintended collisions
+  (atom 0))
+
 (defn eth-rpc
   [method params]
-  (let [request-id (rand-int 4096)
-        body     (json/write-str {:jsonrpc "2.0"
-                                  :method  method
-                                  :params  params
-                                  :id      request-id})
+  (let [request-id (swap! req-id-tracker inc)
+        body       {:jsonrpc "2.0"
+                    :method  method
+                    :params  params
+                    :id      request-id}
         options  {:headers {"content-type" "application/json"}
-                  :body body}
+                  :body (json/write-str body)}
         response  @(post (eth-rpc-url) options)
         result   (safe-read-str (:body response))]
-    (log/debug body "\n" result)
+    (log/infof "eth-rpc req(%s) body: %s\neth-rpc req(%s) result: %s"
+               request-id body request-id result)
 
     (cond
       ;; Ignore any responses that have mismatching request ID
