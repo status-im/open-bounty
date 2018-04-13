@@ -65,7 +65,6 @@
         (if (= nonce @current-nonce)
           (throw (Exception. (str "Attempting to create transaction with the same nonce: " nonce)))
           (swap! current-nonce (constantly nonce)))
-        (log/info "Current nonce:" nonce)
         nonce))))
 
 (defn get-signed-tx [gas-price gas-limit to data]
