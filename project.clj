@@ -50,7 +50,8 @@
                  [akiroz.re-frame/storage "0.1.2"]
                  [cljsjs/chartjs "2.6.0-0"]
                  [org.web3j/core "2.3.1"]
-                 [cljs-web3 "0.19.0-0-7"]]
+                 [cljs-web3 "0.19.0-0-7"]
+                 [dali "0.7.4"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
@@ -85,7 +86,9 @@
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   :profiles
-  {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
+  {:uberjar       {:jvm-opts ["-server"
+                              "-Dconf=config-prod.edn"
+                              "-Djava.awt.headless=true"]
                    :omit-source    true
                    :prep-tasks     ["javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
@@ -108,7 +111,9 @@
                    :uberjar-name   "commiteth.jar"
                    :source-paths   ["env/prod/clj"]
                    :resource-paths ["env/prod/resources"]}
-   :dev   {:jvm-opts ["-server" "-Dconf=config-dev.edn"]
+   :dev   {:jvm-opts ["-server"
+                      "-Dconf=config-dev.edn"
+                      "-Djava.awt.headless=true"]
            :dependencies   [[prone "1.1.4"]
                             [ring/ring-mock "0.3.1"]
                             [ring/ring-devel "1.6.2"]
@@ -143,7 +148,9 @@
                             :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
            :injections     [(require 'pjstadig.humane-test-output)
                             (pjstadig.humane-test-output/activate!)]}
-   :test  {:jvm-opts ["-server" "-Dconf=config-test.edn"]
+   :test  {:jvm-opts ["-server"
+                      "-Dconf=config-test.edn"
+                      "-Djava.awt.headless=true"]
            :resource-paths ["env/dev/resources" "env/test/resources"]
            :dependencies   [[devcards "0.2.4"]]
            :cljsbuild
