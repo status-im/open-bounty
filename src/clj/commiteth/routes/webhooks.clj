@@ -384,7 +384,7 @@
         (log/debug "webhook-app POST, headers" headers)
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
-          (log/info "webhook-app POST, payload:" (pr-str payload))
+          (log/debug "webhook-app POST, payload:" (pr-str payload))
           (if (validate-secret-one-hook payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK app")
