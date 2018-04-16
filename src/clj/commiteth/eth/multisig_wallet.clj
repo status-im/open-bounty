@@ -110,7 +110,8 @@
   (log/debug "multisig/watch-token" bounty-addr token)
   (let [token-address (get-token-address token)]
     (assert token-address)
-    (eth/execute {:from      (eth/eth-account)
+    (eth/execute {:internal-tx-id (str "watch-token-" (System/currentTimeMillis) "-" bounty-addr)
+                  :from      (eth/eth-account)
                   :contract  bounty-addr
                   :method-id (:watch method-ids)
                   :gas-limit nil
