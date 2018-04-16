@@ -73,13 +73,15 @@
                                   DefaultBlockParameterName/LATEST)
                                  sendAsync
                                  get
-                                 getTransactionCount)]
+                                 getTransactionCount)
+              nonce          (if (contains? nonces web3j-tx-count)
+                               (inc (max nonces))
+                               web3j-tx-count)]
           ;; TODO this is a memory leak since tracking state is never pruned
           ;; Since we're not doing 1000s of transactions every day yet we can
           ;; probably defer worrying about this until a bit later
-          (if (contains? nonces web3j-tx-count)
-            (swap! state assoc internal-tx-id (inc (max nonces)))
-            (swap! state assoc internal-tx-id web3j-tx-count))))))
+          (swap! state assoc internal-tx-id nonce)
+          nonce))))
 
 (def nonce-tracker
   (->NonceTracker (atom {})))
