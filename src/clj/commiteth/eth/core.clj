@@ -349,7 +349,6 @@
   eth-core
   :start
   (do
-    (swap! web3j-obj (constantly nil))
     (swap! creds-obj (constantly nil))
     (log/info "eth/core started"))
   :stop
