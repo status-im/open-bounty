@@ -66,13 +66,14 @@
           (throw (Exception. (str "Attempting to create transaction with the same nonce: " nonce)))
           (swap! current-nonce (constantly nonce)))
         nonce))))
+(def get-nonce-fn (get-nonce))
 
 (defn get-signed-tx [gas-price gas-limit to data]
   "Create a sign a raw transaction.
    'From' argument is not needed as it's already
    encoded in credentials.
    See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (let [nonce ((get-nonce))
+  (let [nonce (get-nonce-fn)
         tx (RawTransaction/createTransaction
              nonce
              gas-price
