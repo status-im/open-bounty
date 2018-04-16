@@ -245,6 +245,17 @@
                              (rf/dispatch [::handlers/set-open-bounties-sorting-type sorting-type]))}
                (ui-model/bounty-sorting-type->name sorting-type)])])]))))
 
+(defn bounties-filter-box []
+  (let [value (r/atom nil)
+        save #(dispatch [:filter-bounties @value])]
+    (fn []
+      [:input {:type "text"
+               :value @value
+               :on-change #(reset! value (-> % .-target .-value))
+               :on-key-down #(case (.-which %)
+                                      13 (save)
+                                      nil)}])))
+
 (defn bounties-list [{:keys [items item-count page-number total-count]
                       :as   bounty-page-data}
                      container-element]
@@ -256,6 +267,7 @@
            right (dec (+ left item-count))]
        [:div.item-counts-label-and-sorting-container
         [:div.item-counts-label
+         [bounties-filter-box]
          [:span (str "Showing " left "-" right " of " total-count)]]
         [bounties-sort-view]])
      (display-data-page bounty-page-data bounty-item container-element)]))
