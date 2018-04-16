@@ -13,7 +13,7 @@
             [commiteth.util :as util]))
 
 (defn display-bounty-claims [claims]
-  [:div.bounty-claims-container.pv3
+  [:div.bounty-claims-container.ph4.pv3
    (for [claim claims]
      (let [{:keys [avatar-url
                    pr-title
@@ -65,7 +65,7 @@
             close-claims-click     #(rf/dispatch [::handlers/close-bounty-claim issue-id])
             matches-current-issue? (some #{issue-id} @open-bounty-claims)]
             [:div
-             [:div.open-bounty-item
+             [:div.open-bounty-item.ph4
               [:div.open-bounty-item-content
                [:div.header issue-link]
                [:div.bounty-item-row
@@ -254,7 +254,7 @@
     [:div
      (let [left  (inc (* (dec page-number) items-per-page))
            right (dec (+ left item-count))]
-       [:div.item-counts-label-and-sorting-container
+       [:div.item-counts-label-and-sorting-container.ph4
         [:div.item-counts-label
          [:span (str "Showing " left "-" right " of " total-count)]]
         [bounties-sort-view]])
@@ -269,9 +269,9 @@
         [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [:div.ui.container.open-bounties-container
+        [:div.ui.container.open-bounties-container.
          {:ref #(reset! container-element %1)}
-         [:div.open-bounties-header "Bounties"]
-         [:div.open-bounties-filter-and-sort
+         [:div.open-bounties-header.ph4.pt4 "Bounties"]
+         [:div.open-bounties-filter-and-sort.ph4
           [bounty-filters-view]]
          [bounties-list @bounty-page-data container-element]]))))
