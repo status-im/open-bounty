@@ -1,5 +1,6 @@
 (ns commiteth.ui-model
   (:require [clojure.set :as set]
+            [clojure.string :as s]
             [cljs-time.core :as t]
             [cljs-time.coerce :as t-coerce]
             [cljs-time.format :as t-format]))
