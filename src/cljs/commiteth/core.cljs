@@ -75,9 +75,10 @@
 (defn tabs [mobile?]
   (let [user (rf/subscribe [:user])
         owner-bounties (rf/subscribe [:owner-bounties])
-        current-page (rf/subscribe [:page])]
+        route (rf/subscribe [:route])]
     (fn tabs-render []
-      (let [tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
+      (let [route-id (:route-id @route)
+            tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
                   [:activity "Activity"]
                   (when (seq @owner-bounties)
                     [:dashboard "Dashboard"])
@@ -86,7 +87,10 @@
         (into [:div.ui.attached.tabular.menu.tiny]
               (for [[page caption] (remove nil? tabs)]
                 (let [props {:class (str "ui item"
-                                         (when (= @current-page page) " active"))
+                                         (if (= :dashboard page)
+                                           (when (contains? #{:dashboard :dashboard/to-confirm :dashboard/to-merge} route-id)
+                                             " active")
+                                           (when (= route-id page) " active")))
                              :on-click #(commiteth.routes/nav! page)}]
                   ^{:key page} [:div props caption])))))))
 
@@ -189,8 +193,8 @@
        [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]))
 
 (defn page []
-  (let [current-page (rf/subscribe [:page])
-        show-top-hunters? #(contains? #{:bounties :activity} @current-page)]
+  (let [route (rf/subscribe [:route])
+        show-top-hunters? #(contains? #{:bounties :activity} (:route-id @route))]
     (fn []
       [:div.ui.pusher
        [page-header]
@@ -200,13 +204,13 @@
           [:div {:class (str (if (show-top-hunters?) "eleven" "sixteen")
                              " wide computer sixteen wide tablet column")}
            [:div.ui.container
-            (case @current-page
+            (case (:route-id @route)
               :activity       [activity-page]
               :bounties       [bounties-page]
               :repos          [repos-page]
               (:dashboard
-               :issuer-dashboard/to-confirm
-               :issuer-dashboard/to-merge) [manage-payouts-page]
+               :dashboard/to-confirm
+               :dashboard/to-merge) [manage-payouts-page]
               :settings       [update-address-page]
               :usage-metrics  [usage-metrics-page])]]
           (when (show-top-hunters?)

@@ -281,7 +281,7 @@
   ;; TODO fix `page` subscription to subscribe to full route info
   ;; do this after @msuess PR with some related routing changes has
   ;; been merged
-  (let [page          (rf/subscribe [:page])
+  (let [route         (rf/subscribe [:route])
         owner-bounties (rf/subscribe [:owner-bounties])
         bounty-stats-data (rf/subscribe [:owner-bounties-stats])
         owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
@@ -290,7 +290,8 @@
         [:div.pa5
          [:div.ui.active.inverted.dimmer.bg-none
           [:div.ui.text.loader "Loading"]]]
-        (let [bounties  (vals @owner-bounties)
+        (let [route-id  (:route-id @route)
+              bounties  (vals @owner-bounties)
               grouped   (group-by (comp state-mapping :state) bounties)
               unclaimed (into (get grouped :funded)
                               (get grouped :open))]
@@ -308,29 +309,29 @@
              [:div.mv4
               [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
                {:role "button"
-                :class (if (= @page :issuer-dashboard/to-confirm) active-classes non-active-classes)
-                :on-click #(routes/nav! :issuer-dashboard/to-confirm)}
+                :class (if (= route-id :dashboard/to-confirm) active-classes non-active-classes)
+                :on-click #(routes/nav! :dashboard/to-confirm)}
                "To confirm payment"]
               [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
                {:role "button"
-                :class (if (= @page :issuer-dashboard/to-merge) active-classes non-active-classes)
-                :on-click #(routes/nav! :issuer-dashboard/to-merge)}
+                :class (if (= route-id :dashboard/to-merge) active-classes non-active-classes)
+                :on-click #(routes/nav! :dashboard/to-merge)}
                "To merge"]])
            [:div.cf
             [:div.fr.w-third.pl4.mb3.dn.db-l
              [bounty-stats-new @bounty-stats-data]]
             [:div.fr-l.w-two-thirds-l
-             (case @page
-               :issuer-dashboard/to-confirm (to-confirm-list (get grouped :pending-maintainer-confirmation))
-               :issuer-dashboard/to-merge (to-merge-list (get grouped :claimed))
+             (case route-id
+               :dashboard/to-confirm (to-confirm-list (get grouped :pending-maintainer-confirmation))
+               :dashboard/to-merge (to-merge-list (get grouped :claimed))
                (cond
                  (seq (get grouped :pending-maintainer-confirmation))
-                 (routes/nav! :issuer-dashboard/to-confirm)
+                 (routes/nav! :dashboard/to-confirm)
 
                  (seq (get grouped :claimed))
-                 (routes/nav! :issuer-dashboard/to-merge)
+                 (routes/nav! :dashboard/to-merge)
 
-                 :else (routes/nav! :issuer-dashboard/to-confirm)))
+                 :else (routes/nav! :dashboard/to-confirm)))
              (let [heading :h4.f3.normal.pg-book.sob-muted-blue]
                [:div.mt5
                 [:div.mt4

@@ -81,8 +81,8 @@
 (reg-event-db
  :set-active-page
  (fn [db [_ page params query]]
-   (assoc db :page page
-             :page-number 1
+   (assoc db :page-number 1
+             :route {:route-id page :params params :query query}
              ::db/open-bounties-filters
              (reduce-kv
               #(let [type (ui-model/query-param->bounty-filter-type %2)]
