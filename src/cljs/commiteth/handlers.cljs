@@ -70,7 +70,6 @@
                 (do
                   (println "Using injected Web3 constructor with current provider")
                   (new (aget js/window "web3" "constructor") (web3/current-provider injected-web3))))]
-     (println "web3" w3)
      {:db (merge db {:web3 w3})})))
 
 (reg-event-db
