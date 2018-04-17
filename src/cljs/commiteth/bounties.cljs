@@ -185,24 +185,26 @@
        {:tab-index 0
         :on-focus  #(reset! tooltip-open? true)
         :on-blur   #(reset! tooltip-open? false)}
-       [:div.open-bounties-filter-element
-        {:on-mouse-down #(swap! tooltip-open? not)
-         :class         (when (or current-filter-value @tooltip-open?)
-                          "open-bounties-filter-element-active")}
-        [:div.text
-         (if current-filter-value
-           (ui-model/bounty-filter-value->short-text filter-type current-filter-value)
-           (ui-model/bounty-filter-type->name filter-type))]
-        (when current-filter-value
-          [:div.remove-container
-           {:tab-index 0
-            :on-focus  #(.stopPropagation %)}
-           [:img.remove
-            {:src           "bounty-filter-remove.svg"
-             :on-mouse-down (fn [e]
-                              (.stopPropagation e)
-                              (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
-                              (reset! tooltip-open? false))}]])]
+       ;; text search intuitively feels different so it is not granted a "filter button" like the other options
+       (when-not (= filter-type :commiteth.ui-model/bounty-filter-type|issue-title-text)
+         [:div.open-bounties-filter-element
+          {:on-mouse-down #(swap! tooltip-open? not)
+           :class         (when (or current-filter-value @tooltip-open?)
+                            "open-bounties-filter-element-active")}
+          [:div.text
+           (if current-filter-value
+             (ui-model/bounty-filter-value->short-text filter-type current-filter-value)
+             (ui-model/bounty-filter-type->name filter-type))]
+          (when current-filter-value
+            [:div.remove-container
+             {:tab-index 0
+              :on-focus  #(.stopPropagation %)}
+             [:img.remove
+              {:src           "bounty-filter-remove.svg"
+               :on-mouse-down (fn [e]
+                                (.stopPropagation e)
+                                (rf/dispatch [::handlers/set-open-bounty-filter-type filter-type nil])
+                                (reset! tooltip-open? false))}]])])
        (when @tooltip-open?
          [:div.open-bounties-filter-element-tooltip
           [bounties-filter-tooltip-view
