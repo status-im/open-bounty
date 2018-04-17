@@ -247,16 +247,16 @@
 
 (defn bounties-filter-box []
   (let [value (r/atom nil)
-        save #(rf/dispatch [::handlers/set-open-bounty-filter-type
-              ::ui-model/bounty-filter-type|issue-title-text
-              @value])]
+        save  #(rf/dispatch [::handlers/set-open-bounty-filter-type
+                             ::ui-model/bounty-filter-type|issue-title-text
+                             %])]
     (fn []
-      [:input {:type "text"
-               :value @value
-               :on-change #(reset! value (-> % .-target .-value))
+      [:input {:type        "text"
+               :value       @value
+               :on-change   #(reset! value (-> % .-target .-value))
                :on-key-down #(case (.-which %)
-                                      13 (save)
-                                      nil)}])))
+                               13 (save @value)
+                               nil)}])))
 
 (defn bounties-list [{:keys [items item-count page-number total-count]
                       :as   bounty-page-data}

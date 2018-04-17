@@ -167,6 +167,9 @@
         #{value}
         (set value))
 
+      (= type ::bounty-filter-type|issue-title-text)
+      (str value)
+
       (= type ::bounty-filter-type|claims)
       (keyword (namespace ::_)
                (str "bounty-filter-type-claims-option|" (name value)))
@@ -176,7 +179,8 @@
                (str "bounty-filter-type-date-option|" (name value)))
 
       (= category ::bounty-filter-type-category|range)
-      (clojure.string/split value #"-"))))
+      (clojure.string/split value #"-")
+      :else (str value))))
 
 (defn bounty-filter-value->short-text [filter-type filter-value]
   (cond
