@@ -56,7 +56,13 @@
   transactions (e.g. bounty contract deploy with same owner) shortly
   after another. In this case web3j's TX counting only increases once
   a transaction has been confirmed and so we send multiple identical
-  transactions with the same nonce."
+  transactions with the same nonce.
+
+  Web3j also provides a TransactionManager that increases nonces but it
+  does not track nonces related to transactions and so as far as I understand
+  it might cause transactions to be executed twice if they are retried.
+
+  https://github.com/web3j/web3j/blob/d19855475aa6620a7e93523bd9ede26ca50ed042/core/src/main/java/org/web3j/tx/RawTransactionManager.java"
   (get-nonce [this internal-tx-id]
     "Return the to be used nonce for an OpenBounty Ethereum
     transaction identified by `internal-tx-id`. As these IDs are stable
@@ -75,7 +81,7 @@
                                  get
                                  getTransactionCount)
               nonce          (if (contains? nonces web3j-tx-count)
-                               (inc (max nonces))
+                               (inc (apply max nonces))
                                web3j-tx-count)]
           ;; TODO this is a memory leak since tracking state is never pruned
           ;; Since we're not doing 1000s of transactions every day yet we can
@@ -90,7 +96,7 @@
   "Create a sign a raw transaction. 'From' argument is not needed as it's already encoded in credentials.
    See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
   (let [nonce (get-nonce nonce-tracker internal-tx-id)
-        tx (RawTransaction/createTransaction nonce gas-price gas-limit to data)
+        tx (RawTransaction/createTransaction (biginteger nonce) gas-price gas-limit to data)
         signed (TransactionEncoder/signMessage tx (creds))
         hex-string (Numeric/toHexString signed)]
     (log/infof "Signing TX %s: nonce: %s, gas-price: %s, gas-limit: %s, data: %s"
