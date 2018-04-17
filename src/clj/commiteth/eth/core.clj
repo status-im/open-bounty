@@ -51,6 +51,12 @@
           (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
                           {:password password :file-path file-path}))))))
 
+(defn get-web3j-nonce [web3j-instance]
+  (.. (.ethGetTransactionCount web3j-instance (env :eth-account) DefaultBlockParameterName/LATEST)
+      sendAsync
+      get
+      getTransactionCount))
+
 (defprotocol INonceTracker
   "The reason we need this is that we might send mutliple identical
   transactions (e.g. bounty contract deploy with same owner) shortly
@@ -71,23 +77,20 @@
 (defrecord NonceTracker [state]
   INonceTracker
   (get-nonce [this internal-tx-id]
-    (or (get @state internal-tx-id)
-        (let [nonces         (set (vals @state))
-              web3j-tx-count (.. (.ethGetTransactionCount
-                                  @web3j-obj
-                                  (env :eth-account)
-                                  DefaultBlockParameterName/LATEST)
-                                 sendAsync
-                                 get
-                                 getTransactionCount)
-              nonce          (if (contains? nonces web3j-tx-count)
-                               (inc (apply max nonces))
-                               web3j-tx-count)]
-          ;; TODO this is a memory leak since tracking state is never pruned
-          ;; Since we're not doing 1000s of transactions every day yet we can
-          ;; probably defer worrying about this until a bit later
-          (swap! state assoc internal-tx-id nonce)
-          nonce))))
+    (let [prev-nonce  (get @state internal-tx-id)
+          web3j-nonce (get-web3j-nonce @web3j-obj)
+          nonces      (set (vals @state))
+          nonce       (if (seq nonces)
+                        (inc (apply max nonces))
+                        web3j-nonce)]
+      (when prev-nonce
+        (log/warnf "%s: tx will be retried (prev-nonce: %s, new-nonce: %s, web3j-nonce: %s)"
+                   internal-tx-id prev-nonce nonce web3j-nonce))
+      ;; TODO this is a memory leak since tracking state is never pruned
+      ;; Since we're not doing 1000s of transactions every day yet we can
+      ;; probably defer worrying about this until a bit later
+      (swap! state assoc internal-tx-id nonce)
+      nonce)))
 
 (def nonce-tracker
   (->NonceTracker (atom {})))
@@ -95,13 +98,12 @@
 (defn get-signed-tx [{:keys [gas-price gas-limit to data internal-tx-id]}]
   "Create a sign a raw transaction. 'From' argument is not needed as it's already encoded in credentials.
    See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (let [nonce (get-nonce nonce-tracker internal-tx-id)
-        tx (RawTransaction/createTransaction (biginteger nonce) gas-price gas-limit to data)
-        signed (TransactionEncoder/signMessage tx (creds))
-        hex-string (Numeric/toHexString signed)]
-    (log/infof "Signing TX %s: nonce: %s, gas-price: %s, gas-limit: %s, data: %s"
-               internal-tx-id nonce gas-price gas-limit data)
-    hex-string))
+  (let [nonce (get-nonce nonce-tracker internal-tx-id)]
+    (log/infof "%s: Signing nonce: %s, gas-price: %s, gas-limit: %s"
+               internal-tx-id nonce gas-price gas-limit)
+    (-> (RawTransaction/createTransaction (biginteger nonce) gas-price gas-limit to data)
+        (TransactionEncoder/signMessage (creds))
+        (Numeric/toHexString))))
 
 (defn eth-gasstation-gas-price
   "Get max of average and average_calc from gas station and use that
@@ -156,7 +158,8 @@
   (atom 0))
 
 (defn eth-rpc
-  [method params]
+  [{:keys [method params internal-tx-id]}]
+  {:pre [(string? method) (some? params)]}
   (let [request-id (swap! req-id-tracker inc)
         body       {:jsonrpc "2.0"
                     :method  method
@@ -166,9 +169,9 @@
                   :body (json/write-str body)}
         response  @(post (eth-rpc-url) options)
         result   (safe-read-str (:body response))]
-    (log/infof "eth-rpc req(%s) body: %s\neth-rpc req(%s) result: %s"
-               request-id body request-id result)
-
+    (log/infof "%s: eth-rpc %s" (or internal-tx-id "(no-tx-id)") method)
+    (log/debugf "eth-rpc req(%s) body: %s\neth-rpc req(%s) result: %s"
+                request-id body request-id result)
     (cond
       ;; Ignore any responses that have mismatching request ID
       (not= (:id result) request-id)
@@ -176,7 +179,10 @@
 
       ;; If request ID matches but contains error, throw
       (:error result)
-      (throw (ex-info "Error submitting transaction via eth-rpc" (:error result)))
+      (throw
+       (ex-info (format "%s: Error submitting transaction via eth-rpc %s"
+                        (or internal-tx-id "(no-tx-id)") (:error result))
+                (:error result)))
 
       :else
       (:result result))))
@@ -238,7 +244,8 @@
 
 (defn get-balance-hex
   [account]
-  (eth-rpc "eth_getBalance" [account "latest"]))
+  (eth-rpc {:method "eth_getBalance"
+            :params [account "latest"]}))
 
 (defn get-balance-wei
   [account]
@@ -257,7 +264,8 @@
 
 (defn get-transaction-receipt
   [hash]
-  (eth-rpc "eth_getTransactionReceipt" [hash]))
+  (eth-rpc {:method "eth_getTransactionReceipt"
+            :params [hash]}))
 
 (defn format-call-params
   [method-id & params]
@@ -267,7 +275,8 @@
 (defn call
   [contract method-id & params]
   (let [data (apply format-call-params method-id params)]
-    (eth-rpc "eth_call" [{:to contract :data data} "latest"])))
+    (eth-rpc {:method "eth_call"
+              :params [{:to contract :data data} "latest"]})))
 
 (defn execute
   [{:keys [from contract method-id gas-limit params internal-tx-id]}]
@@ -292,11 +301,13 @@
                  (assoc params :gas gas))]
     (if (offline-signing?)
       (eth-rpc
-        "eth_sendRawTransaction"
-        [params])
+       {:method "eth_sendRawTransaction"
+        :params [params]
+        :internal-tx-id internal-tx-id})
       (eth-rpc
-        "personal_sendTransaction"
-        [params (eth-password)]))))
+       {:method "personal_sendTransaction"
+        :params [params (eth-password)]
+        :internal-tx-id internal-tx-id}))))
 
 (defn hex-ch->num
   [ch]
