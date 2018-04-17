@@ -61,6 +61,8 @@
                github-repos))))
 
 (def bounty-renames
+  ;; TODO this needs to go away ASAP we need to be super consistent
+  ;; about keys unless we will just step on each others toes constantly
   {:user_name :display-name
    :user_avatar_url :avatar-url
    :issue_title :issue-title
@@ -92,7 +94,7 @@
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
     (->> owner-bounties
          (map enrich-owner-bounties)
-         (map (juxt :issue_id identity))
+         (map (juxt :issue-id identity))
          (into {}))))
 
 (defn top-hunters []
