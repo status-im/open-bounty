@@ -59,7 +59,7 @@
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-     {:db (merge db/default-db store)}))
+   {:db (merge db/default-db store)}))
 
 
 (reg-event-fx
@@ -222,6 +222,13 @@
    (assoc db
           :owner-bounties issues
           :owner-bounties-loading? false)))
+
+(reg-event-fx
+ :dashboard/mark-banner-as-seen
+ [(inject-cofx :store)]
+ (fn [{:keys [db store]} [_ banner-id]]
+   {:db    (update-in db    [:dashboard/seen-banners] (fnil conj #{}) banner-id)
+    :store (update-in store [:dashboard/seen-banners] (fnil conj #{}) banner-id)}))
 
 (defn get-ls-token [db token]
   (let [login (get-in db [:user :login])]

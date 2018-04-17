@@ -97,6 +97,24 @@
                :combined-usd-value (sum-dollars unpaid)}})))
 
 (reg-sub
+ :dashboard/seen-banners
+ (fn [db _] (:dashboard/seen-banners db)))
+
+(reg-sub
+ :dashboard/banner-msg
+ :<- [:user]
+ :<- [:dashboard/seen-banners]
+ (fn [[user seen-banners] _]
+   (cond
+     (not (contains? seen-banners "bounty-issuer-salute"))
+     {:name (or (some-> (:name user) (string/split  #"\s") first)
+                (:login user))
+      :banner-id "bounty-issuer-salute"}
+
+     #_(not (contains? seen-banners "new-dashboard-info"))
+     #_{:banner-id "new-dashboard-info"})))
+
+(reg-sub
   :pagination
   (fn [db [_ table]]
     (get-in db [:pagination table])))
