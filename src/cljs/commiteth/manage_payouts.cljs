@@ -56,10 +56,10 @@
     [:div.cf
      [:div.fl.w-80
       [:span.db.f4.muted-blue.hover-black issue-title]
-      [:div.mt2
+      #_[:div.mt2
        [:span.f5.gray.pg-book (str owner "/" repo-name " #" issue-number)]]]
      [:div.fl.w-20.tr
-      [:span.f5.gray.pg-book
+      [:span.f6.gray.pg-book
        {:on-click #(do (.preventDefault %) (prn (dissoc bounty :claims)))}
        (common/human-time updated)]]]]])
 
@@ -67,26 +67,35 @@
   (let [paid?   (bnt/paid? claim)
         merged? (bnt/merged? claim)]
     (when (and merged? (not paid?))
-      [:button.f5.outline-0.bg-sob-blue.white.pv2.ph3.pg-med.br2.bn.pointer
-       (merge (if (and merged? (not paid?))
+      [:button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer
+       (merge {:on-click #(rf/dispatch [:confirm-payout claim])}
+              (if (and merged? (not paid?) (:payout_address bounty))
                 {}
                 {:disabled true})
-              {:on-click #(rf/dispatch [:confirm-payout claim])}
               (when (and (or (bnt/confirming? bounty)
                              (bnt/bot-confirm-unmined? bounty))
                          merged?)
                 {:class "busy loading" :disabled true}))
        (if paid?
          "Signed off"
-         "Confirm")])))
+         "Confirm Payment")])))
 
 (defn confirm-row [bounty claim]
-  [:div.cf
-   [:div.dt.fr
-    [:div.dtc.v-mid.pr3
-     [bounty-balance bounty]]
-    [:div.dtc.v-mid
-     [confirm-button bounty claim]]]])
+  (let [payout-address-available? (:payout_address bounty)]
+    [:div
+     (when-not payout-address-available?
+       [:div.bg-sob-blue-o-20.pv2.ph3.br3.mb3.f6
+        [:p [:span.pg-med (or (:user_name claim) (:user_login claim))
+             "’s payment address is pending."] " You will be able to confirm the payment once the address is provided."]])
+     [:div.cf
+      [:div.dt.fr
+       (when-not payout-address-available?
+         {:style {:-webkit-filter "grayscale(1)"
+                  :pointer-events "none"}})
+       [:div.dtc.v-mid.pr3.f6
+        [bounty-balance bounty]]
+       [:div.dtc.v-mid
+        [confirm-button bounty claim]]]]]))
 
 (defn claim-card [bounty claim {:keys [render-view-claim-button?] :as opts}]
   (let [{user-name :user_name
@@ -98,29 +107,31 @@
       {:class (when (and (bnt/paid? claim) (not (= user-login winner-login)))
                 "o-50")}
       [:div
-       [:img.br-100.w3 {:src avatar-url}]]
+       [:img.br-100.w2 {:src avatar-url}]]
       [:div.pl3.flex-auto
        [:div
-        [:span.f4.muted-blue
+        [:span.f5.muted-blue
          (or user-name user-login) " "
-         [:span.f5.o-60 (when user-name (str "@" user-login "") )]
+         [:span.f6.o-60 (when user-name (str "@" user-login "") )]
          (if (bnt/paid? claim)
            (if (= user-login winner-login)
              [:span "Received payout"]
              [:span "No payout"]))]
-        [:div "Submitted a claim via "
+        [:div.muted-blue "Submitted a claim via "
          [:a {:href (pr-url claim)}
           (str (:repo_owner claim) "/" (:repo_name claim) " PR #" (:pr_number claim))]]]]
       (when render-view-claim-button?
         [:div.dtc.v-mid
          [:div.w-100
-          [:a.f5.outline-0.bg-sob-blue.white.pv2.ph3.pg-med.br2.bn.pointer.hover-white
+          [:a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white
            {:href (pr-url claim)}
-           "View Claim"]]])]]))
+           "View Pull Request"]]])]]))
 
 (defn to-confirm-list [bounties]
   (if (empty? bounties)
-    [:div.ui.text "No items"]
+    [:div.mb3.br3.shadow-6.bg-white.tc.pa5
+     [:h3.pg-book "Nothing to confirm"]
+     [:p "Here you will see the merged claims awaiting payment confirmation"]]
     (into [:div]
           (for [bounty bounties
                 ;; Identifying the winning claim like this is a bit
@@ -133,26 +144,28 @@
                                                      (:winner_login bounty)))
                                          util/assert-first)]]
             ^{:key (:issue_id bounty)}
-            [:div.mb2
-             [:div.pa3.bg-white.bb.b--light-gray
+            [:div.mb3.br3.shadow-6.bg-white
+             [:div.pa3
               [bounty-card bounty]]
-             [:div.pa3.bg-white
+             [:div.pa3
               [claim-card bounty winning-claim]]
-             [:div.pa3.bg-near-white
+             [:div.pa3.bg-sob-tint.br3.br--bottom
               [confirm-row bounty winning-claim]]]))))
 
 (defn to-merge-list [bounties]
   (if (empty? bounties)
-    [:div.ui.text "No items"]
+    [:div.mb3.br3.shadow-6.bg-white.tc.pa5
+     [:h3.pg-book "Nothing to merge"]
+     [:p "Here you will see the claims waiting to be merged"]]
     (into [:div]
           (for [bounty bounties
                 :let [claims (:claims bounty)]]
             ^{:key (:issue_id bounty)}
-            [:div.mb2
-             [:div.pa3.bg-white.bb.b--light-gray
+            [:div.mb3.shadow-6
+             [:div.pa3.bg-white.br3.br--top
               [bounty-card bounty]
-              [:div.mt3 [bounty-balance bounty]]]
-             [:div.pa3.bg-white
+              [:div.mt3.f6 [bounty-balance bounty]]]
+             [:div.pa3.bg-sob-tint.br3.br--bottom
               (for [claim (:claims bounty)]
                 ^{:key (:pr_id claim)}
                 [claim-card bounty claim {:render-view-claim-button? true}])]]))))
@@ -172,6 +185,14 @@
     [:div.f3.pa2 (:count unpaid)]
     [:div.ph4 "Open bounties in total"]]])
 
+(defn bounty-stats-new [{:keys [paid unpaid]}]
+  [:div.br3.bg-white.shadow-6.pa4
+   [:span.db.f3.pg-med.mb2 (common/usd-string (:combined-usd-value paid))]
+   [:span.gray "Paid for " [:span.muted-blue (:count paid) " solved bounties"]]
+   [:div.bb.b--near-white.mv3]
+   [:span.db.f3.pg-med.pt1.mb2 (common/usd-string (:combined-usd-value unpaid))]
+   [:span.gray "Open for " [:span.muted-blue (:count unpaid) " bounties"]]])
+
 (def state-mapping
   {:opened :open
    :funded :funded
@@ -182,29 +203,40 @@
    :pending-maintainer-confirmation :pending-maintainer-confirmation
    :paid :paid})
 
-(defn bounty-title-link [bounty]
+(defn bounty-title-link [bounty show-date?]
   [:a {:href (common/issue-url (:repo-owner bounty) (:repo-name bounty) (:issue-number bounty))}
    [:div.w-100.overflow-hidden
     [:span.db.f5.pg-med.muted-blue.hover-black (:issue-title bounty)]
-    [:span.f6.gray.pg-book
-     {:on-click #(do (.preventDefault %) (prn (dissoc bounty :claims)))}
-     (common/human-time (:updated bounty))]]])
+    (when show-date?
+      [:span.db.mt1.f7.gray.pg-book
+       ;;{:on-click #(do (.preventDefault %) (prn (dissoc bounty :claims)))}
+       (common/human-time (:updated bounty))])]])
+
+(defn square-card
+  "A mostly generic component that renders a square with a section
+  pinned to the top and a section pinned to the bottom."
+  [top bottom]
+  [:div.aspect-ratio-l.aspect-ratio--1x1-l
+   [:div.bg-sob-tint.br3.shadow-6.pa3.aspect-ratio--object-l.flex-l.flex-column-l
+    [:div.flex-auto top]
+    [:div bottom]]])
 
 (defn unclaimed-bounty [bounty]
-  [:div.w-third-ns.fl.pa2
-   [:div.bg-white.br2.br--top.pa2.h4
-    [bounty-title-link bounty]]
-   [:div.bg-white.pa2.f7.br2.br--bottom
-    [bounty-balance bounty]]])
+  [:div.w-third-l.fl-l.pa2
+   [square-card
+    [bounty-title-link bounty true]
+    [:div.f7
+     [bounty-balance bounty]]]])
 
 (defn paid-bounty [bounty]
-  [:div.w-third-ns.fl.pa2
-   [:div.bg-white.br2.br--top.pa2.h4
-    [bounty-title-link bounty]]
-   [:div.bg-white.ph2.f6
-    "Paid out to @" (:winner_login bounty)]
-   [:div.bg-white.pa2.f7.br2.br--bottom
-    [bounty-balance bounty]]])
+  [:div.w-third-l.fl-l.pa2
+   [square-card
+    [:div
+     [bounty-title-link bounty false]
+     [:div.f6.mt1.gray
+      "Paid out to " [:span.pg-med.muted-blue "@" (:winner_login bounty)]]]
+    [:div.f7
+     [bounty-balance bounty]]]])
 
 (defn expandable-bounty-list [bounty-component bounties]
   (let [expanded? (r/atom false)]
@@ -224,8 +256,26 @@
              "Collapse ↑"
              "See all ↓")]])])))
 
-;; TODO For status related bounties there are 133 which have paid? flag set
-;; but the bounty-state function only returns :paid for 130 — why?
+(defn count-pill [n]
+  [:span.v-mid.ml3.ph3.pv1.bg-light-gray.br3.f7 n])
+
+(defn salute [name]
+  (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
+    (fn salute-render [name]
+      (when @msg-info
+        [:div.relative.pa3.bg-sob-blue-o-20.br3
+         [:div.absolute.top-0.right-0.pa3.b.pointer
+          {:role "button"
+           :on-click #(rf/dispatch [:dashboard/mark-banner-as-seen (:banner-id @msg-info)])}
+          "× "]
+         [:div
+          (case (:banner-id @msg-info)
+            "bounty-issuer-salute" [:p [:span.f4.mr2.v-mid "🖖"] [:span.pg-med "We salute you " (:name @msg-info) "!"]
+                                    "  Here is where you can manage your bounties. Questions or comments? "
+                                    [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]]
+            "new-dashboard-info" [:p [:span.pg-med "NEW!"]
+                                  "  Here is where you can manage your bounties. Questions or comments? "
+                                  [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]])]]))))
 
 (defn manage-payouts-page []
   ;; TODO fix `page` subscription to subscribe to full route info
@@ -244,52 +294,62 @@
               grouped   (group-by (comp state-mapping :state) bounties)
               unclaimed (into (get grouped :funded)
                               (get grouped :open))]
-          [:div.center.mw7
+          [:div.center.mw9.pa2.pa0-l
+           [:h1.f3.pg-book.mb3 "Manage bounties"]
+            [:div.dn-l.db-ns
+             [bounty-stats-new @bounty-stats-data]]
+           [salute "Andy"]
            (when (nil? (common/web3))
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
-           [bounty-stats @bounty-stats-data]
-           [:div.cf.ba.bw2.b--white.mb2
-            [:div.f4.fl.w-50-ns.pa4.tc
-             {:role "button"
-              :class (if (= @page :issuer-dashboard/to-confirm) "bg-white pg-med" "bg-near-white pointer")
-              :on-click #(routes/nav! :issuer-dashboard/to-confirm)}
-             "To confirm payment (" (count (get grouped :pending-maintainer-confirmation)) ")"]
-            [:div.f4.fl.w-50-ns.pa4.tc.pointer.bl.b--white
-             {:role "button"
-              :class (if (= @page :issuer-dashboard/to-merge) "bg-white pg-med" "bg-near-white pointer")
-              :on-click #(routes/nav! :issuer-dashboard/to-merge)}
-             "To merge (" (count (get grouped :claimed)) ")"]]
-           [:div
-            (case @page
-              :issuer-dashboard/to-confirm (to-confirm-list (get grouped :pending-maintainer-confirmation))
-              :issuer-dashboard/to-merge (to-merge-list (get grouped :claimed))
-              (cond
-                (seq (get grouped :pending-maintainer-confirmation))
-                (routes/nav! :issuer-dashboard/to-confirm)
+           (let [active-classes "muted-blue bb bw2 b--sob-blue"
+                 non-active-classes "silver pointer"]
+             [:div.mv4
+              [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
+               {:role "button"
+                :class (if (= @page :issuer-dashboard/to-confirm) active-classes non-active-classes)
+                :on-click #(routes/nav! :issuer-dashboard/to-confirm)}
+               "To confirm payment"]
+              [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
+               {:role "button"
+                :class (if (= @page :issuer-dashboard/to-merge) active-classes non-active-classes)
+                :on-click #(routes/nav! :issuer-dashboard/to-merge)}
+               "To merge"]])
+           [:div.cf
+            [:div.fr.w-third.pl4.mb3.dn.db-l
+             [bounty-stats-new @bounty-stats-data]]
+            [:div.fr-l.w-two-thirds-l
+             (case @page
+               :issuer-dashboard/to-confirm (to-confirm-list (get grouped :pending-maintainer-confirmation))
+               :issuer-dashboard/to-merge (to-merge-list (get grouped :claimed))
+               (cond
+                 (seq (get grouped :pending-maintainer-confirmation))
+                 (routes/nav! :issuer-dashboard/to-confirm)
 
-                (seq (get grouped :claimed))
-                (routes/nav! :issuer-dashboard/to-merge)
+                 (seq (get grouped :claimed))
+                 (routes/nav! :issuer-dashboard/to-merge)
 
-                :else (routes/nav! :issuer-dashboard/to-confirm)))]
-           [:div.mt4
-            [:h4.f3.sob-muted-blue "Bounties not claimed yet (" (count unclaimed) ")"]
-            [expandable-bounty-list
-             unclaimed-bounty
-             (->> unclaimed (sort-by :updated) (reverse))]]
+                 :else (routes/nav! :issuer-dashboard/to-confirm)))
+             (let [heading :h4.f3.normal.pg-book.sob-muted-blue]
+               [:div.mt5
+                [:div.mt4
+                 [heading "Bounties not claimed yet" (count-pill (count unclaimed))]
+                 [expandable-bounty-list
+                  unclaimed-bounty
+                  (->> unclaimed (sort-by :updated) (reverse))]]
 
-           [:div.mt4
-            [:h4.f3.sob-muted-blue "Paid out bounties (" (count (get grouped :paid)) ")"]
-            [expandable-bounty-list paid-bounty (get grouped :paid)]]
+                [:div.mt4
+                 [heading "Paid out bounties" (count-pill (count (get grouped :paid)))]
+                 [expandable-bounty-list paid-bounty (get grouped :paid)]]
 
-           [:div.mt4
-            [:h4.f3.sob-muted-blue "Merged bounties (" (count (get grouped :merged)) ")"]
-            [:p "I'm not sure why these exist. They have a :payout-address and a :confirm-hash so why are they missing the :payout-hash?"]
-            [expandable-bounty-list paid-bounty (get grouped :merged)]]
+                [:div.mt4
+                 [heading "Merged bounties" (count-pill (count (get grouped :merged)))]
+                 [:p "I'm not sure why these exist. They have a :payout-address and a :confirm-hash so why are they missing the :payout-hash?"]
+                 [expandable-bounty-list paid-bounty (get grouped :merged)]]
 
-           #_[:div.mt4
-            [:h4.f3 "Revoked bounties (" (count (get grouped :paid)) ")"]
-            [expandable-bounty-list unclaimed-bounty (get grouped :paid)]]
-
+                #_[:div.mt4
+                   [:h4.f3 "Revoked bounties (" (count (get grouped :paid)) ")"]
+                   [expandable-bounty-list unclaimed-bounty (get grouped :paid)]]])]
+            ]
            [:div.mb5]])))))
