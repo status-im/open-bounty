@@ -260,12 +260,12 @@
   (mount-components))
 
 (defn init! []
+  (commiteth.routes/setup-nav!)
   (rf/dispatch-sync [:initialize-db])
   (rf/dispatch [:initialize-web3])
   (when config/debug?
     (enable-re-frisk!))
   (load-interceptors!)
-  (commiteth.routes/setup-nav!)
   (load-data true)
   (.addEventListener js/window "click" #(rf/dispatch [:clear-flash-message]))
   (on-js-load))

@@ -12,7 +12,8 @@
 (reg-sub
  :route
  (fn [db _]
-   (:route db)))
+   (or (:route db)
+       {:route-id :bounties})))
 
 (reg-sub
   :user
