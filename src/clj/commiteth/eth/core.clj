@@ -53,28 +53,32 @@
           (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
                           {:password password :file-path file-path}))))))
 
-(defn get-nonce []
-  (let [current-nonce (atom nil)]
-    (fn []
-      (let [nonce (.. (.ethGetTransactionCount (create-web3j) 
-                                               (env :eth-account) 
-                                               DefaultBlockParameterName/LATEST)
-                      sendAsync
-                      get
-                      getTransactionCount)]
-        (if (= nonce @current-nonce)
-          (throw (Exception. (str "Attempting to create transaction with the same nonce: " nonce)))
-          (swap! current-nonce (constantly nonce)))
-        nonce))))
-(def get-nonce-fn (get-nonce))
+(def highest-nonce (atom nil))
+(def nonces-dropped (atom (clojure.lang.PersistentQueue/EMPTY)))
 
-(defn get-signed-tx [gas-price gas-limit to data]
+
+(defn get-nonce []
+  (if (seq @nonces-dropped)
+    (let [nonce (peek @nonces-dropped)]
+      (swap! nonces-dropped pop)
+      nonce)
+  (let [nonce (.. (.ethGetTransactionCount (create-web3j) 
+                                           (env :eth-account) 
+                                           DefaultBlockParameterName/LATEST)
+                  sendAsync
+                  get
+                  getTransactionCount)]
+    (if (or (nil? @highest-nonce)
+            (> nonce @highest-nonce))
+      (reset! highest-nonce nonce)
+      (swap! highest-nonce inc)))))
+
+(defn get-signed-tx [gas-price gas-limit to data nonce]
   "Create a sign a raw transaction.
    'From' argument is not needed as it's already
    encoded in credentials.
    See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (let [nonce (get-nonce-fn)
-        tx (RawTransaction/createTransaction
+  (let [tx (RawTransaction/createTransaction
              nonce
              gas-price
              gas-limit
@@ -155,7 +159,7 @@
     (cond
       ;; Ignore any responses that have mismatching request ID
       (not= (:id result) request-id)
-      (log/error "Geth returned an invalid json-rpc request ID, ignoring response")
+      (throw (ex-info "Geth returned an invalid json-rpc request ID, ignoring response"))
 
       ;; If request ID matches but contains error, throw
       (:error result)
@@ -266,16 +270,22 @@
                  (merge {:to contract}))
         gas (if gas-limit gas-limit 
               (estimate-gas from contract value params))
+        nonce (when (offline-signing?) (get-nonce))
         params (if (offline-signing?)
                  (get-signed-tx (biginteger gas-price)
-                                      (hex->big-integer gas)
-                                      contract
-                                      data) 
+                                (hex->big-integer gas)
+                                contract
+                                data
+                                nonce) 
                  (assoc params :gas gas))]
     (if (offline-signing?)
-      (eth-rpc
-        "eth_sendRawTransaction"
-        [params])
+      (try
+        (eth-rpc
+          "eth_sendRawTransaction"
+          [params])
+        (catch Throwable ex
+          (swap! nonces-dropped conj nonce)
+          (throw ex)))
       (eth-rpc
         "personal_sendTransaction"
         [params (eth-password)]))))
