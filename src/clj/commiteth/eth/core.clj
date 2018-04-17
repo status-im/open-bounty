@@ -219,9 +219,10 @@
 (defn estimate-gas
   [from to value & [params]]
   (let [geth-estimate (eth-rpc
-                       "eth_estimateGas" [(merge params {:from  from
-                                                         :to    to
-                                                         :value value})])
+                       {:method "eth_estimateGas"
+                        :params [(merge params {:from  from
+                                                :to    to
+                                                :value value})]})
         adjusted-gas (adjust-gas-estimate geth-estimate)]
 
     (log/debug "estimated gas (geth):" geth-estimate)
