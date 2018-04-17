@@ -10,9 +10,9 @@
   (fn [db _] db))
 
 (reg-sub
-  :page
-  (fn [db _]
-    (:page db)))
+ :route
+ (fn [db _]
+   (:route db)))
 
 (reg-sub
   :user

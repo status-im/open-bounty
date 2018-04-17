@@ -7,8 +7,8 @@
                 ["/activity"       :activity]
                 ["/repos"          :repos]
                 ["/dashboard"      :dashboard]
-                ["/dashboard/to-confirm" :issuer-dashboard/to-confirm]
-                ["/dashboard/to-merge"   :issuer-dashboard/to-merge]
+                ["/dashboard/to-confirm" :dashboard/to-confirm]
+                ["/dashboard/to-merge"   :dashboard/to-merge]
                 ["/settings"       :settings]
                 ["/usage-metrics"  :usage-metrics]]))
 
