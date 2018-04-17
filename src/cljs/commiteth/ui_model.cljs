@@ -117,7 +117,16 @@
     ::bounty-filter-type.predicate (fn [filter-value bounty]
                                      (condp = filter-value
                                        ::bounty-filter-type-claims-option|no-claims
-                                       (= 0 (:claim-count bounty))))}})
+                                       (= 0 (:claim-count bounty))))}
+   ::bounty-filter-type|issue-title-text
+   {::bounty-filter-type.name     "Issue Title Text"
+    ::bounty-filter-type.category ::bounty-filter-type-category|single-static-option
+    ::bounty-filter-type.options  nil
+    ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                     (re-find (-> filter-value
+                                                  (s/upper-case)
+                                                  (re-pattern))
+                                              (s/upper-case (:issue-title bounty))))}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 

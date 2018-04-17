@@ -247,7 +247,9 @@
 
 (defn bounties-filter-box []
   (let [value (r/atom nil)
-        save #(dispatch [:filter-bounties @value])]
+        save #(rf/dispatch [::handlers/set-open-bounty-filter-type
+              ::ui-model/bounty-filter-type|issue-title-text
+              @value])]
     (fn []
       [:input {:type "text"
                :value @value
