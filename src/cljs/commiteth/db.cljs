@@ -14,10 +14,11 @@
    :bounty-page-number          1
    :activity-page-number        1
    ::open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent
-   ::open-bounties-filters      {::ui-model/bounty-filter-type|value    nil
-                                 ::ui-model/bounty-filter-type|currency nil
-                                 ::ui-model/bounty-filter-type|date     nil
-                                 ::ui-model/bounty-filter-type|owner    nil}
+   ::open-bounties-filters      {::ui-model/bounty-filter-type|value            nil
+                                 ::ui-model/bounty-filter-type|currency         nil
+                                 ::ui-model/bounty-filter-type|date             nil
+                                 ::ui-model/bounty-filter-type|owner            nil
+                                 ::ui-model/bounty-filter-type|issue-title-text nil}
    ::open-bounty-claims         #{}
    :owner-bounties              {}
    :top-hunters                 []

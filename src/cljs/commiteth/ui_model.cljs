@@ -1,5 +1,6 @@
 (ns commiteth.ui-model
   (:require [clojure.set :as set]
+            [clojure.string :as s]
             [cljs-time.core :as t]
             [cljs-time.coerce :as t-coerce]
             [cljs-time.format :as t-format]))
@@ -117,7 +118,16 @@
     ::bounty-filter-type.predicate (fn [filter-value bounty]
                                      (condp = filter-value
                                        ::bounty-filter-type-claims-option|no-claims
-                                       (= 0 (:claim-count bounty))))}})
+                                       (= 0 (:claim-count bounty))))}
+   ::bounty-filter-type|issue-title-text
+   {::bounty-filter-type.name     "Issue Title Text"
+    ::bounty-filter-type.category ::bounty-filter-type-category|single-static-option
+    ::bounty-filter-type.options  nil
+    ::bounty-filter-type.predicate (fn [filter-value bounty]
+                                     (re-find (-> filter-value
+                                                  (s/upper-case)
+                                                  (re-pattern))
+                                              (s/upper-case (:issue-title bounty))))}})
 
 (def bounty-filter-types (keys bounty-filter-types-def))
 
@@ -157,6 +167,9 @@
         #{value}
         (set value))
 
+      (= type ::bounty-filter-type|issue-title-text)
+      (str value)
+
       (= type ::bounty-filter-type|claims)
       (keyword (namespace ::_)
                (str "bounty-filter-type-claims-option|" (name value)))
@@ -166,7 +179,8 @@
                (str "bounty-filter-type-date-option|" (name value)))
 
       (= category ::bounty-filter-type-category|range)
-      (clojure.string/split value #"-"))))
+      (clojure.string/split value #"-")
+      :else (str value))))
 
 (defn bounty-filter-value->short-text [filter-type filter-value]
   (cond
