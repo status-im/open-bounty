@@ -1,0 +1,36 @@
+# 0004. Use Tachyons
+
+| Date | Tags |
+|---|---|
+| 2018-04-18 | design, css, tooling |
+
+
+## Status
+
+Accepted
+
+## Context
+
+A primary component of OpenBounty is a web application. As part of our work on this web application we regularly need to implement new UI elements or flows to support overall product development. This frontend work requires usage of CSS to specify positioning, text styles and many more variables.
+
+A common problem with CSS is that developers try to generalize CSS classes so that they can be reused (see BEM). Arguably the intention is great but inevitably the time will come when constraints change and so the component's CSS is modified. By that time other people may have used that component in other places relying on the current implementation. 
+
+In programming languages breaking a collaborator's expectation like this can be mitigated using assertions or automatic tests but this is less easily done when working with CSS. 
+
+
+## Decision
+
+In order to avoid the problems outlined above we will adopt the approach of using atomic, immutable utility classes as promoted by the [Tachyons](http://tachyons.io/) library.
+
+Tachyons provides safe-to-reuse, single-purpose classes that help with achieving consistent scales of whitespace and font-sizes.
+
+By not modifying the definition of CSS classes anymore we can safely build out UI components using those classes without needing to worry if we're breaking someone else's expectations.
+
+## Consequences
+
+- Tachyons can be a bit weird when not being familiar with the general approach. While I believe it will enable contributors to move more confidently & quickly in the long run we might need to go the extra mile to make them buy into this approach.
+- Previously reuse what at the level of CSS classes. With an approach like Tachyon's reuse will get elevated to the component level. 
+
+## Appendix
+
+- [CSS and Scalability](http://mrmrs.github.io/writing/2016/03/24/scalable-css/)
