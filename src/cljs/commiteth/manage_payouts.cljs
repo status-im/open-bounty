@@ -133,7 +133,10 @@
      [:h3.pg-book "Nothing to confirm"]
      [:p "Here you will see the merged claims awaiting payment confirmation"]]
     (into [:div]
-          (for [bounty bounties
+          ;; FIXME we remove all bounties that Andy 'won' as this basically
+          ;; has been our method for revocations. This needs to be cleaned up ASAP.
+          ;; https://github.com/status-im/open-bounty/issues/284
+          (for [bounty (filter #(not= "andytudhope" (:winner_login %)) bounties)
                 ;; Identifying the winning claim like this is a bit
                 ;; imprecise if there have been two PRs for the same
                 ;; bounty by the same contributor
@@ -143,7 +146,7 @@
                                          (filter #(= (:user_login %)
                                                      (:winner_login bounty)))
                                          util/assert-first)]]
-            ^{:key (:issue_id bounty)}
+            ^{:key (:issue-id bounty)}
             [:div.mb3.br3.shadow-6.bg-white
              [:div.pa3
               [bounty-card bounty]]
@@ -160,7 +163,7 @@
     (into [:div]
           (for [bounty bounties
                 :let [claims (:claims bounty)]]
-            ^{:key (:issue_id bounty)}
+            ^{:key (:issue-id bounty)}
             [:div.mb3.shadow-6
              [:div.pa3.bg-white.br3.br--top
               [bounty-card bounty]
@@ -245,7 +248,7 @@
        [:div.cf.nl2.nr2
         (for [bounty (cond->> bounties
                        (not @expanded?) (take 3))]
-          ^{:key (:issue_id bounty)}
+          ^{:key (:issue-id bounty)}
           [bounty-component bounty])]
        (when (> (count bounties) 3)
          [:div.tr
