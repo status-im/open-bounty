@@ -13,7 +13,7 @@ Accepted
 
 A primary component of OpenBounty is a web application. As part of our work on this web application we regularly need to implement new UI elements or flows to support overall product development. This frontend work requires usage of CSS to specify positioning, text styles and many more variables.
 
-A common problem with CSS is that developers try to generalize CSS classes so that they can be reused (see BEM). Arguably the intention is great but inevitably the time will come when constraints change and so the component's CSS is modified. By that time other people may have used that component in other places relying on the current implementation. 
+A common problem with CSS is that developers try to generalize CSS classes so that they can be reused (see e.g. [BEM](http://getbem.com/)). Arguably the intention is great but inevitably the time will come when constraints change and so the component's CSS is modified. By that time other people may have used that component in other places relying on the current implementation. 
 
 In programming languages breaking a collaborator's expectation like this can be mitigated using assertions or automatic tests but this is less easily done when working with CSS. 
 
