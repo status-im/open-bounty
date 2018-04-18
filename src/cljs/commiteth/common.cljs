@@ -135,7 +135,7 @@
           :else 
           [:div
            [draw-items] 
-           [:div.page-nav-container
+           [:div.page-nav-container.ph4.pb4
             [:div.page-direction-container
              [draw-rect :backward]
              [draw-rect :forward]]
