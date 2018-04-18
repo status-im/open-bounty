@@ -33,4 +33,6 @@ By not modifying the definition of CSS classes anymore we can safely build out U
 
 ## Appendix
 
-- [CSS and Scalability](http://mrmrs.github.io/writing/2016/03/24/scalable-css/)
+- [CSS and Scalability](http://mrmrs.github.io/writing/2016/03/24/scalable-css/) — an insightful article on why utility classes are a good idea by the author of Tachyons.
+- [tachyons-tldr](https://tachyons-tldr.now.sh) — super helpful tool to look up classes provided by Tachyons via the CSS attributes they affect.
+- [dwyl/learn-tachyons](https://github.com/dwyl/learn-tachyons) — a nice repository with another 30s pitch and various examples outlining basic usage.
