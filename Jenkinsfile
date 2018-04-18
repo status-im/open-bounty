@@ -33,7 +33,7 @@ def dockerreponame = "statusim/openbounty-app"
 		}
 		stage('Tetisng') {
 			if ( currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause') ){
-				build job: 'nd-to-end-tests/job/sob-end-to-end-tests'
+				build job: 'end-to-end-tests/job/sob-end-to-end-tests'
 			} else {
 				echo "No testing on automatic trigger, go to Jenkins and push build button to deliver it and test it."
 			}
