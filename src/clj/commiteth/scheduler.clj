@@ -126,7 +126,9 @@
                                                    tokens
                                                    winner-login
                                                    true))
-             (let [execute-hash (multisig/send-all contract-address payout-address)]
+             (let [execute-hash (multisig/send-all {:contract contract-address
+                                                    :payout-address payout-address
+                                                    :internal-tx-id (str "payout-github-issue-" issue-id)})]
                (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address execute-hash)
                (db-bounties/update-execute-hash issue-id execute-hash)
                (db-bounties/update-winner-login issue-id winner-login)
