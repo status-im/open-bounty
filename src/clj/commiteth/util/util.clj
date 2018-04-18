@@ -1,6 +1,7 @@
 (ns commiteth.util.util
   (:require
    [clj-http.client :as http]
+   [clojure.string :as str]
    [clojure.data.json :as json]))
 
 
@@ -14,3 +15,10 @@
   (->> (http/get url)
        (:body)
        (json/read-str)))
+
+(defmacro to-map [& vars]
+  (into {} (map #(vector (keyword %1) %1) vars)))
+
+(defmacro to-db-map [& vars]
+  (into {} (map #(vector (keyword (str/replace (name %1) "-" "_")) %1) vars)))
+

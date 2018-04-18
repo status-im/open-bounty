@@ -267,7 +267,7 @@ SELECT
   i.tokens           AS tokens,
   i.value_usd        AS value_usd,
   u.login            AS winner_login,
-  u.address          AS payout_address
+  u.address          AS winner_address
 FROM issues i, pull_requests p, users u, repositories r
 WHERE
 p.issue_id = i.issue_id
@@ -322,27 +322,23 @@ AND i.payout_hash IS NOT NULL;
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash
 UPDATE issues
-SET confirm_hash = :confirm_hash,
+SET confirm_hash = :confirm-hash,
 updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
+WHERE issue_id = :issue-id;
 
--- :name update-execute-hash :! :n
--- :doc updates issue with execute transaction hash
+-- :name update-execute-hash-and-winner-login :! :n
+-- :doc updates issue with execute transaction hash and winner login
 UPDATE issues
-SET execute_hash = :execute_hash,
+SET execute_hash = :execute-hash,
+winner_login = :winner-login,
 updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
-
--- :name update-winner-login :! :n
-UPDATE issues
-SET winner_login = :winner_login
-WHERE issue_id = :issue_id;
+WHERE issue_id = :issue-id;
 
 -- :name update-watch-hash :! :n
 -- :doc updates issue with watch transaction hash
 UPDATE issues
-SET watch_hash = :watch_hash
-WHERE issue_id = :issue_id;
+SET watch_hash = :watch-hash
+WHERE issue_id = :issue-id;
 
 -- :name pending-watch-calls :? :*
 -- :doc issues with a pending watch transaction
@@ -356,9 +352,9 @@ WHERE watch_hash IS NOT NULL;
 -- :name update-payout-hash :! :n
 -- :doc updates issue with payout transaction hash
 UPDATE issues
-SET payout_hash = :payout_hash,
+SET payout_hash = :payout-hash,
 updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
+WHERE issue_id = :issue-id;
 
 -- :name reset-payout-hash :! :n
 -- :doc sets issue's payout transaction hash to NULL
@@ -371,26 +367,9 @@ WHERE issue_id = :issue_id;
 -- :name update-payout-receipt :! :n
 -- :doc updates issue with payout transaction receipt
 UPDATE issues
-SET payout_receipt = :payout_receipt::jsonb,
+SET payout_receipt = :payout-receipt::jsonb,
 updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
-
-
--- :name update-token-balances :! :n
--- :doc updates issue with given token balances
-UPDATE issues
-SET tokens = :token_balances::jsonb,
-updated = timezone('utc'::text, now())
-WHERE contract_address = :contract_address;
-
-
--- :name update-usd-value :! :n
--- :doc updates issue with given USD value
-UPDATE issues
-SET value_usd = :usd_value,
-value_usd_updated = timezone('utc'::text, now())
-WHERE contract_address = :contract_address;
-
+WHERE issue_id = :issue-id;
 
 -- :name update-issue-open :! :n
 -- :doc updates issue's open status
@@ -535,17 +514,19 @@ SELECT
   r.owner            AS owner,
   r.repo             AS repo
 FROM issues i, repositories r
-WHERE i.issue_number = :issue_number
+WHERE i.issue_number = :issue-number
 AND r.repo_id = i.repo_id
 AND r.owner = :owner
 AND r.repo = :repo;
 
--- :name update-eth-balance :! :n
+-- :name update-balances :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
-SET balance_eth = :balance_eth,
+SET balance_eth = :balance-eth,
+    tokens = :token-balances::jsonb,
+    value_usd = :usd-value,
 updated = timezone('utc'::text, now())
-WHERE contract_address = :contract_address;
+WHERE contract_address = :contract-address;
 
 
 -- :name save-issue-comment-image! :<! :1

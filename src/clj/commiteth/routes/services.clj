@@ -78,9 +78,7 @@
          (into {}))))
 
 (defn top-hunters []
-  (let [renames {:user_name :display-name
-                 :avatar_url :avatar-url
-                 :total_usd :total-usd}]
+  (let [renames {:user-name :display-name}]
     (map #(-> %
               (rename-keys renames)
               (update :total-usd usd-decimal->str))
@@ -107,16 +105,8 @@
                                    (into {})
                                    (assoc bounty :tokens)))
         renames {:user_name :display-name
-                 :user_avatar_url :avatar-url
-                 :issue_title :issue-title
-                 :type :item-type
-                 :repo_name :repo-name
-                 :repo_owner :repo-owner
-                 :issue_number :issue-number
-                 :value_usd :value-usd
-                 :claim_count :claim-count
-                 :balance_eth :balance-eth
-                 :user_has_address :user-has-address}]
+                 :user-avatar-url :avatar-url
+                 :type :item-type }]
     (map #(-> %
               (rename-keys renames)
               (update :value-usd usd-decimal->str)

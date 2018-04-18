@@ -1,5 +1,6 @@
 (ns commiteth.db.bounties
   (:require [commiteth.db.core :refer [*db*] :as db]
+            [commiteth.util.util :refer [to-db-map]]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [rename-keys]]))
 
@@ -43,22 +44,19 @@
 (defn update-confirm-hash
   [issue-id confirm-hash]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-confirm-hash con-db {:issue_id issue-id :confirm_hash confirm-hash})))
+    (db/update-confirm-hash con-db (to-db-map issue-id confirm-hash))))
 
-(defn update-execute-hash
-  [issue-id execute-hash]
+(defn update-execute-hash-and-winner-login
+  [issue-id execute-hash winner-login]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-execute-hash con-db {:issue_id issue-id :execute_hash execute-hash})))
-
-(defn update-winner-login
-  [issue-id login]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-winner-login con-db {:issue_id issue-id :winner_login login})))
+    (db/update-execute-hash-and-winner-login con-db 
+                                             (to-db-map issue-id execute-hash winner-login)
+                                             )))
 
 (defn update-watch-hash
   [issue-id watch-hash]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-watch-hash con-db {:issue_id issue-id :watch_hash watch-hash})))
+    (db/update-watch-hash con-db (to-db-map issue-id watch-hash))))
 
 (defn pending-watch-calls
   []
@@ -68,7 +66,7 @@
 (defn update-payout-hash
   [issue-id payout-hash]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-payout-hash con-db {:issue_id issue-id :payout_hash payout-hash})))
+    (db/update-payout-hash con-db (to-db-map issue-id payout-hash))))
 
 (defn reset-payout-hash
   [issue-id]
@@ -78,13 +76,12 @@
 (defn update-payout-receipt
   [issue-id payout-receipt]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-payout-receipt con-db {:issue_id issue-id
-                                      :payout_receipt payout-receipt})))
+    (db/update-payout-receipt con-db (to-db-map issue-id payout-receipt))))
 
 (defn get-bounty
   [owner repo issue-number]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-bounty con-db {:owner owner :repo repo :issue_number issue-number})))
+    (db/get-bounty con-db (to-db-map owner repo issue-number))))
 
 (defn open-bounty-contracts
   []
