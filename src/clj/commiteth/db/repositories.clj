@@ -34,7 +34,7 @@
 (defn update-repo-state
   [repo-id repo-state]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-repo-name con-db {:repo_id repo-id
+    (db/update-repo-state con-db {:repo_id repo-id
                                  :repo_state repo-state})))
 (defn get-repo
   "Get a repo from DB given it's full name (owner/repo-name)"

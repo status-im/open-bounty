@@ -4,51 +4,95 @@
             [commiteth.common :refer [human-time
                                       display-data-page
                                       items-per-page
-                                      issue-url]]
+                                      issue-url
+                                      pull-request-url]]
             [commiteth.handlers :as handlers]
             [commiteth.db :as db]
             [commiteth.ui-model :as ui-model]
             [commiteth.subscriptions :as subs]
             [commiteth.util :as util]))
 
+(defn display-bounty-claims [claims]
+  [:div.bounty-claims-container.ph4.pv3
+   (for [claim claims]
+     (let [{:keys [avatar-url
+                   pr-title
+                   pr-id
+                   updated
+                   repo-owner
+                   repo-name
+                   pr-number]} claim]
+       ^{:key pr-id}
+       [:div.bounty-claims-row.open-bounty-item-content.flex
+        [:div.bounty-claims-icon.pl2
+         [:div.ui.tiny.circular.image
+          [:img {:src avatar-url}]]]
+        [:span.bounty-claims-text.pt2.pl2
+         [:a.fw5
+          {:href (pull-request-url repo-owner repo-name pr-number)}
+          (if pr-title
+            pr-title
+            (str "#" pr-number " by " repo-owner " in " repo-name))]
+         [:span.time.pl2 (human-time updated)]]]))])
+
+(defn blue-arrow-box [image-src]
+  "generates the appropriate container for a blue arrow"
+  [:span.blue-arrow-box.pa1
+   [:img.blue-arrow-image.v-mid {:src image-src}]])
 
 (defn bounty-item [bounty]
-  (let [{avatar-url   :repo_owner_avatar_url
-         owner        :repo-owner
-         repo-name    :repo-name
-         issue-title  :issue-title
-         issue-number :issue-number
-         updated      :updated
-         tokens       :tokens
-         balance-eth  :balance-eth
-         value-usd    :value-usd
-         claim-count  :claim-count} bounty
-        full-repo  (str owner "/" repo-name)
-        repo-url   (str "https://github.com/" full-repo)
-        repo-link  [:a {:href repo-url} full-repo]
-        issue-link [:a
-                    {:href (issue-url owner repo-name issue-number)}
-                    issue-title]]
-    [:div.open-bounty-item
-     [:div.open-bounty-item-content
-      [:div.header issue-link]
-      [:div.bounty-item-row
-       [:div.time (human-time updated)]
-       [:span.bounty-repo-label repo-link]]
-
-      [:div.footer-row
-       [:div.balance-badge "ETH " balance-eth]
-       (for [[tla balance] tokens]
-         ^{:key (random-uuid)}
-         [:div.balance-badge.token
-          (str (subs (str tla) 1) " " balance)])
-       [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
-       (when (> claim-count 0)
-         [:span.open-claims-label (str claim-count " open claim"
-                                       (when (> claim-count 1) "s"))])]]
-     [:div.open-bounty-item-icon
-      [:div.ui.tiny.circular.image
-       [:img {:src avatar-url}]]]]))
+  (let [open-bounty-claims (rf/subscribe [::subs/open-bounty-claims])]
+    (fn [bounty]
+      (let [{avatar-url   :repo_owner_avatar_url
+             owner        :repo-owner
+             repo-name    :repo-name
+             issue-title  :issue-title
+             issue-number :issue-number
+             issue-id     :issue-id
+             updated      :updated
+             tokens       :tokens
+             balance-eth  :balance-eth
+             value-usd    :value-usd
+             claim-count  :claim-count
+             claims       :claims} bounty
+            full-repo              (str owner "/" repo-name)
+            repo-url               (str "https://github.com/" full-repo)
+            repo-link              [:a {:href repo-url} full-repo]
+            issue-link             [:a
+                                    {:href (issue-url owner repo-name issue-number)}
+                                    issue-title]
+            open-claims-click      #(rf/dispatch [::handlers/open-bounty-claim issue-id])
+            close-claims-click     #(rf/dispatch [::handlers/close-bounty-claim issue-id])
+            matches-current-issue? (some #{issue-id} @open-bounty-claims)]
+            [:div
+             [:div.open-bounty-item.ph4
+              [:div.open-bounty-item-content
+               [:div.header issue-link]
+               [:div.bounty-item-row
+                [:div.time (human-time updated)]
+                [:span.bounty-repo-label repo-link]]
+               [:div.footer-row
+                [:div.balance-badge "ETH " balance-eth]
+                (for [[tla balance] tokens]
+                  ^{:key (random-uuid)}
+                  [:div.balance-badge.token
+                   (str (subs (str tla) 1) " " balance)])
+                [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
+                (when (> claim-count 0)
+                  [:span.open-claims-label
+                   {:on-click (if matches-current-issue?
+                                #(close-claims-click)
+                                #(open-claims-click))}
+                   (str claim-count " open claim"
+                        (when (> claim-count 1) "s"))
+                   (if matches-current-issue?
+                     [blue-arrow-box "blue-arrow-up.png"]
+                     [blue-arrow-box "blue-arrow-down.png"])])]]
+              [:div.open-bounty-item-icon
+               [:div.ui.tiny.circular.image
+                [:img {:src avatar-url}]]]]
+             (when matches-current-issue?
+               [display-bounty-claims claims])]))))
 
 (defn bounties-filter-tooltip-value-input-view [label tooltip-open? opts]
   [:div.open-bounties-filter-element-tooltip-value-input-container
@@ -210,7 +254,7 @@
     [:div
      (let [left  (inc (* (dec page-number) items-per-page))
            right (dec (+ left item-count))]
-       [:div.item-counts-label-and-sorting-container
+       [:div.item-counts-label-and-sorting-container.ph4
         [:div.item-counts-label
          [:span (str "Showing " left "-" right " of " total-count)]]
         [bounties-sort-view]])
@@ -227,7 +271,7 @@
           [:div.ui.text.loader.view-loading-label "Loading"]]]
         [:div.ui.container.open-bounties-container
          {:ref #(reset! container-element %1)}
-         [:div.open-bounties-header "Bounties"]
-         [:div.open-bounties-filter-and-sort
+         [:div.open-bounties-header.ph4.pt4 "Bounties"]
+         [:div.open-bounties-filter-and-sort.ph4
           [bounty-filters-view]]
          [bounties-list @bounty-page-data container-element]]))))

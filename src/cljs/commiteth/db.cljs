@@ -4,7 +4,7 @@
 (def default-db
   {:page                        :bounties
    :user                        nil
-   :user-profile-loaded? false
+   :user-profile-loaded?        false
    :repos-loading?              false
    :repos                       {}
    :activity-feed-loading?      false
@@ -18,6 +18,7 @@
                                  ::ui-model/bounty-filter-type|currency nil
                                  ::ui-model/bounty-filter-type|date     nil
                                  ::ui-model/bounty-filter-type|owner    nil}
+   ::open-bounty-claims         #{}
    :owner-bounties              {}
    :top-hunters                 []
    :activity-feed               []})

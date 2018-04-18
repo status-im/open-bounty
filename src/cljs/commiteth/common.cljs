@@ -48,6 +48,9 @@
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))
 
+(defn pull-request-url [owner repo number]
+  (str "https://github.com/" owner "/" repo "/pull/" number))
+
 (def items-per-page 15)
 
 (defn draw-page-numbers [page-number page-count container-element]
@@ -132,7 +135,7 @@
           :else 
           [:div
            [draw-items] 
-           [:div.page-nav-container
+           [:div.page-nav-container.ph4.pb4
             [:div.page-direction-container
              [draw-rect :backward]
              [draw-rect :forward]]
