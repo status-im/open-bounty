@@ -169,9 +169,10 @@
                   :body (json/write-str body)}
         response  @(post (eth-rpc-url) options)
         result   (safe-read-str (:body response))]
-    (log/infof "%s: eth-rpc %s" (or internal-tx-id "(no-tx-id)") method)
-    (log/debugf "eth-rpc req(%s) body: %s\neth-rpc req(%s) result: %s"
-                request-id body request-id result)
+    (when internal-tx-id
+      (log/infof "%s: eth-rpc %s" internal-tx-id method))
+    (log/debugf "%s: eth-rpc req(%s) body: %s" internal-tx-id request-id body)
+    (log/debugf "%s: eth-rpc req(%s) result: %s" internal-tx-id request-id result)
     (cond
       ;; Ignore any responses that have mismatching request ID
       (not= (:id result) request-id)
