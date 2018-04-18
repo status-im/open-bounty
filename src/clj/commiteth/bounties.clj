@@ -130,7 +130,12 @@
     (cond
       (:payout_hash bounty)           :paid
       (nil? (:payout_address bounty)) :pending-contributor-address
-      (nil? (:confirm_hash bounty))   :pending-maintainer-confirmation
+      ;; `confirm_hash` is set by us as soon as a PR is merged and the
+      ;; contributor address is known. Usually end users should not need
+      ;; to be aware of this step.
+      (nil? (:confirm_hash bounty))   :pending-sob-confirmation
+      ;; `payout_hash` is set when the bounty issuer signs the payout
+      (nil? (:payout_hash bounty))    :pending-maintainer-confirmation
       :else                           :merged)
     (cond ; not yet merged
       (< 1 (count (:claims bounty)))  :multiple-claims
