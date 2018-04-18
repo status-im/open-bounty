@@ -282,8 +282,7 @@ class GithubPage(BasePageObject):
         os.mkdir(repo_folder)
         os.chdir(repo_folder)
         self.local_repo_path = os.getcwd()
-
-        fork = 'https://%s:%s@github.com/%s/%s.git' % (test_data.config['DEV']['gh_login'],
+        fork = 'https://%s:%s@github.com/%s/%s.git' % (test_data.config['DEV']['gh_username'],
                                                        test_data.config['DEV']['gh_password'], username, repo_name)
         logging.info(('Cloning from %s to %s' % (fork, self.local_repo_path)))
         repo = git.Repo.clone_from(fork, self.local_repo_path)
