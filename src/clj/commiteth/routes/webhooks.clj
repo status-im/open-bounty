@@ -115,18 +115,18 @@
 
 
 (defn handle-claim
-  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number head-sha merged? event-type]
+  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number pr-title head-sha merged? event-type]
   (users/create-user user-id login name nil avatar_url)
   (let [open-or-edit? (contains? #{:opened :edited} event-type)
         close? (= :closed event-type)
         pr-data {:repo_id   repo-id
                  :pr_id     pr-id
                  :pr_number pr-number
+                 :title     pr-title
                  :user_id   user-id
                  :issue_number (:issue_number issue)
                  :issue_id (:issue_id issue)
                  :state event-type}]
-
     ;; TODO: in the opened case if the submitting user has no
     ;; Ethereum address stored, we could post a comment to the
     ;; Github PR explaining that payout is not possible if the PR is
@@ -187,6 +187,7 @@
                         repo-id
                         pr-id
                         pr-number
+                        pr-title
                         head-sha
                         merged?
                         event-type))

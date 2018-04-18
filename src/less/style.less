@@ -415,7 +415,6 @@ label[for="input-hidden"] {
     background-color: #fff;
     border-radius: 10px;
     transform: translateY(-45px);
-    padding: 24px;
     .open-bounties-header {
         font-family: "PostGrotesk-Medium";
         font-size: 21px;
@@ -714,6 +713,17 @@ label[for="input-hidden"] {
         padding: 4px;
         text-align: center;
     }
+
+    .blue-arrow-box {
+        width: 24px;
+        height: 24px;
+    }
+
+    .blue-arrow-image {
+	width: 13.5px;
+	height: 6px;
+    }
+
 }
 
 .open-bounty-item:first-child {
@@ -748,8 +758,6 @@ label[for="input-hidden"] {
         font-size: 15px;
     }
 
-    border-bottom: #eaecee 1px solid !important;
-
     .open-bounty-item-content {
         width: 80%;
         padding: .7em 0 1em;
@@ -780,8 +788,28 @@ label[for="input-hidden"] {
     flex-direction: row !important;
     justify-content: space-between;
     width: 80%;
-
 }
+
+.bounty-claims-row {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.bounty-claims-container {
+    background-color: #FBFBFB;
+}
+
+.bounty-claims-icon {
+    width: 40px;
+ }
+
+.bounty-claims-text {
+    a {
+	text-decoration: none;
+	color: #42505c;
+    }
+}
+
 .bounty-repo-label a {
     margin: auto;
 	font-family: "PostGrotesk-Book";
@@ -804,6 +832,7 @@ label[for="input-hidden"] {
     padding-left: 15px;
     font-size: 15px;
     color: #57a7ed;
+    cursor: pointer;
 }
 
 .activity-item-container {

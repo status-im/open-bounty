@@ -23,9 +23,10 @@
 (defn deploy-contract [owner owner-address repo issue-id issue-number]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
-    (do
+    (try
       (log/infof "issue %s: Deploying contract to %s" issue-id owner-address)
-      (if-let [transaction-hash (multisig/deploy-multisig owner-address)]
+      (if-let [transaction-hash (multisig/deploy-multisig {:owner owner-address
+                                                           :internal-tx-id (str "contract-github-issue-" issue-id)})]
         (do
           (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id transaction-hash)
           (let [resp (github/post-deploying-comment owner
@@ -36,7 +37,8 @@
             (log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
             (issues/update-comment-id issue-id comment-id))
           (issues/update-transaction-hash issue-id transaction-hash))
-        (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address)))))
+        (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
+      (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
 
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id
