@@ -33,6 +33,8 @@ By not modifying the definition of CSS classes anymore we can safely build out U
 
 ## Appendix
 
-- [CSS and Scalability](http://mrmrs.github.io/writing/2016/03/24/scalable-css/) — an insightful article on why utility classes are a good idea by the author of Tachyons.
+- [CSS and Scalability](http://mrmrs.github.io/writing/2016/03/24/scalable-css/) — an insightful article on why utility classes are a good idea by the author of Tachyons. A quote from that article:  
+
+  > In [the monolith] model, you will never stop writing css. Refactoring css is hard and time consuming. Deleting unused css is hard and time consuming. And more often than not - it’s not work people are excited to do. So what happens? People keep writing more and more css 
 - [tachyons-tldr](https://tachyons-tldr.now.sh) — super helpful tool to look up classes provided by Tachyons via the CSS attributes they affect.
 - [dwyl/learn-tachyons](https://github.com/dwyl/learn-tachyons) — a nice repository with another 30s pitch and various examples outlining basic usage.
