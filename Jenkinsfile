@@ -31,6 +31,14 @@ def dockerreponame = "statusim/openbounty-app"
 				echo "No deployment on automatic trigger, go to Jenkins and push build button to deliver it."
 			}
 		}
+		stage('Tetisng') {
+			if ( currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause') ){
+				build job: 'nd-to-end-tests/job/sob-end-to-end-tests'
+			} else {
+				echo "No testing on automatic trigger, go to Jenkins and push build button to deliver it and test it."
+			}
+		}
+
 
 	} catch (e) {
     // slackSend color: 'bad', message: REPO + ":" + BRANCH_NAME + ' failed to build. ' + env.BUILD_URL
