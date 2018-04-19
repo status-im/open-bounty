@@ -145,12 +145,7 @@
     (try
       (json/read-str s :key-fn keyword)
       (catch Exception ex
-        (do (log/error "Exception when parsing json string:"
-                       s
-                       "message:"
-                       ex)
-
-            nil)))))
+        (log/error ex "Exception when parsing json string:" s)))))
 
 (def req-id-tracker
   ;; HACK to ensure previous random-number approach doesn't lead to
