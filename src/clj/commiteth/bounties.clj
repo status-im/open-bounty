@@ -29,7 +29,6 @@
         (do
           (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id transaction-hash)
           (github/update-comment (to-map owner repo issue-number transaction-hash))
-(log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
           (issues/update-transaction-hash issue-id transaction-hash))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
@@ -41,7 +40,7 @@
         created-issue (issues/create repo-id issue-id issue-number issue-title)
         {:keys [address owner]} (users/get-repo-owner repo-id)]
     (log/debug "issue %s: Adding bounty for issue %s/%s - owner address: %s"
-               issue-id repo issue-number owner-address)
+               issue-id repo issue-number address)
     (if (= 1 created-issue)
       (deploy-contract owner address repo issue-id issue-number)
       (log/debug "issue %s: Issue already exists in DB, ignoring"))))

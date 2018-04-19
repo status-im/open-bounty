@@ -45,7 +45,6 @@
   []
   (log/info "In update-issue-contract-address")
   (p :update-issue-contract-address
-<<<<<<< HEAD
      (doseq [{:keys [issue-id transaction-hash]} (issues/list-pending-deployments)]
     (log/infof "issue %s: pending deployment: %s" issue-id transaction-hash)
     (try 
@@ -76,17 +75,9 @@
 (defn deploy-pending-contracts
   "Under high-concurrency circumstances or in case geth is in defunct state, a bounty contract may not deploy successfully when the bounty label is addded to an issue. This function deploys such contracts."
   []
-    (p :deploy-pending-contracts
-  (doseq [{:keys [issue-id issue-number owner owner-address repo]} 
-          (db-bounties/pending-contracts)]
-    (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
-    (try
-         (bounties/deploy-contract owner owner-address repo issue-id issue-number)
-     (doseq [{issue-id :issue_id
-              issue-number :issue_number
-              owner :owner
-              owner-address :owner_address
-              repo :repo} (db-bounties/pending-contracts)]
+  (p :deploy-pending-contracts
+     (doseq [{:keys [issue-id issue-number owner owner-address repo]} 
+             (db-bounties/pending-contracts)]
        (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
        (try
          (bounties/deploy-contract owner owner-address repo issue-id issue-number)
@@ -98,7 +89,6 @@
   []
   (log/info "In self-sign-bounty")
   (p :self-sign-bounty
-<<<<<<< HEAD
      (doseq [{:keys [contract-address winner-address issue-id winner-login] :as issue}
              (db-bounties/pending-bounties)]
        (try
@@ -245,6 +235,7 @@
   (p :update-balances
      (doseq [{:keys [contract-address owner 
                      repo balance-eth tokens
+                     issue-id
                      issue-number
                      comment-id] :as issue}
              (db-bounties/open-bounty-contracts)]
@@ -273,7 +264,7 @@
                                          (merge token-balances {:ETH current-balance-eth})))
                (github/update-comment issue))))
          (catch Throwable ex 
-        (log/error ex "issue %s: update-balances exception" issue-id)))))
+           (log/error ex "issue %s: update-balances exception" issue-id)))))
   (log/info "Exit update-balances"))
 
 
