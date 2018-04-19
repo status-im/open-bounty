@@ -70,7 +70,7 @@
     (if (or (nil? @highest-nonce)
             (> nonce @highest-nonce))
       (reset! highest-nonce nonce)
-      (swap! highest-nonce inc)))))
+      (swap! highest-nonce (comp biginteger inc))))))
 
 (defn get-signed-tx [gas-price gas-limit to data nonce]
   "Create a sign a raw transaction.
