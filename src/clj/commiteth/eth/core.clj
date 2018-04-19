@@ -61,7 +61,7 @@
     (let [nonce (peek @nonces-dropped)]
       (swap! nonces-dropped pop)
       nonce)
-  (let [nonce (.. (.ethGetTransactionCount (create-web3j) 
+  (let [nonce (.. (.ethGetTransactionCount @web3j-obj 
                                            (env :eth-account) 
                                            DefaultBlockParameterName/LATEST)
                   sendAsync
