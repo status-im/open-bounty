@@ -207,6 +207,7 @@ AND i.transaction_hash IS NOT NULL;
 INSERT INTO pull_requests (pr_id,
   repo_id,
   pr_number,
+  title,
   issue_number,
   issue_id,
   commit_sha,
@@ -215,16 +216,18 @@ INSERT INTO pull_requests (pr_id,
 VALUES(:pr_id,
   :repo_id,
   :pr_number,
+  :title,
   :issue_number,
   :issue_id,
   :commit_sha,
   :user_id,
   :state)
-ON CONFLICT (pr_id) DO UPDATE
+ON CONFLICT (pr_id,issue_id) DO UPDATE
 SET
   state = :state,
   issue_number = :issue_number,
   issue_id = :issue_id,
+  title = :title,
   updated = timezone('utc'::text, now()),
   commit_sha = :commit_sha;
 
@@ -573,7 +576,11 @@ SELECT
   issue_title,
   repo_name,
   repo_owner,
+  pr_number,
+  pr_title,
+  pr_id,
   issue_number,
+  issue_id,
   user_name,
   user_avatar_url,
   balance_eth,

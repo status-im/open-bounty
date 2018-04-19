@@ -28,7 +28,9 @@
 (defn auto-gas-price? [] (env :auto-gas-price false))
 (defn offline-signing? [] (env :offline-signing true))
 
-(def web3j-obj (atom nil))
+(def web3j-obj
+  (delay (Web3j/build (HttpService. (eth-rpc-url)))))
+
 (def creds-obj (atom nil))
 
 (defn wallet-file-path []
@@ -36,10 +38,6 @@
 
 (defn wallet-password []
   (env :eth-password))
-
-(defn create-web3j []
- (or @web3j-obj
-      (swap! web3j-obj (constantly (Web3j/build (HttpService. (eth-rpc-url)))))))
 
 (defn creds []
   (or @creds-obj
@@ -53,27 +51,59 @@
           (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
                           {:password password :file-path file-path}))))))
 
-(defn get-signed-tx [gas-price gas-limit to data]
-  "Create a sign a raw transaction.
-   'From' argument is not needed as it's already
-   encoded in credentials.
+(defn get-web3j-nonce [web3j-instance]
+  (.. (.ethGetTransactionCount web3j-instance (env :eth-account) DefaultBlockParameterName/LATEST)
+      sendAsync
+      get
+      getTransactionCount))
+
+(defprotocol INonceTracker
+  "The reason we need this is that we might send mutliple identical
+  transactions (e.g. bounty contract deploy with same owner) shortly
+  after another. In this case web3j's TX counting only increases once
+  a transaction has been confirmed and so we send multiple identical
+  transactions with the same nonce.
+
+  Web3j also provides a TransactionManager that increases nonces but it
+  does not track nonces related to transactions and so as far as I understand
+  it might cause transactions to be executed twice if they are retried.
+
+  https://github.com/web3j/web3j/blob/d19855475aa6620a7e93523bd9ede26ca50ed042/core/src/main/java/org/web3j/tx/RawTransactionManager.java"
+  (get-nonce [this internal-tx-id]
+    "Return the to be used nonce for an OpenBounty Ethereum
+    transaction identified by `internal-tx-id`. As these IDs are stable
+    we can use them to use consistent nonces for the same transaction."))
+
+(defrecord NonceTracker [state]
+  INonceTracker
+  (get-nonce [this internal-tx-id]
+    (let [prev-nonce  (get @state internal-tx-id)
+          web3j-nonce (get-web3j-nonce @web3j-obj)
+          nonces      (set (vals @state))
+          nonce       (if (seq nonces)
+                        (inc (apply max nonces))
+                        web3j-nonce)]
+      (when prev-nonce
+        (log/warnf "%s: tx will be retried (prev-nonce: %s, new-nonce: %s, web3j-nonce: %s)"
+                   internal-tx-id prev-nonce nonce web3j-nonce))
+      ;; TODO this is a memory leak since tracking state is never pruned
+      ;; Since we're not doing 1000s of transactions every day yet we can
+      ;; probably defer worrying about this until a bit later
+      (swap! state assoc internal-tx-id nonce)
+      nonce)))
+
+(def nonce-tracker
+  (->NonceTracker (atom {})))
+
+(defn get-signed-tx [{:keys [gas-price gas-limit to data internal-tx-id]}]
+  "Create a sign a raw transaction. 'From' argument is not needed as it's already encoded in credentials.
    See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (let [web3j (create-web3j)
-        nonce (.. (.ethGetTransactionCount web3j 
-                                           (env :eth-account) 
-                                           DefaultBlockParameterName/LATEST)
-                  sendAsync
-                  get
-                  getTransactionCount)
-        tx (RawTransaction/createTransaction
-             nonce
-             gas-price
-             gas-limit
-             to
-             data)
-        signed (TransactionEncoder/signMessage tx (creds))
-        hex-string (Numeric/toHexString signed)]
-    hex-string))
+  (let [nonce (get-nonce nonce-tracker internal-tx-id)]
+    (log/infof "%s: Signing nonce: %s, gas-price: %s, gas-limit: %s"
+               internal-tx-id nonce gas-price gas-limit)
+    (-> (RawTransaction/createTransaction (biginteger nonce) gas-price gas-limit to data)
+        (TransactionEncoder/signMessage (creds))
+        (Numeric/toHexString))))
 
 (defn eth-gasstation-gas-price
   "Get max of average and average_calc from gas station and use that
@@ -122,19 +152,27 @@
 
             nil)))))
 
+(def req-id-tracker
+  ;; HACK to ensure previous random-number approach doesn't lead to
+  ;; unintended collisions
+  (atom 0))
+
 (defn eth-rpc
-  [method params]
-  (let [request-id (rand-int 4096)
-        body     (json/write-str {:jsonrpc "2.0"
-                                  :method  method
-                                  :params  params
-                                  :id      request-id})
+  [{:keys [method params internal-tx-id]}]
+  {:pre [(string? method) (some? params)]}
+  (let [request-id (swap! req-id-tracker inc)
+        body       {:jsonrpc "2.0"
+                    :method  method
+                    :params  params
+                    :id      request-id}
         options  {:headers {"content-type" "application/json"}
-                  :body body}
+                  :body (json/write-str body)}
         response  @(post (eth-rpc-url) options)
         result   (safe-read-str (:body response))]
-    (log/debug body "\n" result)
-
+    (when internal-tx-id
+      (log/infof "%s: eth-rpc %s" internal-tx-id method))
+    (log/debugf "%s: eth-rpc req(%s) body: %s" internal-tx-id request-id body)
+    (log/debugf "%s: eth-rpc req(%s) result: %s" internal-tx-id request-id result)
     (cond
       ;; Ignore any responses that have mismatching request ID
       (not= (:id result) request-id)
@@ -142,7 +180,10 @@
 
       ;; If request ID matches but contains error, throw
       (:error result)
-      (throw (ex-info "Error submitting transaction via eth-rpc" (:error result)))
+      (throw
+       (ex-info (format "%s: Error submitting transaction via eth-rpc %s"
+                        (or internal-tx-id "(no-tx-id)") (:error result))
+                (:error result)))
 
       :else
       (:result result))))
@@ -179,9 +220,10 @@
 (defn estimate-gas
   [from to value & [params]]
   (let [geth-estimate (eth-rpc
-                       "eth_estimateGas" [(merge params {:from  from
-                                                         :to    to
-                                                         :value value})])
+                       {:method "eth_estimateGas"
+                        :params [(merge params {:from  from
+                                                :to    to
+                                                :value value})]})
         adjusted-gas (adjust-gas-estimate geth-estimate)]
 
     (log/debug "estimated gas (geth):" geth-estimate)
@@ -204,7 +246,8 @@
 
 (defn get-balance-hex
   [account]
-  (eth-rpc "eth_getBalance" [account "latest"]))
+  (eth-rpc {:method "eth_getBalance"
+            :params [account "latest"]}))
 
 (defn get-balance-wei
   [account]
@@ -223,7 +266,8 @@
 
 (defn get-transaction-receipt
   [hash]
-  (eth-rpc "eth_getTransactionReceipt" [hash]))
+  (eth-rpc {:method "eth_getTransactionReceipt"
+            :params [hash]}))
 
 (defn format-call-params
   [method-id & params]
@@ -233,10 +277,12 @@
 (defn call
   [contract method-id & params]
   (let [data (apply format-call-params method-id params)]
-    (eth-rpc "eth_call" [{:to contract :data data} "latest"])))
+    (eth-rpc {:method "eth_call"
+              :params [{:to contract :data data} "latest"]})))
 
 (defn execute
-  [from contract method-id gas-limit & params]
+  [{:keys [from contract method-id gas-limit params internal-tx-id]}]
+  {:pre [(string? method-id)]}
   (let [data (apply format-call-params method-id params)
         gas-price (gas-price)
         value (format "0x%x" 0)
@@ -247,21 +293,23 @@
                  (merge {:gasPrice (integer->hex gas-price)})
                  contract
                  (merge {:to contract}))
-        gas (if gas-limit gas-limit 
-              (estimate-gas from contract value params))
+        gas    (or gas-limit (estimate-gas from contract value params))
         params (if (offline-signing?)
-                 (get-signed-tx (biginteger gas-price)
-                                      (hex->big-integer gas)
-                                      contract
-                                      data) 
+                 (get-signed-tx {:internal-tx-id internal-tx-id
+                                 :gas-price (biginteger gas-price)
+                                 :gas-limit (hex->big-integer gas)
+                                 :to        contract
+                                 :data      data})
                  (assoc params :gas gas))]
     (if (offline-signing?)
       (eth-rpc
-        "eth_sendRawTransaction"
-        [params])
+       {:method "eth_sendRawTransaction"
+        :params [params]
+        :internal-tx-id internal-tx-id})
       (eth-rpc
-        "personal_sendTransaction"
-        [params (eth-password)]))))
+       {:method "personal_sendTransaction"
+        :params [params (eth-password)]
+        :internal-tx-id internal-tx-id}))))
 
 (defn hex-ch->num
   [ch]
@@ -322,7 +370,6 @@
   eth-core
   :start
   (do
-    (swap! web3j-obj (constantly nil))
     (swap! creds-obj (constantly nil))
     (log/info "eth/core started"))
   :stop

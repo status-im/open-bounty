@@ -26,6 +26,7 @@ WORKDIR /root/
 RUN apt-get update
 RUN apt-get -y install xvfb
 RUN apt-get -y install wkhtmltopdf
+RUN apt-get -y install less
 
 COPY --from=builder /usr/src/app/target/uberjar/commiteth.jar .
 COPY html2png.sh .

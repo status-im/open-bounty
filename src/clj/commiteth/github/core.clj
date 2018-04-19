@@ -341,6 +341,8 @@
                                              tokens
                                              winner-login)
                       )]
+    (when (and (= state :merged) (empty? winner-address)) 
+      (log/warn "issue %s: Cannot sign pending bounty - winner has no payout address" issue-id))
     (when (= :paid state)
          (db-bounties/update-payout-receipt issue-id payout-receipt))
               

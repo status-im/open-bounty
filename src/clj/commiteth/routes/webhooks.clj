@@ -115,18 +115,18 @@
 
 
 (defn handle-claim
-  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number head-sha merged? event-type]
+  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number pr-title head-sha merged? event-type]
   (users/create-user user-id login name nil avatar_url)
   (let [open-or-edit? (contains? #{:opened :edited} event-type)
         close? (= :closed event-type)
         pr-data {:repo_id   repo-id
                  :pr_id     pr-id
                  :pr_number pr-number
+                 :title     pr-title
                  :user_id   user-id
                  :issue_number (:issue_number issue)
                  :issue_id (:issue_id issue)
                  :state event-type}]
-
     ;; TODO: in the opened case if the submitting user has no
     ;; Ethereum address stored, we could post a comment to the
     ;; Github PR explaining that payout is not possible if the PR is
@@ -174,22 +174,24 @@
      pr-body         :body
      pr-title        :title} :pull_request}]
   (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (if-let [issue (some #(issues/get-issue repo-id %1) (extract-issue-number owner repo pr-body pr-title))]
-    (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
-      (do
-        (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
-        (handle-claim issue
-                      user-id
-                      login name
-                      avatar_url
-                      owner repo
-                      repo-id
-                      pr-id
-                      pr-number
-                      head-sha
-                      merged?
-                      event-type))
-      (log/info "PR for issue already merged"))
+  (if-let [issues (remove nil? (map #(issues/get-issue repo-id %1) (extract-issue-number owner repo pr-body pr-title)))]
+    (doseq [issue issues]
+      (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
+        (do
+          (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
+          (handle-claim issue
+                        user-id
+                        login name
+                        avatar_url
+                        owner repo
+                        repo-id
+                        pr-id
+                        pr-number
+                        pr-title
+                        head-sha
+                        merged?
+                        event-type))
+        (log/info "PR for issue already merged")))
     (when (= :edited event-type)
       ; Remove PR if it does not reference any issue
       (pull-requests/remove pr-id))))
@@ -383,7 +385,7 @@
         (log/debug "webhook-app POST, headers" headers)
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
-          (log/info "webhook-app POST, payload:" (pr-str payload))
+          (log/debug "webhook-app POST, payload:" (pr-str payload))
           (if (validate-secret-one-hook payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK app")
