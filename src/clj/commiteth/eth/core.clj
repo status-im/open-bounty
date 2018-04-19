@@ -172,7 +172,9 @@
     (when internal-tx-id
       (log/infof "%s: eth-rpc %s" internal-tx-id method))
     (log/debugf "%s: eth-rpc req(%s) body: %s" internal-tx-id request-id body)
-    (log/infof "%s: eth-rpc req(%s) result: %s" internal-tx-id request-id result)
+    (if internal-tx-id
+      (log/infof "%s: eth-rpc req(%s) result: %s" internal-tx-id request-id result)
+      (log/debugf "no-tx-id: eth-rpc req(%s) result: %s" request-id result))
     (cond
       ;; Ignore any responses that have mismatching request ID
       (not= (:id result) request-id)
