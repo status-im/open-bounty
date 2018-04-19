@@ -246,6 +246,7 @@ WHERE pr_id = :pr_id;
 SELECT
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
+  i.transaction_hash AS transaction_hash,
   r.owner            AS owner,
   u.address          AS owner_address,
   r.repo             AS repo
@@ -253,7 +254,7 @@ FROM issues i, users u, repositories r
 WHERE
 r.user_id = u.id
 AND i.repo_id = r.repo_id
-AND i.transaction_hash IS NULL
+AND (i.transaction_hash IS NULL OR updated > now() - interval '1 hour')
 AND i.contract_address IS NULL;
 
 
