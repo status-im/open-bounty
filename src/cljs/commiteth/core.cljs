@@ -195,7 +195,7 @@
 (defn page []
   (let [route (rf/subscribe [:route])
         show-top-hunters? #(contains? #{:bounties :activity} (:route-id @route))]
-    (fn []
+    (fn page-render []
       [:div.ui.pusher
        [page-header]
        [:div.ui.vertical.segment
@@ -245,10 +245,10 @@
     (reset! active-user nil)))
 
 (defn load-data [initial-load?]
-  (doall (map rf/dispatch
-        [[:load-open-bounties initial-load?]
-         [:load-activity-feed initial-load?]
-         [:load-top-hunters initial-load?]]))
+  (doseq [event [[:load-open-bounties initial-load?]
+                 [:load-activity-feed initial-load?]
+                 [:load-top-hunters initial-load?]]]
+    (rf/dispatch event))
   (load-user))
 
 (defonce timer-id (r/atom nil))
