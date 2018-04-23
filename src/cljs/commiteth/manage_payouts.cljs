@@ -104,7 +104,8 @@
 
 (defn view-pr-button [claim]
   [primary-button-link
-   {:href (pr-url claim)}
+   {:href (pr-url claim)
+    :target "_blank"}
    "View Pull Request"])
 
 (defn claim-card [bounty claim {:keys [render-view-claim-button?] :as opts}]
