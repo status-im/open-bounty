@@ -287,7 +287,7 @@
           (case (:banner-id @msg-info)
             "bounty-issuer-salute" [:p [:span.f4.mr2.v-mid "🖖"] [:span.pg-med "We salute you " (:name @msg-info) "!"]
                                     "  Here is where you can manage your bounties. Questions or comments? "
-                                    [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]]
+                                    [:a.sob-blue.pg-med {:href "https://chat.status.im" :target "_blank"} "Chat with us"]]
             "new-dashboard-info" [:p [:span.pg-med "NEW!"]
                                   "  Here is where you can manage your bounties. Questions or comments? "
                                   [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]])]]))))
