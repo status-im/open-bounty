@@ -15,12 +15,12 @@
 .hover-muted-blue:hover, .hover-muted-blue:focus { color: #42505c; }
 .hover-bg-muted-blue:hover, .hover-bg-muted-blue:focus { background-color: #42505c; }
 
-.sob-blue { color: #5babed; }
-.bg-sob-blue { background-color: #5babed; }
+.sob-blue { color: #57a7ed; }
+.bg-sob-blue { background-color: #57a7ed; }
 .bg-sob-blue-o-20 { background-color: rgba(87, 167, 237, 0.2); }
-.b--sob-blue { border-color: #5babed; }
-.hover-sob-blue:hover, .hover-sob-blue:focus { color: #5babed; }
-.hover-bg-sob-blue:hover, .hover-bg-sob-blue:focus { background-color: #5babed; }
+.b--sob-blue { border-color: #57a7ed; }
+.hover-sob-blue:hover, .hover-sob-blue:focus { color: #57a7ed; }
+.hover-bg-sob-blue:hover, .hover-bg-sob-blue:focus { background-color: #57a7ed; }
 
 .sob-sky { color: #f2f5f8; }
 .bg-sob-sky { background-color: #f2f5f8; }
