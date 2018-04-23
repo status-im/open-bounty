@@ -279,7 +279,7 @@
     (fn salute-render [name]
       (when @msg-info
         [:div.relative.pa3.bg-sob-blue-o-20.br3
-         [:div.absolute.top-0.right-0.pa3.b.pointer
+         [:div.f3.muted-blue.absolute.top-0.right-0.pa3.b.pointer
           {:role "button"
            :on-click #(rf/dispatch [:dashboard/mark-banner-as-seen (:banner-id @msg-info)])}
           "× "]
