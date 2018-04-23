@@ -1,6 +1,8 @@
 .pg-book {font-family: "PostGrotesk-Book", sans-serif}
 .pg-med {font-family: "PostGrotesk-Medium", sans-serif}
 
+.shadow-7 {box-shadow: 0 2px 4px 0 rgba(22, 51, 81, 0.14)}
+
 .shadow-6 {box-shadow: 0 5px 16px 0 rgba(230, 235, 238, 0.68)}
 
 /* Color classes are generated using https://tachyons-tldr.now.sh/#/tools */
