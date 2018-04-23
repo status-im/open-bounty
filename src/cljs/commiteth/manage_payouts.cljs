@@ -294,14 +294,15 @@
 
 (defn manage-payouts-nav [active-route-id]
   (let [active-classes "muted-blue bb bw2 b--sob-blue"
-        non-active-classes "silver pointer"]
+        non-active-classes "silver pointer"
+        tab :span.dib.f6.tracked.ttu.pg-med.mr4.pb3]
     [:div.mv4
-     [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
+     [tab
       {:role "button"
        :class (if (= active-route-id :dashboard/to-confirm) active-classes non-active-classes)
        :on-click #(routes/nav! :dashboard/to-confirm)}
       "To confirm payment"]
-     [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
+     [tab
       {:role "button"
        :class (if (= active-route-id :dashboard/to-merge) active-classes non-active-classes)
        :on-click #(routes/nav! :dashboard/to-merge)}
