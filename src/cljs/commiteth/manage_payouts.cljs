@@ -292,19 +292,49 @@
                                   "  Here is where you can manage your bounties. Questions or comments? "
                                   [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]])]]))))
 
+(defn manage-payouts-nav [active-route-id]
+  (let [active-classes "muted-blue bb bw2 b--sob-blue"
+        non-active-classes "silver pointer"]
+    [:div.mv4
+     [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
+      {:role "button"
+       :class (if (= active-route-id :dashboard/to-confirm) active-classes non-active-classes)
+       :on-click #(routes/nav! :dashboard/to-confirm)}
+      "To confirm payment"]
+     [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
+      {:role "button"
+       :class (if (= active-route-id :dashboard/to-merge) active-classes non-active-classes)
+       :on-click #(routes/nav! :dashboard/to-merge)}
+      "To merge"]]))
+
+(defn manage-payouts-loading []
+  [:div.center.mw9.pa2.pa0-l
+   [:h1.f3.pg-book.mb3 "Manage bounties"]
+   [manage-payouts-nav :dashboard/to-confirm]
+   [:div.w-two-thirds-l.mb6
+    ;; This semantic UI loading spinner thing makes so many assumptions
+    ;; severly limiting where and how it can be used.
+    ;; TODO replace with React spinner library, CSS spinner or something else
+    [:div.ui.segment
+     [:div.ui.active.inverted.dimmer
+      [:div.ui.text.loader "Loading"]]]]])
+
 (defn manage-payouts-page []
-  ;; TODO fix `page` subscription to subscribe to full route info
-  ;; do this after @msuess PR with some related routing changes has
-  ;; been merged
-  (let [route         (rf/subscribe [:route])
+  (let [route (rf/subscribe [:route])
+        user (rf/subscribe [:user])
         owner-bounties (rf/subscribe [:owner-bounties])
         bounty-stats-data (rf/subscribe [:owner-bounties-stats])
         owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
-    (fn []
-      (if @owner-bounties-loading?
-        [:div.pa5
-         [:div.ui.active.inverted.dimmer.bg-none
-          [:div.ui.text.loader "Loading"]]]
+    (fn manage-payouts-page-render []
+      (cond
+        (nil? @user)
+        [:div.bg-white.br3.shadow-6.pa4.tc
+         [:h3 "Please log in to view this page."]]
+
+        (or (nil? @owner-bounties-loading?) @owner-bounties-loading?)
+        [manage-payouts-loading]
+
+        :else
         (let [route-id  (:route-id @route)
               bounties  (vals @owner-bounties)
               grouped   (group-by (comp state-mapping :state) bounties)
@@ -319,19 +349,7 @@
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
-           (let [active-classes "muted-blue bb bw2 b--sob-blue"
-                 non-active-classes "silver pointer"]
-             [:div.mv4
-              [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
-               {:role "button"
-                :class (if (= route-id :dashboard/to-confirm) active-classes non-active-classes)
-                :on-click #(routes/nav! :dashboard/to-confirm)}
-               "To confirm payment"]
-              [:span.dib.f6.tracked.ttu.pg-med.mr4.pb2
-               {:role "button"
-                :class (if (= route-id :dashboard/to-merge) active-classes non-active-classes)
-                :on-click #(routes/nav! :dashboard/to-merge)}
-               "To merge"]])
+           [manage-payouts-nav route-id]
            [:div.cf
             [:div.fr.w-third.pl4.mb3.dn.db-l
              [bounty-stats-new @bounty-stats-data]]
