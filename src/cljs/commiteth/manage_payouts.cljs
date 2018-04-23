@@ -1,6 +1,7 @@
 (ns commiteth.manage-payouts
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
+            [goog.string :as gstring]
             [commiteth.util :as util]
             [commiteth.routes :as routes]
             [commiteth.model.bounty :as bnt]
@@ -206,10 +207,12 @@
    :pending-maintainer-confirmation :pending-maintainer-confirmation
    :paid :paid})
 
-(defn bounty-title-link [bounty show-date?]
+(defn bounty-title-link [bounty {:keys [show-date? max-length]}]
   [:a {:href (common/issue-url (:repo-owner bounty) (:repo-name bounty) (:issue-number bounty))}
    [:div.w-100.overflow-hidden
-    [:span.db.f5.pg-med.muted-blue.hover-black (:issue-title bounty)]
+    [:span.db.f5.pg-med.muted-blue.hover-black
+     (cond-> (:issue-title bounty)
+       max-length (gstring/truncate max-length))]
     (when show-date?
       [:span.db.mt1.f7.gray.pg-book
        ;;{:on-click #(do (.preventDefault %) (prn (dissoc bounty :claims)))}
@@ -227,7 +230,7 @@
 (defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
-    [bounty-title-link bounty true]
+    [bounty-title-link bounty {:show-date? true :max-length 100}]
     [:div.f7
      [bounty-balance bounty]]]])
 
@@ -235,7 +238,7 @@
   [:div.w-third-l.fl-l.pa2
    [square-card
     [:div
-     [bounty-title-link bounty false]
+     [bounty-title-link bounty {:show-date? false :max-length 100}]
      [:div.f6.mt1.gray
       "Paid out to " [:span.pg-med.muted-blue "@" (:winner_login bounty)]]]
     [:div.f7
