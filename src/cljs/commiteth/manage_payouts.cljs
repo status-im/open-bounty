@@ -305,8 +305,8 @@
 (defn manage-bounties-nav [active-route-id]
   (let [active-classes "muted-blue bb bw2 b--sob-blue"
         non-active-classes "silver pointer"
-        tab :span.dib.f6.tracked.ttu.pg-med.mr3.pb2]
-    [:div.mv4
+        tab :span.dib.f6.tracked.ttu.pg-med.mr3.ml2.pb2]
+    [:div.mv4.nl2
      [tab
       {:role "button"
        :class (if (= active-route-id :dashboard/to-confirm) active-classes non-active-classes)
