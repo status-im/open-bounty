@@ -113,23 +113,23 @@
          user-login :user_login
          avatar-url :user_avatar_url} claim
         winner-login (:winner_login bounty)]
-    [:div.pa2
-     [:div.flex.items-center
+    [:div.pv2
+     [:div.flex
       {:class (when (and (bnt/paid? claim) (not (= user-login winner-login)))
                 "o-50")}
-      [:div.w2.flex-none
-       [:img.br-100.w2 {:src avatar-url}]]
-      [:div.pl3.flex-auto
+      [:div.w3.flex-none.pr3.pl1.nl1
+       [:img.br-100.w-100.bg-white {:src avatar-url}]]
+      [:div.flex-auto
        [:div
-        [:span.f5.muted-blue
+        [:span.f5.muted-blue.pg-med.fw5
          (or user-name user-login) " "
          [:span.f6.o-60 (when user-name (str "@" user-login "") )]
          (if (bnt/paid? claim)
            (if (= user-login winner-login)
              [:span "Received payout"]
              [:span "No payout"]))]
-        [:div.muted-blue "Submitted a claim via "
-         [:a.sob-blue {:href (pr-url claim)}
+        [:div.f6.gray "Submitted a claim via "
+         [:a.gray {:href (pr-url claim)}
           (str (:repo_owner claim) "/" (:repo_name claim) " PR #" (:pr_number claim))]]
         ;; We render the button twice for difference screen sizes, first button is for small screens:
         ;; 1) db + dn-ns: `display: block` + `display: none` for not-small screens
@@ -163,11 +163,11 @@
                                          util/assert-first)]]
             ^{:key (:issue-id bounty)}
             [:div.mb3.br3.shadow-6.bg-white
-             [:div.pa3
+             [:div.ph4.pt4
               [bounty-card bounty]]
-             [:div.pa3
+             [:div.ph4.pv3
               [claim-card bounty winning-claim]]
-             [:div.pa3.bg-sob-tint.br3.br--bottom
+             [:div.ph4.pv3.bg-sob-tint.br3.br--bottom
               [confirm-row bounty winning-claim]]]))))
 
 (defn to-merge-list [bounties]
@@ -180,10 +180,9 @@
                 :let [claims (:claims bounty)]]
             ^{:key (:issue-id bounty)}
             [:div.mb3.shadow-6
-             [:div.pa3.bg-white.br3.br--top
-              [bounty-card bounty]
-              [:div.mt3.f6 [bounty-balance bounty]]]
-             [:div.pa3.bg-sob-tint.br3.br--bottom
+             [:div.pa4.nb2.bg-white.br3.br--top
+              [bounty-card bounty]]
+             [:div.ph4.pv3.bg-sob-tint.br3.br--bottom
               [:span.f6.gray (if (second claims)
                        (str "Current Claims (" (count claims) ")")
                        "Current Claim")]
@@ -231,7 +230,7 @@
      (cond-> (:issue-title bounty)
        max-length (gstring/truncate max-length))]
     (when show-date?
-      [:span.db.mt1.f7.gray.pg-book
+      [:span.db.mt1.f6.gray.pg-book
        ;;{:on-click #(do (.preventDefault %) (prn (dissoc bounty :claims)))}
        (common/human-time (:updated bounty))])]])
 
@@ -306,7 +305,7 @@
 (defn manage-bounties-nav [active-route-id]
   (let [active-classes "muted-blue bb bw2 b--sob-blue"
         non-active-classes "silver pointer"
-        tab :span.dib.f6.tracked.ttu.pg-med.mr4.pb3]
+        tab :span.dib.f6.tracked.ttu.pg-med.mr3.pb2]
     [:div.mv4
      [tab
       {:role "button"
@@ -379,10 +378,10 @@
                  (routes/nav! :dashboard/to-merge)
 
                  :else (routes/nav! :dashboard/to-confirm)))
-             (let [heading :h4.f3.normal.pg-book.sob-muted-blue]
+             (let [heading :h4.f4.normal.pg-book.sob-muted-blue]
                [:div.mt5
                 [:div.mt4
-                 [heading "Bounties not claimed yet" (count-pill (count unclaimed))]
+                 [heading "Unclaimed bounties" (count-pill (count unclaimed))]
                  [expandable-bounty-list
                   unclaimed-bounty
                   (->> unclaimed (sort-by :updated) (reverse))]]
