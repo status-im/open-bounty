@@ -295,7 +295,7 @@
 (defn manage-bounties-title []
   [:h1.f3.pg-med.fw5.muted-blue.mb3 "Manage bounties"])
 
-(defn manage-payouts-nav [active-route-id]
+(defn manage-bounties-nav [active-route-id]
   (let [active-classes "muted-blue bb bw2 b--sob-blue"
         non-active-classes "silver pointer"
         tab :span.dib.f6.tracked.ttu.pg-med.mr4.pb3]
@@ -314,7 +314,7 @@
 (defn manage-payouts-loading []
   [:div.center.mw9.pa2.pa0-l
    [manage-bounties-title]
-   [manage-payouts-nav :dashboard/to-confirm]
+   [manage-bounties-nav :dashboard/to-confirm]
    [:div.w-two-thirds-l.mb6
     ;; This semantic UI loading spinner thing makes so many assumptions
     ;; severly limiting where and how it can be used.
@@ -355,7 +355,7 @@
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
-           [manage-payouts-nav route-id]
+           [manage-bounties-nav route-id]
            [:div.cf
             [:div.fr.w-third.pl4.mb3.dn.db-l
              [bounty-stats-new @bounty-stats-data]]
