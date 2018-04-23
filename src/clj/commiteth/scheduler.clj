@@ -89,7 +89,6 @@
   (p :deploy-pending-contracts
      (doseq [{issue-id :issue_id
               issue-number :issue_number
-              transaction-hash :transaction_hash
               owner :owner
               owner-address :owner_address
               repo :repo} (db-bounties/pending-contracts)]
