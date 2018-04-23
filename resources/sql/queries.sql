@@ -145,7 +145,8 @@ RETURNING repo_id, issue_id, issue_number, title, commit_sha, contract_address;
 -- :name update-transaction-hash :! :n
 -- :doc updates transaction-hash for a given issue
 UPDATE issues
-SET transaction_hash = :transaction_hash
+SET transaction_hash = :transaction_hash,
+    updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
 
@@ -241,6 +242,48 @@ WHERE pr_id = :pr_id;
 -- Bounties ------------------------------------------------------------------------
 
 
+-- :name unmined-tx-hashes :? :*
+-- :doc hashes that haven't been mined for some time
+SELECT
+  CASE WHEN transaction_hash is not null and contract_address is null
+       THEN transaction_hash
+       WHEN execute_hash is not null and confirm_hash is null
+       THEN execute_hash
+       WHEN watch_hash is not null
+       THEN watch_hash
+  END
+  AS tx_hash,
+  CASE WHEN transaction_hash is not null and contract_address is null
+       THEN 'deploy'
+       WHEN execute_hash is not null and confirm_hash is null
+       THEN 'execute'
+       WHEN watch_hash is not null
+       THEN 'watch'
+  END
+  AS type,
+  issue_id
+FROM issues
+WHERE updated < timezone('utc'::text, now()) - interval '5 minutes'
+AND (transaction_hash is not null and contract_address is null
+     OR execute_hash is not null and confirm_hash is null
+     OR watch_hash is not null);
+
+
+-- :name reset-tx-hash! :! :n
+-- :doc reset tx hash if it hasn't been mined for some time
+UPDATE issues
+  SET
+  --~ (when (= (:type params) "deploy") "transaction_hash")
+  --~ (when (= (:type params) "execute") "execute_hash")
+  --~ (when (= (:type params) "watch") "watch_hash")
+  = null
+  WHERE
+  --~ (when (= (:type params) "deploy") "transaction_hash")
+  --~ (when (= (:type params) "execute") "execute_hash")
+  --~ (when (= (:type params) "watch") "watch_hash")
+  = :tx-hash
+
+
 -- :name pending-contracts :? :*
 -- :doc bounty issues where deploy contract has failed
 SELECT
@@ -254,7 +297,7 @@ FROM issues i, users u, repositories r
 WHERE
 r.user_id = u.id
 AND i.repo_id = r.repo_id
-AND (i.transaction_hash IS NULL OR updated > now() - interval '1 hour')
+AND i.transaction_hash IS NULL
 AND i.contract_address IS NULL;
 
 

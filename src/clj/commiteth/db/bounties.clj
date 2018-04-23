@@ -100,3 +100,12 @@
   []
   (jdbc/with-db-connection [con-db *db*]
     (db/bounties-activity con-db)))
+
+(defn unmined-tx-hashes []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/unmined-tx-hashes con-db)))
+
+(defn reset-tx-hash!
+  [tx-hash type]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/reset-tx-hash! con-db {:tx-hash tx-hash :type type})))

@@ -89,6 +89,7 @@
   (p :deploy-pending-contracts
      (doseq [{issue-id :issue_id
               issue-number :issue_number
+              transaction-hash :transaction_hash
               owner :owner
               owner-address :owner_address
               repo :repo} (db-bounties/pending-contracts)]
@@ -371,6 +372,25 @@
         (log/error ex "issue %s: update-balances exception" issue-id)))))
   (log/info "Exit update-balances"))
 
+(defn check-tx-receipts 
+  "At all times, there should be no more than one unmined tx hash,
+  as we are executing txs sequentially"
+  []
+  (log/info "In check-tx-receipts")
+  (doseq [{tx-hash :tx_hash
+           type :type
+           issue-id :issue_id} (db-bounties/unmined-tx-hashes)]
+    (log/infof "issue %s: resetting tx operation: %s for hash: %s" issue-id type tx-hash)
+    (db-bounties/reset-tx-hash! tx-hash type)
+    (when (= tx-hash (:tx-hash @eth/nonce-being-mined))
+      (log/infof "issue %s: reset nonce" issue-id)
+      (reset! eth/nonce-being-mined nil)))
+  (when (and (:timestamp @eth/nonce-being-mined)
+             (t/before? (:timestamp @eth/nonce-being-mined) (t/minus (t/now) (t/minutes 5))))
+    (log/errorf "nonce-being-mined not present in DB and unmined for 5 minutes, force reset. Tx hash: %s, type: %s" 
+                (:tx-hash @eth/nonce-being-mined) (:type @eth/nonce-being-mined))
+    (reset! eth/nonce-being-mined nil))
+  (log/info "Exit check-tx-receipts"))
 
 (defn wrap-in-try-catch [func]
   (try
@@ -394,6 +414,7 @@
       update-confirm-hash
       update-payout-receipt
       update-watch-hash
+      check-tx-receipts
       self-sign-bounty
       ])
     (log/info "run-1-min-interval-tasks done")))

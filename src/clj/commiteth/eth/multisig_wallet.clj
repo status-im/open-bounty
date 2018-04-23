@@ -43,6 +43,7 @@
   [{:keys [owner internal-tx-id]}]
   {:pre [(string? owner) (string? internal-tx-id)]}
   (eth/execute {:internal-tx-id internal-tx-id
+                :type "deploy"
                 :from      (eth/eth-account)
                 :contract  (factory-contract-addr)
                 :method-id (:create method-ids)
@@ -93,6 +94,7 @@
                 (:withdraw-everything method-ids)
                 payout-address)]
     (eth/execute {:internal-tx-id internal-tx-id
+                  :type "execute"
                   :from      (eth/eth-account)
                   :contract  contract
                   :method-id (:submit-transaction method-ids)
@@ -111,6 +113,7 @@
   (let [token-address (get-token-address token)]
     (assert token-address)
     (eth/execute {:internal-tx-id (str "watch-token-" (System/currentTimeMillis) "-" bounty-addr)
+                  :type "watch"
                   :from      (eth/eth-account)
                   :contract  bounty-addr
                   :method-id (:watch method-ids)

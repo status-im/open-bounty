@@ -7,6 +7,7 @@
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
+            [clj-time.core :as t]
             [mount.core :as mount]
             [pandect.core :as pandect]
             [commiteth.util.util :refer [json-api-request]])
@@ -51,26 +52,20 @@
           (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
                           {:password password :file-path file-path}))))))
 
-
-(def highest-nonce (atom nil))
-(def nonces-dropped (atom (clojure.lang.PersistentQueue/EMPTY)))
-
+(defrecord TxNonce [tx-hash nonce type timestamp])
+(def nonce-being-mined (atom nil))
 
 (defn get-nonce []
-  (if (seq @nonces-dropped)
-    (let [nonce (peek @nonces-dropped)]
-      (swap! nonces-dropped pop)
-      nonce)
   (let [nonce (.. (.ethGetTransactionCount @web3j-obj 
                                            (env :eth-account) 
-                                           DefaultBlockParameterName/LATEST)
+                                           DefaultBlockParameterName/PENDING)
                   sendAsync
                   get
                   getTransactionCount)]
-    (if (or (nil? @highest-nonce)
-            (> nonce @highest-nonce))
-      (reset! highest-nonce nonce)
-      (swap! highest-nonce (comp biginteger inc))))))
+    (if (or (nil? @nonce-being-mined)
+            (> nonce (:nonce @nonce-being-mined)))
+      (:nonce (reset! nonce-being-mined (TxNonce. nil nonce nil nil)))
+      (throw (Exception. (str "Attempting to re-use old nonce" nonce))))))
 
 (defn get-signed-tx [gas-price gas-limit to data nonce]
   "Create a sign a raw transaction.
@@ -248,8 +243,13 @@
 
 (defn get-transaction-receipt
   [hash]
-  (eth-rpc {:method "eth_getTransactionReceipt"
-            :params [hash]}))
+  (when-let [receipt (eth-rpc {:method "eth_getTransactionReceipt"
+                               :params [hash]})]
+    (if (= hash (:tx-hash @nonce-being-mined))
+      (reset! nonce-being-mined nil)
+      ;; This can happen in case of payout receipts
+      (log/infof "Obtained receipt for tx not currently being mined: " hash))
+    receipt))
 
 (defn format-call-params
   [method-id & params]
@@ -263,7 +263,7 @@
               :params [{:to contract :data data} "latest"]})))
 
 (defn execute
-  [{:keys [from contract method-id gas-limit params internal-tx-id]}]
+  [{:keys [from contract method-id gas-limit params internal-tx-id type]}]
   {:pre [(string? method-id)]}
   (let [data (apply format-call-params method-id params)
         gas-price (gas-price)
@@ -288,12 +288,16 @@
                  (assoc params :gas gas))]
     (if (offline-signing?)
       (try
-        (eth-rpc
-          {:method "eth_sendRawTransaction"
-           :params [params]
-           :internal-tx-id internal-tx-id})
+        (let [tx-hash (eth-rpc
+                        {:method "eth_sendRawTransaction"
+                         :params [params]
+                         :internal-tx-id internal-tx-id})]
+          (:tx-hash (swap! nonce-being-mined 
+                           assoc :tx-hash tx-hash
+                           :type type
+                           :timestamp (t/now))))
         (catch Throwable ex
-          (swap! nonces-dropped conj nonce)
+          (reset! nonce-being-mined nil)
           (throw ex)))
       (eth-rpc
        {:method "personal_sendTransaction"
