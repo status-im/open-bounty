@@ -59,7 +59,8 @@
    [:a {:href (bnt/issue-url bounty)}
     [:div.cf
      [:div.fl.w-80
-      [:span.pg-med.fw5.db.f4.muted-blue.hover-black issue-title]
+      [:span.pg-med.fw5.db.f4.muted-blue.hover-black
+       (gstring/truncate issue-title 110)]
       #_[:div.mt2
        [:span.f5.gray.pg-book (str owner "/" repo-name " #" issue-number)]]]
      [:div.fl.w-20.tr
