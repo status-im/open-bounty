@@ -34,6 +34,12 @@
 .hover-sob-tint:hover, .hover-sob-tint:focus { color: #f7f9fa; }
 .hover-bg-sob-tint:hover, .hover-bg-sob-tint:focus { background-color: #f7f9fa; }
 
+.gray { color: #8d99a4; }
+.bg-gray { background-color: #8d99a4; }
+.b--gray { border-color: #8d99a4; }
+.hover-gray:hover, .hover-gray:focus { color: #8d99a4; }
+.hover-bg-gray:hover, .hover-bg-gray:focus { background-color: #8d99a4; }
+
 /* Tachyons overrides */
 
 .tracked { letter-spacing: .0625em } /* tachyons default: .1em */
