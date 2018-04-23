@@ -297,11 +297,12 @@ class GithubPage(BasePageObject):
         repo = git.Repo(self.local_repo_path)
         logging.info(repo.git.status())
         logging.info(repo.git.pull('upstream', 'master'))
-        repo_url = 'https://%s:%s@github.com/%s/%s.git' % (test_data.config['DEV']['gh_username'],
-                                                       test_data.config['DEV']['gh_password'], test_data.config['DEV']['gh_username'], test_data.config['ORG']['gh_repo_name'])
-
-        logging.info('Pushing to %s' % repo_url)
-        logging.info(repo.git.push(repo_url))
+        # repo_url = 'https://%s:%s@github.com/%s/%s.git' % (test_data.config['DEV']['gh_username'],
+        #                                                test_data.config['DEV']['gh_password'], test_data.config['DEV']['gh_username'], test_data.config['ORG']['gh_repo_name'])
+        #
+        # logging.info('Pushing to %s' % repo_url)
+        # logging.info(repo.git.push(repo_url))
+        logging.info(repo.git.push('origin', 'master'))
         logging.info(repo.git.fetch('--all'))
         repo.git.checkout('-b', branch)
         file = open(os.path.join(self.local_repo_path, file_to_modify), 'w')
