@@ -81,7 +81,7 @@
             tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
                   [:activity "Activity"]
                   (when (seq @owner-bounties)
-                    [:dashboard "Dashboard"])
+                    [:dashboard "Manage bounties"])
                   (when (:status-team-member? @user)
                     [:usage-metrics "Usage metrics"])]]
         (into [:div.ui.attached.tabular.menu.tiny]
