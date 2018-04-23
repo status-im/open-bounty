@@ -98,6 +98,11 @@
        [:div.dtc.v-mid
         [confirm-button bounty claim]]]]]))
 
+(defn view-pr-button [claim]
+  [:a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white
+   {:href (pr-url claim)}
+   "View Pull Request"])
+
 (defn claim-card [bounty claim {:keys [render-view-claim-button?] :as opts}]
   (let [{user-name :user_name
          user-login :user_login
@@ -107,7 +112,7 @@
      [:div.flex.items-center
       {:class (when (and (bnt/paid? claim) (not (= user-login winner-login)))
                 "o-50")}
-      [:div
+      [:div.w2.flex-none
        [:img.br-100.w2 {:src avatar-url}]]
       [:div.pl3.flex-auto
        [:div
@@ -120,13 +125,17 @@
              [:span "No payout"]))]
         [:div.muted-blue "Submitted a claim via "
          [:a {:href (pr-url claim)}
-          (str (:repo_owner claim) "/" (:repo_name claim) " PR #" (:pr_number claim))]]]]
+          (str (:repo_owner claim) "/" (:repo_name claim) " PR #" (:pr_number claim))]]
+        ;; We render the button twice for difference screen sizes, first button is for small screens:
+        ;; 1) db + dn-ns: `display: block` + `display: none` for not-small screens
+        ;; 2) dn + db-ns: `display: none` + `display: block` for not-small screens
+        (when render-view-claim-button?
+          [:div.mt2.db.dn-ns
+           (view-pr-button claim)])]]
       (when render-view-claim-button?
-        [:div.dtc.v-mid
+        [:div.dn.db-ns
          [:div.w-100
-          [:a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white
-           {:href (pr-url claim)}
-           "View Pull Request"]]])]]))
+          (view-pr-button claim)]])]]))
 
 (defn to-confirm-list [bounties]
   (if (empty? bounties)
