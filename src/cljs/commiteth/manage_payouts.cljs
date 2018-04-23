@@ -335,7 +335,9 @@
         [:div.bg-white.br3.shadow-6.pa4.tc
          [:h3 "Please log in to view this page."]]
 
-        (or (nil? @owner-bounties-loading?) @owner-bounties-loading?)
+        (and
+         (empty? @owner-bounties)
+         (or (nil? @owner-bounties-loading?) @owner-bounties-loading?))
         [manage-payouts-loading]
 
         :else
