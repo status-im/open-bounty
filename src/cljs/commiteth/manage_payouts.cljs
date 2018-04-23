@@ -182,7 +182,10 @@
               [bounty-card bounty]
               [:div.mt3.f6 [bounty-balance bounty]]]
              [:div.pa3.bg-sob-tint.br3.br--bottom
-              (for [claim (:claims bounty)]
+              [:span.f6.gray (if (second claims)
+                       (str "Current Claims (" (count claims) ")")
+                       "Current Claim")]
+              (for [claim claims]
                 ^{:key (:pr_id claim)}
                 [claim-card bounty claim {:render-view-claim-button? true}])]]))))
 
