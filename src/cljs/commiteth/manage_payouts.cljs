@@ -12,6 +12,9 @@
                repo :repo_name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
 
+(def primary-button-button :button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer.shadow-7)
+(def primary-button-link :a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white.shadow-7)
+
 (defn balance-badge
   [tla balance]
   {:pre [(keyword? tla)]}
@@ -68,7 +71,7 @@
   (let [paid?   (bnt/paid? claim)
         merged? (bnt/merged? claim)]
     (when (and merged? (not paid?))
-      [:button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer
+      [primary-button-button
        (merge {:on-click #(rf/dispatch [:confirm-payout claim])}
               (if (and merged? (not paid?) (:payout_address bounty))
                 {}
@@ -99,7 +102,7 @@
         [confirm-button bounty claim]]]]]))
 
 (defn view-pr-button [claim]
-  [:a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white
+  [primary-button-link
    {:href (pr-url claim)}
    "View Pull Request"])
 
