@@ -247,7 +247,8 @@
 (defn load-data [initial-load?]
   (doseq [event [[:load-open-bounties initial-load?]
                  [:load-activity-feed initial-load?]
-                 [:load-top-hunters initial-load?]]]
+                 [:load-top-hunters initial-load?]
+                 [:load-owner-bounties initial-load?]]]
     (rf/dispatch event))
   (load-user))
 
