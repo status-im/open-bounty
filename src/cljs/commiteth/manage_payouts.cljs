@@ -292,6 +292,9 @@
                                   "  Here is where you can manage your bounties. Questions or comments? "
                                   [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]])]]))))
 
+(defn manage-bounties-title []
+  [:h1.f3.pg-med.fw5.muted-blue.mb3 "Manage bounties"])
+
 (defn manage-payouts-nav [active-route-id]
   (let [active-classes "muted-blue bb bw2 b--sob-blue"
         non-active-classes "silver pointer"
@@ -310,7 +313,7 @@
 
 (defn manage-payouts-loading []
   [:div.center.mw9.pa2.pa0-l
-   [:h1.f3.pg-book.mb3 "Manage bounties"]
+   [manage-bounties-title]
    [manage-payouts-nav :dashboard/to-confirm]
    [:div.w-two-thirds-l.mb6
     ;; This semantic UI loading spinner thing makes so many assumptions
@@ -342,9 +345,9 @@
               unclaimed (into (get grouped :funded)
                               (get grouped :open))]
           [:div.center.mw9.pa2.pa0-l
-           [:h1.f3.pg-book.mb3 "Manage bounties"]
-            [:div.dn-l.db-ns
-             [bounty-stats-new @bounty-stats-data]]
+           [manage-bounties-title]
+           [:div.dn-l.db-ns
+            [bounty-stats-new @bounty-stats-data]]
            [salute "Andy"]
            (when (nil? (common/web3))
              [:div.ui.warning.message
