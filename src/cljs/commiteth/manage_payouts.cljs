@@ -347,8 +347,12 @@
              [bounty-stats-new @bounty-stats-data]]
             [:div.fr-l.w-two-thirds-l
              (case route-id
-               :dashboard/to-confirm (to-confirm-list (get grouped :pending-maintainer-confirmation))
-               :dashboard/to-merge (to-merge-list (get grouped :claimed))
+               :dashboard/to-confirm (->> (get grouped :pending-maintainer-confirmation)
+                                          (sort-by :updated >)
+                                          (to-confirm-list))
+               :dashboard/to-merge (->> (get grouped :claimed >)
+                                        (sort-by :updated >)
+                                        (to-merge-list))
                (cond
                  (seq (get grouped :pending-maintainer-confirmation))
                  (routes/nav! :dashboard/to-confirm)
@@ -363,11 +367,13 @@
                  [heading "Unclaimed bounties" (count-pill (count unclaimed))]
                  [expandable-bounty-list
                   unclaimed-bounty
-                  (->> unclaimed (sort-by :updated) (reverse))]]
+                  (sort-by :updated > unclaimed)]]
 
                 [:div.mt4
                  [heading "Paid out bounties" (count-pill (count (get grouped :paid)))]
-                 [expandable-bounty-list paid-bounty (get grouped :paid)]]
+                 [expandable-bounty-list
+                  paid-bounty
+                  (sort-by :updated > (get grouped :paid))]]
 
                 #_[:div.mt4
                  [heading "Merged bounties" (count-pill (count (get grouped :merged)))]
