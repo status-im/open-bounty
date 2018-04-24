@@ -369,7 +369,7 @@
                  [heading "Paid out bounties" (count-pill (count (get grouped :paid)))]
                  [expandable-bounty-list paid-bounty (get grouped :paid)]]
 
-                [:div.mt4
+                #_[:div.mt4
                  [heading "Merged bounties" (count-pill (count (get grouped :merged)))]
                  [:p "I'm not sure why these exist. They have a :payout-address and a :confirm-hash so why are they missing the :payout-hash?"]
                  [expandable-bounty-list paid-bounty (get grouped :merged)]]
