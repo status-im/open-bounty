@@ -334,9 +334,9 @@
                               (get grouped :open))]
           [:div.center.mw9.pa2.pa0-l
            [manage-bounties-title]
-           [:div.dn-l.db-ns
-            [bounty-stats-new @bounty-stats-data]]
            [salute "Andy"]
+           [:div.dn-l.db-ns.mt4
+            [bounty-stats-new @bounty-stats-data]]
            (when (nil? (common/web3))
              [:div.ui.warning.message
               [:i.warning.icon]
