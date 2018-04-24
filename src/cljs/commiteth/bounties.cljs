@@ -9,6 +9,8 @@
             [commiteth.handlers :as handlers]
             [commiteth.db :as db]
             [commiteth.ui-model :as ui-model]
+            [commiteth.ui.balances :as ui-balances]
+            [commiteth.model.bounty :as bnt]
             [commiteth.subscriptions :as subs]
             [commiteth.util :as util]))
 
@@ -71,15 +73,12 @@
                [:div.bounty-item-row
                 [:div.time (human-time updated)]
                 [:span.bounty-repo-label repo-link]]
-               [:div.footer-row
-                [:div.balance-badge "ETH " balance-eth]
-                (for [[tla balance] tokens]
-                  ^{:key (random-uuid)}
-                  [:div.balance-badge.token
-                   (str (subs (str tla) 1) " " balance)])
-                [:span.usd-value-label "Value "] [:span.usd-balance-label (str "$" value-usd)]
+               [:div.footer-row.f6.lh-title
+                [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
+                [:span.mr3
+                 [ui-balances/usd-value-label (:value-usd bounty)]]
                 (when (> claim-count 0)
-                  [:span.open-claims-label
+                  [:span.dib.sob-blue.pointer
                    {:on-click (if matches-current-issue?
                                 #(close-claims-click)
                                 #(open-claims-click))}
