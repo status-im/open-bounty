@@ -27,7 +27,6 @@
   (empty? (:confirm_hash bounty)))
 
 (defn confirming? [bounty]
-  (assert (find bounty :confirming?))
   (:confirming? bounty))
 
 (defn issue-url
