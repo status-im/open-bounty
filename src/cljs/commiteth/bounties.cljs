@@ -268,7 +268,7 @@
         [:div.view-loading-container
          [:div.ui.active.inverted.dimmer
           [:div.ui.text.loader.view-loading-label "Loading"]]]
-        [:div.ui.container.open-bounties-container
+        [:div.ui.container.open-bounties-container.shadow-6
          {:ref #(reset! container-element %1)}
          [:div.open-bounties-header.ph4.pt4 "Bounties"]
          [:div.open-bounties-filter-and-sort.ph4
