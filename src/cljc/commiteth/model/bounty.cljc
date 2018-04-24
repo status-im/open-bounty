@@ -35,7 +35,4 @@
   (str "https://github.com/" (:repo-owner bounty) "/" (:repo-name bounty) "/issues/" (:issue-number bounty)))
 
 (defn crypto-balances [bounty]
-  ;; TODO add some assertions
-  (cond-> (seq (:tokens bounty))
-    (< 0 (util/parse-float (:balance-eth bounty)))
-    (conj [:ETH (:balance-eth bounty)])))
+  (assoc (:tokens bounty) :ETH (util/parse-float (:balance-eth bounty))))

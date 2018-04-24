@@ -1,6 +1,7 @@
 (ns commiteth.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
             [commiteth.db :as db]
+            [commiteth.util :as util]
             [commiteth.ui-model :as ui-model]
             [commiteth.common :refer [items-per-page]]
             [clojure.string :as string]))
@@ -88,14 +89,20 @@
  :owner-bounties-stats
  :<- [:owner-bounties]
  (fn [owner-bounties _]
-   (let [sum-dollars (fn sum-dollars [bounties]
-                       (reduce + (map #(js/parseFloat (:value-usd %)) bounties)))
+   (let [sum-field (fn sum-field [field bounties]
+                       (reduce + (map #(js/parseFloat (get % field)) bounties)))
+         sum-crypto (fn sum-crypto [bounties]
+                      (-> (map :tokens bounties)
+                          (util/sum-maps)
+                          (assoc :ETH (sum-field :balance-eth bounties))))
          {:keys [paid unpaid]} (group-by #(if (:paid? %) :paid :unpaid)
                                          (vals owner-bounties))]
      {:paid {:count (count paid)
-             :combined-usd-value (sum-dollars paid)}
+             :combined-usd-value (sum-field :value-usd paid)
+             :crypto (sum-crypto paid)}
       :unpaid {:count (count unpaid)
-               :combined-usd-value (sum-dollars unpaid)}})))
+               :combined-usd-value (sum-field :value-usd unpaid)
+               :crypto (sum-crypto unpaid)}})))
 
 (reg-sub
  :dashboard/seen-banners
