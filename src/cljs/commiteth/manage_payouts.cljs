@@ -162,9 +162,11 @@
               [:span.f6.gray (if (second claims)
                        (str "Current Claims (" (count claims) ")")
                        "Current Claim")]
-              (for [claim claims]
+              (for [[idx claim] (zipmap (range) claims)]
                 ^{:key (:pr_id claim)}
-                [claim-card bounty claim {:render-view-claim-button? true}])]]))))
+                [:div
+                 {:class (when (> idx 0) "bt b--light-gray pt2")}
+                 [claim-card bounty claim {:render-view-claim-button? true}]])]]))))
 
 (defn bounty-stats [{:keys [paid unpaid]}]
   [:div.cf
