@@ -183,10 +183,10 @@
 
 (defn bounty-stats-new [{:keys [paid unpaid]}]
   [:div.br3.bg-white.shadow-6.pa4
-   [:span.db.f3.pg-med.mb2 (common/usd-string (:combined-usd-value paid))]
+   [:span.db.f3.pg-med.mb2.dark-gray (common/usd-string (:combined-usd-value paid))]
    [:span.gray "Paid for " [:span.dark-gray (:count paid) " solved bounties"]]
    [:div.bb.b--near-white.mv3]
-   [:span.db.f3.pg-med.pt1.mb2 (common/usd-string (:combined-usd-value unpaid))]
+   [:span.db.f3.pg-med.pt1.mb2.dark-gray (common/usd-string (:combined-usd-value unpaid))]
    [:span.gray "Open for " [:span.dark-gray (:count unpaid) " bounties"]]])
 
 (def state-mapping
