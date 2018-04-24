@@ -31,7 +31,7 @@
    [:a {:href (bnt/issue-url bounty)}
     [:div.cf
      [:div.fl.w-80
-      [:span.pg-med.fw5.db.f4.muted-blue.hover-black
+      [:span.pg-med.fw5.db.f4.dark-gray.hover-black
        (gstring/truncate issue-title 110)]
       #_[:div.mt2
        [:span.f5.gray.pg-book (str owner "/" repo-name " #" issue-number)]]]
@@ -96,7 +96,7 @@
        [:img.br-100.w-100.bg-white {:src avatar-url}]]
       [:div.flex-auto
        [:div
-        [:span.f5.muted-blue.pg-med.fw5
+        [:span.f5.dark-gray.pg-med.fw5
          (or user-name user-login) " "
          [:span.f6.o-60 (when user-name (str "@" user-login "") )]
          (if (bnt/paid? claim)
@@ -184,10 +184,10 @@
 (defn bounty-stats-new [{:keys [paid unpaid]}]
   [:div.br3.bg-white.shadow-6.pa4
    [:span.db.f3.pg-med.mb2 (common/usd-string (:combined-usd-value paid))]
-   [:span.gray "Paid for " [:span.muted-blue (:count paid) " solved bounties"]]
+   [:span.gray "Paid for " [:span.dark-gray (:count paid) " solved bounties"]]
    [:div.bb.b--near-white.mv3]
    [:span.db.f3.pg-med.pt1.mb2 (common/usd-string (:combined-usd-value unpaid))]
-   [:span.gray "Open for " [:span.muted-blue (:count unpaid) " bounties"]]])
+   [:span.gray "Open for " [:span.dark-gray (:count unpaid) " bounties"]]])
 
 (def state-mapping
   {:opened :open
@@ -202,7 +202,7 @@
 (defn bounty-title-link [bounty {:keys [show-date? max-length]}]
   [:a.lh-title {:href (common/issue-url (:repo-owner bounty) (:repo-name bounty) (:issue-number bounty))}
    [:div.w-100.overflow-hidden
-    [:span.db.f5.pg-med.muted-blue.hover-black
+    [:span.db.f5.pg-med.dark-gray.hover-black
      (cond-> (:issue-title bounty)
        max-length (gstring/truncate max-length))]
     (when show-date?
@@ -236,7 +236,7 @@
     [:div
      [bounty-title-link bounty {:show-date? false :max-length 60}]
      [:div.f6.mt1.gray
-      "Paid out to " [:span.pg-med.muted-blue "@" (:winner_login bounty)]]]
+      "Paid out to " [:span.pg-med.fw5 "@" (:winner_login bounty)]]]
     [small-card-balances bounty]]])
 
 (defn expandable-bounty-list [bounty-component bounties]
@@ -265,7 +265,7 @@
     (fn salute-render [name]
       (when @msg-info
         [:div.relative.pa3.bg-sob-blue-o-20.br3
-         [:div.f3.muted-blue.absolute.top-0.right-0.pa3.b.pointer
+         [:div.f3.dark-gray.absolute.top-0.right-0.pa3.b.pointer
           {:role "button"
            :on-click #(rf/dispatch [:dashboard/mark-banner-as-seen (:banner-id @msg-info)])}
           "× "]
@@ -279,10 +279,10 @@
                                   [:a.sob-blue.pg-med {:href "https://chat.status.im"} "Chat with us"]])]]))))
 
 (defn manage-bounties-title []
-  [:h1.f3.pg-med.fw5.muted-blue.mb3 "Manage bounties"])
+  [:h1.f3.pg-med.fw5.dark-gray.mb3 "Manage bounties"])
 
 (defn manage-bounties-nav [active-route-id]
-  (let [active-classes "muted-blue bb bw2 b--sob-blue"
+  (let [active-classes "dark-gray bb bw2 b--sob-blue"
         non-active-classes "silver pointer"
         tab :span.dib.f6.tracked.ttu.pg-med.mr3.ml2.pb2]
     [:div.mv4.nl2
@@ -357,7 +357,7 @@
                  (routes/nav! :dashboard/to-merge)
 
                  :else (routes/nav! :dashboard/to-confirm)))
-             (let [heading :h4.f4.normal.pg-book.sob-muted-blue]
+             (let [heading :h4.f4.normal.pg-book.dark-gray]
                [:div.mt5
                 [:div.mt4
                  [heading "Unclaimed bounties" (count-pill (count unclaimed))]
