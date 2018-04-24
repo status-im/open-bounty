@@ -109,7 +109,8 @@
       [:div.vertical.segment.commiteth-header.bg-sob-tile
        [:div.ui.grid.container.computer.tablet.only
         [:div.four.wide.column
-         [header-logo]]
+         [:a {:href "/"}
+          [header-logo]]]
         [:div.eight.wide.column.middle.aligned.computer.tablet.only.computer-tabs-container
          [tabs false]]
         [:div.four.wide.column.right.aligned.computer.tablet.only
