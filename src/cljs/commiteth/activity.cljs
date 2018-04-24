@@ -48,7 +48,7 @@
     [:div.header.display-name display-name]
     [:div.description
      [item-description item]]
-    [:div.footer-row.f6.lh-title
+    [:div.footer-row.f6.lh-title.mt2
      (when-not (= item-type "new-bounty")
        [ui-balances/token-balances (bnt/crypto-balances item) :badge])
      [:span.gray (human-time updated)]]]])

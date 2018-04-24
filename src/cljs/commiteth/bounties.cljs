@@ -73,7 +73,7 @@
                [:div.bounty-item-row
                 [:div.time (human-time updated)]
                 [:span.bounty-repo-label repo-link]]
-               [:div.footer-row.f6.lh-title
+               [:div.footer-row.f6.lh-title.mt2
                 [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
                 [:span.mr3
                  [ui-balances/usd-value-label (:value-usd bounty)]]
