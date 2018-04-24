@@ -5,6 +5,7 @@
             [commiteth.util :as util]
             [commiteth.routes :as routes]
             [commiteth.model.bounty :as bnt]
+            [commiteth.ui.balances :as ui-balances]
             [commiteth.common :as common :refer [human-time]]))
 
 (defn pr-url [{owner :repo_owner
@@ -15,35 +16,6 @@
 (def primary-button-button :button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer.shadow-7)
 (def primary-button-link :a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white.shadow-7)
 
-(defn balance-badge
-  [tla balance]
-  {:pre [(keyword? tla)]}
-  (let [color (fn balance-badge-color [tla]
-                (get {"ETH" "#57a7ed"} tla "#4360df"))
-        tla   (name tla)]
-    [:div.dib.ph2.pv1.relative
-     {:style {:color (color tla)}}
-     [:div.absolute.top-0.left-0.right-0.bottom-0.o-10.br2
-      {:style {:background-color (color tla)}}]
-     [:span.pg-med (str tla " " balance)]]))
-
-(defn usd-value-label [value-usd]
-  [:span
-   [:span.usd-value-label "Value "]
-   [:span.usd-balance-label (str "$" value-usd)]])
-
-(defn token-balances [crypto-balances]
-  [:span ; TODO consider non DOM el react wrapping
-   (for [[tla balance] crypto-balances]
-     ^{:key tla}
-     [:div.dib.mr2
-      [balance-badge tla balance]])])
-
-(defn bounty-balance [{:keys [value-usd] :as bounty}]
-  [:div
-   [token-balances (bnt/crypto-balances bounty)]
-   [:div.dib.mr2.pv1
-    [usd-value-label value-usd]]])
 
 (defn bounty-card [{owner        :repo-owner
                     repo-name    :repo-name
@@ -98,7 +70,10 @@
          {:style {:-webkit-filter "grayscale(1)"
                   :pointer-events "none"}})
        [:div.dtc.v-mid.pr3.f6
-        [bounty-balance bounty]]
+        [:div
+         [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
+         [:div.dib.mr2.pv1
+          [ui-balances/usd-value-label (:value-usd bounty)]]]]
        [:div.dtc.v-mid
         [confirm-button bounty claim]]]]]))
 
@@ -225,14 +200,13 @@
    :paid :paid})
 
 (defn bounty-title-link [bounty {:keys [show-date? max-length]}]
-  [:a {:href (common/issue-url (:repo-owner bounty) (:repo-name bounty) (:issue-number bounty))}
+  [:a.lh-title {:href (common/issue-url (:repo-owner bounty) (:repo-name bounty) (:issue-number bounty))}
    [:div.w-100.overflow-hidden
     [:span.db.f5.pg-med.muted-blue.hover-black
      (cond-> (:issue-title bounty)
        max-length (gstring/truncate max-length))]
     (when show-date?
       [:span.db.mt1.f6.gray.pg-book
-       ;;{:on-click #(do (.preventDefault %) (prn (dissoc bounty :claims)))}
        (common/human-time (:updated bounty))])]])
 
 (defn square-card
@@ -244,22 +218,26 @@
     [:div.flex-auto top]
     [:div bottom]]])
 
+(defn small-card-balances [bounty]
+  [:div.f6
+   [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
+   [:div
+    [ui-balances/usd-value-label (:value-usd bounty)]]])
+
 (defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
-    [bounty-title-link bounty {:show-date? true :max-length 100}]
-    [:div.f7
-     [bounty-balance bounty]]]])
+    [bounty-title-link bounty {:show-date? true :max-length 60}]
+    [small-card-balances bounty]]])
 
 (defn paid-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
     [:div
-     [bounty-title-link bounty {:show-date? false :max-length 100}]
+     [bounty-title-link bounty {:show-date? false :max-length 60}]
      [:div.f6.mt1.gray
       "Paid out to " [:span.pg-med.muted-blue "@" (:winner_login bounty)]]]
-    [:div.f7
-     [bounty-balance bounty]]]])
+    [small-card-balances bounty]]])
 
 (defn expandable-bounty-list [bounty-component bounties]
   (let [expanded? (r/atom false)]
@@ -280,7 +258,7 @@
              "See all ↓")]])])))
 
 (defn count-pill [n]
-  [:span.v-mid.ml3.ph3.pv1.bg-light-gray.br3.f7 n])
+  [:span.v-top.ml3.ph3.pv1.bg-black-05.gray.br3.f7 n])
 
 (defn salute [name]
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
