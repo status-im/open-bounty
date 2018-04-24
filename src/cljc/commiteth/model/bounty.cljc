@@ -10,6 +10,9 @@
 ;; via a protocol. Clojure records could also be serialized via transit making it easier
 ;; to communicate what datatypes are returned where.
 
+(defn open? [claim]
+  (assert (find claim :pr_state))
+  (= 0 (:pr_state claim)))
 
 (defn merged? [claim]
   (assert (find claim :pr_state))
