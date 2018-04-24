@@ -12,15 +12,19 @@
 
 
 (defn merged? [claim]
+  (assert (find claim :pr_state))
   (= 1 (:pr_state claim)))
 
 (defn paid? [claim]
+  (assert (find claim :payout_hash))
   (not-empty (:payout_hash claim)))
 
 (defn bot-confirm-unmined? [bounty]
+  (assert (find bounty :confirm_hash))
   (empty? (:confirm_hash bounty)))
 
 (defn confirming? [bounty]
+  (assert (find bounty :confirming?))
   (:confirming? bounty))
 
 (defn issue-url
