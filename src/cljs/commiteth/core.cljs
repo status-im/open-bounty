@@ -106,7 +106,7 @@
   (let [user (rf/subscribe [:user])
         flash-message (rf/subscribe [:flash-message])]
     (fn []
-      [:div.vertical.segment.commiteth-header
+      [:div.vertical.segment.commiteth-header.bg-sob-tile
        [:div.ui.grid.container.computer.tablet.only
         [:div.four.wide.column
          [header-logo]]

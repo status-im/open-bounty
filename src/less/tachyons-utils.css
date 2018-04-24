@@ -5,6 +5,13 @@
 
 .shadow-6 {box-shadow: 0 5px 16px 0 rgba(230, 235, 238, 0.68)}
 
+.bg-sob-tile {
+  background-image: url(/dest/img/new-site/SOB_tile4@2x.png);
+  background-size: 20px;
+  background-position: left top;
+  background-repeat: repeat;
+}
+
 /* Color classes are generated using https://tachyons-tldr.now.sh/#/tools */
 /* all colors defined here: https://app.zeplin.io/project/59dd4d45719799b4220a2e49/styleguide */
 /* TODO names need some updating */
