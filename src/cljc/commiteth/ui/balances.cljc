@@ -28,9 +28,16 @@
    [:span.gray "Value "]
    [:span.dark-gray (str "$" value-usd)]])
 
-(defn token-balances [crypto-balances style]
+(defn token-balances
+  "Render ETH and token balances using the specified `style` (:label or :badge).
+
+  Non-positive balances will not be rendered. ETH will always be rendered first."
+  [crypto-balances style]
   [:span ; TODO consider non DOM el react wrapping
-   (for [[tla balance] crypto-balances]
+   (for [[tla balance] (-> (dissoc crypto-balances :ETH)
+                           (seq)
+                           (conj [:ETH (:ETH crypto-balances)]))
+         :when (pos? balance)]
      ^{:key tla}
      [:div.dib.mr2
       (case style
