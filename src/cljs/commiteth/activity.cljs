@@ -1,6 +1,8 @@
 (ns commiteth.activity
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
+            [commiteth.ui.balances :as ui-balances]
+            [commiteth.model.bounty :as bnt]
             [commiteth.common :refer [human-time
                                       items-per-page
                                       display-data-page
@@ -46,15 +48,10 @@
     [:div.header.display-name display-name]
     [:div.description
      [item-description item]]
-    [:div.footer-row
+    [:div.footer-row.f6.lh-title
      (when-not (= item-type "new-bounty")
-       [:div
-        [:div.balance-badge "ETH " balance-eth]
-        (for [[tla balance] tokens]
-          ^{:key (random-uuid)}
-          [:div.balance-badge.token
-           (str (subs (str tla) 1) " " balance)])])
-     [:div.time (human-time updated)]]]])
+       [ui-balances/token-balances (bnt/crypto-balances item) :badge])
+     [:span.gray (human-time updated)]]]])
 
 (defn activity-list [{:keys [items item-count page-number total-count] 
                       :as activity-page-data}
