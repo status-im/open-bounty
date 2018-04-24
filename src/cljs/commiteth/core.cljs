@@ -216,7 +216,7 @@
               :usage-metrics  [usage-metrics-page])]]
           (when (show-top-hunters?)
             [:div.five.wide.column.computer.only
-             [:div.ui.container.top-hunters
+             [:div.ui.container.top-hunters.shadow-6
               [:h3.top-hunters-header "Top 5 hunters"]
               [:div.top-hunters-subheader "All time"]
               [top-hunters]]])]]]
