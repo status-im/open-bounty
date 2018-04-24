@@ -158,8 +158,9 @@
                 ;; Since the resulting payout is the same we can probably
                 ;; ignore this edge case for a first version
                 :let [winning-claim (->> (:claims bounty)
-                                         (filter #(= (:user_login %)
-                                                     (:winner_login bounty)))
+                                         (filter #(and (bnt/merged? %)
+                                                       (= (:user_login %)
+                                                          (:winner_login bounty))))
                                          util/assert-first)]]
             ^{:key (:issue-id bounty)}
             [:div.mb3.br3.shadow-6.bg-white
