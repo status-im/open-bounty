@@ -13,7 +13,7 @@
      {:style {:color (tla-color tla)}}
      [:div.absolute.top-0.left-0.right-0.bottom-0.o-10.br2
       {:style {:background-color (tla-color tla)}}]
-     [:span.pg-med (str tla " " balance)]]))
+     [:span.pg-med (str balance " " tla)]]))
 
 (defn balance-label
   [tla balance]
@@ -21,7 +21,7 @@
   (let [tla   (name tla)]
     [:span.pg-med.fw5
      {:style {:color (tla-color tla)}}
-     (str tla " " balance)]))
+     (str balance " " tla)]))
 
 (defn usd-value-label [value-usd]
   [:span
