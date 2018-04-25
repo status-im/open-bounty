@@ -634,7 +634,7 @@ SELECT
   updated
 FROM activity_feed_view
 ORDER BY updated DESC
-LIMIT 100;
+LIMIT 1000;
 
 -- :name get-new-users-for-welcome-email :? :*
 -- :doc users who have not been sent a welcome email
