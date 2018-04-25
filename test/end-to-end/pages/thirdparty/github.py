@@ -267,7 +267,7 @@ class GithubPage(BasePageObject):
     def get_login_page(self):
         self.driver.get(test_data.config['Common']['gh_login'])
 
-    def get_deployed_contract(self, wait=120):
+    def get_deployed_contract(self, wait=50):
         for i in range(wait):
             self.refresh()
             try:
@@ -275,7 +275,7 @@ class GithubPage(BasePageObject):
             except TimeoutException:
                 time.sleep(10)
                 pass
-        pytest.fail('Contract is not deployed in %s minutes!' % str(wait / 60))
+        pytest.fail('Contract is not deployed in %s minutes!' % str(wait * 10 / 60))
 
     # cloning via HTTPS
     def clone_repo(self, initial_repo=None, username=None, repo_name=None, repo_folder='test_repo'):
