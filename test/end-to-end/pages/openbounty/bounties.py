@@ -44,7 +44,8 @@ class BountyClaimsAmount(BaseText):
     def __init__(self, driver, issue_title, claims_text):
         super(BaseText, self).__init__(driver)
         self.locator = self.Locator.xpath_selector(
-            '//div[@class="header"]/a[contains(.,"%s")]/../../div[@class="footer-row"]/span[contains(.,"%s")]' % (issue_title, claims_text))
+            '//div[@class="header"]/a[contains(.,"%s")]/../../*/span[contains(.,"%s")]' % (issue_title, claims_text))
+
 
 
 class BountiesPage(BasePageObject):
