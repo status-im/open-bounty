@@ -33,9 +33,9 @@ def dockerreponame = "statusim/openbounty-app"
 		}
 		stage('Testing') {
 			if ( currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause') ){
-			    echo 'Waiting 2,5 minutes for deployment to complete prior starting smoke testing'
-			    sleep 150
-				build job: 'status-openbounty/sob-end-to-end-tests', parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: "*/Jenkins/experiment"]]
+			    echo 'Waiting 1 minute for deployment to complete prior starting smoke testing'
+			    sleep 60
+				build job: 'status-openbounty/sob-end-to-end-tests', parameters: [[$class: 'StringParameterValue', name: 'branch', value: "*/Jenkins/experiment"]]
 			} else {
 				echo "No testing on automatic trigger, go to Jenkins and push build button to deliver it and test it."
 			}
