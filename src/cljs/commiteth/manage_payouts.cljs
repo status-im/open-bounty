@@ -191,15 +191,15 @@
                      {:class (if (< 100000000 usd-amount) "f3" "f2")}
                      (.toLocaleString usd-amount)]])]
     [:div.br3.bg-white.shadow-6.pa4.dark-gray
-     [:span.db.mb3.f6 "Paid for " (:count paid) " solved bounties"]
-     (usd-stat (:combined-usd-value paid))
-     [:div.f6.mt3
-      [ui-balances/token-balances (:crypto paid) :label]]
-     [:div.bb.b--near-white.mv3]
      [:span.db.mb3.f6 "Open for " [:span.dark-gray (:count unpaid) " bounties"]]
      (usd-stat (:combined-usd-value unpaid))
      [:div.f6.mt3
-      [ui-balances/token-balances (:crypto unpaid) :label]]]))
+      [ui-balances/token-balances (:crypto unpaid) :label]]
+     [:div.bb.b--near-white.mv3]
+     [:span.db.mb3.f6 "Paid for " (:count paid) " solved bounties"]
+     (usd-stat (:combined-usd-value paid))
+     [:div.f6.mt3
+      [ui-balances/token-balances (:crypto paid) :label]]]))
 
 (def state-mapping
   {:opened :open
