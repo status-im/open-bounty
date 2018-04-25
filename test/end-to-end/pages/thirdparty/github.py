@@ -304,6 +304,8 @@ class GithubPage(BasePageObject):
         # logging.info(repo.git.push(repo_url))
         logging.info(repo.git.push('origin', 'master'))
         logging.info(repo.git.fetch('--all'))
+        repo.git.config('user.email', test_data.config['DEV']['gh_login'])
+        repo.git.config('user.name', test_data.config['DEV']['gh_username'])
         repo.git.checkout('-b', branch)
         file = open(os.path.join(self.local_repo_path, file_to_modify), 'w')
         file.write("Autotest change: %s \r \n" % test_data.date_time)
