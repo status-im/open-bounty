@@ -51,7 +51,7 @@ class InstallButton(BaseButton):
 class OrganizationButton(BaseButton):
     def __init__(self, driver):
         super(OrganizationButton, self).__init__(driver)
-        self.locator = self.Locator.css_selector('[alt="@Org4"]')
+        self.locator = self.Locator.css_selector('[alt="@%s"]' % test_data.config['ORG']['gh_org_name'])
 
 
 class AllRepositoriesButton(BaseButton):
@@ -297,11 +297,6 @@ class GithubPage(BasePageObject):
         repo = git.Repo(self.local_repo_path)
         logging.info(repo.git.status())
         logging.info(repo.git.pull('upstream', 'master'))
-        # repo_url = 'https://%s:%s@github.com/%s/%s.git' % (test_data.config['DEV']['gh_username'],
-        #                                                test_data.config['DEV']['gh_password'], test_data.config['DEV']['gh_username'], test_data.config['ORG']['gh_repo_name'])
-        #
-        # logging.info('Pushing to %s' % repo_url)
-        # logging.info(repo.git.push(repo_url))
         logging.info(repo.git.push('origin', 'master'))
         logging.info(repo.git.fetch('--all'))
         repo.git.config('user.email', test_data.config['DEV']['gh_login'])
