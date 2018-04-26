@@ -75,18 +75,22 @@
 (defn tabs [mobile?]
   (let [user (rf/subscribe [:user])
         owner-bounties (rf/subscribe [:owner-bounties])
-        current-page (rf/subscribe [:page])]
+        route (rf/subscribe [:route])]
     (fn tabs-render []
-      (let [tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
+      (let [route-id (:route-id @route)
+            tabs [[:bounties (str (when-not @user "Open ") "Bounties")]
                   [:activity "Activity"]
                   (when (seq @owner-bounties)
-                    [:manage-payouts (str (when-not mobile? "Manage ") "Payouts")])
+                    [:dashboard "Manage bounties"])
                   (when (:status-team-member? @user)
                     [:usage-metrics "Usage metrics"])]]
         (into [:div.ui.attached.tabular.menu.tiny]
               (for [[page caption] (remove nil? tabs)]
                 (let [props {:class (str "ui item"
-                                         (when (= @current-page page) " active"))
+                                         (if (= :dashboard page)
+                                           (when (contains? #{:dashboard :dashboard/to-confirm :dashboard/to-merge} route-id)
+                                             " active")
+                                           (when (= route-id page) " active")))
                              :on-click #(commiteth.routes/nav! page)}]
                   ^{:key page} [:div props caption])))))))
 
@@ -102,10 +106,11 @@
   (let [user (rf/subscribe [:user])
         flash-message (rf/subscribe [:flash-message])]
     (fn []
-      [:div.vertical.segment.commiteth-header
+      [:div.vertical.segment.commiteth-header.bg-sob-tile
        [:div.ui.grid.container.computer.tablet.only
         [:div.four.wide.column
-         [header-logo]]
+         [:a {:href "/"}
+          [header-logo]]]
         [:div.eight.wide.column.middle.aligned.computer.tablet.only.computer-tabs-container
          [tabs false]]
         [:div.four.wide.column.right.aligned.computer.tablet.only
@@ -189,9 +194,9 @@
        [:div.version-footer "version " [:a {:href (str "https://github.com/status-im/commiteth/commit/" version)} version]])]))
 
 (defn page []
-  (let [current-page (rf/subscribe [:page])
-        show-top-hunters? #(contains? #{:bounties :activity} @current-page)]
-    (fn []
+  (let [route (rf/subscribe [:route])
+        show-top-hunters? #(contains? #{:bounties :activity} (:route-id @route))]
+    (fn page-render []
       [:div.ui.pusher
        [page-header]
        [:div.ui.vertical.segment
@@ -200,16 +205,18 @@
           [:div {:class (str (if (show-top-hunters?) "eleven" "sixteen")
                              " wide computer sixteen wide tablet column")}
            [:div.ui.container
-            (case @current-page
+            (case (:route-id @route)
               :activity       [activity-page]
               :bounties       [bounties-page]
               :repos          [repos-page]
-              :manage-payouts [manage-payouts-page]
+              (:dashboard
+               :dashboard/to-confirm
+               :dashboard/to-merge) [manage-payouts-page]
               :settings       [update-address-page]
               :usage-metrics  [usage-metrics-page])]]
           (when (show-top-hunters?)
             [:div.five.wide.column.computer.only
-             [:div.ui.container.top-hunters
+             [:div.ui.container.top-hunters.shadow-6
               [:h3.top-hunters-header "Top 5 hunters"]
               [:div.top-hunters-subheader "All time"]
               [top-hunters]]])]]]
@@ -239,10 +246,11 @@
     (reset! active-user nil)))
 
 (defn load-data [initial-load?]
-  (doall (map rf/dispatch
-        [[:load-open-bounties initial-load?]
-         [:load-activity-feed initial-load?]
-         [:load-top-hunters initial-load?]]))
+  (doseq [event [[:load-open-bounties initial-load?]
+                 [:load-activity-feed initial-load?]
+                 [:load-top-hunters initial-load?]
+                 [:load-owner-bounties initial-load?]]]
+    (rf/dispatch event))
   (load-user))
 
 (defonce timer-id (r/atom nil))
@@ -254,12 +262,12 @@
   (mount-components))
 
 (defn init! []
+  (commiteth.routes/setup-nav!)
   (rf/dispatch-sync [:initialize-db])
   (rf/dispatch [:initialize-web3])
   (when config/debug?
     (enable-re-frisk!))
   (load-interceptors!)
-  (commiteth.routes/setup-nav!)
   (load-data true)
   (.addEventListener js/window "click" #(rf/dispatch [:clear-flash-message]))
   (on-js-load))

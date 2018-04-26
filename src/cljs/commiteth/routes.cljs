@@ -6,7 +6,9 @@
   (bide/router [["/"               :bounties]
                 ["/activity"       :activity]
                 ["/repos"          :repos]
-                ["/manage-payouts" :manage-payouts]
+                ["/dashboard"      :dashboard]
+                ["/dashboard/to-confirm" :dashboard/to-confirm]
+                ["/dashboard/to-merge"   :dashboard/to-merge]
                 ["/settings"       :settings]
                 ["/usage-metrics"  :usage-metrics]]))
 

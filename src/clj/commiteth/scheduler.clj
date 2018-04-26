@@ -84,7 +84,9 @@
 
 
 (defn deploy-pending-contracts
-  "Under high-concurrency circumstances or in case geth is in defunct state, a bounty contract may not deploy successfully when the bounty label is addded to an issue. This function deploys such contracts."
+  "Under high-concurrency circumstances or in case geth is in defunct
+  state, a bounty contract may not deploy successfully when the bounty
+  label is addded to an issue. This function deploys such contracts."
   []
   (p :deploy-pending-contracts
      (doseq [{issue-id :issue_id
@@ -104,20 +106,24 @@
   (log/info "In self-sign-bounty")
   (p :self-sign-bounty
      (doseq [{contract-address :contract_address
-           issue-id         :issue_id
-           payout-address   :payout_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
+              issue-id         :issue_id
+              payout-address   :payout_address
+              repo :repo
+              owner :owner
+              comment-id :comment_id
+              issue-number :issue_number
+              balance-eth :balance_eth
+              tokens :tokens
               winner-login :winner_login} (db-bounties/pending-bounties)]
        (try
+         ;; TODO(martin) delete this shortly after org-dashboard deploy
+         ;; as we're now setting `winner_login` when handling a new claims
+         ;; coming in via webhooks (see `commiteth.routes.webhooks/handle-claim`)
+         (db-bounties/update-winner-login issue-id winner-login)
          (let [value (eth/get-balance-hex contract-address)]
            (if (empty? payout-address)
              (do
-               (log/warn "issue %s: Cannot sign pending bounty - winner has no payout address" issue-id)
+               (log/warn "issue %s: Cannot sign pending bounty - winner (%s) has no payout address" issue-id winner-login)
                (github/update-merged-issue-comment owner
                                                    repo
                                                    comment-id
@@ -131,7 +137,6 @@
                                                     :internal-tx-id (str "payout-github-issue-" issue-id)})]
                (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address execute-hash)
                (db-bounties/update-execute-hash issue-id execute-hash)
-               (db-bounties/update-winner-login issue-id winner-login)
                (github/update-merged-issue-comment owner
                                                    repo
                                                    comment-id
