@@ -4,6 +4,7 @@
             [commiteth.db.repositories :as repos]
             [commiteth.db.comment-images :as comment-images]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.util.png-rendering :as png-rendering]
@@ -36,7 +37,7 @@
                 comment-id (:id resp)]
             (log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
             (issues/update-comment-id issue-id comment-id))
-          (eth/track-tx! tx-info))
+          (tracker/track-tx! tx-info))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
 

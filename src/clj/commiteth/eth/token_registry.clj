@@ -1,6 +1,7 @@
 (ns commiteth.eth.token-registry
   (:require [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
+            [commiteth.eth.web3j :refer [web3j-obj creds-obj]]
             [clojure.tools.logging :as log])
   (:import [org.web3j
             abi.datatypes.generated.Uint256
@@ -22,8 +23,8 @@
 
 (defn- load-tokenreg-contract [addr]
   (TokenReg/load addr
-                 @eth/web3j-obj
-                 (eth/creds)
+                 @web3j-obj
+                 @creds-obj
                  (eth/gas-price)
                  (BigInteger/valueOf 21000)))
 
@@ -58,8 +59,8 @@
 (defn deploy-parity-tokenreg
   "Deploy an instance of parity token-registry to current network"
   []
-  (TokenReg/deploy @eth/web3j-obj
-                   (eth/creds)
+  (TokenReg/deploy @web3j-obj
+                   @creds-obj
                    (eth/gas-price)
                    (BigInteger/valueOf 4000000) ;; gas limit
                    BigInteger/ZERO))

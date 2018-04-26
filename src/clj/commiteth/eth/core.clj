@@ -1,27 +1,17 @@
 (ns commiteth.eth.core
   (:require [clojure.data.json :as json]
             [org.httpkit.client :refer [post]]
-            [commiteth.db.issues :as issues]
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
+            [commiteth.eth.web3j :refer [get-signed-tx]]
             [clojure.string :refer [join]]
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [clojure.tools.logging :as log]
+            [commiteth.eth.tracker :as tracker]
+            [clj-time.core :as t]
             [clojure.string :as str]
             [pandect.core :as pandect]
-            [mount.core :as mount]
-            [clj-time.core :as t]
-            [commiteth.util.util :refer [json-api-request]])
-  (:import [org.web3j
-            protocol.Web3j
-            protocol.http.HttpService
-            protocol.core.DefaultBlockParameterName
-            protocol.core.methods.response.EthGetTransactionCount
-            protocol.core.methods.request.RawTransaction
-            utils.Numeric
-            crypto.Credentials
-            crypto.TransactionEncoder
-            crypto.WalletUtils]))
+            [commiteth.util.util :refer [json-api-request]]))
 
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
@@ -29,118 +19,6 @@
 (defn gas-estimate-factor [] (env :gas-estimate-factor 1.0))
 (defn auto-gas-price? [] (env :auto-gas-price false))
 (defn offline-signing? [] (env :offline-signing true))
-
-(def web3j-obj
-  (delay (Web3j/build (HttpService. (eth-rpc-url)))))
-
-(def creds-obj (atom nil))
-
-(defn wallet-file-path []
-  (env :eth-wallet-file))
-
-(defn wallet-password []
-  (env :eth-password))
-
-(defn creds []
-  (or @creds-obj
-      (let [password  (wallet-password)
-            file-path (wallet-file-path)]
-        (if (and password file-path)
-          (swap! creds-obj
-                 (constantly (WalletUtils/loadCredentials
-                               password
-                               file-path)))
-          (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
-                          {:password password :file-path file-path}))))))
-
-(defn get-nonce []
-  (.. (.ethGetTransactionCount @web3j-obj 
-                               (env :eth-account) 
-                               DefaultBlockParameterName/PENDING)
-      sendAsync
-      get
-      getTransactionCount))
-
-
-(defprotocol TxTracker
-  (try-reserve-nonce [this]
-    "Fetch current nonce via eth_getTransactionCount
-    and either return it if it is not in use yet,
-    or throw an exception")
-  (drop-nonce [this nonce]
-    "If tx execution returned with an error,
-    release previously reserved nonce")
-  (track-tx [this tx-info]
-    "Record tx data after successful submission")
-  (untrack-tx [this tx-info]
-    "Mark tx as successfully closed")
-  (prune-txs [this txs]
-    "Release nonces related to txs param
-    and the ones that have expired (haven't been marked as closed after a certain timeout)")
-  )
-
-(defrecord SequentialTxTracker [current-tx]
-  TxTracker
-  (try-reserve-nonce [this]
-    (let [nonce (get-nonce)]
-      (if (or (nil? @current-tx)
-              (> nonce (:nonce @current-tx)))
-        (:nonce (reset! current-tx {:nonce nonce}))
-        (throw (Exception. (str "Attempting to re-use old nonce" nonce))))))
-  (drop-nonce [this nonce]
-    (reset! current-tx nil))
-  (track-tx [this tx-info]
-    (reset! current-tx tx-info))
-  (untrack-tx [this tx-info]
-    (reset! current-tx nil))
-  (prune-txs [this unmined-txs]
-    (when (or ((set (map :tx-hash unmined-txs)) (:tx-hash @current-tx))
-            (and (:timestamp @current-tx)
-               (t/before? (:timestamp @current-tx) (t/minus (t/now) (t/minutes 5)))))
-      (log/errorf "Current nonce unmined for 5 minutes, force reset. Tx hash: %s, type: %s" 
-                  (:tx-hash @current-tx) (:type @current-tx))
-      (reset! current-tx nil)))
-
-  )
-(def tx-tracker (SequentialTxTracker. (atom nil)))
-
-(defn track-tx! 
-  "Store tx data in tx-tracker and DB"
-  [{:keys [issue-id tx-hash type]
-                  :as tx-info}]
-  (track-tx tx-tracker tx-info)
-  (issues/save-tx-info! issue-id tx-hash type))
-  
-(defn untrack-tx! 
-  "Mark tx data stored in tx-tracker and DB as closed"
-  [{:keys [issue-id result type]
-                    :as tx-info}]
-  (untrack-tx tx-tracker tx-info)
-  (issues/save-tx-result! issue-id result type))
-
-(defn prune-txs! [unmined-txs]
-  "Release nonces related to unmined txs,
-   and set relevant DB fields to null thereby
-   marking them as candidates for re-execution"
-  (doseq [{issue-id :issue_id
-           tx-hash :tx_hash
-           type :type} unmined-txs]
-    (log/infof "issue %s: resetting tx operation: %s for hash: %s" issue-id type tx-hash)
-    (issues/save-tx-info! issue-id nil type))
-  (prune-txs tx-tracker unmined-txs))
-
- 
-(defn get-signed-tx [gas-price gas-limit to data nonce]
-  "Create a sign a raw transaction.
-  'From' argument is not needed as it's already
-  encoded in credentials.
-  See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (log/infof "Signing TX: nonce: %s, gas-price: %s, gas-limit: %s, data: %s"
-             nonce gas-price gas-limit data)
-  (-> (RawTransaction/createTransaction nonce gas-price gas-limit to data)
-      (TransactionEncoder/signMessage (creds))
-      (Numeric/toHexString)))
-
 
 (defn eth-gasstation-gas-price
   "Get max of average and average_calc from gas station and use that
@@ -212,7 +90,8 @@
     (cond
       ;; Ignore any responses that have mismatching request ID
       (not= (:id result) request-id)
-      (throw (ex-info "Geth returned an invalid json-rpc request ID, ignoring response"))
+      (throw (ex-info "Geth returned an invalid json-rpc request ID, ignoring response"
+                      {:result result}))
 
       ;; If request ID matches but contains error, throw
       (:error result)
@@ -328,15 +207,17 @@
       contract
       (merge {:to contract}))))
 
-(defmulti execute (fn [arg] (offline-signing?)))
+(defmulti execute (fn [_] (if (offline-signing?) 
+                            :with-tx-signing
+                            :no-tx-signing)))
 
 
-(defmethod execute true
+(defmethod execute :with-tx-signing
   [{:keys [from contract method-id gas-limit params internal-tx-id]
     :as args}]
   {:pre [(string? method-id)]}
   (let [[type-kw issue-id] internal-tx-id
-        nonce (try-reserve-nonce tx-tracker)
+        nonce (tracker/try-reserve-nonce!)
         gas-price (gas-price)
         params (construct-params (assoc args :gas-price gas-price))
         gas (or gas-limit (estimate-gas from contract (:value params) params))
@@ -347,11 +228,11 @@
                               nonce)
         tx-hash (try
                   (eth-rpc
-                  {:method "eth_sendRawTransaction"
-                   :params [params]
-                   :internal-tx-id internal-tx-id})
+                    {:method "eth_sendRawTransaction"
+                     :params [params]
+                     :internal-tx-id internal-tx-id})
                   (catch Throwable ex
-                    (drop-nonce tx-tracker nonce)
+                    (tracker/drop-nonce! nonce)
                     (throw ex)))]
     {:tx-hash tx-hash
      :issue-id issue-id
@@ -359,7 +240,7 @@
      :nonce nonce
      :timestamp (t/now)}))
 
-(defmethod execute false
+(defmethod execute :no-tx-signing
   [{:keys [from contract method-id gas-limit params internal-tx-id]
     :as args}]
   {:pre [(string? method-id)]}
@@ -433,14 +314,3 @@
             (filter true?)
             (empty?)))
           true))))
-
-(mount/defstate
-  eth-core
-  :start
-  (do
-    (swap! creds-obj (constantly nil))
-    (log/info "eth/core started"))
-  :stop
-  (log/info "eth/core stopped"))
-
-

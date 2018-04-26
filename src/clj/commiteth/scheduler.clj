@@ -2,6 +2,7 @@
   (:require [commiteth.eth.core :as eth]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.eth.token-data :as token-data]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
@@ -52,7 +53,7 @@
          (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
            (log/infof "issue %s: update-issue-contract-address: tx receipt: %s" issue-id receipt)
            (if-let [contract-address (multisig/find-created-multisig-address receipt)]
-             (let [_ (eth/untrack-tx! {:issue-id issue-id 
+             (let [_ (tracker/untrack-tx! {:issue-id issue-id 
                                            :tx-hash transaction-hash 
                                            :result contract-address 
                                            :type :deploy})
@@ -133,7 +134,7 @@
                                                :payout-address payout-address
                                                :internal-tx-id [:execute issue-id]})]
                (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address (:tx-hash tx-info))
-               (eth/track-tx! tx-info)
+               (tracker/track-tx! tx-info)
                (db-bounties/update-winner-login issue-id winner-login)
                (github/update-merged-issue-comment owner
                                                    repo
@@ -160,10 +161,10 @@
            (log/infof "issue %s: execution receipt for issue " issue-id receipt)
            (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
              (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
-             (eth/untrack-tx! {:issue-id issue-id 
-                               :tx-hash execute-hash 
-                               :result confirm-hash 
-                               :type :execute})))
+             (tracker/untrack-tx! {:issue-id issue-id 
+                                   :tx-hash execute-hash 
+                                   :result confirm-hash 
+                                   :type :execute})))
          (catch Throwable ex
            (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id)))))
   (log/info "Exit update-confirm-hash"))
@@ -178,10 +179,10 @@
        (log/infof "issue %s: pending watch call %s" issue-id watch-hash)
        (try
          (when-let [receipt (eth/get-transaction-receipt watch-hash)]
-           (eth/untrack-tx! {:issue-id issue-id 
-                             :tx-hash watch-hash 
-                             :result nil 
-                             :type :watch}))
+           (tracker/untrack-tx! {:issue-id issue-id 
+                                 :tx-hash watch-hash 
+                                 :result nil 
+                                 :type :watch}))
          (catch Throwable ex
            (log/errorf ex "issue %s: update-watch-hash exception:" issue-id))))))
 
@@ -272,7 +273,7 @@
                 (let [tx-info (multisig/watch-token {:bounty-addr bounty-addr 
                                                      :token tla
                                                      :internal-tx-id [:watch issue-id]})]
-                  (eth/track-tx! tx-info)))))))
+                  (tracker/track-tx! tx-info)))))))
       (catch Throwable ex
         (log/error ex "bounty %s: update-bounty-token-balances exception" bounty-addr))))
   (log/info "Exit update-bounty-token-balances"))
@@ -387,7 +388,7 @@
   as we are executing txs sequentially"
   []
   (log/info "In check-tx-receipts")
-  (eth/prune-txs! (issues/unmined-txs))
+  (tracker/prune-txs! (issues/unmined-txs))
   (log/info "Exit check-tx-receipts"))
 
 (defn wrap-in-try-catch [func]

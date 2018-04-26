@@ -2,6 +2,7 @@
   (:require [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]
+            [commiteth.eth.web3j :refer [web3j-obj creds-obj]]
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
@@ -119,8 +120,8 @@
 
 (defn load-bounty-contract [addr]
   (MultiSigTokenWallet/load addr
-    @eth/web3j-obj
-    (eth/creds)
+    @web3j-obj
+    @creds-obj
     (eth/gas-price)
     (BigInteger/valueOf 500000)))
 
