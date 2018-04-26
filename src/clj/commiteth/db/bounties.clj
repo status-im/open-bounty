@@ -40,25 +40,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/confirmed-payouts con-db)))
 
-(defn update-confirm-hash
-  [issue-id confirm-hash]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-confirm-hash con-db {:issue_id issue-id :confirm_hash confirm-hash})))
-
-(defn update-execute-hash
-  [issue-id execute-hash]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-execute-hash con-db {:issue_id issue-id :execute_hash execute-hash})))
 
 (defn update-winner-login
   [issue-id login]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-winner-login con-db {:issue_id issue-id :winner_login login})))
-
-(defn update-watch-hash
-  [issue-id watch-hash]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-watch-hash con-db {:issue_id issue-id :watch_hash watch-hash})))
 
 (defn pending-watch-calls
   []
@@ -101,11 +87,4 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/bounties-activity con-db)))
 
-(defn unmined-tx-hashes []
-  (jdbc/with-db-connection [con-db *db*]
-    (db/unmined-tx-hashes con-db)))
 
-(defn reset-tx-hash!
-  [tx-hash type]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/reset-tx-hash! con-db {:tx-hash tx-hash :type type})))

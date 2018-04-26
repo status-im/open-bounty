@@ -41,9 +41,8 @@
   `internal-tx-id` is used to identify what issue this multisig is deployed
   for and manage nonces at a later point in time."
   [{:keys [owner internal-tx-id]}]
-  {:pre [(string? owner) (string? internal-tx-id)]}
+  {:pre [(string? owner) (vector? internal-tx-id)]}
   (eth/execute {:internal-tx-id internal-tx-id
-                :type "deploy"
                 :from      (eth/eth-account)
                 :contract  (factory-contract-addr)
                 :method-id (:create method-ids)
@@ -88,13 +87,12 @@
 
 (defn send-all
   [{:keys [contract payout-address internal-tx-id]}]
-  {:pre [(string? contract) (string? payout-address) (string? internal-tx-id)]}
+  {:pre [(string? contract) (string? payout-address) (vector? internal-tx-id)]}
   (log/debug "multisig/send-all " contract payout-address internal-tx-id)
   (let [params (eth/format-call-params
                 (:withdraw-everything method-ids)
                 payout-address)]
     (eth/execute {:internal-tx-id internal-tx-id
-                  :type "execute"
                   :from      (eth/eth-account)
                   :contract  contract
                   :method-id (:submit-transaction method-ids)
@@ -108,12 +106,11 @@
     (:address token-details)))
 
 (defn watch-token
-  [bounty-addr token]
+  [{:keys [bounty-addr token internal-tx-id]}]
   (log/debug "multisig/watch-token" bounty-addr token)
   (let [token-address (get-token-address token)]
     (assert token-address)
-    (eth/execute {:internal-tx-id (str "watch-token-" (System/currentTimeMillis) "-" bounty-addr)
-                  :type "watch"
+    (eth/execute {:internal-tx-id internal-tx-id
                   :from      (eth/eth-account)
                   :contract  bounty-addr
                   :method-id (:watch method-ids)
