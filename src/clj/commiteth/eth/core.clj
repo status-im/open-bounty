@@ -76,7 +76,7 @@
     "Mark tx as successfully closed")
   (prune-txs [this txs]
     "Release nonces related to txs param
-    and the ones that have expired (haven't been in a certain time)")
+    and the ones that have expired (haven't been marked as closed after a certain timeout)")
   )
 
 (defrecord SequentialTxTracker [current-tx]
