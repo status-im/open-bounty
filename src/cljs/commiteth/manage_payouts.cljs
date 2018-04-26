@@ -153,7 +153,7 @@
      [:p "Here you will see the claims waiting to be merged"]]
     (into [:div]
           (for [bounty bounties
-                :let [claims (:claims bounty)]]
+                :let [claims (filter bnt/open? (:claims bounty))]]
             ^{:key (:issue-id bounty)}
             [:div.mb3.shadow-6
              [:div.pa4.nb2.bg-white.br3.br--top
@@ -162,7 +162,7 @@
               [:span.f6.gray (if (second claims)
                        (str "Current Claims (" (count claims) ")")
                        "Current Claim")]
-              (for [[idx claim] (zipmap (range) (filter bnt/open? claims))]
+              (for [[idx claim] (zipmap (range) claims)]
                 ^{:key (:pr_id claim)}
                 [:div
                  {:class (when (> idx 0) "bt b--light-gray pt2")}
