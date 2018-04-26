@@ -52,7 +52,8 @@
   (track-tx [this tx-info]
     (reset! current-tx tx-info))
   (untrack-tx [this tx-info]
-    (reset! current-tx nil))
+    (when (= (:nonce tx-info) (:nonce @current-tx))
+      (reset! current-tx nil)))
   (prune-txs [this unmined-txs]
     (when (or ((set (map :tx-hash unmined-txs)) (:tx-hash @current-tx))
             (and (:timestamp @current-tx)
