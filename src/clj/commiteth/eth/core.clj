@@ -63,11 +63,20 @@
 
 
 (defprotocol TxTracker
-  (try-reserve-nonce [this])
-  (drop-nonce [this nonce])
-  (track-tx [this tx-info])
-  (untrack-tx [this tx-info])
-  (prune-txs [this unmined-txs])
+  (try-reserve-nonce [this]
+    "Fetch current nonce via eth_getTransactionCount
+    and either return it if it is not in use yet,
+    or throw an exception")
+  (drop-nonce [this nonce]
+    "If tx execution returned with an error,
+    release previously reserved nonce")
+  (track-tx [this tx-info]
+    "Record tx data after successful submission")
+  (untrack-tx [this tx-info]
+    "Mark tx as successfully closed")
+  (prune-txs [this txs]
+    "Release nonces related to txs param
+    and the ones that have expired (haven't been in a certain time)")
   )
 
 (defrecord SequentialTxTracker [current-tx]
@@ -95,17 +104,24 @@
   )
 (def tx-tracker (SequentialTxTracker. (atom nil)))
 
-(defn track-tx! [{:keys [issue-id tx-hash type]
+(defn track-tx! 
+  "Store tx data in tx-tracker and DB"
+  [{:keys [issue-id tx-hash type]
                   :as tx-info}]
   (track-tx tx-tracker tx-info)
   (issues/save-tx-info! issue-id tx-hash type))
   
-(defn untrack-tx! [{:keys [issue-id result type]
+(defn untrack-tx! 
+  "Mark tx data stored in tx-tracker and DB as closed"
+  [{:keys [issue-id result type]
                     :as tx-info}]
   (untrack-tx tx-tracker tx-info)
   (issues/save-tx-result! issue-id result type))
 
 (defn prune-txs! [unmined-txs]
+  "Release nonces related to unmined txs,
+   and set relevant DB fields to null thereby
+   marking them as candidates for re-execution"
   (doseq [{issue-id :issue_id
            tx-hash :tx_hash
            type :type} unmined-txs]
@@ -114,7 +130,6 @@
   (prune-txs tx-tracker unmined-txs))
 
  
-
 (defn get-signed-tx [gas-price gas-limit to data nonce]
   "Create a sign a raw transaction.
   'From' argument is not needed as it's already
