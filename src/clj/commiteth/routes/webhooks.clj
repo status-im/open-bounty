@@ -7,6 +7,7 @@
    [commiteth.bounties :as bounties]
    [commiteth.db
     [issues :as issues]
+    [bounties :as db-bounties]
     [pull-requests :as pull-requests]
     [repositories :as repositories]
     [users :as users]]
@@ -133,19 +134,17 @@
     ;; merged
     (cond
       open-or-edit? (do
-                      (log/info "PR with reference to bounty issue"
-                                 (:issue_number issue) "opened")
+                      (log/infof "issue %s: PR with reference to bounty issue opened" (:issue_number issue))
                       (pull-requests/save (merge pr-data {:state :opened
                                                           :commit_sha head-sha})))
       close? (if merged?
-               (do (log/info "PR with reference to bounty issue"
-                             (:issue_number issue) "merged")
+               (do (log/infof "issue %s: PR with reference to bounty issue merged" (:issue_number issue))
                    (pull-requests/save
                     (merge pr-data {:state :merged
                                     :commit_sha head-sha}))
-                   (issues/update-commit-sha (:issue_id issue) head-sha))
-               (do (log/info "PR with reference to bounty issue"
-                             (:issue_number issue) "closed with no merge")
+                   (issues/update-commit-sha (:issue_id issue) head-sha)
+                   (db-bounties/update-winner-login (:issue_id issue) login))
+               (do (log/infof "issue %s: PR with reference to bounty issue closed with no merge" (:issue_number issue))
                    (pull-requests/save
                     (merge pr-data {:state :closed
                                     :commit_sha head-sha})))))))

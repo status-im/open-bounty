@@ -32,7 +32,7 @@
 
 (defn update-issue-title
   [issue-id title]
-  (log/info "issue %s: Updating changed title \"%s\"" issue-id title)
+  (log/infof "issue %s: Updating changed title \"%s\"" issue-id title)
   (jdbc/with-db-connection [con-db *db*]
     (db/update-issue-title con-db {:issue_id issue-id
                                    :title title})))

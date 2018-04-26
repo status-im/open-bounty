@@ -60,6 +60,24 @@
                                    (map update-enabled repos)})
                github-repos))))
 
+(def bounty-renames
+  ;; TODO this needs to go away ASAP we need to be super consistent
+  ;; about keys unless we will just step on each others toes constantly
+  {:user_name :display-name
+   :user_avatar_url :avatar-url
+   :issue_title :issue-title
+   :pr_title :pr-title
+   :pr_number :pr-number
+   :pr_id :pr-id
+   :type :item-type
+   :repo_name :repo-name
+   :repo_owner :repo-owner
+   :issue_number :issue-number
+   :issue_id :issue-id
+   :value_usd :value-usd
+   :claim_count :claim-count
+   :balance_eth :balance-eth
+   :user_has_address :user-has-address})
 
 (defn ^:private enrich-owner-bounties [owner-bounty]
   (let [claims      (map
@@ -67,14 +85,16 @@
                      (bounties-db/bounty-claims (:issue_id owner-bounty)))
         with-claims (assoc owner-bounty :claims claims)]
     (-> with-claims
-        (update :value_usd usd-decimal->str)
+        (rename-keys bounty-renames)
+        (update :value-usd usd-decimal->str)
+        (update :balance-eth eth-decimal->str)
         (assoc :state (bounties/bounty-state with-claims)))))
 
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
     (->> owner-bounties
          (map enrich-owner-bounties)
-         (map (juxt :issue_id identity))
+         (map (juxt :issue-id identity))
          (into {}))))
 
 (defn top-hunters []
@@ -105,24 +125,9 @@
                                    (map (fn [[tla balance]]
                                           [tla (format-float bounty balance)]))
                                    (into {})
-                                   (assoc bounty :tokens)))
-        renames {:user_name :display-name
-                 :user_avatar_url :avatar-url
-                 :issue_title :issue-title
-                 :pr_title :pr-title
-                 :pr_number :pr-number
-                 :pr_id :pr-id
-                 :type :item-type
-                 :repo_name :repo-name
-                 :repo_owner :repo-owner
-                 :issue_number :issue-number
-                 :issue_id :issue-id
-                 :value_usd :value-usd
-                 :claim_count :claim-count
-                 :balance_eth :balance-eth
-                 :user_has_address :user-has-address}]
+                                   (assoc bounty :tokens)))]
     (map #(-> %
-              (rename-keys renames)
+              (rename-keys bounty-renames)
               (update :value-usd usd-decimal->str)
               (update :balance-eth eth-decimal->str)
               update-token-values)
