@@ -162,7 +162,7 @@
               [:span.f6.gray (if (second claims)
                        (str "Current Claims (" (count claims) ")")
                        "Current Claim")]
-              (for [[idx claim] (zipmap (range) claims)]
+              (for [[idx claim] (zipmap (range) (filter bnt/open? claims))]
                 ^{:key (:pr_id claim)}
                 [:div
                  {:class (when (> idx 0) "bt b--light-gray pt2")}
