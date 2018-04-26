@@ -116,6 +116,9 @@
               tokens :tokens
               winner-login :winner_login} (db-bounties/pending-bounties)]
        (try
+         ;; TODO(martin) delete this shortly after org-dashboard deploy
+         ;; as we're now setting `winner_login` when handling a new claims
+         ;; coming in via webhooks (see `commiteth.routes.webhooks/handle-claim`)
          (db-bounties/update-winner-login issue-id winner-login)
          (let [value (eth/get-balance-hex contract-address)]
            (if (empty? payout-address)
