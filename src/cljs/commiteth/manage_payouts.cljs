@@ -343,7 +343,9 @@
               bounties  (vals @owner-bounties)
               grouped   (group-by (comp state-mapping :state) bounties)
               unclaimed (into (get grouped :funded)
-                              (get grouped :open))]
+                              (get grouped :open))
+              to-confirm (into (get grouped :pending-maintainer-confirmation)
+                               (get grouped :pending-contributor-address))]
           [:div.center.mw9.pa2.pa0-l
            [manage-bounties-title]
            [salute "Andy"]
@@ -359,14 +361,14 @@
              [bounty-stats-new @bounty-stats-data]]
             [:div.fr-l.w-two-thirds-l
              (case route-id
-               :dashboard/to-confirm (->> (get grouped :pending-maintainer-confirmation)
+               :dashboard/to-confirm (->> to-confirm
                                           (sort-by :updated >)
                                           (to-confirm-list))
                :dashboard/to-merge (->> (get grouped :claimed)
                                         (sort-by :updated >)
                                         (to-merge-list))
                (cond
-                 (seq (get grouped :pending-maintainer-confirmation))
+                 (seq to-confirm)
                  (routes/nav! :dashboard/to-confirm)
 
                  (seq (get grouped :claimed))
