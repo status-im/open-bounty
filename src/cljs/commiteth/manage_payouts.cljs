@@ -362,7 +362,7 @@
                :dashboard/to-confirm (->> (get grouped :pending-maintainer-confirmation)
                                           (sort-by :updated >)
                                           (to-confirm-list))
-               :dashboard/to-merge (->> (get grouped :claimed >)
+               :dashboard/to-merge (->> (get grouped :claimed)
                                         (sort-by :updated >)
                                         (to-merge-list))
                (cond
