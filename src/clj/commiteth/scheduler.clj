@@ -84,7 +84,9 @@
 
 
 (defn deploy-pending-contracts
-  "Under high-concurrency circumstances or in case geth is in defunct state, a bounty contract may not deploy successfully when the bounty label is addded to an issue. This function deploys such contracts."
+  "Under high-concurrency circumstances or in case geth is in defunct
+  state, a bounty contract may not deploy successfully when the bounty
+  label is addded to an issue. This function deploys such contracts."
   []
   (p :deploy-pending-contracts
      (doseq [{issue-id :issue_id
