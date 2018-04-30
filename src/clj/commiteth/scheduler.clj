@@ -94,13 +94,10 @@
   []
   (p :deploy-pending-contracts
      (doseq [{issue-id :issue_id
-              issue-number :issue_number
-              owner :owner
-              owner-address :owner_address
-              repo :repo} (db-bounties/pending-contracts)]
+              owner-address :owner_address} (db-bounties/pending-contracts)]
        (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
        (try
-         (bounties/deploy-contract owner owner-address repo issue-id issue-number)
+         (bounties/deploy-contract owner-address issue-id)
          (catch Throwable t
            (log/errorf t "issue %s: deploy-pending-contracts exception: %s" issue-id (ex-data t)))))))
 
@@ -436,11 +433,11 @@
 
 (mount/defstate scheduler
   :start (let [every-minute (rest
-                             (periodic-seq (t/now)
-                                           (t/minutes 1)))
+                              (periodic-seq (t/now)
+                                            (t/minutes 1)))
                every-10-minutes (rest
-                                 (periodic-seq (t/now)
-                                               (t/minutes 10)))
+                                  (periodic-seq (t/now)
+                                                (t/minutes 10)))
                error-handler (fn [e]
                                (log/error "Scheduled task failed" e)
                                (throw e))

@@ -22,7 +22,7 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
-(defn deploy-contract [owner owner-address repo issue-id issue-number]
+(defn deploy-contract [owner-address issue-id]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
     (try
@@ -47,7 +47,7 @@
     (log/debug "issue %s: Adding bounty for issue %s/%s - owner address: %s"
                issue-id repo issue-number owner-address)
     (if (= 1 created-issue)
-      (deploy-contract owner owner-address repo issue-id issue-number)
+      (deploy-contract owner-address issue-id)
       (log/debug "issue %s: Issue already exists in DB, ignoring"))))
 
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
