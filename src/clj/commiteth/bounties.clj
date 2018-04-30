@@ -31,13 +31,8 @@
                                                   :internal-tx-id [:deploy issue-id]})]
         (do
           (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id (:tx-hash tx-info))
-          (let [resp (github/post-deploying-comment owner
-                                                    repo
-                                                    issue-number
-                                                    (:tx-hash tx-info))
-                comment-id (:id resp)]
-            (log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
-            (issues/update-comment-id issue-id comment-id))
+          (github/post-deploying-comment issue-id
+                                         (:tx-hash tx-info))
           (tracker/track-tx! tx-info))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
