@@ -238,7 +238,7 @@ SELECT
   AS type,
   issue_id
 FROM issues
-WHERE updated < timezone('utc'::text, now()) - interval '5 minutes'
+WHERE updated < timezone('utc'::text, now()) - interval '10 minutes'
 AND (transaction_hash is not null and contract_address is null
      OR execute_hash is not null and confirm_hash is null
      OR watch_hash is not null);
