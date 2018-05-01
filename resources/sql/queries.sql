@@ -43,9 +43,9 @@ SELECT  u.id,
         u.opts->'hide_address_warning' as hide_address_warning,
         u.opts->'hide_gh_repos_warning' as hide_gh_repos_warning,
         count(r.*) as repo_count
-FROM users u, repositories r
+FROM users u
+left outer join repositories r on (u.id=r.user_id)
 WHERE u.id = :id
-AND u.id=r.user_id
 GROUP BY u.id;
 
 -- :name get-user-by-login :? :1
