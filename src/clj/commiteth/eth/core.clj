@@ -52,7 +52,7 @@
                           {:password password :file-path file-path}))))))
 
 (defn get-web3j-nonce [web3j-instance]
-  (.. (.ethGetTransactionCount web3j-instance (env :eth-account) DefaultBlockParameterName/LATEST)
+  (.. (.ethGetTransactionCount web3j-instance (env :eth-account) DefaultBlockParameterName/PENDING)
       sendAsync
       get
       getTransactionCount))
@@ -113,10 +113,10 @@
   []
   (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
         avg-price (max
-                    (-> (get data "average")
-                        bigint)
-                    (-> (get data "average_calc")
-                        bigint))
+                   (-> (get data "average")
+                       bigint)
+                   (-> (get data "average_calc")
+                       bigint))
         avg-price-gwei (/ avg-price (bigint 10))]
     (->> (* (bigint (Math/pow 10 9)) avg-price-gwei) ;; for some reason the API returns 10x gwei price
         .toBigInteger)))
