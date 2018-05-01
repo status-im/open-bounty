@@ -34,5 +34,7 @@
             :email   nil
             :avatar_url ""
             :address "address"
-            :created nil}
+            :created nil
+            :welcome_email_sent 0
+            :is_hidden_in_hunters false}
           (db/get-user t-conn {:id 1})))))

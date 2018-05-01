@@ -1,7 +1,8 @@
 (ns commiteth.db.issues
   (:require [commiteth.db.core :refer [*db*] :as db]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :refer [rename-keys]]))
+            [clojure.set :refer [rename-keys]]
+            [clojure.tools.logging :as log]))
 
 (defn create
   "Creates issue"
@@ -31,6 +32,7 @@
 
 (defn update-issue-title
   [issue-id title]
+  (log/infof "issue %s: Updating changed title \"%s\"" issue-id title)
   (jdbc/with-db-connection [con-db *db*]
     (db/update-issue-title con-db {:issue_id issue-id
                                    :title title})))
@@ -62,12 +64,6 @@
   []
   (jdbc/with-db-connection [con-db *db*]
     (db/list-pending-deployments con-db)))
-
-
-(defn list-failed-deployments
-  []
-  (jdbc/with-db-connection [con-db *db*]
-    (db/list-failed-deployments con-db)))
 
 (defn update-eth-balance
   [contract-address balance-eth]
@@ -101,3 +97,9 @@
         first
         :exists
         boolean)))
+
+(defn get-issue
+  [repo-id issue-number]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issue con-db {:repo_id repo-id
+                          :issue_number issue-number})))

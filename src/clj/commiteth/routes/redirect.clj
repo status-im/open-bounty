@@ -35,28 +35,33 @@
 
 (defroutes redirect-routes
   (GET "/callback" [code state]
-    (let [resp         (github/post-for-token code state)
-          body         (keywordize-keys (codec/form-decode (:body resp)))
-          scope        (:scope body)
-          access-token (:access_token body)]
-      (log/info "access-token:" access-token)
-      (log/debug "github sign-in callback, response body:" body)
-      (if (:error body)
-        ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
-        (found (str (env :server-address) "/app"))
-        (let [admin-token? (str/includes? scope "repo")
-              token-key (if admin-token? :admin-token :token)
-              gh-user (github/get-user access-token)
-              new-user? (nil? (users/get-user (:id gh-user 0)))
-              user (assoc (get-or-create-user access-token)
-                          token-key access-token)]
-          (when (and (hubspot-contact-create-enabled)
-                     new-user?)
-            (try
-              (hubspot/create-hubspot-contact (:email user)
-                                              (:name user "")
-                                              (:login user))
-              (catch Throwable t
-                (log/error "Failed to create hubspot contact" t))))
-          (assoc (found (str (env :server-address) "/app"))
-                 :session {:identity user}))))))
+       (let [resp         (github/post-for-token code state)
+             body         (keywordize-keys (codec/form-decode (:body resp)))
+             scope        (:scope body)
+             access-token (:access_token body)]
+         (log/info "access-token:" access-token)
+         (log/debug "github sign-in callback, response body:" body)
+         (if (:error body)
+           ;; Why does Mist browser sends two redirects at the same time? The latter results in 401 error.
+           (found (str (env :server-address) "/app"))
+           (let [admin-token? (str/includes? scope "repo")
+                 token-key (if admin-token? :admin-token :token)
+                 gh-user (github/get-user access-token)
+                 new-user? (nil? (users/get-user (:id gh-user 0)))
+                 user (assoc (get-or-create-user access-token)
+                             token-key access-token)]
+             (when (and (hubspot-contact-create-enabled)
+                        new-user?)
+               (try
+                 (hubspot/create-hubspot-contact (:email user)
+                                                 (:name user "")
+                                                 (:login user))
+                 (catch Throwable t
+                   (log/error "Failed to create hubspot contact" t))))
+             (assoc (found (str (env :server-address) "/app"))
+                    :session {:identity user})))))
+  (GET "/callback_dev" []
+       (assoc (found (str (env :server-address) "/app"))
+              :session {:identity (users/get-user-by-login (env :dev-login))}))
+
+  )

@@ -1,8 +1,8 @@
 (ns commiteth.eth.multisig-wallet
-  (:require [commiteth.eth.core :as eth
-             :refer [create-web3j creds]]
+  (:require [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]
+            [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
             abi.datatypes.Address
@@ -35,24 +35,19 @@
   []
   (env :tokenreg-base-format :status))
 
-(defn create-new
-  [owner1 owner2 required]
-  (eth/execute (eth/eth-account)
-               (factory-contract-addr)
-               (:create method-ids)
-               (eth/integer->hex 865000) ;; gas-limit
-               0x40
-               0x2
-               required
-               owner1
-               owner2))
-
-
 (defn deploy-multisig
   "Deploy a new multisig contract to the blockchain with commiteth bot
-  and given owner as owners."
-  [owner]
-  (create-new (eth/eth-account) owner 2))
+  and given owner as owners.
+  `internal-tx-id` is used to identify what issue this multisig is deployed
+  for and manage nonces at a later point in time."
+  [{:keys [owner internal-tx-id]}]
+  {:pre [(string? owner) (string? internal-tx-id)]}
+  (eth/execute {:internal-tx-id internal-tx-id
+                :from      (eth/eth-account)
+                :contract  (factory-contract-addr)
+                :method-id (:create method-ids)
+                :gas-limit (eth/integer->hex 865000)
+                :params    [0x40 0x2 2 (eth/eth-account) owner]}))
 
 (defn find-event-in-tx-receipt [tx-receipt topic-id]
   (let [logs (:logs tx-receipt)
@@ -91,20 +86,18 @@
 
 
 (defn send-all
-  [contract to]
-  (log/debug "multisig/send-all " contract to)
+  [{:keys [contract payout-address internal-tx-id]}]
+  {:pre [(string? contract) (string? payout-address) (string? internal-tx-id)]}
+  (log/debug "multisig/send-all " contract payout-address internal-tx-id)
   (let [params (eth/format-call-params
                 (:withdraw-everything method-ids)
-                to)]
-    (eth/execute (eth/eth-account)
-                 contract
-                 (:submit-transaction method-ids)
-                 nil
-                 contract
-                 0
-                 "0x60" ;; TODO: document these
-                 "0x24" ;;  or refactor out
-                 params)))
+                payout-address)]
+    (eth/execute {:internal-tx-id internal-tx-id
+                  :from      (eth/eth-account)
+                  :contract  contract
+                  :method-id (:submit-transaction method-ids)
+                  :gas-limit nil
+                  :params    [contract 0 "0x60" "0x24" params]})))
 
 
 (defn get-token-address [token]
@@ -117,17 +110,17 @@
   (log/debug "multisig/watch-token" bounty-addr token)
   (let [token-address (get-token-address token)]
     (assert token-address)
-    (eth/execute (eth/eth-account)
-                 bounty-addr
-                 (:watch method-ids)
-                 nil
-                 token-address)))
-
+    (eth/execute {:internal-tx-id (str "watch-token-" (System/currentTimeMillis) "-" bounty-addr)
+                  :from      (eth/eth-account)
+                  :contract  bounty-addr
+                  :method-id (:watch method-ids)
+                  :gas-limit nil
+                  :params    [token-address]})))
 
 (defn load-bounty-contract [addr]
   (MultiSigTokenWallet/load addr
-    (create-web3j)
-    (creds)
+    @eth/web3j-obj
+    (eth/creds)
     (eth/gas-price)
     (BigInteger/valueOf 500000)))
 
@@ -147,20 +140,22 @@
   "Query (internal) ERC20 token balance from bounty contract for given
   token TLA."
   [bounty-addr token]
-  (let [bounty-contract (load-bounty-contract bounty-addr)
+  (p :token-balance-in-bounty
+     (let [bounty-contract (load-bounty-contract bounty-addr)
         token-address (get-token-address token)
         token-addr-web3j (Address. token-address)]
     (-> bounty-contract
         (.tokenBalances token-addr-web3j)
         .get
         .getValue
-        (convert-token-value token))))
+        (convert-token-value token)))))
 
 (defn token-balance
   "Query balance of given ERC20 token TLA for given address from ERC20
   contract."
   [bounty-addr token]
-  (let [token-address (get-token-address token)]
+  (p :token-balance
+     (let [token-address (get-token-address token)]
     (log/debug "token-balance" bounty-addr token token-address)
     (try
       (-> (eth/call token-address
@@ -170,25 +165,26 @@
           (convert-token-value token))
       (catch Throwable t
         (log/debug "Failed to query token balance " t)
-        0))))
+        0)))))
 
 
 (defn token-balances
   "Get a given bounty contract's token balances. Assumes contract's
   internal balances have been updated."
   [bounty-addr]
-  (let [bounty-contract (load-bounty-contract bounty-addr)
-        token-addresses (-> bounty-contract
+  (p :token-balances
+     (let [bounty-contract (p :load-bounty-contract (load-bounty-contract bounty-addr))
+        token-addresses (p :getTokenList (-> bounty-contract
                             (.getTokenList)
-                            .get)]
+                            .get))]
     (if token-addresses
       (let [addrs (map str
-                       (.getValue token-addresses))]
+                       (p :getValue (.getValue token-addresses)))]
         (into {}
               (map (fn [addr] (if-let [info (token-data/token-info-by-addr addr)]
                                (let [tla (first info)]
                                  [tla (token-balance bounty-addr tla)]))) addrs)))
-      {})))
+      {}))))
 
 (defn uint256 [x]
   (org.web3j.abi.datatypes.generated.Uint256. x))

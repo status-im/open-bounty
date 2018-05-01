@@ -46,67 +46,6 @@
     (log/debug "token" token "member?" member?)
     member?))
 
-(defn enable-repo [repo-id repo full-repo token]
-  (log/debug "enable-repo" repo-id repo)
-  (when (github/webhook-exists? full-repo token)
-    (github/remove-our-webhooks full-repo token))
-
-  (let [hook-secret (random/base64 32)]
-    (repositories/update-repo repo-id {:state 1
-                                       :hook_secret hook-secret})
-    (let [created-hook (github/add-webhook full-repo token hook-secret)]
-      (log/debug "Created webhook:" created-hook)
-      (repositories/update-repo repo-id {:hook_id (:id created-hook)})))
-  (github/create-label full-repo token)
-  (repositories/update-repo repo-id {:state 2})
-  (when (add-bounties-for-existing-issues?)
-    (bounties/add-bounties-for-existing-issues full-repo)))
-
-(defn disable-repo [repo-id full-repo hook-id token]
-  (log/debug "disable-repo" repo-id full-repo)
-  (github/remove-webhook full-repo hook-id token)
-  (repositories/update-repo repo-id {:hook_secret ""
-                                     :state 0
-                                     :hook_id nil}))
-
-;; NOTE(oskarth): This and above two functions about to be deprecated with Github App
-(defn handle-toggle-repo [user params can-create?]
-  (log/info "XXX handle-toggle-repo" (pr-str user) (pr-str params))
-  (let [{user-id :id} user
-        {repo-id :id
-         full-repo :full_name
-         owner-avatar-url :owner-avatar-url
-         token   :token
-         repo    :name} params
-        [owner _] (str/split full-repo #"/")
-        db-user (users/get-user (:id user))]
-
-    (cond (not can-create?)
-          {:status 400
-           :body "Please join our Riot - chat.status.im/#/register and request
-           access in our #openbounty room to have your account whitelisted"}
-
-          (empty? (:address db-user))
-          {:status 400
-           :body "Please add your ethereum address to your profile first"}
-
-          :else
-          (try
-            (let [_ (println "CREATING")
-                  db-item (repositories/create (merge params {:user_id user-id
-                                                              :owner owner}))
-                  is-enabled (= 2 (:state db-item))]
-              (if is-enabled
-                (disable-repo repo-id full-repo (:hook_id db-item) token)
-                (enable-repo repo-id repo full-repo token))
-              (ok (merge
-                   {:enabled (not is-enabled)}
-                   (select-keys params [:id :full_name]))))
-            (catch Exception e
-              (log/error "exception when enabling repo" e)
-              (repositories/update-repo repo-id {:state -1})
-              (internal-server-error))))))
-
 (defn in? [coll elem]
   (some #(= elem %) coll))
 
@@ -121,19 +60,42 @@
                                    (map update-enabled repos)})
                github-repos))))
 
+(def bounty-renames
+  ;; TODO this needs to go away ASAP we need to be super consistent
+  ;; about keys unless we will just step on each others toes constantly
+  {:user_name :display-name
+   :user_avatar_url :avatar-url
+   :issue_title :issue-title
+   :pr_title :pr-title
+   :pr_number :pr-number
+   :pr_id :pr-id
+   :type :item-type
+   :repo_name :repo-name
+   :repo_owner :repo-owner
+   :issue_number :issue-number
+   :issue_id :issue-id
+   :value_usd :value-usd
+   :claim_count :claim-count
+   :balance_eth :balance-eth
+   :user_has_address :user-has-address})
+
+(defn ^:private enrich-owner-bounties [owner-bounty]
+  (let [claims      (map
+                     #(update % :value_usd usd-decimal->str)
+                     (bounties-db/bounty-claims (:issue_id owner-bounty)))
+        with-claims (assoc owner-bounty :claims claims)]
+    (-> with-claims
+        (rename-keys bounty-renames)
+        (update :value-usd usd-decimal->str)
+        (update :balance-eth eth-decimal->str)
+        (assoc :state (bounties/bounty-state with-claims)))))
 
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
-    (into {}
-          (for [ob owner-bounties
-                :let [b (update ob :value_usd usd-decimal->str)]]
-            [(:issue_id b)
-             (conj b
-                   (let [claims (map
-                                 #(update % :value_usd usd-decimal->str)
-                                 (bounties-db/bounty-claims (:issue_id b)))]
-                     {:claims claims}))]))))
-
+    (->> owner-bounties
+         (map enrich-owner-bounties)
+         (map (juxt :issue-id identity))
+         (into {}))))
 
 (defn top-hunters []
   (let [renames {:user_name :display-name
@@ -163,20 +125,9 @@
                                    (map (fn [[tla balance]]
                                           [tla (format-float bounty balance)]))
                                    (into {})
-                                   (assoc bounty :tokens)))
-        renames {:user_name :display-name
-                 :user_avatar_url :avatar-url
-                 :issue_title :issue-title
-                 :type :item-type
-                 :repo_name :repo-name
-                 :repo_owner :repo-owner
-                 :issue_number :issue-number
-                 :value_usd :value-usd
-                 :claim_count :claim-count
-                 :balance_eth :balance-eth
-                 :user_has_address :user-has-address}]
+                                   (assoc bounty :tokens)))]
     (map #(-> %
-              (rename-keys renames)
+              (rename-keys bounty-renames)
               (update :value-usd usd-decimal->str)
               (update :balance-eth eth-decimal->str)
               update-token-values)
@@ -288,9 +239,4 @@
                          :auth-rules authenticated?
                          :current-user user
                          (log/debug "/user/bounties")
-                         (ok (user-bounties user)))
-                    (POST "/repository/toggle" {:keys [params]}
-                          ;; NOTE: Don't allow anyone to create repos; manual add
-                          :auth-rules authenticated?
-                          :current-user user
-                          (handle-toggle-repo user params (user-whitelisted? (:login user)))))))
+                         (ok (user-bounties user))))))

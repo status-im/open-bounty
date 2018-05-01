@@ -23,7 +23,10 @@
                               :on-testnet? (env :on-testnet)}))
 
 (defn landing-page []
-  (layout/render "index.html" {:authorize-url (github/signup-authorize-url)}))
+  (layout/render "index.html" 
+                 {:authorize-url (if (env :dev-login)
+                                   (str (env :server-address) "/callback_dev")
+                                   (github/signup-authorize-url))}))
 
 (defn welcome-page []
   (layout/render "welcome.html"))

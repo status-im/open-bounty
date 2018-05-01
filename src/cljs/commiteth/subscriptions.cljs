@@ -1,6 +1,7 @@
 (ns commiteth.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
             [commiteth.db :as db]
+            [commiteth.util :as util]
             [commiteth.ui-model :as ui-model]
             [commiteth.common :refer [items-per-page]]
             [clojure.string :as string]))
@@ -10,9 +11,10 @@
   (fn [db _] db))
 
 (reg-sub
-  :page
-  (fn [db _]
-    (:page db)))
+ :route
+ (fn [db _]
+   (or (:route db)
+       {:route-id :bounties})))
 
 (reg-sub
   :user
@@ -53,22 +55,72 @@
   :open-bounties-page
   :<- [::filtered-and-sorted-open-bounties]
   :<- [:page-number]
-  (fn [[open-bounties page-number] _]
+  :<- [:activity-feed]
+  (fn [[open-bounties page-number activity-feed] _]
     (let [total-count (count open-bounties)
-          start (* (dec page-number) items-per-page)
-          end (min total-count (+ items-per-page start))
-          items (subvec open-bounties start end)]
-      {:items items
-       :item-count (count items)
+          start       (* (dec page-number) items-per-page)
+          end         (min total-count (+ items-per-page start))
+          items       (->> (subvec open-bounties start end)
+                           (map (fn [bounty]
+                                  (let [matching-claims (filter
+                                                         (fn [claim]
+                                                           (= (:issue-id claim)
+                                                              (:issue-id bounty)))
+                                                         activity-feed)]
+                                    (assoc bounty :claims matching-claims)))))]
+      {:items       items
+       :item-count  (count items)
        :total-count total-count
        :page-number page-number
-       :page-count (Math/ceil (/ total-count items-per-page))})))
-
+       :page-count  (Math/ceil (/ total-count items-per-page))})))
 
 (reg-sub
   :owner-bounties
   (fn [db _]
-    (:owner-bounties db)))
+    (->> (for [[id bounty] (:owner-bounties db)]
+           ;; TODO(martinklepsch) we might want to consider using a
+           ;; special prefix or namespace for derived properties that
+           ;; are added to domain records like this
+           ;; e.g. `derived/paid?`
+           [id (assoc bounty :paid? (boolean (:payout_hash bounty)))])
+         (into {}))))
+
+(reg-sub
+ :owner-bounties-stats
+ :<- [:owner-bounties]
+ (fn [owner-bounties _]
+   (let [sum-field (fn sum-field [field bounties]
+                       (reduce + (map #(js/parseFloat (get % field)) bounties)))
+         sum-crypto (fn sum-crypto [bounties]
+                      (-> (map :tokens bounties)
+                          (util/sum-maps)
+                          (assoc :ETH (sum-field :balance-eth bounties))))
+         {:keys [paid unpaid]} (group-by #(if (:paid? %) :paid :unpaid)
+                                         (vals owner-bounties))]
+     {:paid {:count (count paid)
+             :combined-usd-value (sum-field :value-usd paid)
+             :crypto (sum-crypto paid)}
+      :unpaid {:count (count unpaid)
+               :combined-usd-value (sum-field :value-usd unpaid)
+               :crypto (sum-crypto unpaid)}})))
+
+(reg-sub
+ :dashboard/seen-banners
+ (fn [db _] (:dashboard/seen-banners db)))
+
+(reg-sub
+ :dashboard/banner-msg
+ :<- [:user]
+ :<- [:dashboard/seen-banners]
+ (fn [[user seen-banners] _]
+   (cond
+     (not (contains? seen-banners "bounty-issuer-salute"))
+     {:name (or (some-> (:name user) (string/split  #"\s") first)
+                (:login user))
+      :banner-id "bounty-issuer-salute"}
+
+     #_(not (contains? seen-banners "new-dashboard-info"))
+     #_{:banner-id "new-dashboard-info"})))
 
 (reg-sub
   :pagination
@@ -133,6 +185,11 @@
     (:user-dropdown-open? db)))
 
 (reg-sub
+  ::open-bounty-claims
+  (fn [db _]
+    (::db/open-bounty-claims db)))
+
+(reg-sub
   ::open-bounties-sorting-type
   (fn [db _]
     (::db/open-bounties-sorting-type db)))
@@ -165,7 +222,7 @@
                          (mapcat keys)
                          (filter identity)
                          set)]
-      (into #{"ETH"} token-ids))))
+      (into #{:ETH} token-ids))))
 
 (reg-sub
   ::filtered-and-sorted-open-bounties

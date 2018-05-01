@@ -6,7 +6,6 @@ from selenium.webdriver.support import expected_conditions
 
 
 class BaseElement(object):
-
     class Locator(object):
 
         def __init__(self, by, value):

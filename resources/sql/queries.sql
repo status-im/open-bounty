@@ -48,6 +48,13 @@ WHERE u.id = :id
 AND u.id=r.user_id
 GROUP BY u.id;
 
+-- :name get-user-by-login :? :1
+-- :doc retrieve a user given GitHub login.
+SELECT *
+FROM users
+WHERE login = :login;
+
+
 -- :name get-repo-owner :? :1
 SELECT *
 FROM users u, repositories r
@@ -107,19 +114,16 @@ WHERE i.repo_id = :repo_id
 AND i.confirm_hash is null
 AND i.is_open = true;
 
--- :name update-repo-generic :! :n
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+-- :name update-repo-name :! :n
 UPDATE repositories
-SET
-/*~
-(string/join ","
-  (for [[field _] (:updates params)]
-    (str (identifier-param-quote (name field) options)
-      " = :v:updates." (name field))))
-~*/
-where repo_id = :repo_id;
+SET repo = :repo_name
+WHERE repo_id = :repo_id 
+AND repo != :repo_name
 
+-- :name update-repo-state :! :n
+UPDATE repositories
+SET state = :repo_state
+WHERE repo_id = :repo_id 
 
 
 -- Issues --------------------------------------------------------------------------
@@ -201,20 +205,6 @@ AND i.contract_address IS NULL
 AND i.transaction_hash IS NOT NULL;
 
 
--- :name list-failed-deployments :? :*
--- :doc retrieves failed contract deployments
-SELECT
-  i.issue_id as issue_id,
-  i.transaction_hash as transaction_hash,
-  u.address as owner_address
-FROM issues i, users u, repositories r
-WHERE r.user_id = u.id
-AND i.repo_id = r.repo_id
-AND i.contract_address IS NULL
-AND i.transaction_hash IS NOT NULL
-AND i.updated < now() at time zone 'UTC' - interval '1 hour';
-
-
 -- Pull Requests -------------------------------------------------------------------
 
 -- :name save-pull-request! :! :n
@@ -222,6 +212,7 @@ AND i.updated < now() at time zone 'UTC' - interval '1 hour';
 INSERT INTO pull_requests (pr_id,
   repo_id,
   pr_number,
+  title,
   issue_number,
   issue_id,
   commit_sha,
@@ -230,16 +221,18 @@ INSERT INTO pull_requests (pr_id,
 VALUES(:pr_id,
   :repo_id,
   :pr_number,
+  :title,
   :issue_number,
   :issue_id,
   :commit_sha,
   :user_id,
   :state)
-ON CONFLICT (pr_id) DO UPDATE
+ON CONFLICT (pr_id,issue_id) DO UPDATE
 SET
   state = :state,
   issue_number = :issue_number,
   issue_id = :issue_id,
+  title = :title,
   updated = timezone('utc'::text, now()),
   commit_sha = :commit_sha;
 
@@ -257,7 +250,10 @@ WHERE pr_id = :pr_id;
 -- :doc bounty issues where deploy contract has failed
 SELECT
   i.issue_id         AS issue_id,
-  u.address          AS owner_address
+  i.issue_number     AS issue_number,
+  r.owner            AS owner,
+  u.address          AS owner_address,
+  r.repo             AS repo
 FROM issues i, users u, repositories r
 WHERE
 r.user_id = u.id
@@ -417,6 +413,14 @@ SELECT exists(SELECT 1
   FROM issues
   WHERE issue_id = :issue_id);
 
+-- :name get-issue :? :1
+-- :doc get issue from DB by repo-id and issue-number
+SELECT issue_id, issue_number, is_open, winner_login, commit_sha
+FROM issues
+WHERE repo_id = :repo_id
+AND issue_number = :issue_number;
+
+
 
 -- :name open-bounties :? :*
 -- :doc all open bounty issues
@@ -464,8 +468,11 @@ SELECT
   i.updated          AS updated,
   i.winner_login     AS winner_login,
   r.repo             AS repo_name,
-  o.address          AS owner_address
-FROM issues i, users o, repositories r
+  r.owner            AS repo_owner,
+  r.owner_avatar_url AS repo_owner_avatar_url,
+  o.address          AS owner_address,
+  u.address          AS payout_address
+FROM users o, repositories r, issues i LEFT OUTER JOIN users u ON u.login = i.winner_login
 WHERE
 r.repo_id = i.repo_id
 AND r.user_id = o.id
@@ -595,7 +602,11 @@ SELECT
   issue_title,
   repo_name,
   repo_owner,
+  pr_number,
+  pr_title,
+  pr_id,
   issue_number,
+  issue_id,
   user_name,
   user_avatar_url,
   balance_eth,

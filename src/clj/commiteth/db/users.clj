@@ -21,6 +21,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/get-user con-db {:id user-id})))
 
+(defn get-user-by-login
+  [login]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-user-by-login con-db {:login login})))
+
 (defn exists?
   [user-id]
   (jdbc/with-db-connection [con-db *db*]

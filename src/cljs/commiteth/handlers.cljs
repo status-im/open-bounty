@@ -12,7 +12,9 @@
             [akiroz.re-frame.storage
              :as rf-storage
              :refer [reg-co-fx!]]
-            [commiteth.ui-model :as ui-model]))
+            [commiteth.ui-model :as ui-model]
+            [commiteth.common :as common]
+            [commiteth.routes :as routes]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -39,22 +41,35 @@
    (println "redirecting to" path)
    (set! (.-pathname js/location) path)))
 
+(reg-fx
+ :persist-bounty-filters-in-query
+ (fn [{:keys [bounty-filters]}]
+   (let [query
+         (->> bounty-filters
+              (remove (comp nil? val))
+              (map (fn [[k v]]
+                     [(ui-model/bounty-filter-type->query-param k)
+                      (ui-model/bounty-filter-value->query-param k v)]))
+              (into {}))]
+     (routes/nav! :bounties {} (if (= {} query)
+                                 nil
+                                 query)))))
+
 (reg-event-fx
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-     {:db (merge db/default-db store)}))
+   {:db (merge db/default-db store)}))
 
 
 (reg-event-fx
  :initialize-web3
  (fn [{:keys [db]} [_]]
-      (let [injected-web3 (-> js/window .-web3)
+      (let [injected-web3 (common/web3)
             w3 (when (boolean injected-web3)
                 (do
                   (println "Using injected Web3 constructor with current provider")
                   (new (aget js/window "web3" "constructor") (web3/current-provider injected-web3))))]
-     (println "web3" w3)
      {:db (merge db {:web3 w3})})))
 
 (reg-event-db
@@ -64,10 +79,17 @@
 
 (reg-event-db
  :set-active-page
- (fn [db [_ page]]
-   (assoc db :page page
-             :page-number 1
-             ::db/open-bounties-filters {}
+ (fn [db [_ page params query]]
+   (assoc db :page-number 1
+             :route {:route-id page :params params :query query}
+             ::db/open-bounties-filters
+             (reduce-kv
+              #(let [type (ui-model/query-param->bounty-filter-type %2)]
+                 (assoc %1
+                  type
+                  (ui-model/query-param->bounty-filter-value type %3)))
+              {}
+              query)
              ::db/open-bounties-sorting-type ::ui-model/bounty-sorting-type|most-recent)))
 
 (reg-event-db
@@ -200,6 +222,13 @@
           :owner-bounties issues
           :owner-bounties-loading? false)))
 
+(reg-event-fx
+ :dashboard/mark-banner-as-seen
+ [(inject-cofx :store)]
+ (fn [{:keys [db store]} [_ banner-id]]
+   {:db    (update-in db    [:dashboard/seen-banners] (fnil conj #{}) banner-id)
+    :store (update-in store [:dashboard/seen-banners] (fnil conj #{}) banner-id)}))
+
 (defn get-ls-token [db token]
   (let [login (get-in db [:user :login])]
     (get-in db [:tokens login token])))
@@ -312,12 +341,6 @@
                         (str "Failed to toggle repo: "
                              (:status-text response)))]}))
 
-
-(reg-event-fx
- :update-address
- (fn [{:keys [db]} [_]]
-   {:db db
-    :dispatch [:set-active-page :update-address]}))
 
 (reg-event-db
  :update-user
@@ -485,14 +508,27 @@
    (assoc db :user-dropdown-open? false)))
 
 (reg-event-db
+ ::open-bounty-claim
+ (fn [db [_ opening-issue-id]]
+   (update db ::db/open-bounty-claims #(conj % opening-issue-id))))
+
+(reg-event-db
+ ::close-bounty-claim
+ (fn [db [_ closing-issue-id]]
+   (update db ::db/open-bounty-claims #(disj % closing-issue-id))))
+
+(reg-event-db
   ::set-open-bounties-sorting-type
   (fn [db [_ sorting-type]]
     (merge db {::db/open-bounties-sorting-type sorting-type
                :page-number 1})))
 
-(reg-event-db
-  ::set-open-bounty-filter-type
-  (fn [db [_ filter-type filter-value]]
-    (-> db
-        (assoc-in [::db/open-bounties-filters filter-type] filter-value)
-        (assoc :page-number 1))))
+(reg-event-fx
+ ::set-open-bounty-filter-type
+ (fn [{:keys [event db]} [_ filter-type filter-value]]
+   (println "db" db)
+   (let [filters (::db/open-bounties-filters db)]
+     (println "filters" filters)
+     {:persist-bounty-filters-in-query
+      {:bounty-filters
+       (assoc filters filter-type filter-value)}})))

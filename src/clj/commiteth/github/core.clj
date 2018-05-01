@@ -219,7 +219,7 @@
     (str "Tokens: "
          (str/join " " (map (fn [[tla balance]] (format "%s: %.2f"
                                                        (subs (str tla) 1)
-                                                       (float balance)))
+                                                       (double balance)))
                             token-balances))
          "\n")))
 
@@ -275,7 +275,7 @@
 (defn post-deploying-comment
   [owner repo issue-number tx-id]
   (let [comment (generate-deploying-comment owner repo issue-number tx-id)]
-    (log/debug "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
+    (log/info "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
     (issues/create-comment owner repo issue-number comment (self-auth-params))))
 
 (defn make-patch-request [end-point positional query]

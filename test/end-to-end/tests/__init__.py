@@ -1,4 +1,5 @@
-import configparser
+import configparser, time, datetime, os
+
 
 class TestData(object):
 
@@ -6,15 +7,17 @@ class TestData(object):
         self.test_name = None
         self.config = configparser.ConfigParser()
 
-        # define here path to your config.ini file
-        # example - config_example.ini
+        # put config.ini to /test/end-to-end/tests folder (same directory where config_example.ini is placed
+        self.tests_path = os.path.abspath(os.path.dirname(__file__))
+        self.config.read(os.path.join(self.tests_path, 'config.ini'))
 
-        self.config.read("tests/config.ini")
+        # create unique identificator for PRs, issues ect
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        self.date_time = st
 
         # self.issue['title'] is set in GithubPage::create_new_bounty
         # self.issue['id'] is set in GithubPage::create_new_bounty
-        # self.local_repo_path is set in GithubPage::clone_repo
-
 
 
 test_data = TestData()
