@@ -438,7 +438,6 @@
    (let [issue-id (:issue_id fields)]
      {:http {:method     POST
              :url        "/api/user/revoke"
-             ;; merge returned confirm hash with 
              :on-success #(dispatch [:revoke-bounty-success (merge fields %)])
              :on-error   #(dispatch [:revoke-bounty-error issue-id %])
              :params       fields}})))

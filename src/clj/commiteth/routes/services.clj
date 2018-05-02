@@ -270,4 +270,4 @@
                                     (ok {:confirm-hash confirm-hash})
                                     (bad-request "The confirm hash could not be updated"))
                                   (bad-request "The transaction hash could not be confirmed in a reasonable amount of time"))
-                                (bad-request (str "We were unable to withdraw everything from " contract-address))))))))
+                                (bad-request (str "Unable to withdraw everything from " contract-address))))))))

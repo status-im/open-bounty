@@ -171,7 +171,7 @@
               execute-hash :execute_hash} (db-bounties/pending-payouts)]
        
        (update-confirm-hash issue-id execute-hash)))
-  (log/info "Exit update-confirm-hash"))
+  (log/info "Exit update-confirm-hashes"))
 
 (defn update-watch-hash
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
@@ -502,4 +502,3 @@
   :stop (do
           (log/info "stopping scheduler")
           (scheduler)))
-
