@@ -149,6 +149,30 @@
            (log/error ex "issue %s: self-sign-bounty exception" issue-id)))))
   (log/info "Exit self-sign-bounty"))
 
+(defn update-confirm-hash
+  [issue-id execute-hash]
+  (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
+       (try 
+         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
+           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
+           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
+             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
+             (db-bounties/update-confirm-hash issue-id confirm-hash)
+             {:confirm_hash confirm-hash}))
+         (catch Throwable ex
+           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))))
+
+(defn update-confirm-hashes
+  "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
+  []
+  (log/info "In update-confirm-hashes")
+  (p :update-confirm-hash
+     (doseq [{issue-id     :issue_id
+              execute-hash :execute_hash} (db-bounties/pending-payouts)]
+       
+       (update-confirm-hash issue-id execute-hash)))
+  (log/info "Exit update-confirm-hash"))
+
 (defn update-watch-hash
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
   []
@@ -252,6 +276,43 @@
     (neg? n) (- n)
     :else n))
 
+(defn contract-confirmation-logs [contract-address]
+  "retrives all log events for the confirmation topic since contract creation"
+  (some-> contract-address
+      issues/get-issue-by-contract-address
+      :transaction_hash
+      eth/get-transaction-by-hash
+      :blockNumber
+      (eth/get-logs contract-address [(:confirmation multisig/topics)])))
+
+(defn hash-in-logs?
+  "return true if the transaction hash is present in the queryable blockchain"
+  [hash logs]
+  (some #(= hash (:transactionHash %)) logs))
+
+(defn execution-status [execute-hash contract-address]
+  "check to see if a given execute-hash has been confirmed"
+  (log/infof "checking contract for logs containing %s" execute-hash)
+  (let [logs (contract-confirmation-logs contract-address)]
+    (hash-in-logs? execute-hash logs)))
+
+
+(defn poll-transaction-logs [execute-hash contract-address]
+  "check for execution hash in logs for a few minutes"
+  (let [found? (promise)
+        intervals (take 6
+                    (periodic-seq (t/now)
+                                  (t/seconds 30)))]
+    ;; polling will be slow but if we want to move to an event driven
+    ;; model then we can listen for events, rather than logs, once we're
+    ;; using a geth node again
+    (chime-at intervals
+              (fn [time]
+                (when (execution-status execute-hash contract-address)
+                  (deliver found? true)))
+              {:on-finished (fn []
+                              (deliver found? false))})
+    @found?))
 
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token
@@ -400,6 +461,7 @@
     (run-tasks
      [deploy-pending-contracts
       update-issue-contract-address
+      update-confirm-hashes
       update-payout-receipts
       update-revoked-payout-receipts
       update-watch-hash
@@ -441,40 +503,3 @@
           (log/info "stopping scheduler")
           (scheduler)))
 
-(defn contract-confirmation-logs [contract-address]
-  "retrives all log events for the confirmation topic since contract creation"
-  (some-> contract-address
-      issues/get-issue-by-contract-address
-      :transaction_hash
-      eth/get-transaction-by-hash
-      :blockNumber
-      (eth/get-logs contract-address [(:confirmation multisig/topics)])))
-
-(defn hash-in-logs?
-  "return true if the transaction hash is present in the queryable blockchain"
-  [hash logs]
-  (some #(= hash (:transactionHash %)) logs))
-
-(defn execution-status [execute-hash contract-address]
-  "check to see if a given execute-hash has been confirmed"
-  (log/infof "checking contract for logs containing %s" execute-hash)
-  (let [logs (contract-confirmation-logs contract-address)]
-    (hash-in-logs? execute-hash logs)))
-
-
-(defn poll-transaction-logs [execute-hash contract-address]
-  "check for execution hash in logs for a few minutes"
-  (let [found? (promise)
-        intervals (take 6
-                    (periodic-seq (t/now)
-                                  (t/seconds 30)))]
-    ;; polling will be slow but if we want to move to an event driven
-    ;; model then we can listen for events, rather than logs, once we're
-    ;; using a geth node again
-    (chime-at intervals
-              (fn [time]
-                (when (execution-status execute-hash contract-address)
-                  (deliver found? true)))
-              {:on-finished (fn []
-                              (deliver found? false))})
-    @found?))

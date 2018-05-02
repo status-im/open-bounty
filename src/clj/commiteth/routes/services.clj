@@ -171,18 +171,6 @@
     {:execute-hash  execute-hash
      :execute-write execute-write}))
 
-(defn update-confirm-hash
-  [issue-id execute-hash]
-  (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
-       (try 
-         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
-           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
-           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
-             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
-             (db-bounties/update-confirm-hash issue-id confirm-hash)
-             {:confirm_hash confirm-hash}))
-         (catch Throwable ex
-           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))))
 
 (defapi service-routes
   (when (:dev env)
@@ -278,7 +266,7 @@
                           (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
                               (if-let [{:keys [execute-hash execute-write]} (execute-revocation issue-id contract-address owner-address)]
                                 (if (scheduler/poll-transaction-logs execute-hash contract-address)
-                                  (if-let [{confirm-hash :confirm_hash} (update-confirm-hash issue-id execute-hash)]
+                                  (if-let [{confirm-hash :confirm_hash} (scheduler/update-confirm-hash issue-id execute-hash)]
                                     (ok {:confirm-hash confirm-hash})
                                     (bad-request "The confirm hash could not be updated"))
                                   (bad-request "The transaction hash could not be confirmed in a reasonable amount of time"))
