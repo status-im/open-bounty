@@ -227,26 +227,6 @@
       (catch Throwable ex
         (log/error ex "issue %s: update-payout-receipt exception" issue-id))))
 
-(defn update-revoked-payout-receipts
-  "Gets transaction receipt for each confirmed revocation and updates payout_hash"
-  []
-  (log/info "In update-revoked-payout-receipts")
-  (p :update-payout-receipts
-     (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash
-           contract-address :contract_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
-           confirm-hash :confirm_hash
-           payee-login :payee_login
-           updated :updated} (db-bounties/confirmed-revocation-payouts)]
-       (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
-  (log/info "Exit update-revoked-payout-receipts"))
-
 (defn update-payout-receipts
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
@@ -266,6 +246,26 @@
            updated :updated} (db-bounties/confirmed-payouts)]
     (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
   (log/info "Exit update-payout-receipts"))
+
+(defn update-revoked-payout-receipts
+  "Gets transaction receipt for each confirmed revocation and updates payout_hash"
+  []
+  (log/info "In update-revoked-payout-receipts")
+  (p :update-payout-receipts
+     (doseq [{issue-id    :issue_id
+           payout-hash :payout_hash
+           contract-address :contract_address
+           repo :repo
+           owner :owner
+           comment-id :comment_id
+           issue-number :issue_number
+           balance-eth :balance_eth
+           tokens :tokens
+           confirm-hash :confirm_hash
+           payee-login :payee_login
+           updated :updated} (db-bounties/confirmed-revocation-payouts)]
+       (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
+  (log/info "Exit update-revoked-payout-receipts"))
 
 (defn abs
   "(abs n) is the absolute value of n"
