@@ -266,7 +266,9 @@
                           (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
                               (if-let [{:keys [execute-hash execute-write]} (execute-revocation issue-id contract-address owner-address)]
                                 (if (scheduler/poll-transaction-logs execute-hash contract-address)
-                                  (if-let [{confirm-hash :confirm_hash} (scheduler/update-confirm-hash issue-id execute-hash)]
+                                  ;; TODO this is no longer explicity setting confirm_hash in db so may have to
+                                  ;; perform an extra step. consult the tracker merge
+                                  (if-let [{confirm-hash :result} (scheduler/update-confirm-hash issue-id execute-hash)]
                                     (ok {:confirm-hash confirm-hash})
                                     (bad-request "The confirm hash could not be updated"))
                                   (bad-request "The transaction hash could not be confirmed in a reasonable amount of time"))

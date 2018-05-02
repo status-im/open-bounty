@@ -38,19 +38,25 @@
                                    :title title})))
 
 
-(defn update-transaction-hash
-  "Updates issue with transaction-hash"
-  [issue-id transaction-hash]
+(defn save-tx-info!
+  "Set transaction_hash, execute_hash or watch_hash depending on operation"
+  [issue-id tx-hash type-kw]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-transaction-hash con-db {:issue_id         issue-id
-                                        :transaction_hash transaction-hash})))
+    (db/save-tx-info! con-db {:issue-id issue-id
+                                :tx-hash tx-hash
+                                :type (name type-kw)})))
 
-(defn update-contract-address
-  "Updates issue with contract-address"
-  [issue-id contract-address]
+(defn save-tx-result!
+  "Set contract_address, confirm_hash or watch_hash depending on operation"
+  [issue-id result type-kw]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-contract-address con-db {:issue_id         issue-id
-                                        :contract_address contract-address})))
+    (db/save-tx-result! con-db {:issue-id issue-id
+                                :result result
+                                :type (name type-kw)})))
+
+(defn unmined-txs []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/unmined-txs con-db)))
 
 (defn update-comment-id
   "Updates issue with comment id"
@@ -118,4 +124,5 @@
 (defn get-issue-by-id
   [issue-id]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-issue-by-id {:issue_id issue-id})))
+    (db/get-issue-by-id con-db {:issue-id issue-id})))
+

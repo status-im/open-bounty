@@ -2,6 +2,7 @@
   (:require [commiteth.eth.core :as eth]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.eth.token-data :as token-data]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
@@ -52,11 +53,14 @@
          (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
            (log/infof "issue %s: update-issue-contract-address: tx receipt: %s" issue-id receipt)
            (if-let [contract-address (multisig/find-created-multisig-address receipt)]
-             (let [issue   (issues/update-contract-address issue-id contract-address)
+             (let [_ (tracker/untrack-tx! {:issue-id issue-id 
+                                           :tx-hash transaction-hash 
+                                           :result contract-address 
+                                           :type :deploy})
                    {owner        :owner
                     repo         :repo
                     comment-id   :comment_id
-                    issue-number :issue_number} issue
+                    issue-number :issue_number} (issues/get-issue-by-id issue-id)
                    balance-eth-str (eth/get-balance-eth contract-address 6)
                    balance-eth (read-string balance-eth-str)]
                (log/infof "issue %s: Updating comment image" issue-id)
@@ -90,13 +94,10 @@
   []
   (p :deploy-pending-contracts
      (doseq [{issue-id :issue_id
-              issue-number :issue_number
-              owner :owner
-              owner-address :owner_address
-              repo :repo} (db-bounties/pending-contracts)]
+              owner-address :owner_address} (db-bounties/pending-contracts)]
        (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
        (try
-         (bounties/deploy-contract owner owner-address repo issue-id issue-number)
+         (bounties/deploy-contract owner-address issue-id)
          (catch Throwable t
            (log/errorf t "issue %s: deploy-pending-contracts exception: %s" issue-id (ex-data t)))))))
 
@@ -106,15 +107,15 @@
   (log/info "In self-sign-bounty")
   (p :self-sign-bounty
      (doseq [{contract-address :contract_address
-              issue-id         :issue_id
-              payout-address   :payout_address
-              repo :repo
-              owner :owner
-              comment-id :comment_id
-              issue-number :issue_number
-              balance-eth :balance_eth
-              tokens :tokens
-              winner-login :winner_login} (db-bounties/pending-bounties)]
+           issue-id         :issue_id
+           payout-address   :payout_address
+           repo :repo
+           owner :owner
+           comment-id :comment_id
+           issue-number :issue_number
+           balance-eth :balance_eth
+           tokens :tokens
+           winner-login :winner_login} (db-bounties/pending-bounties)]
        (try
          ;; TODO(martin) delete this shortly after org-dashboard deploy
          ;; as we're now setting `winner_login` when handling a new claims
@@ -132,11 +133,11 @@
                                                    tokens
                                                    winner-login
                                                    true))
-             (let [execute-hash (multisig/send-all {:contract contract-address
-                                                    :payout-address payout-address
-                                                    :internal-tx-id (str "payout-github-issue-" issue-id)})]
-               (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address execute-hash)
-               (db-bounties/update-execute-hash issue-id execute-hash)
+             (let [tx-info (multisig/send-all {:contract contract-address
+                                               :payout-address payout-address
+                                               :internal-tx-id [:execute issue-id]})]
+               (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address (:tx-hash tx-info))
+               (tracker/track-tx! tx-info)
                (github/update-merged-issue-comment owner
                                                    repo
                                                    comment-id
@@ -157,8 +158,10 @@
            (log/infof "issue %s: execution receipt for issue " issue-id receipt)
            (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
              (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
-             (db-bounties/update-confirm-hash issue-id confirm-hash)
-             {:confirm_hash confirm-hash}))
+             (tracker/untrack-tx! {:issue-id issue-id 
+                                   :tx-hash execute-hash 
+                                   :result confirm-hash 
+                                   :type :execute})))
          (catch Throwable ex
            (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))))
 
@@ -182,7 +185,10 @@
        (log/infof "issue %s: pending watch call %s" issue-id watch-hash)
        (try
          (when-let [receipt (eth/get-transaction-receipt watch-hash)]
-           (db-bounties/update-watch-hash issue-id nil))
+           (tracker/untrack-tx! {:issue-id issue-id 
+                                 :tx-hash watch-hash 
+                                 :result nil 
+                                 :type :watch}))
          (catch Throwable ex
            (log/errorf ex "issue %s: update-watch-hash exception:" issue-id))))))
 
@@ -330,8 +336,10 @@
               (when (and (nil? watch-hash)
                          (not= balance internal-balance))
                 (log/infof "bounty %s: balances not in sync, calling watch" bounty-addr)
-                (let [hash (multisig/watch-token bounty-addr tla)]
-                  (db-bounties/update-watch-hash issue-id hash)))))))
+                (let [tx-info (multisig/watch-token {:bounty-addr bounty-addr 
+                                                     :token tla
+                                                     :internal-tx-id [:watch issue-id]})]
+                  (tracker/track-tx! tx-info)))))))
       (catch Throwable ex
         (log/error ex "bounty %s: update-bounty-token-balances exception" bounty-addr))))
   (log/info "Exit update-bounty-token-balances"))
@@ -441,6 +449,13 @@
         (log/error ex "issue %s: update-balances exception" issue-id)))))
   (log/info "Exit update-balances"))
 
+(defn check-tx-receipts 
+  "At all times, there should be no more than one unmined tx hash,
+  as we are executing txs sequentially"
+  []
+  (log/info "In check-tx-receipts")
+  (tracker/prune-txs! (issues/unmined-txs))
+  (log/info "Exit check-tx-receipts"))
 
 (defn wrap-in-try-catch [func]
   (try
@@ -465,6 +480,7 @@
       update-payout-receipts
       update-revoked-payout-receipts
       update-watch-hash
+      check-tx-receipts
       self-sign-bounty
       ])
     (log/info "run-1-min-interval-tasks done")))
@@ -482,11 +498,11 @@
 
 (mount/defstate scheduler
   :start (let [every-minute (rest
-                             (periodic-seq (t/now)
-                                           (t/minutes 1)))
+                              (periodic-seq (t/now)
+                                            (t/minutes 1)))
                every-10-minutes (rest
-                                 (periodic-seq (t/now)
-                                               (t/minutes 10)))
+                                  (periodic-seq (t/now)
+                                                (t/minutes 10)))
                error-handler (fn [e]
                                (log/error "Scheduled task failed" e)
                                (throw e))
