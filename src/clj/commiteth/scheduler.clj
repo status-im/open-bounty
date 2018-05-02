@@ -149,25 +149,6 @@
            (log/error ex "issue %s: self-sign-bounty exception" issue-id)))))
   (log/info "Exit self-sign-bounty"))
 
-(defn update-confirm-hash
-  "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
-  []
-  (log/info "In update-confirm-hash")
-  (p :update-confirm-hash
-     (doseq [{issue-id     :issue_id
-              execute-hash :execute_hash} (db-bounties/pending-payouts)]
-       (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
-       (try 
-         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
-           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
-           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
-             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
-             (db-bounties/update-confirm-hash issue-id confirm-hash)))
-         (catch Throwable ex
-           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id)))))
-  (log/info "Exit update-confirm-hash"))
-
-
 (defn update-watch-hash
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
   []
@@ -190,24 +171,8 @@
     (println "hour diff:" diff)
     (> diff 3)))
 
-(defn update-payout-receipt
-  "Gets transaction receipt for each confirmed payout and updates payout_hash"
-  []
-  (log/info "In update-payout-receipt")
-  (p :update-payout-receipt
-     (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash
-           contract-address :contract_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
-           confirm-id :confirm_hash
-           payee-login :payee_login
-           updated :updated} (db-bounties/confirmed-payouts)]
-    (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
+(defn update-payout-receipt [owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated]
+  (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
     (try
       (if-let [receipt (eth/get-transaction-receipt payout-hash)]
         (let [contract-tokens (multisig/token-balances contract-address)
@@ -217,9 +182,9 @@
                 (> contract-eth-balance 0))
             (do
               (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
-              (when (multisig/is-confirmed? contract-address confirm-id)
+              (when (multisig/is-confirmed? contract-address confirm-hash)
                 (log/infof "issue %s: Detected bounty with funds and confirmed payout, calling executeTransaction" issue-id)
-                (let [execute-tx-hash (multisig/execute-tx contract-address confirm-id)]
+                (let [execute-tx-hash (multisig/execute-tx contract-address confirm-hash)]
                   (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
 
             (do
@@ -236,8 +201,47 @@
           (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
           (db-bounties/reset-payout-hash issue-id)))
       (catch Throwable ex
-        (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
-  (log/info "Exit update-payout-receipt"))
+        (log/error ex "issue %s: update-payout-receipt exception" issue-id))))
+
+(defn update-revoked-payout-receipts
+  "Gets transaction receipt for each confirmed revocation and updates payout_hash"
+  []
+  (log/info "In update-revoked-payout-receipts")
+  (p :update-payout-receipts
+     (doseq [{issue-id    :issue_id
+           payout-hash :payout_hash
+           contract-address :contract_address
+           repo :repo
+           owner :owner
+           comment-id :comment_id
+           issue-number :issue_number
+           balance-eth :balance_eth
+           tokens :tokens
+           confirm-hash :confirm_hash
+           payee-login :payee_login
+           updated :updated} (db-bounties/confirmed-revocation-payouts)]
+       (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
+  (log/info "Exit update-revoked-payout-receipts"))
+
+(defn update-payout-receipts
+  "Gets transaction receipt for each confirmed payout and updates payout_hash"
+  []
+  (log/info "In update-payout-receipts")
+  (p :update-payout-receipts
+     (doseq [{issue-id    :issue_id
+           payout-hash :payout_hash
+           contract-address :contract_address
+           repo :repo
+           owner :owner
+           comment-id :comment_id
+           issue-number :issue_number
+           balance-eth :balance_eth
+           tokens :tokens
+           confirm-hash :confirm_hash
+           payee-login :payee_login
+           updated :updated} (db-bounties/confirmed-payouts)]
+    (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
+  (log/info "Exit update-payout-receipts"))
 
 (defn abs
   "(abs n) is the absolute value of n"
@@ -396,8 +400,8 @@
     (run-tasks
      [deploy-pending-contracts
       update-issue-contract-address
-      update-confirm-hash
-      update-payout-receipt
+      update-payout-receipts
+      update-revoked-payout-receipts
       update-watch-hash
       self-sign-bounty
       ])
@@ -436,3 +440,41 @@
   :stop (do
           (log/info "stopping scheduler")
           (scheduler)))
+
+(defn contract-confirmation-logs [contract-address]
+  "retrives all log events for the confirmation topic since contract creation"
+  (some-> contract-address
+      issues/get-issue-by-contract-address
+      :transaction_hash
+      eth/get-transaction-by-hash
+      :blockNumber
+      (eth/get-logs contract-address [(:confirmation multisig/topics)])))
+
+(defn hash-in-logs?
+  "return true if the transaction hash is present in the queryable blockchain"
+  [hash logs]
+  (some #(= hash (:transactionHash %)) logs))
+
+(defn execution-status [execute-hash contract-address]
+  "check to see if a given execute-hash has been confirmed"
+  (log/infof "checking contract for logs containing %s" execute-hash)
+  (let [logs (contract-confirmation-logs contract-address)]
+    (hash-in-logs? execute-hash logs)))
+
+
+(defn poll-transaction-logs [execute-hash contract-address]
+  "check for execution hash in logs for a few minutes"
+  (let [found? (promise)
+        intervals (take 6
+                    (periodic-seq (t/now)
+                                  (t/seconds 30)))]
+    ;; polling will be slow but if we want to move to an event driven
+    ;; model then we can listen for events, rather than logs, once we're
+    ;; using a geth node again
+    (chime-at intervals
+              (fn [time]
+                (when (execution-status execute-hash contract-address)
+                  (deliver found? true)))
+              {:on-finished (fn []
+                              (deliver found? false))})
+    @found?))

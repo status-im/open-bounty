@@ -30,6 +30,11 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/pending-bounties con-db)))
 
+(defn pending-executions
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/pending-executions con-db)))
+
 (defn pending-payouts
   []
   (jdbc/with-db-connection [con-db *db*]
@@ -39,6 +44,11 @@
   []
   (jdbc/with-db-connection [con-db *db*]
     (db/confirmed-payouts con-db)))
+
+(defn confirmed-revocation-payouts
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/confirmed-revocation-payouts con-db)))
 
 (defn update-confirm-hash
   [issue-id confirm-hash]

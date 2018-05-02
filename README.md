@@ -103,9 +103,9 @@ lein less auto
 ```
 
 ### Solidity compilation
-Invoke `build-contracts` Leiningen task to compile Solidity files into Java classes:
+Compile Solidity files into Java classes with:
 ```
-lein build-contracts
+cd contracts && ./build.sh
 ```
 
 ### Clojure app without REPL

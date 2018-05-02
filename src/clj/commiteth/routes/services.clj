@@ -1,6 +1,7 @@
 (ns commiteth.routes.services
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
+            [compojure.api.exception :as ex]
             [schema.core :as s]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
@@ -10,6 +11,7 @@
             [commiteth.db.usage-metrics :as usage-metrics]
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties-db]
+            [commiteth.db.issues :as issues]
             [commiteth.bounties :as bounties]
             [commiteth.eth.core :as eth]
             [commiteth.github.core :as github]
@@ -19,7 +21,12 @@
                                          eth-decimal->str]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [commiteth.eth.multisig-wallet :as multisig]
+            [commiteth.db.bounties :as db-bounties]
+            [commiteth.scheduler :as scheduler]
+            [clj-time.core :as t]
+            [clj-time.periodic :refer [periodic-seq]]))
 
 (defn add-bounties-for-existing-issues? []
   (env :add-bounties-for-existing-issues false))
@@ -155,13 +162,38 @@
   (let [whitelist (env :user-whitelist #{})]
     (whitelist user)))
 
+(defn execute-revocation [issue-id contract-address payout-address]
+  (log/info (str "executing revocation for " issue-id "at" contract-address))
+  (let [execute-hash  (multisig/send-all {:contract       contract-address
+                                          :payout-address payout-address
+                                          :internal-tx-id (str "payout-github-issue-" issue-id)})
+        execute-write (db-bounties/update-execute-hash issue-id execute-hash)]
+    {:execute-hash  execute-hash
+     :execute-write execute-write}))
+
+(defn update-confirm-hash
+  [issue-id execute-hash]
+  (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
+       (try 
+         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
+           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
+           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
+             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
+             (db-bounties/update-confirm-hash issue-id confirm-hash)
+             {:confirm_hash confirm-hash}))
+         (catch Throwable ex
+           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))))
+
 (defapi service-routes
   (when (:dev env)
-    {:swagger {:ui   "/swagger-ui"
-               :spec "/swagger.json"
-               :data {:info {:version     "0.1"
-                             :title       "commitETH API"
-                             :description "commitETH API"}}}})
+    {:swagger    {:ui   "/swagger-ui"
+                  :spec "/swagger.json"
+                  :data {:info {:version     "0.1"
+                                :title       "commitETH API"
+                                :description "commitETH API"}}}
+     :exceptions {:handlers 
+                  {::ex/request-parsing     (ex/with-logging ex/request-parsing-handler :info)
+                   ::ex/response-validation (ex/with-logging ex/response-validation-handler :error)}}})
 
   (context "/api" []
            (GET "/top-hunters" []
@@ -191,11 +223,11 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {:address s/Str
+                          :body [body {:address              s/Str
                                        :is_hidden_in_hunters s/Bool}]
                           :summary "Updates user's fields."
 
-                          (let [user-id (:id user)
+                          (let [user-id           (:id user)
                                 {:keys [address]} body]
 
                             (when-not (eth/valid-address? address)
@@ -226,9 +258,9 @@
                             (log/debug "/bounty/X/payout" params)
                             (let [{issue       :issue
                                    payout-hash :payout-hash} params
-                                  result (bounties-db/update-payout-hash
-                                          (Integer/parseInt issue)
-                                          payout-hash)]
+                                  result                     (bounties-db/update-payout-hash
+                                                              (Integer/parseInt issue)
+                                                              payout-hash)]
                               (log/debug "result" result)
                               (if (= 1 result)
                                 (ok)
@@ -237,4 +269,17 @@
                          :auth-rules authenticated?
                          :current-user user
                          (log/debug "/user/bounties")
-                         (ok (user-bounties user))))))
+                         (ok (user-bounties user)))
+                    (POST "/revoke"  {{issue-id         :issue-id
+                                       contract-address :contract-address
+                                       owner-address    :owner-address} :params}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
+                              (if-let [{:keys [execute-hash execute-write]} (execute-revocation issue-id contract-address owner-address)]
+                                (if (scheduler/poll-transaction-logs execute-hash contract-address)
+                                  (if-let [{confirm-hash :confirm_hash} (update-confirm-hash issue-id execute-hash)]
+                                    (ok {:confirm-hash confirm-hash})
+                                    (bad-request "The confirm hash could not be updated"))
+                                  (bad-request "The transaction hash could not be confirmed in a reasonable amount of time"))
+                                (bad-request (str "We were unable to withdraw everything from " contract-address))))))))

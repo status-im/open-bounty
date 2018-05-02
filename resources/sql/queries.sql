@@ -73,7 +73,6 @@ FROM repositories
 WHERE owner = :owner
 AND repo = :repo;
 
-
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
 INSERT INTO repositories (repo_id, user_id, owner, repo, state, owner_avatar_url)
@@ -237,7 +236,6 @@ SET
 DELETE from pull_requests
 WHERE pr_id = :pr_id;
 
-
 -- Bounties ------------------------------------------------------------------------
 
 
@@ -280,6 +278,16 @@ AND r.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.execute_hash IS NULL;
 
+-- :name pending-executions :? :*
+-- :doc recently posted executions waiting for bot confirmation to be mined
+SELECT
+  i.contract_address AS contract_address,
+  i.issue_id         AS issue_id,
+  i.execute_hash     AS execute_hash
+FROM issues i
+WHERE i.execute_posted IS NULL
+AND i.execute_hash IS NOT NULL;
+
 -- :name pending-payouts :? :*
 -- :doc recently closed issues awaiting for bot confirmation to be mined
 SELECT
@@ -321,6 +329,30 @@ AND p.state = 1
 AND u.id = p.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
+
+-- :name confirmed-revocation-payouts :? :*
+-- :doc lists all recently confirmed bounty revocations
+SELECT
+  i.contract_address AS contract_address,
+  r.owner            AS owner,
+  r.repo             AS repo,
+  i.comment_id       AS comment_id,
+  i.issue_number     AS issue_number,
+  i.issue_id         AS issue_id,
+  i.balance_eth      AS balance_eth,
+  i.tokens           AS tokens,
+  i.value_usd        AS value_usd,
+  u.address          AS payout_address,
+  u.login           AS payee_login,
+  i.confirm_hash    AS confirm_hash,
+  i.payout_hash     AS payout_hash,
+  i.updated         AS updated
+FROM issues i, users u, repositories r
+WHERE r.repo_id = i.repo_id
+AND u.id = r.user_id
+AND i.payout_receipt IS NULL
+AND i.payout_hash IS NOT NULL;
+
 
 -- :name update-confirm-hash :! :n
 -- :doc updates issue with confirmation hash
@@ -401,6 +433,11 @@ UPDATE issues
 SET is_open = :is_open
 WHERE issue_id = :issue_id;
 
+-- :name update-execute-posted :! :n
+-- :doc updates issue's execute_posted status
+UPDATE issues
+SET execute_posted = :execute_posted
+WHERE issue_id = :issue_id;
 
 -- :name issue-exists :1
 -- :doc returns true if given issue exists
@@ -415,7 +452,17 @@ FROM issues
 WHERE repo_id = :repo_id
 AND issue_number = :issue_number;
 
+-- :name get-issue-by-contract-address :? :1
+-- :doc get issue from DB by contract_address
+SELECT issue_id, contract_address, transaction_hash
+FROM issues
+WHERE contract_address = :contract_address;
 
+-- :name get-issue-by-id :? :1
+-- :doc get issue from DB by issue_id
+SELECT issue_id, owner_address, contract_address, confirm_hash
+FROM issues
+WHERE issue_id = :issue_id;
 
 -- :name open-bounties :? :*
 -- :doc all open bounty issues
@@ -457,6 +504,8 @@ SELECT
   i.balance_eth      AS balance_eth,
   i.tokens           AS tokens,
   i.value_usd        AS value_usd,
+  i.execute_hash     AS execute_hash,
+  i.execute_posted   AS execute_posted,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,

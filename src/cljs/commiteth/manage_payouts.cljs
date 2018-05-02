@@ -6,12 +6,19 @@
             [commiteth.routes :as routes]
             [commiteth.model.bounty :as bnt]
             [commiteth.ui.balances :as ui-balances]
+            [commiteth.config :as config]
             [commiteth.common :as common :refer [human-time]]))
 
 (defn pr-url [{owner :repo_owner
                pr-number :pr_number
                repo :repo_name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
+
+;; TODO put this in cljc file
+(defn etherscan-tx-url [tx-id]
+   (str "https://"
+          (when (config/on-testnet?) "ropsten.")
+          "etherscan.io/tx/" tx-id))
 
 (def primary-button-button :button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer.shadow-7)
 (def primary-button-link :a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white.shadow-7)
@@ -56,6 +63,15 @@
        (if paid?
          "Signed off"
          "Confirm Payment")])))
+
+(defn revoke-button [{issue-id :issue-id
+                      contract-address :contract_address
+                      owner-address :owner_address}]
+  [:button.ui.button
+   {:on-click #(rf/dispatch [:revoke-bounty {:contract-address contract-address
+                                             :issue-id         issue-id
+                                             :owner-address   owner-address}])}
+   "Revoke"])
 
 (defn confirm-row [bounty claim]
   (let [payout-address-available? (:payout_address bounty)]
@@ -236,10 +252,12 @@
    [:div
     [ui-balances/usd-value-label (:value-usd bounty)]]])
 
-(defn unclaimed-bounty [bounty]
+(defn unclaimed-bounty [{value-usd :value-usd :as bounty}]
   [:div.w-third-l.fl-l.pa2
    [square-card
     [bounty-title-link bounty {:show-date? true :max-length 60}]
+    (when (> value-usd 0)
+      [revoke-button bounty])
     [small-card-balances bounty]]])
 
 (defn paid-bounty [bounty]

@@ -89,6 +89,12 @@
     (db/update-issue-open con-db {:issue_id issue-id
                                   :is_open is-open})))
 
+(defn update-execute-posted
+  [issue-id execute_posted]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/update-execute-posted con-db {:issue_id issue-id
+                                      :execute_posted execute_posted})))
+
 (defn is-bounty-issue?
   [issue-id]
   (let [res (jdbc/with-db-connection [con-db *db*]
@@ -103,3 +109,13 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/get-issue con-db {:repo_id repo-id
                           :issue_number issue-number})))
+
+(defn get-issue-by-contract-address
+  [contract-address]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issue-by-contract-address con-db {:contract_address contract-address})))
+
+(defn get-issue-by-id
+  [issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/get-issue-by-id {:issue_id issue-id})))

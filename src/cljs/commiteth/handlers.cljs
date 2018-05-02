@@ -1,6 +1,7 @@
 (ns commiteth.handlers
   (:require [commiteth.db :as db]
-            [re-frame.core :refer [dispatch
+            [re-frame.core :refer [debug
+                                   dispatch
                                    reg-event-db
                                    reg-event-fx
                                    reg-fx
@@ -19,6 +20,9 @@
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
                                        :cofx :store})
+
+;; https://github.com/Day8/re-frame/blob/master/docs/Debugging-Event-Handlers.md
+(def interceptors  [(when ^boolean goog.DEBUG debug)])
 
 (reg-fx
  :http
@@ -64,6 +68,7 @@
 
 (reg-event-fx
  :initialize-web3
+ interceptors
  (fn [{:keys [db]} [_]]
       (let [injected-web3 (common/web3)
             w3 (when (boolean injected-web3)
@@ -209,6 +214,7 @@
 
 (reg-event-fx
  :load-owner-bounties
+ interceptors
  (fn [{:keys [db]} [_]]
    {:db   (assoc db :owner-bounties-loading? true)
     :http {:method     GET
@@ -376,6 +382,7 @@
 
 (reg-event-fx
  :save-payout-hash
+ interceptors
  (fn [{:keys [db]} [_ issue-id payout-hash]]
    {:db   db
     :http {:method     POST
@@ -406,7 +413,39 @@
   (str/replace x #"^0x" ""))
 
 (reg-event-fx
+  :revoke-bounty-success
+ interceptors
+ (fn [{:keys [db]} [_  {:keys [issue-id owner-address contract-address confirm-hash]}]]
+   {:dispatch [:confirm-payout {:issue_id         issue-id
+                                :owner_address    owner-address
+                                :contract_address contract-address
+                                :confirm_hash     confirm-hash}]}))
+
+(reg-event-fx
+ :revoke-bounty-error
+ interceptors
+ (fn [{:keys [db]} [_ issue-id response]]
+   {:dispatch [:set-flash-message
+               :error (if (= 400 (:status response))
+                        (:response response)
+                        (str "Failed to initiate revocation for: " issue-id
+                             (:status-text response)))]}))
+
+(reg-event-fx
+ :revoke-bounty
+ interceptors
+ (fn [{:keys [db]} [_ fields]]
+   (let [issue-id (:issue_id fields)]
+     {:http {:method     POST
+             :url        "/api/user/revoke"
+             ;; merge returned confirm hash with 
+             :on-success #(dispatch [:revoke-bounty-success (merge fields %)])
+             :on-error   #(dispatch [:revoke-bounty-error issue-id %])
+             :params       fields}})))
+
+(reg-event-fx
  :confirm-payout
+ interceptors
  (fn [{:keys [db]} [_ {issue-id         :issue_id
                       owner-address    :owner_address
                       contract-address :contract_address
@@ -437,6 +476,7 @@
 
 (reg-event-fx
  :payout-confirmed
+ interceptors
  (fn [{:keys [db]} [_ issue-id]]
    {:dispatch [:load-owner-bounties]
     :db (-> db
