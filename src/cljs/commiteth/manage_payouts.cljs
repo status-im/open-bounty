@@ -247,18 +247,24 @@
     [:div bottom]]])
 
 (defn small-card-balances [bounty]
-  [:div.f6
+  [:div.f6.fl.w-80
    [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
    [:div
     [ui-balances/usd-value-label (:value-usd bounty)]]])
 
-(defn unclaimed-bounty [{value-usd :value-usd :as bounty}]
+
+;; [revoke-button bounty]
+(defn three-dots-button [{value-usd :value-usd :as bounty}]
+  (when (pos? value-usd)
+    [:div.fl.w-20
+     [:button#menu-lower-right.mdl-button.mdl-js-button.mdl-button--icon
+      [:i.material-icons "more_horiz"]]]))
+
+(defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
     [bounty-title-link bounty {:show-date? true :max-length 60}]
-    (when (> value-usd 0)
-      [revoke-button bounty])
-    [small-card-balances bounty]]])
+    [:div [small-card-balances bounty] [three-dots-button bounty]]]])
 
 (defn paid-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
