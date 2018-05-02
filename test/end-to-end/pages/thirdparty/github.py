@@ -51,7 +51,7 @@ class InstallButton(BaseButton):
 class OrganizationButton(BaseButton):
     def __init__(self, driver):
         super(OrganizationButton, self).__init__(driver)
-        self.locator = self.Locator.css_selector('[alt="@Org4"]')
+        self.locator = self.Locator.css_selector('[alt="@%s"]' % test_data.config['ORG']['gh_org_name'])
 
 
 class AllRepositoriesButton(BaseButton):
@@ -267,7 +267,7 @@ class GithubPage(BasePageObject):
     def get_login_page(self):
         self.driver.get(test_data.config['Common']['gh_login'])
 
-    def get_deployed_contract(self, wait=120):
+    def get_deployed_contract(self, wait=50):
         for i in range(wait):
             self.refresh()
             try:
@@ -275,14 +275,15 @@ class GithubPage(BasePageObject):
             except TimeoutException:
                 time.sleep(10)
                 pass
-        pytest.fail('Contract is not deployed in %s minutes!' % str(wait / 60))
+        pytest.fail('Contract is not deployed in %s minutes!' % str(wait * 10 / 60))
 
     # cloning via HTTPS
     def clone_repo(self, initial_repo=None, username=None, repo_name=None, repo_folder='test_repo'):
         os.mkdir(repo_folder)
         os.chdir(repo_folder)
         self.local_repo_path = os.getcwd()
-        fork = 'https://github.com/%s/%s.git' % (username, repo_name)
+        fork = 'https://%s:%s@github.com/%s/%s.git' % (test_data.config['DEV']['gh_username'],
+                                                       test_data.config['DEV']['gh_password'], username, repo_name)
         logging.info(('Cloning from %s to %s' % (fork, self.local_repo_path)))
         repo = git.Repo.clone_from(fork, self.local_repo_path)
         logging.info(('Successefully cloned to:  %s' % self.local_repo_path))
@@ -298,6 +299,8 @@ class GithubPage(BasePageObject):
         logging.info(repo.git.pull('upstream', 'master'))
         logging.info(repo.git.push('origin', 'master'))
         logging.info(repo.git.fetch('--all'))
+        repo.git.config('user.email', test_data.config['DEV']['gh_login'])
+        repo.git.config('user.name', test_data.config['DEV']['gh_username'])
         repo.git.checkout('-b', branch)
         file = open(os.path.join(self.local_repo_path, file_to_modify), 'w')
         file.write("Autotest change: %s \r \n" % test_data.date_time)
