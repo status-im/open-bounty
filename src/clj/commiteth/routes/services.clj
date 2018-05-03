@@ -170,7 +170,7 @@
   (try 
     (let [tx-info (multisig/send-all {:contract       contract-address
                                       :payout-address payout-address
-                                      :internal-tx-id (str "payout-github-issue-" issue-id)})]
+                                      :internal-tx-id [:execute issue-id]})]
       (tracker/track-tx! tx-info)
       {:execute-hash (:tx-hash tx-info)})
     (catch Throwable ex
