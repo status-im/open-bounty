@@ -289,6 +289,8 @@
       :transaction_hash
       eth/get-transaction-by-hash
       :blockNumber
+      ;; the transaction_hash's block number is used as the starting point
+      ;; from which to begin polling for later events on the contract
       (eth/get-logs contract-address [(:confirmation multisig/topics)])))
 
 (defn hash-in-logs?
