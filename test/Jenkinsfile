@@ -1,12 +1,12 @@
 node ('linux1') {sauce('1be1b688-e0e7-4314-92a0-db11f52d3c00') {
- checkout([$class: 'GitSCM', branches: [[name: '*/develop']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/status-im/open-bounty.git']]])
+ checkout([$class: 'GitSCM', branches: [[name: '$branch']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/status-im/open-bounty.git']]])
  configFileProvider([configFile(fileId: 'sob_automation_test_config', targetLocation: 'test/end-to-end/tests')]) {
             try {withCredentials([string(credentialsId: 'SOB_SAUCE_ACCESS_KEY', variable: 'SAUCE_ACCESS_KEY'), string(credentialsId: 'SOB_SAUCE_USERNAME', variable: 'SAUCE_USERNAME')])
-            {sh 'cd test && docker build -t end2end . && docker run --rm  -e "SAUCE_USERNAME="${SAUCE_USERNAME} -e "SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY} --name end2end-container end2end -m pytest -m sanity --build=$BUILD_NAME -v -n 1'}
+            {sh 'cd test && docker build -t end2end . && docker run -v `pwd`/end-to-end/tests/results:/app/results --rm  -e "SAUCE_USERNAME="${SAUCE_USERNAME} -e "SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY} --name end2end-container end2end -m pytest -m sanity --build=$BUILD_NAME -v -n 1'}
             }
             finally {
                 saucePublisher()
-                junit testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']], testResults: 'test/end-to-end/tests/*.xml' }
+                junit testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']], testResults: 'test/end-to-end/tests/results/*.xml' }
         }
     }
 }

@@ -26,4 +26,3 @@ node_modules
 /config-prod.edn
 /config-dev.edn
 /config-test.edn
-/src/java

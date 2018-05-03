@@ -1,3 +1,4 @@
+html,body { font-size: 16px }
 
 @font-face {
     font-family: PostGrotesk-Book;
@@ -257,7 +258,6 @@ label[for="input-hidden"] {
 }
 
 .ui.attached.tabular {
-    background-color: #57a7ed;
     border-bottom: none;
     height: 80%;
     .ui.item {
@@ -415,7 +415,6 @@ label[for="input-hidden"] {
     background-color: #fff;
     border-radius: 10px;
     transform: translateY(-45px);
-    padding: 24px;
     .open-bounties-header {
         font-family: "PostGrotesk-Medium";
         font-size: 21px;
@@ -714,6 +713,17 @@ label[for="input-hidden"] {
         padding: 4px;
         text-align: center;
     }
+
+    .blue-arrow-box {
+        width: 24px;
+        height: 24px;
+    }
+
+    .blue-arrow-image {
+	width: 13.5px;
+	height: 6px;
+    }
+
 }
 
 .open-bounty-item:first-child {
@@ -748,8 +758,6 @@ label[for="input-hidden"] {
         font-size: 15px;
     }
 
-    border-bottom: #eaecee 1px solid !important;
-
     .open-bounty-item-content {
         width: 80%;
         padding: .7em 0 1em;
@@ -780,30 +788,33 @@ label[for="input-hidden"] {
     flex-direction: row !important;
     justify-content: space-between;
     width: 80%;
-
 }
+
+.bounty-claims-row {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.bounty-claims-container {
+    background-color: #FBFBFB;
+}
+
+.bounty-claims-icon {
+    width: 40px;
+ }
+
+.bounty-claims-text {
+    a {
+	text-decoration: none;
+	color: #42505c;
+    }
+}
+
 .bounty-repo-label a {
     margin: auto;
 	font-family: "PostGrotesk-Book";
 	font-size: 15px;
 	color: #8d99a4;
-}
-
-.usd-value-label {
-    padding-left: 5px;
-    font-size: 15px;
-    color: #8d99a4;
-}
-
-.usd-balance-label {
-    font-size: 15px;
-    color: #42505c;
-}
-
-.open-claims-label {
-    padding-left: 15px;
-    font-size: 15px;
-    color: #57a7ed;
 }
 
 .activity-item-container {
@@ -907,36 +918,6 @@ label[for="input-hidden"] {
     }
 }
 
-.footer-row {
-    padding: 1em 0 0;
-    .balance-badge {
-        float: left;
-        margin-right: 1em;
-    }
-}
-
-.balance-badge {
-    color: #57a7ed;
-    background-color: rgba(87,167,237,.2);
-    font-family: "PostGrotesk-Medium";
-    font-weight: 500;
-    font-size: 13px;
-    line-height: 1.15;
-    width: auto;
-    min-width: 0;
-    height: auto;
-    min-height: 0;
-    line-height: 2em;
-    display: table;
-    padding: 0 10px 0;
-    letter-spacing: 1px;
-    border-radius: 8px;
-
-    &.token {
-        color: #4360df;
-        background-color: rgba(67,96,223,.2);
-    }
-}
 .fork-span {
     padding-left: .5em;
 }
@@ -1179,7 +1160,7 @@ label[for="input-hidden"] {
 }
 
 body {
-    background-color: #eaecee;
+    background-color: #f2f5f8;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
 }
@@ -1283,3 +1264,6 @@ body {
 	color: #8d99a4;
     padding-top: 20px;
 }
+
+
+@import (inline) "tachyons-utils.css";

@@ -1,5 +1,6 @@
+import logging
 from pages.base_page import BasePageObject
-from pages.base_element import *
+from pages.base_element import BaseText
 from tests import test_data
 
 
@@ -16,6 +17,7 @@ class TopHuntersHeader(BaseText):
         super(TopHuntersHeader, self).__init__(driver)
         self.locator = self.Locator.css_selector('.top-hunters-header')
 
+
 class BountyTitles(BaseText):
 
     def __init__(self, driver):
@@ -29,11 +31,21 @@ class BountyItemRows(BaseText):
         super(BountyItemRows, self).__init__(driver)
         self.locator = self.Locator.css_selector('.open-bounty-item-content .bounty-item-row')
 
+
 class BountyFooters(BaseText):
 
     def __init__(self, driver):
         super(BountyFooters, self).__init__(driver)
         self.locator = self.Locator.css_selector('.open-bounty-item-content .footer-row')
+
+
+class BountyClaimsAmount(BaseText):
+
+    def __init__(self, driver, issue_title, claims_text):
+        super(BaseText, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector(
+            '//div[@class="header"]/a[contains(.,"%s")]/../../*/span[contains(.,"%s")]' % (issue_title, claims_text))
+
 
 
 class BountiesPage(BasePageObject):
@@ -51,3 +63,6 @@ class BountiesPage(BasePageObject):
     def get_bounties_page(self):
         self.driver.get(test_data.config['Common']['url'] + 'app')
 
+    def check_bounty_claims_amount(self, issue_title, claims_text):
+        logging.info('Check that bounty "%s" has "%s"' % (issue_title, claims_text))
+        BountyClaimsAmount(self.driver, issue_title, claims_text).find_element()

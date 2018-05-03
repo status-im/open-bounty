@@ -1,6 +1,6 @@
 import time
 from pages.base_page import BasePageObject
-from pages.base_element import *
+from pages.base_element import BaseButton, BaseText, BaseEditBox
 from selenium.webdriver import ActionChains
 
 
@@ -74,7 +74,6 @@ class MetaMaskPlugin(BasePageObject):
         self.ok_button = OkButton(self.driver)
 
     def recover_access(self, passphrase, password, confirm_password):
-
         self.get_url('chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/popup.html')
         self.accept_button.click()
         ActionChains(self.driver).move_to_element(self.privacy_text.find_element()).perform()
@@ -85,4 +84,3 @@ class MetaMaskPlugin(BasePageObject):
         self.password_edit_box.send_keys(password)
         self.password_box_confirm.send_keys(confirm_password)
         self.ok_button.click()
-

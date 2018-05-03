@@ -7,6 +7,7 @@
    [commiteth.bounties :as bounties]
    [commiteth.db
     [issues :as issues]
+    [bounties :as db-bounties]
     [pull-requests :as pull-requests]
     [repositories :as repositories]
     [users :as users]]
@@ -82,65 +83,68 @@
   (when (issues/is-bounty-issue? issue-id)
     (issues/update-open-status issue-id true)))
 
-(def ^:const keywords
-  [#"(?i)close:?\s+#(\d+)"
-   #"(?i)closes:?\s+#(\d+)"
-   #"(?i)closed:?\s+#(\d+)"
-   #"(?i)fix:?\s+#(\d+)"
-   #"(?i)fixes:?\s+#(\d+)"
-   #"(?i)fixed:?\s+#(\d+)"
-   #"(?i)resolve:?\s?#(\d+)"
-   #"(?i)resolves:?\s+#(\d+)"
-   #"(?i)resolved:?\s+#(\d+)"])
+(defn pr-keywords [prefix]
+  (mapv
+    #(re-pattern (str "(?i)" %1 ":?\\s+" prefix "(\\d+)"))
+    ["close"
+     "closes"
+     "closed"
+     "fix"
+     "fixes"
+     "fixed"
+     "resolve"
+     "resolves"
+     "resolved"]))
 
 (defn extract-issue-number
-  [pr-body pr-title]
+  [owner repo pr-body pr-title]
   (let [cleaned-body (str/replace pr-body #"(?m)^\[comment.*$" "")
+        keywords (concat (pr-keywords "#") 
+                         (when-not (or (str/blank? owner) (str/blank? repo))
+                           (pr-keywords (str "https://github.com/" owner "/" repo "/issues/"))))
         extract (fn [source]
                   (mapcat #(keep
-                            (fn [s]
-                              (try (let [issue-number (Integer/parseInt (second s))]
-                                     (when (pos? issue-number)
-                                       issue-number))
-                                   (catch NumberFormatException _)))
-                            (re-seq % source)) keywords))]
+                             (fn [s]
+                               (try (let [issue-number (Integer/parseInt (second s))]
+                                      (when (pos? issue-number)
+                                        issue-number))
+                                    (catch NumberFormatException _)))
+                             (re-seq % source)) keywords))]
     (log/debug cleaned-body)
     (concat (extract cleaned-body)
             (extract pr-title))))
 
 
 (defn handle-claim
-  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number head-sha merged? event-type]
+  [issue user-id login name avatar_url owner repo repo-id pr-id pr-number pr-title head-sha merged? event-type]
   (users/create-user user-id login name nil avatar_url)
   (let [open-or-edit? (contains? #{:opened :edited} event-type)
         close? (= :closed event-type)
         pr-data {:repo_id   repo-id
                  :pr_id     pr-id
                  :pr_number pr-number
+                 :title     pr-title
                  :user_id   user-id
                  :issue_number (:issue_number issue)
                  :issue_id (:issue_id issue)
                  :state event-type}]
-
     ;; TODO: in the opened case if the submitting user has no
     ;; Ethereum address stored, we could post a comment to the
     ;; Github PR explaining that payout is not possible if the PR is
     ;; merged
     (cond
       open-or-edit? (do
-                      (log/info "PR with reference to bounty issue"
-                                 (:issue_number issue) "opened")
+                      (log/infof "issue %s: PR with reference to bounty issue opened" (:issue_number issue))
                       (pull-requests/save (merge pr-data {:state :opened
                                                           :commit_sha head-sha})))
       close? (if merged?
-               (do (log/info "PR with reference to bounty issue"
-                             (:issue_number issue) "merged")
+               (do (log/infof "issue %s: PR with reference to bounty issue merged" (:issue_number issue))
                    (pull-requests/save
                     (merge pr-data {:state :merged
                                     :commit_sha head-sha}))
-                   (issues/update-commit-sha (:issue_id issue) head-sha))
-               (do (log/info "PR with reference to bounty issue"
-                             (:issue_number issue) "closed with no merge")
+                   (issues/update-commit-sha (:issue_id issue) head-sha)
+                   (db-bounties/update-winner-login (:issue_id issue) login))
+               (do (log/infof "issue %s: PR with reference to bounty issue closed with no merge" (:issue_number issue))
                    (pull-requests/save
                     (merge pr-data {:state :closed
                                     :commit_sha head-sha})))))))
@@ -169,24 +173,24 @@
      pr-body         :body
      pr-title        :title} :pull_request}]
   (log/info "handle-pull-request-event" event-type owner repo repo-id login pr-body pr-title)
-  (if-let [issue (some->> (extract-issue-number pr-body pr-title)
-                          (first)
-                          (issues/get-issue repo-id))]
-    (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
-      (do
-        (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
-        (handle-claim issue
-                      user-id
-                      login name
-                      avatar_url
-                      owner repo
-                      repo-id
-                      pr-id
-                      pr-number
-                      head-sha
-                      merged?
-                      event-type))
-      (log/info "PR for issue already merged"))
+  (if-let [issues (remove nil? (map #(issues/get-issue repo-id %1) (extract-issue-number owner repo pr-body pr-title)))]
+    (doseq [issue issues]
+      (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
+        (do
+          (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
+          (handle-claim issue
+                        user-id
+                        login name
+                        avatar_url
+                        owner repo
+                        repo-id
+                        pr-id
+                        pr-number
+                        pr-title
+                        head-sha
+                        merged?
+                        event-type))
+        (log/info "PR for issue already merged")))
     (when (= :edited event-type)
       ; Remove PR if it does not reference any issue
       (pull-requests/remove pr-id))))
@@ -380,7 +384,7 @@
         (log/debug "webhook-app POST, headers" headers)
         (let [raw-payload (slurp body)
               payload (json/parse-string raw-payload true)]
-          (log/info "webhook-app POST, payload:" (pr-str payload))
+          (log/debug "webhook-app POST, payload:" (pr-str payload))
           (if (validate-secret-one-hook payload raw-payload (get headers "x-hub-signature"))
             (do
               (log/debug "Github secret validation OK app")

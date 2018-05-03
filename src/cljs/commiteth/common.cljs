@@ -2,9 +2,13 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [clojure.string :as str]
+            [goog.object :as gobj]
             [goog.date.relative]
             [goog.i18n.DateTimePatterns :as DateTimePatterns])
   (:import (goog.i18n DateTimeFormat)))
+
+(defn web3 []
+  (gobj/get js/window "web3"))
 
 (defn input [val-ratom props]
   (fn []
@@ -43,6 +47,9 @@
 
 (defn issue-url [owner repo number]
   (str "https://github.com/" owner "/" repo "/issues/" number))
+
+(defn pull-request-url [owner repo number]
+  (str "https://github.com/" owner "/" repo "/pull/" number))
 
 (def items-per-page 15)
 
@@ -128,7 +135,7 @@
           :else 
           [:div
            [draw-items] 
-           [:div.page-nav-container
+           [:div.page-nav-container.ph4.pb4
             [:div.page-direction-container
              [draw-rect :backward]
              [draw-rect :forward]]

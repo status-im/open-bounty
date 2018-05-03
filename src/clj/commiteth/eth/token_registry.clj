@@ -1,7 +1,7 @@
 (ns commiteth.eth.token-registry
-  (:require [commiteth.eth.core :as eth
-             :refer [create-web3j creds]]
+  (:require [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
+            [commiteth.eth.web3j :refer [web3j-obj creds-obj]]
             [clojure.tools.logging :as log])
   (:import [org.web3j
             abi.datatypes.generated.Uint256
@@ -23,8 +23,8 @@
 
 (defn- load-tokenreg-contract [addr]
   (TokenReg/load addr
-                 (create-web3j)
-                 (creds)
+                 @web3j-obj
+                 @creds-obj
                  (eth/gas-price)
                  (BigInteger/valueOf 21000)))
 
@@ -37,6 +37,7 @@
   ([addr]
    (println "addr" addr)
    (let [contract (load-tokenreg-contract addr)]
+     (assert contract (format "Could not load contract for addr %s" addr))
      ;(assert (.isValid contract)) ;; web3j's isValid can't be trusted...
      (let [token-count (-> contract .tokenCount .get .getValue)]
        (log/debug "token-count" token-count)
@@ -58,9 +59,8 @@
 (defn deploy-parity-tokenreg
   "Deploy an instance of parity token-registry to current network"
   []
-  (let [web3j (create-web3j)]
-    (TokenReg/deploy web3j
-                     (creds)
-                     (eth/gas-price)
-                     (BigInteger/valueOf 4000000) ;; gas limit
-                     BigInteger/ZERO)))
+  (TokenReg/deploy @web3j-obj
+                   @creds-obj
+                   (eth/gas-price)
+                   (BigInteger/valueOf 4000000) ;; gas limit
+                   BigInteger/ZERO))

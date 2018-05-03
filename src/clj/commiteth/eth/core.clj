@@ -3,21 +3,15 @@
             [org.httpkit.client :refer [post]]
             [clojure.java.io :as io]
             [commiteth.config :refer [env]]
+            [commiteth.eth.web3j :refer [get-signed-tx]]
             [clojure.string :refer [join]]
+            [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [clojure.tools.logging :as log]
+            [commiteth.eth.tracker :as tracker]
+            [clj-time.core :as t]
             [clojure.string :as str]
             [pandect.core :as pandect]
-            [commiteth.util.util :refer [json-api-request]])
-  (:import [org.web3j
-            protocol.Web3j
-            protocol.http.HttpService
-            protocol.core.DefaultBlockParameterName
-            protocol.core.methods.response.EthGetTransactionCount
-            protocol.core.methods.request.RawTransaction
-            utils.Numeric
-            crypto.Credentials
-            crypto.TransactionEncoder
-            crypto.WalletUtils]))
+            [commiteth.util.util :refer [json-api-request]]))
 
 (defn eth-rpc-url [] (env :eth-rpc-url "http://localhost:8545"))
 (defn eth-account [] (:eth-account env))
@@ -26,51 +20,18 @@
 (defn auto-gas-price? [] (env :auto-gas-price false))
 (defn offline-signing? [] (env :offline-signing true))
 
-(defn wallet-file-path []
-  (env :eth-wallet-file))
-
-(defn wallet-password []
-  (env :eth-password))
-
-(defn creds []
-  (let [password  (wallet-password)
-        file-path (wallet-file-path)]
-    (if (and password file-path)
-      (WalletUtils/loadCredentials
-       password
-       file-path)
-      (throw (ex-info "Make sure you provided proper credentials in appropriate resources/config.edn"
-                      {:password password :file-path file-path})))))
-
-(defn create-web3j []
-  (Web3j/build (HttpService. (eth-rpc-url))))
-
-(defn get-signed-tx [gas-price gas-limit to data]
-  "Create a sign a raw transaction.
-   'From' argument is not needed as it's already
-   encoded in credentials.
-   See https://web3j.readthedocs.io/en/latest/transactions.html#offline-transaction-signing"
-  (let [web3j (create-web3j)
-        nonce (.. (.ethGetTransactionCount web3j 
-                                           (env :eth-account) 
-                                           DefaultBlockParameterName/LATEST)
-                  sendAsync
-                  get
-                  getTransactionCount)
-        tx (RawTransaction/createTransaction
-             nonce
-             gas-price
-             gas-limit
-             to
-             data)
-        signed (TransactionEncoder/signMessage tx (creds))
-        hex-string (Numeric/toHexString signed)]
-    hex-string))
 (defn eth-gasstation-gas-price
+  "Get max of average and average_calc from gas station and use that
+   as gas price. average_calc is computed from a larger time period than average,
+   so the idea is to account for both temporary dips (when average_calc > average)
+   and temporary rises (average_calc < average) of gas price"
   []
   (let [data (json-api-request "https://ethgasstation.info/json/ethgasAPI.json")
-        avg-price (-> (get data "average")
-                      bigint)
+        avg-price (max
+                    (-> (get data "average")
+                        bigint)
+                    (-> (get data "average_calc")
+                        bigint))
         avg-price-gwei (/ avg-price (bigint 10))]
     (->> (* (bigint (Math/pow 10 9)) avg-price-gwei) ;; for some reason the API returns 10x gwei price
         .toBigInteger)))
@@ -99,33 +60,48 @@
     (try
       (json/read-str s :key-fn keyword)
       (catch Exception ex
-        (do (log/error "Exception when parsing json string:"
-                       s
-                       "message:"
-                       ex)
+        (log/error ex "Exception when parsing json string:" s)))))
 
-            nil)))))
+(def req-id-tracker
+  ;; HACK to ensure previous random-number approach doesn't lead to
+  ;; unintended collisions
+  (atom 0))
 
 (defn eth-rpc
-  [method params]
-  (let [request-id (rand-int 4096)
-        body     (json/write-str {:jsonrpc "2.0"
-                                  :method  method
-                                  :params  params
-                                  :id      request-id})
+  [{:keys [method params internal-tx-id]}]
+  {:pre [(string? method) (some? params)]}
+  (let [[type-kw issue-id] internal-tx-id
+        tx-id-str (str type-kw "-" issue-id)
+        request-id (swap! req-id-tracker inc)
+        body       {:jsonrpc "2.0"
+                    :method  method
+                    :params  params
+                    :id      request-id}
         options  {:headers {"content-type" "application/json"}
-                  :body body}
+                  :body (json/write-str body)}
         response  @(post (eth-rpc-url) options)
         result   (safe-read-str (:body response))]
-    (log/debug body "\n" result)
+    (when internal-tx-id
+      (log/infof "%s: eth-rpc %s" tx-id-str method))
+    (log/debugf "%s: eth-rpc req(%s) body: %s" tx-id-str request-id body)
+    (if tx-id-str
+      (log/infof "%s: eth-rpc req(%s) result: %s" tx-id-str request-id result)
+      (log/debugf "no-tx-id: eth-rpc req(%s) result: %s" request-id result))
+    (cond
+      ;; Ignore any responses that have mismatching request ID
+      (not= (:id result) request-id)
+      (throw (ex-info "Geth returned an invalid json-rpc request ID, ignoring response"
+                      {:result result}))
 
-    (if (= (:id result) request-id)
-      (:result result)
-      (do
-        (log/error "Geth returned an invalid json-rpc request ID,"
-                   "ignoring response")
-        (when-let [error (:error result)]
-          (log/error "Method: " method ", error: " error))))))
+      ;; If request ID matches but contains error, throw
+      (:error result)
+      (throw
+       (ex-info (format "%s: Error submitting transaction via eth-rpc %s"
+                        (or tx-id-str "(no-tx-id)") (:error result))
+                (:error result)))
+
+      :else
+      (:result result))))
 
 (defn hex->big-integer
   [hex]
@@ -159,9 +135,10 @@
 (defn estimate-gas
   [from to value & [params]]
   (let [geth-estimate (eth-rpc
-                       "eth_estimateGas" [(merge params {:from  from
-                                                         :to    to
-                                                         :value value})])
+                       {:method "eth_estimateGas"
+                        :params [(merge params {:from  from
+                                                :to    to
+                                                :value value})]})
         adjusted-gas (adjust-gas-estimate geth-estimate)]
 
     (log/debug "estimated gas (geth):" geth-estimate)
@@ -184,7 +161,8 @@
 
 (defn get-balance-hex
   [account]
-  (eth-rpc "eth_getBalance" [account "latest"]))
+  (eth-rpc {:method "eth_getBalance"
+            :params [account "latest"]}))
 
 (defn get-balance-wei
   [account]
@@ -192,7 +170,8 @@
 
 (defn get-balance-eth
   [account digits]
-  (hex->eth (get-balance-hex account) digits))
+  (p :get-balance-eth
+     (hex->eth (get-balance-hex account) digits)))
 
 (defn- format-param
   [param]
@@ -202,7 +181,8 @@
 
 (defn get-transaction-receipt
   [hash]
-  (eth-rpc "eth_getTransactionReceipt" [hash]))
+  (eth-rpc {:method "eth_getTransactionReceipt"
+            :params [hash]}))
 
 (defn format-call-params
   [method-id & params]
@@ -212,35 +192,73 @@
 (defn call
   [contract method-id & params]
   (let [data (apply format-call-params method-id params)]
-    (eth-rpc "eth_call" [{:to contract :data data} "latest"])))
+    (eth-rpc {:method "eth_call"
+              :params [{:to contract :data data} "latest"]})))
 
-(defn execute
-  [from contract method-id gas-limit & params]
+(defn construct-params
+  [{:keys [from contract method-id params gas-price]}]
   (let [data (apply format-call-params method-id params)
+        value (format "0x%x" 0)]
+    (cond-> {:data data
+             :from  from
+             :value value}
+      gas-price
+      (merge {:gasPrice (integer->hex gas-price)})
+      contract
+      (merge {:to contract}))))
+
+(defmulti execute (fn [_] (if (offline-signing?) 
+                            :with-tx-signing
+                            :no-tx-signing)))
+
+
+(defmethod execute :with-tx-signing
+  [{:keys [from contract method-id gas-limit params internal-tx-id]
+    :as args}]
+  {:pre [(string? method-id)]}
+  (let [[type-kw issue-id] internal-tx-id
+        nonce (tracker/try-reserve-nonce!)
         gas-price (gas-price)
-        value (format "0x%x" 0)
-        params (cond-> {:data data
-                        :from  from
-                        :value value}
-                 gas-price
-                 (merge {:gasPrice (integer->hex gas-price)})
-                 contract
-                 (merge {:to contract}))
-        gas (if gas-limit gas-limit 
-              (estimate-gas from contract value params))
-        params (if (offline-signing?)
-                 (get-signed-tx (biginteger gas-price)
-                                      (hex->big-integer gas)
-                                      contract
-                                      data) 
-                 (assoc params :gas gas))]
-    (if (offline-signing?)
-      (eth-rpc
-        "eth_sendRawTransaction"
-        [params])
-      (eth-rpc
-        "personal_sendTransaction"
-        [params (eth-password)]))))
+        params (construct-params (assoc args :gas-price gas-price))
+        gas (or gas-limit (estimate-gas from contract (:value params) params))
+        params (get-signed-tx (biginteger gas-price)
+                              (hex->big-integer gas)
+                              contract
+                              (:data params)
+                              nonce)
+        tx-hash (try
+                  (eth-rpc
+                    {:method "eth_sendRawTransaction"
+                     :params [params]
+                     :internal-tx-id internal-tx-id})
+                  (catch Throwable ex
+                    (tracker/drop-nonce! nonce)
+                    (throw ex)))]
+    {:tx-hash tx-hash
+     :issue-id issue-id
+     :type type-kw
+     :nonce nonce
+     :timestamp (t/now)}))
+
+(defmethod execute :no-tx-signing
+  [{:keys [from contract method-id gas-limit params internal-tx-id]
+    :as args}]
+  {:pre [(string? method-id)]}
+  (let [[type-kw issue-id] internal-tx-id
+        gas-price (gas-price)
+        params (construct-params (assoc args :gas-price gas-price))
+        gas (or gas-limit (estimate-gas from contract (:value params) params))
+        params (assoc params :gas gas)
+        tx-hash (eth-rpc
+                  {:method "personal_sendTransaction"
+                   :params [params (eth-password)]
+                   :internal-tx-id internal-tx-id})]
+    {:tx-hash tx-hash
+     :type type-kw
+     :timestamp (t/now)
+     :issue-id issue-id}
+    ))
+
 
 (defn hex-ch->num
   [ch]

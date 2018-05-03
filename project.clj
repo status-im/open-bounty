@@ -9,8 +9,9 @@
                  [reagent-utils "0.2.1"]
                  [reagent "0.7.0"]
                  [org.clojure/clojurescript "1.9.946"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.9.0"]
                  [selmer "1.11.1"]
+                 [com.taoensso/tufte "1.3.0"]
                  [markdown-clj "1.0.1"]
                  [ring-middleware-format "0.7.2"]
                  [ring/ring-core "1.6.2"]
@@ -65,25 +66,18 @@
   :plugins [[lein-cprop "1.0.1"]
             [migratus-lein "0.4.1"]
             [lein-cljsbuild "1.1.7"]
-            [lein-auto "0.1.2"]
             [lein-less "1.7.5"]
-            [lein-shell "0.5.0"]
             [lein-sha-version "0.1.1"]]
 
 
   :less {:source-paths ["src/less"]
          :target-path "resources/public/css"}
 
-  :auto {"build-contracts" {:file-pattern #"\.(sol)\n"
-                            :paths ["./contracts"]}}
-
-  :aliases {"build-contracts" ["shell" "./build_contracts.sh"]}
-
   :ring {:destroy commiteth.scheduler/stop-scheduler}
 
   :uberjar-exclusions [#"public/README.md" #"public/cards.html"]
   :clean-targets ^{:protect false}
-  [:target-path :java-source-paths [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
    :nrepl-port       7002
@@ -93,7 +87,7 @@
   :profiles
   {:uberjar       {:jvm-opts ["-server" "-Dconf=config-prod.edn"]
                    :omit-source    true
-                   :prep-tasks     ["build-contracts" "javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
+                   :prep-tasks     ["javac" "compile" ["cljsbuild" "once" "min"] ["less" "once"]]
                    :cljsbuild
                    {:builds
                     {:min
