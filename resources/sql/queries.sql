@@ -486,7 +486,7 @@ SELECT
       i.is_open          AS is_open,
       i.winner_login     AS winner_login,
       i.commit_sha       AS commit_sha,
-      i.owner_address	 AS owner_address,
+      u.address		 AS owner_address,
       i.contract_address AS contract_address,
       i.confirm_hash	 AS confirm_hash,
       i.title            AS title,
@@ -494,8 +494,9 @@ SELECT
       i.repo_id          AS repo_id,
       r.owner            AS owner,
       r.repo             AS repo
-FROM issues i, repositories r
+FROM issues i, repositories r, users u
 WHERE r.repo_id = i.repo_id
+AND r.user_id = u.id
 AND i.issue_id = :issue-id
 
 -- :name open-bounties :? :*

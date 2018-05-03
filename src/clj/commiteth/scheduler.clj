@@ -147,7 +147,7 @@
                                                    winner-login
                                                    false))))
          (catch Throwable ex
-           (log/error ex "issue %s: self-sign-bounty exception" issue-id)))))
+           (log/errorf ex "issue %s: self-sign-bounty exception" issue-id)))))
   (log/info "Exit self-sign-bounty"))
 
 (defn update-confirm-hash

@@ -14,6 +14,7 @@
             [commiteth.db.issues :as issues]
             [commiteth.bounties :as bounties]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.config :refer [env]]
@@ -164,12 +165,16 @@
 
 (defn execute-revocation [issue-id contract-address payout-address]
   (log/info (str "executing revocation for " issue-id "at" contract-address))
-  (let [execute-hash  (multisig/send-all {:contract       contract-address
-                                          :payout-address payout-address
-                                          :internal-tx-id (str "payout-github-issue-" issue-id)})
-        execute-write (db-bounties/update-execute-hash issue-id execute-hash)]
-    {:execute-hash  execute-hash
-     :execute-write execute-write}))
+  ;; todo set winnner login as the owner of the repo to which the issue belongs
+  ;; (db-bounties/update-winner-login issue-id winner-login)
+  (try 
+    (let [tx-info (multisig/send-all {:contract       contract-address
+                                      :payout-address payout-address
+                                      :internal-tx-id (str "payout-github-issue-" issue-id)})]
+      (tracker/track-tx! tx-info)
+      {:execute-hash (:tx-hash tx-info)})
+    (catch Throwable ex
+      (log/errorf ex "error revoking funds for %s" issue-id))))
 
 
 (defapi service-routes
@@ -258,18 +263,13 @@
                          :current-user user
                          (log/debug "/user/bounties")
                          (ok (user-bounties user)))
-                    (POST "/revoke"  {{issue-id         :issue-id
-                                       contract-address :contract-address
-                                       owner-address    :owner-address} :params}
-                          :auth-rules authenticated?
+                    (POST "/revoke"  {{issue-id :issue-id} :params}
+;;                          :auth-rules authenticated?
                           :current-user user
-                          (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
-                              (if-let [{:keys [execute-hash execute-write]} (execute-revocation issue-id contract-address owner-address)]
-                                (if (scheduler/poll-transaction-logs execute-hash contract-address)
-                                  ;; TODO this is no longer explicity setting confirm_hash in db so may have to
-                                  ;; perform an extra step. consult the tracker merge
-                                  (if-let [{confirm-hash :result} (scheduler/update-confirm-hash issue-id execute-hash)]
-                                    (ok {:confirm-hash confirm-hash})
-                                    (bad-request "The confirm hash could not be updated"))
-                                  (bad-request "The transaction hash could not be confirmed in a reasonable amount of time"))
-                                (bad-request (str "Unable to withdraw everything from " contract-address))))))))
+                          (let [{contract-address :contract_address owner-address :owner_address} (issues/get-issue-by-id issue-id)]
+                            (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
+                                (if-let [{:keys [execute-hash]} (execute-revocation issue-id contract-address owner-address)]
+                                  (ok {:issue-id         issue-id
+                                       :execute-hash     execute-hash
+                                       :contract-address contract-address})
+                               (bad-request (str "Unable to withdraw funds from " contract-address)))))))))
