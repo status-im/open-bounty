@@ -27,14 +27,14 @@
  ;; this is the default value for ropsten
  :contract-factory-addr "0x3B9A3c062Bdb640b5039C0cCda4157737d732F95"
 
- ;; commiteth-test-tpatja
- :github-client-id       "CLIENT ID"
- :github-client-secret   "CLIENT SECRET"
-
  ;; github username + password for bot account
+ ;; Any github account will do, so long as it does not have 2 factor auth enabled. 
  :github-user            "commiteth"
  :github-password        "XXX"
 
+ :github-client-id       "CLIENT ID"
+ :github-client-secret   "CLIENT SECRET"
+ 
  ;; Add Github App webhook secret here to verify GH origin
  :webhook-secret "XXX"
 

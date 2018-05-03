@@ -50,7 +50,7 @@ dev-login | Local development only. Set it to the GitHub name of your dev user i
 nrepl-port | nREPL port for development
 jdbc-database-url | PostgreSQL database URL; for instance, the URL to the local db would be `jdbc:postgresql://localhost/commiteth?user=commiteth&password=commiteth`
 server-address | The URL and port of the local server that can be resolved from public internet. It will be used as a redirect URI during GitHub OAuth authorization process.
-eth-account | Ethereum account ID for the bot
+eth-account | Ethereum account ID for the bot. Make sure it has some test ether to cover the cost of gas for deploying contracts
 eth-password | Ethereum account password for the bot
 eth-rpc-url | RPC URL to the Ethereum node, e.g. Geth. Either local or remote
 eth-wallet-file | Location of the wallet file. If Geth is run with the parameters specified below, it will reside under `$HOME/.ropsten/keystore`.
@@ -134,10 +134,10 @@ Now you can start a CLJS REPL:
 
 (Alternatively, if you use emacs and CIDER, you can run cider-jack-in. Details [here](https://cider.readthedocs.io/en/latest/up_and_running/))
 
-Next, start the application from the clojure REPL:
+Next, [start](https://github.com/tolitius/mount) the application from the clojure REPL with:
 
 ```
-(user/start)
+(reset)
 ```
 
 ## Uberjar build
