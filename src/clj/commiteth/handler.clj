@@ -17,22 +17,18 @@
   :start ((or (:init defaults) identity))
   :stop ((or (:stop defaults) identity)))
 
-(def app-routes
+(defn app []
   (routes
-    #'webhook-routes
-    (middleware/wrap-base
-     (routes
-      (-> #'home-routes
-          (wrap-routes middleware/wrap-csrf)
-          (wrap-routes middleware/wrap-formats))
-      #'redirect-routes
-      #'service-routes
-      #'qr-routes
+   #'webhook-routes
+   (middleware/wrap-base
+    (routes
+     (-> #'home-routes
+         (wrap-routes middleware/wrap-csrf)
+         (wrap-routes middleware/wrap-formats))
+     #'redirect-routes
+     #'service-routes
+     #'qr-routes
      (route/not-found
       (:body
        (error-page {:status 404
                     :title  "page not found"})))))))
-
-
-(defn app []
-  #'app-routes)
