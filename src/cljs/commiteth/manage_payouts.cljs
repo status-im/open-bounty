@@ -64,14 +64,7 @@
          "Signed off"
          "Confirm Payment")])))
 
-(defn revoke-button [{issue-id :issue-id
-                      contract-address :contract_address
-                      owner-address :owner_address}]
-  [:button.ui.button
-   {:on-click #(rf/dispatch [:revoke-bounty {:contract-address contract-address
-                                             :issue-id         issue-id
-                                             :owner-address   owner-address}])}
-   "Revoke"])
+
 
 (defn confirm-row [bounty claim]
   (let [payout-address-available? (:payout_address bounty)]
@@ -252,19 +245,19 @@
    [:div
     [ui-balances/usd-value-label (:value-usd bounty)]]])
 
-
-;; [revoke-button bounty]
-(defn three-dots-button [{value-usd :value-usd :as bounty}]
-  (when (pos? value-usd)
-    [:div.fl.w-20
-     [:button#menu-lower-right.mdl-button.mdl-js-button.mdl-button--icon
-      [:i.material-icons "more_horiz"]]]))
+(defn revoke-button [bounty]
+  (let [{:keys [issue-id value-usd]} bounty]
+   (when (pos? value-usd)
+     [:div.fl.w-20
+      [:button.ui.button
+       {:on-click #(rf/dispatch [:revoke-bounty {:issue-id issue-id}])}
+       "Revoke"]])))
 
 (defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
     [bounty-title-link bounty {:show-date? true :max-length 60}]
-    [:div [small-card-balances bounty] [three-dots-button bounty]]]])
+    [:div [small-card-balances bounty] [revoke-button bounty]]]])
 
 (defn paid-bounty [bounty]
   [:div.w-third-l.fl-l.pa2

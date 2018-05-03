@@ -416,6 +416,10 @@
   :revoke-bounty-success
  interceptors
  (fn [{:keys [db]} [_  {:keys [issue-id owner-address contract-address confirm-hash]}]]
+   ;; replace with dispatch of pending banner
+   ;; confirm-payout dispatch will be called by a component
+   ;; that subscribes to owner-bounties
+   ;; which will get an updated confirm_hash from the scheduler
    {:dispatch [:confirm-payout {:issue_id         issue-id
                                 :owner_address    owner-address
                                 :contract_address contract-address
@@ -434,13 +438,12 @@
 (reg-event-fx
  :revoke-bounty
  interceptors
- (fn [{:keys [db]} [_ fields]]
-   (let [issue-id (:issue_id fields)]
-     {:http {:method     POST
-             :url        "/api/user/revoke"
-             :on-success #(dispatch [:revoke-bounty-success (merge fields %)])
-             :on-error   #(dispatch [:revoke-bounty-error issue-id %])
-             :params       fields}})))
+ (fn [{:keys [db]} [_ {:keys [issue-id]}]]
+   {:http {:method     POST
+           :url        "/api/user/revoke"
+           :on-success #(dispatch [:revoke-bounty-success %])
+           :on-error   #(dispatch [:revoke-bounty-error %])
+           :params      {:issue-id issue-id}}}))
 
 (reg-event-fx
  :confirm-payout
