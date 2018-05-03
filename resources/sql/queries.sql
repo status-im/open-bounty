@@ -321,11 +321,9 @@ SELECT
   i.issue_id         AS issue_id,
   u.address          AS payout_address,
   i.execute_hash     AS execute_hash
-FROM issues i, pull_requests p, users u
-WHERE
-p.issue_id = i.issue_id
-AND p.repo_id = i.repo_id
-AND u.id = p.user_id
+FROM issues i, repositories r, users u
+WHERE i.repo_id = r.repo_id
+AND u.id = r.user_id
 AND i.confirm_hash IS NULL
 AND i.execute_hash IS NOT NULL;
 

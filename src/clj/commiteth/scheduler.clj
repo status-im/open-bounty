@@ -157,7 +157,7 @@
          (when-let [receipt (eth/get-transaction-receipt execute-hash)]
            (log/infof "issue %s: execution receipt for issue " issue-id receipt)
            (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
-             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
+             (log/infof "issue %s: confirm hash:%s" issue-id confirm-hash)
              (tracker/untrack-tx! {:issue-id issue-id 
                                    :tx-hash execute-hash 
                                    :result confirm-hash 
