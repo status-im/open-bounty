@@ -35,25 +35,21 @@
                   (let [[only-before only-after both] (data/diff
                                                        (bounty-confirm-hashes start-ob)
                                                        (bounty-confirm-hashes end-ob))]
-                  ;; we only care about the case where
-                  ;; any of them were nill before and set currently
-                  ;; but first lets log these to see where we're at
-                  (println "whole before: " start-ob)
-                  (println "whole after: " end-ob)
 
-                  (println "diff before: " only-before)
-                  (println "diff after: " only-after)
-                  (println "equal at:" both)
-
-                  (if only-after
+                    ;; making it here means ther was a change in the confirm hashes
+                    ;; that was not the result of just setting them on page load
+                    (if only-after
                     ;; TODO we'll need to backtrack to get the issue-id
-                    ;; in order to dispatch confirm payout
-                    (println "new confirm hash detected!"))
-                  
-                  context
-                  #_(when changes-after
-                    (do (println  "examining changes in:" event-name)
-                        (println  "after:" changes-after)
-                        ;; now we need to see if the update included
-                        ;; confirm hash
-                        ))))))))
+                      ;; in order to dispatch confirm payout
+
+                      ;; now let's see if we can get the issue-id of the one that chagned
+                      (let [updated-issues (->> end-ob
+                                                (filter (fn [[issue-id owner-bounty]]
+                                                          (let [current-confirm-hash (:confirm_hash owner-bounty)
+                                                                old-confirm-hash (get-in start-ob [issue-id :confirm_hash])]
+                                                            (println "old-confirm-hash is" old-confirm-hash)
+                                                            (println "new confirm-hash is" current-confirm-hash)
+                                                            (and (nil? old-confirm-hash) (some? new-confirm-hash)))))
+                                                vals)]
+                        (println "updated issues are " updated-issues))
+                      context)))))))
