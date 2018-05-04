@@ -15,7 +15,8 @@
              :refer [reg-co-fx!]]
             [commiteth.ui-model :as ui-model]
             [commiteth.common :as common]
-            [commiteth.routes :as routes]))
+            [commiteth.routes :as routes]
+            [commiteth.interceptors]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
@@ -68,7 +69,6 @@
 
 (reg-event-fx
  :initialize-web3
- interceptors
  (fn [{:keys [db]} [_]]
       (let [injected-web3 (common/web3)
             w3 (when (boolean injected-web3)
@@ -214,7 +214,6 @@
 
 (reg-event-fx
  :load-owner-bounties
- interceptors
  (fn [{:keys [db]} [_]]
    {:db   (assoc db :owner-bounties-loading? true)
     :http {:method     GET
@@ -223,6 +222,7 @@
 
 (reg-event-db
  :set-owner-bounties
+ [commiteth.interceptors/confirm-hash-update]
  (fn [db [_ issues]]
    (assoc db
           :owner-bounties issues
