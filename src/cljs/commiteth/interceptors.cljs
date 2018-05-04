@@ -12,17 +12,17 @@
 (defn filter-updated-bounties [old-bounties new-bounties]
   "filters collection of bounties to only those with a confirm has that has been recently set"
   (filter (fn [[issue-id owner-bounty]]
-            (let [current-confirm-hash (:confirm_hash owner-bounty)
+            (let [new-confirm-hash (:confirm_hash owner-bounty)
                   old-confirm-hash     (get-in old-bounties [issue-id :confirm_hash])]
-              (and (nil? old-confirm-hash) (some? current-confirm-hash))))
+              (and (nil? old-confirm-hash) (some? new-confirm-hash))))
           new-bounties))
 
 (defn dispatch-bounty [bounty]
   "dispatches a bounty via reframe dispatch"
   (rf/dispatch [:confirm-payout {:issue_id         (:issue-id bounty)
-                                 :owner_address    (:owner-address bounty)
+                                 :owner_address    (:owner_address bounty)
                                  :contract_address (:contract_address bounty)
-                                 :confirm_hash     (:confirm-hash bounty)}]))
+                                 :confirm_hash     (:confirm_hash bounty)}]))
 
 (def confirm-hash-update
   "An interceptor which exaimines the event diff for `:load-owner-bounties`
@@ -54,7 +54,8 @@
                         (let [updated-bounties (->> end-ob
                                                     (filter-updated-bounties start-ob)
                                                     vals)]
-                          ;; for bounties which just had confirm hash set: perform side effect
-                          ;; but interceptor must return context
-                          (map (fn [bounty] (dispatch-bounty bounty)) updated-bounties)))))
+                          ;; for bounties which just had confirm hash set: perform
+                          ;; dispatch side effect but interceptor must return context
+                          (doseq [bounty updated-bounties]
+                            (dispatch-bounty bounty))))))
                 context))))
