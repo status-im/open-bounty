@@ -9,6 +9,21 @@
       vals
       (->> (map #(:confirm_hash %)))))
 
+(defn filter-updated-bounties [old-bounties new-bounties]
+  "filters collection of bounties to only those with a confirm has that has been recently set"
+  (filter (fn [[issue-id owner-bounty]]
+            (let [current-confirm-hash (:confirm_hash owner-bounty)
+                  old-confirm-hash     (get-in old-bounties [issue-id :confirm_hash])]
+              (and (nil? old-confirm-hash) (some? current-confirm-hash))))
+          new-bounties))
+
+(defn dispatch-bounty [bounty]
+  "dispatches a bounty via reframe dispatch"
+  (rf/dispatch [:confirm-payout {:issue_id         (:issue-id bounty)
+                                 :owner_address    (:owner-address bounty)
+                                 :contract_address (:contract_address bounty)
+                                 :confirm_hash     (:confirm-hash bounty)}]))
+
 (def confirm-hash-update
   "An interceptor which exaimines the event diff for `:load-owner-bounties`
   and dispatches a `confirm-payout` event when one of the owner bounties has
@@ -37,16 +52,9 @@
 
                       (when only-after ;; confirm hashes changed, now find out which ones
                         (let [updated-bounties (->> end-ob
-                                                    (filter (fn [[issue-id owner-bounty]]
-                                                              (let [current-confirm-hash (:confirm_hash owner-bounty)
-                                                                    old-confirm-hash     (get-in start-ob [issue-id :confirm_hash])]
-                                                                (and (nil? old-confirm-hash) (some? current-confirm-hash)))))
+                                                    (filter-updated-bounties start-ob)
                                                     vals)]
                           ;; for bounties which just had confirm hash set: perform side effect
                           ;; but interceptor must return context
-                        (map (fn [bounty]
-                               (rf/dispatch [:confirm-payout {:issue_id         (:issue-id bounty)
-                                                              :owner_address    (:owner-address bounty)
-                                                              :contract_address (:contract_address bounty)
-                                                              :confirm_hash     (:confirm-hash bounty)}])) updated-bounties)))))
+                          (map (fn [bounty] (dispatch-bounty bounty)) updated-bounties)))))
                 context))))
