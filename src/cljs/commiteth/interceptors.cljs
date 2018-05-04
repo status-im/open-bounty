@@ -1,10 +1,10 @@
 (ns commiteth.interceptors
   (:require [commiteth.db :as db]
-            [re-frame.core :refer [->interceptor
-                                   dispatch]]
+            [re-frame.core :as rf]
             [clojure.data :as data]))
 
 (defn bounty-confirm-hashes [owner-bounties]
+  "for app-db representation of owner bounties, return a list of confirm hashes"
   (-> owner-bounties
       vals
       (->> (map #(:confirm_hash %)))))
@@ -19,7 +19,8 @@
 
   More information on re-frame interceptors can be found here:
   https://github.com/Day8/re-frame/blob/master/docs/Interceptors.md"
-  (->interceptor
+
+  (rf/->interceptor
     :id     :confirm-hash-update
     :after  (fn confirm-hash-update-after
               [context]
@@ -29,27 +30,23 @@
                                    first)
                     start-ob   (get-in context [:coeffects :db :owner-bounties])
                     end-ob     (get-in context [:effects :db :owner-bounties])]
-                (if (empty? start-ob)
-                  ;; don't treat initial load as an update to watch for
-                  context
+                (when (not-empty start-ob)
                   (let [[only-before only-after both] (data/diff
                                                        (bounty-confirm-hashes start-ob)
                                                        (bounty-confirm-hashes end-ob))]
 
-                    ;; making it here means ther was a change in the confirm hashes
-                    ;; that was not the result of just setting them on page load
-                    (if only-after
-                    ;; TODO we'll need to backtrack to get the issue-id
-                      ;; in order to dispatch confirm payout
-
-                      ;; now let's see if we can get the issue-id of the one that chagned
-                      (let [updated-issues (->> end-ob
-                                                (filter (fn [[issue-id owner-bounty]]
-                                                          (let [current-confirm-hash (:confirm_hash owner-bounty)
-                                                                old-confirm-hash (get-in start-ob [issue-id :confirm_hash])]
-                                                            (println "old-confirm-hash is" old-confirm-hash)
-                                                            (println "new confirm-hash is" current-confirm-hash)
-                                                            (and (nil? old-confirm-hash) (some? new-confirm-hash)))))
-                                                vals)]
-                        (println "updated issues are " updated-issues))
-                      context)))))))
+                      (when only-after ;; confirm hashes changed, now find out which ones
+                        (let [updated-bounties (->> end-ob
+                                                    (filter (fn [[issue-id owner-bounty]]
+                                                              (let [current-confirm-hash (:confirm_hash owner-bounty)
+                                                                    old-confirm-hash     (get-in start-ob [issue-id :confirm_hash])]
+                                                                (and (nil? old-confirm-hash) (some? current-confirm-hash)))))
+                                                    vals)]
+                          ;; for bounties which just had confirm hash set: perform side effect
+                          ;; but interceptor must return context
+                        (map (fn [bounty]
+                               (rf/dispatch [:confirm-payout {:issue_id         (:issue-id bounty)
+                                                              :owner_address    (:owner-address bounty)
+                                                              :contract_address (:contract_address bounty)
+                                                              :confirm_hash     (:confirm-hash bounty)}])) updated-bounties)))))
+                context))))
