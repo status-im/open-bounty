@@ -23,10 +23,7 @@
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]
-            [commiteth.eth.multisig-wallet :as multisig]
-            [commiteth.db.bounties :as db-bounties]
-            [clj-time.core :as t]
-            [clj-time.periodic :refer [periodic-seq]]))
+            [commiteth.eth.multisig-wallet :as multisig]))
 
 (defn add-bounties-for-existing-issues? []
   (env :add-bounties-for-existing-issues false))
@@ -164,8 +161,6 @@
 
 (defn execute-revocation [issue-id contract-address payout-address]
   (log/info (str "executing revocation for " issue-id "at" contract-address))
-  ;; todo set winnner login as the owner of the repo to which the issue belongs
-  ;; (db-bounties/update-winner-login issue-id winner-login)
   (try 
     (let [tx-info (multisig/send-all {:contract       contract-address
                                       :payout-address payout-address
