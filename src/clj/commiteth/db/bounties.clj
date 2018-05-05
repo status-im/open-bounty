@@ -45,11 +45,6 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/confirmed-revocation-payouts con-db)))
 
-(defn update-confirm-hash
-  [issue-id confirm-hash]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-confirm-hash con-db {:issue_id issue-id :confirm_hash confirm-hash})))
-
 (defn update-winner-login
   [issue-id login]
   (jdbc/with-db-connection [con-db *db*]
