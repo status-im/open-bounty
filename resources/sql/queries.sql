@@ -449,12 +449,6 @@ FROM issues
 WHERE repo_id = :repo_id
 AND issue_number = :issue_number;
 
--- :name get-issue-by-contract-address :? :1
--- :doc get issue from DB by contract_address
-SELECT issue_id, contract_address, transaction_hash
-FROM issues
-WHERE contract_address = :contract_address;
-
 -- :name get-issue-by-id :? :1
 -- :doc get issue from DB by issue-id
 SELECT 

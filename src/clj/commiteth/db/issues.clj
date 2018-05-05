@@ -110,11 +110,6 @@
     (db/get-issue con-db {:repo_id repo-id
                           :issue_number issue-number})))
 
-(defn get-issue-by-contract-address
-  [contract-address]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/get-issue-by-contract-address con-db {:contract_address contract-address})))
-
 (defn get-issue-by-id
   [issue-id]
   (jdbc/with-db-connection [con-db *db*]
