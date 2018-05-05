@@ -244,13 +244,19 @@
    [:div
     [ui-balances/usd-value-label (:value-usd bounty)]]])
 
+(defn three-dots-box [image-src]
+  "generates the appropriate container for menu dots"
+  [:span.pt2
+   [:img.o-50.pl3.pt2 {:src image-src}]])
+
 (defn revoke-button [bounty]
   (let [{:keys [issue-id value-usd]} bounty]
    (when (pos? value-usd)
      [:div.fl.w-20
-      [:button.ui.button
-       {:on-click #(rf/dispatch [:revoke-bounty {:issue-id issue-id}])}
-       "Revoke"]])))
+      [:div
+       {:on-click #_#(rf/dispatch [:revoke-bounty {:issue-id issue-id}])
+        #(js/alert "hey")}
+       [three-dots-box "ic-more-vert-black-24dp-1x.png"]]])))
 
 (defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
