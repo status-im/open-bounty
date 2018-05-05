@@ -184,20 +184,6 @@
   (eth-rpc {:method "eth_getTransactionReceipt"
             :params [hash]}))
 
-(defn get-transaction-by-hash
-  [hash]
-  (eth-rpc {:method "eth_getTransactionByHash"
-            :params [hash]}))
-
-(defn get-logs
-  [from-block address topics]
-  (eth-rpc {:method "eth_getLogs"
-            :params [{:address address
-                      :topics topics
-                      ;; a nil fromBlock will default to the current block
-                      ;; which is not useful for the current state of logging
-                      :fromBlock from-block}]}))
-
 (defn format-call-params
   [method-id & params]
   (let [params (join (map format-param params))]

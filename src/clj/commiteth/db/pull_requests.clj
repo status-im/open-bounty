@@ -10,9 +10,7 @@
   (let [state (case (:state pull-request)
                 :opened 0
                 :merged 1
-                :closed 2
-                ;; allow for case of proper state already set
-                (:state pull-request))]
+                :closed 2)]
 
     (log/debug "save pr" (assoc pull-request :state state))
     (jdbc/with-db-connection [con-db *db*]
