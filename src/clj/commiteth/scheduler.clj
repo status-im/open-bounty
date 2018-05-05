@@ -282,46 +282,6 @@
     (neg? n) (- n)
     :else n))
 
-(defn contract-confirmation-logs [contract-address]
-  "retrives all log events for the confirmation topic since contract creation"
-  (some-> contract-address
-      issues/get-issue-by-contract-address
-      :transaction_hash
-      eth/get-transaction-by-hash
-      :blockNumber
-      ;; the transaction_hash's block number is used as the starting point
-      ;; from which to begin polling for later events on the contract
-      (eth/get-logs contract-address [(:confirmation multisig/topics)])))
-
-(defn hash-in-logs?
-  "return true if the transaction hash is present in the queryable blockchain"
-  [hash logs]
-  (some #(= hash (:transactionHash %)) logs))
-
-(defn execution-status [execute-hash contract-address]
-  "check to see if a given execute-hash has been confirmed"
-  (log/infof "checking contract for logs containing %s" execute-hash)
-  (let [logs (contract-confirmation-logs contract-address)]
-    (hash-in-logs? execute-hash logs)))
-
-
-(defn poll-transaction-logs [execute-hash contract-address]
-  "check for execution hash in logs for a few minutes"
-  (let [found? (promise)
-        intervals (take 6
-                    (periodic-seq (t/now)
-                                  (t/seconds 30)))]
-    ;; polling will be slow but if we want to move to an event driven
-    ;; model then we can listen for events, rather than logs, once we're
-    ;; using a geth node again
-    (chime-at intervals
-              (fn [time]
-                (when (execution-status execute-hash contract-address)
-                  (deliver found? true)))
-              {:on-finished (fn []
-                              (deliver found? false))})
-    @found?))
-
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token
   multisig contract. Will be called periodically for all open bounty

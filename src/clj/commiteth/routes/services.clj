@@ -25,7 +25,6 @@
             [clojure.string :as str]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.db.bounties :as db-bounties]
-            [commiteth.scheduler :as scheduler]
             [clj-time.core :as t]
             [clj-time.periodic :refer [periodic-seq]]))
 
