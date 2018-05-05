@@ -114,4 +114,3 @@
   [issue-id]
   (jdbc/with-db-connection [con-db *db*]
     (db/get-issue-by-id con-db {:issue-id issue-id})))
-
