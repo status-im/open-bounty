@@ -203,6 +203,16 @@ Landing page is static and different CSS and JS due to time constraints.
 
 This copies the necessary artifacts over to the `resources` dir.
 
+### Seed postgres for local development
+
+Postgres can be seeded with initial values to make sure that your local SOB app loads with some data. Just
+include the number of entities you wish to create as the first argument to `seed-postgres`, such as:
+
+```
+lein run -m commiteth.db.seed/seed-postgres 3
+```
+
+*Note, it may take a minute for all of your newly created entities to become visible in the local app.
 
 ## More info
 Detailed information on code structure, troubleshooting, and more can be found [here](doc/README.md).
