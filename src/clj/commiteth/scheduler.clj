@@ -274,6 +274,7 @@
     (neg? n) (- n)
     :else n))
 
+
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token
   multisig contract. Will be called periodically for all open bounty

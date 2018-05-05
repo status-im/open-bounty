@@ -14,7 +14,6 @@
                repo :repo_name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
 
-;; TODO put this in cljc file
 (defn etherscan-tx-url [tx-id]
    (str "https://"
           (when (config/on-testnet?) "ropsten.")

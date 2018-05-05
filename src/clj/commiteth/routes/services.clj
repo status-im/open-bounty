@@ -266,4 +266,4 @@
                                   (ok {:issue-id         issue-id
                                        :execute-hash     execute-hash
                                        :contract-address contract-address})
-                               (bad-request (str "Unable to withdraw funds from " contract-address)))))))))
+                                  (bad-request (str "Unable to withdraw funds from " contract-address)))))))))
