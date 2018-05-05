@@ -95,12 +95,6 @@
     (db/update-issue-open con-db {:issue_id issue-id
                                   :is_open is-open})))
 
-(defn update-execute-posted
-  [issue-id execute_posted]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-execute-posted con-db {:issue_id issue-id
-                                      :execute_posted execute_posted})))
-
 (defn is-bounty-issue?
   [issue-id]
   (let [res (jdbc/with-db-connection [con-db *db*]

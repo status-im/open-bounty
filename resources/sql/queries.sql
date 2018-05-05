@@ -73,6 +73,7 @@ FROM repositories
 WHERE owner = :owner
 AND repo = :repo;
 
+
 -- :name create-repository! :<! :1
 -- :doc creates repository if not exists
 INSERT INTO repositories (repo_id, user_id, owner, repo, state, owner_avatar_url)
@@ -211,6 +212,7 @@ SET
 -- :doc remove a PR by id
 DELETE from pull_requests
 WHERE pr_id = :pr_id;
+
 
 -- Bounties ------------------------------------------------------------------------
 
@@ -432,12 +434,6 @@ WHERE contract_address = :contract_address;
 -- :doc updates issue's open status
 UPDATE issues
 SET is_open = :is_open
-WHERE issue_id = :issue_id;
-
--- :name update-execute-posted :! :n
--- :doc updates issue's execute_posted status
-UPDATE issues
-SET execute_posted = :execute_posted
 WHERE issue_id = :issue_id;
 
 -- :name issue-exists :1
