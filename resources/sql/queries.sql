@@ -506,7 +506,6 @@ SELECT
   i.tokens           AS tokens,
   i.value_usd        AS value_usd,
   i.execute_hash     AS execute_hash,
-  i.execute_posted   AS execute_posted,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
