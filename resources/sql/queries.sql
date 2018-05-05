@@ -385,13 +385,6 @@ SET confirm_hash = :confirm_hash,
 updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
--- :name update-execute-hash :! :n
--- :doc updates issue with execute transaction hash
-UPDATE issues
-SET execute_hash = :execute_hash,
-updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
-
 -- :name update-winner-login :! :n
 UPDATE issues
 SET winner_login = :winner_login

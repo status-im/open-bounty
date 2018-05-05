@@ -55,11 +55,6 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/update-confirm-hash con-db {:issue_id issue-id :confirm_hash confirm-hash})))
 
-(defn update-execute-hash
-  [issue-id execute-hash]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-execute-hash con-db {:issue_id issue-id :execute_hash execute-hash})))
-
 (defn update-winner-login
   [issue-id login]
   (jdbc/with-db-connection [con-db *db*]
