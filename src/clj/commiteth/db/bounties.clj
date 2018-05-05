@@ -30,11 +30,6 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/pending-bounties con-db)))
 
-(defn pending-executions
-  []
-  (jdbc/with-db-connection [con-db *db*]
-    (db/pending-executions con-db)))
-
 (defn pending-payouts
   []
   (jdbc/with-db-connection [con-db *db*]

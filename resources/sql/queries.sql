@@ -304,16 +304,6 @@ AND r.repo_id = i.repo_id
 AND u.id = p.user_id
 AND i.execute_hash IS NULL;
 
--- :name pending-executions :? :*
--- :doc recently posted executions waiting for bot confirmation to be mined
-SELECT
-  i.contract_address AS contract_address,
-  i.issue_id         AS issue_id,
-  i.execute_hash     AS execute_hash
-FROM issues i
-WHERE i.execute_posted IS NULL
-AND i.execute_hash IS NOT NULL;
-
 -- :name pending-payouts :? :*
 -- :doc recently closed issues awaiting for bot confirmation to be mined
 SELECT
