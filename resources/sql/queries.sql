@@ -369,14 +369,6 @@ AND u.id = r.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
 
-
--- :name update-confirm-hash :! :n
--- :doc updates issue with confirmation hash
-UPDATE issues
-SET confirm_hash = :confirm_hash,
-updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
-
 -- :name update-winner-login :! :n
 UPDATE issues
 SET winner_login = :winner_login
@@ -436,6 +428,7 @@ UPDATE issues
 SET is_open = :is_open
 WHERE issue_id = :issue_id;
 
+
 -- :name issue-exists :1
 -- :doc returns true if given issue exists
 SELECT exists(SELECT 1
@@ -457,9 +450,9 @@ SELECT
       i.is_open          AS is_open,
       i.winner_login     AS winner_login,
       i.commit_sha       AS commit_sha,
-      u.address		 AS owner_address,
+      u.address          AS owner_address,
       i.contract_address AS contract_address,
-      i.confirm_hash	 AS confirm_hash,
+      i.confirm_hash     AS confirm_hash,
       i.title            AS title,
       i.comment_id       AS comment_id,
       i.repo_id          AS repo_id,
@@ -469,6 +462,8 @@ FROM issues i, repositories r, users u
 WHERE r.repo_id = i.repo_id
 AND r.user_id = u.id
 AND i.issue_id = :issue-id
+
+
 
 -- :name open-bounties :? :*
 -- :doc all open bounty issues
