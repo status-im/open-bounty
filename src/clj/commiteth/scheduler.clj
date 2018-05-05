@@ -9,7 +9,7 @@
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
             [commiteth.util.crypto-fiat-value :as fiat-util]
-            [commiteth.util.util :refer [eth-decimal->str]]
+            [commiteth.util.util :as util]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
             [clj-time.core :as t]
@@ -129,7 +129,7 @@
                                                    repo
                                                    comment-id
                                                    contract-address
-                                                   (eth-decimal->str balance-eth)
+                                                   (util/eth-decimal->str balance-eth)
                                                    tokens
                                                    winner-login
                                                    true))
@@ -142,7 +142,7 @@
                                                    repo
                                                    comment-id
                                                    contract-address
-                                                   (eth-decimal->str balance-eth)
+                                                   (util/eth-decimal->str balance-eth)
                                                    tokens
                                                    winner-login
                                                    false))))
@@ -201,15 +201,28 @@
     (println "hour diff:" diff)
     (> diff 3)))
 
-(defn update-payout-receipt [owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated]
-  (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
+(defn update-payout-receipt [bounty]
+  {:pre [(util/contains-all-keys bounty db-bounties/payout-receipt-keys)]}
+  (let [{issue-id         :issue_id
+         payout-hash      :payout_hash
+         contract-address :contract_address
+         repo             :repo
+         owner            :owner
+         comment-id       :comment_id
+         issue-number     :issue_number
+         balance-eth      :balance_eth
+         tokens           :tokens
+         confirm-hash     :confirm_hash
+         payee-login      :payee_login
+         updated          :updated} bounty]
+    (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
     (try
       (if-let [receipt (eth/get-transaction-receipt payout-hash)]
-        (let [contract-tokens (multisig/token-balances contract-address)
+        (let [contract-tokens      (multisig/token-balances contract-address)
               contract-eth-balance (eth/get-balance-wei contract-address)]
           (if (or
-                (some #(> (second %) 0.0) contract-tokens)
-                (> contract-eth-balance 0))
+               (some #(> (second %) 0.0) contract-tokens)
+               (> contract-eth-balance 0))
             (do
               (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
               (when (multisig/is-confirmed? contract-address confirm-hash)
@@ -224,54 +237,33 @@
                                                 repo
                                                 comment-id
                                                 contract-address
-                                                (eth-decimal->str balance-eth)
+                                                (util/eth-decimal->str balance-eth)
                                                 tokens
                                                 payee-login))))
         (when (older-than-3h? updated)
           (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
           (db-bounties/reset-payout-hash issue-id)))
       (catch Throwable ex
-        (log/error ex "issue %s: update-payout-receipt exception" issue-id))))
+       (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
 
 (defn update-payout-receipts
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
   []
   (log/info "In update-payout-receipts")
   (p :update-payout-receipts
-     (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash
-           contract-address :contract_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
-           confirm-hash :confirm_hash
-           payee-login :payee_login
-           updated :updated} (db-bounties/confirmed-payouts)]
-    (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
-  (log/info "Exit update-payout-receipts"))
+     (doseq [bounty (db-bounties/confirmed-payouts)]
+       (update-payout-receipt bounty))
+     (log/info "Exit update-payout-receipts")))
 
 (defn update-revoked-payout-receipts
   "Gets transaction receipt for each confirmed revocation and updates payout_hash"
   []
   (log/info "In update-revoked-payout-receipts")
-  (p :update-payout-receipts
-     (doseq [{issue-id    :issue_id
-           payout-hash :payout_hash
-           contract-address :contract_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
-           confirm-hash :confirm_hash
-           payee-login :payee_login
-           updated :updated} (db-bounties/confirmed-revocation-payouts)]
-       (update-payout-receipt owner repo comment-id balance-eth tokens payee-login issue-id confirm-hash payout-hash contract-address updated)))
-  (log/info "Exit update-revoked-payout-receipts"))
+  (p :update-revoked-payout-receipts
+     ;; todo see if confirmed-payouts & confirmed-revocation-payouts can be combined
+     (doseq [bounty (db-bounties/confirmed-revocation-payouts)]
+       (update-payout-receipt bounty))
+     (log/info "Exit update-revoked-payout-receipts")))
 
 (defn abs
   "(abs n) is the absolute value of n"

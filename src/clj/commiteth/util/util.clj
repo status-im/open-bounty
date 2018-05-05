@@ -14,3 +14,8 @@
   (->> (http/get url)
        (:body)
        (json/read-str)))
+
+(defn contains-all-keys [m ks]
+  {:pre [(map? m) [(vector? ks)]]}
+  (every?
+   #(contains? m %) ks))
