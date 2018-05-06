@@ -246,7 +246,7 @@
 
 (defn three-dots-box [image-src]
   "generates the appropriate container for menu dots"
-  [:span.pt2
+  [:span.pt2.pointer
    [:img.o-50.pl3.pt2 {:src image-src}]])
 
 (defn three-dots []
