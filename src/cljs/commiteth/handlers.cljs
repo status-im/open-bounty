@@ -532,6 +532,21 @@
    (.removeEventListener js/window "click" close-dropdown)
    (assoc db :user-dropdown-open? false)))
 
+(defn close-three-dots []
+  (dispatch [:three-dots-close]))
+
+(reg-event-db
+ :three-dots-open
+ (fn [db [_]]
+   (.addEventListener js/window "click" close-three-dots)
+   (assoc db :three-dots-open? true)))
+
+(reg-event-db
+ :three-dots-close
+ (fn [db [_]]
+   (.removeEventListener js/window "click" close-three-dots)
+   (assoc db :three-dots-open? false)))
+
 (reg-event-db
  ::open-bounty-claim
  (fn [db [_ opening-issue-id]]

@@ -180,6 +180,11 @@
     (:user-dropdown-open? db)))
 
 (reg-sub
+  :three-dots-open?
+  (fn [db _]
+    (:three-dots-open? db)))
+
+(reg-sub
   ::open-bounty-claims
   (fn [db _]
     (::db/open-bounty-claims db)))

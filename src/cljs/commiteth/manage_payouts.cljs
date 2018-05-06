@@ -249,20 +249,30 @@
   [:span.pt2
    [:img.o-50.pl3.pt2 {:src image-src}]])
 
-(defn revoke-button [bounty]
+(defn three-dots [bounty]
   (let [{:keys [issue-id value-usd]} bounty]
    (when (pos? value-usd)
      [:div.fl.w-20
       [:div
-       {:on-click #_#(rf/dispatch [:revoke-bounty {:issue-id issue-id}])
-        #(js/alert "hey")}
+       {:on-click #(rf/dispatch [:three-dots-open])}
        [three-dots-box "ic-more-vert-black-24dp-1x.png"]]])))
+
+(defn revoke-dropdown [bounty]
+  (let [menu (if @(rf/subscribe [:three-dots-open?])
+               [:div.ui.menu.revoke-transition {:tab-index -1}]
+               [:div.ui.menu.transition.hidden])]
+    [:div
+     [three-dots bounty]
+     (into menu [[:div.revoke-item
+                  [:a
+                   {:on-click #(rf/dispatch [:revoke-bounty {:issue-id (:issue-id bounty)}])}
+                   "Revoke"]]])]))
 
 (defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
     [bounty-title-link bounty {:show-date? true :max-length 60}]
-    [:div [small-card-balances bounty] [revoke-button bounty]]]])
+    [:div [small-card-balances bounty] [revoke-dropdown bounty]]]])
 
 (defn paid-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
