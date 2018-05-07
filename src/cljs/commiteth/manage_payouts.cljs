@@ -304,9 +304,9 @@
 (defn count-pill [n]
   [:span.v-top.ml3.ph3.pv1.bg-black-05.gray.br3.f7 n])
 
-(defn salute [name]
+(defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
-    (fn salute-render [name]
+    (fn salute-render []
       (when @msg-info
         [:div.relative.pa3.pr4.bg-sob-blue-o-20.br3.nt1
          [:div.f3.dark-gray.absolute.top-0.right-0.pa3.b.pointer
@@ -380,7 +380,7 @@
                                (get grouped :pending-contributor-address))]
           [:div.center.mw9.pa2.pa0-l
            [manage-bounties-title]
-           [salute "Andy"]
+           [salute]
            [:div.dn-l.db-ns.mt4
             [bounty-stats-new @bounty-stats-data]]
            (when (nil? (common/web3))
