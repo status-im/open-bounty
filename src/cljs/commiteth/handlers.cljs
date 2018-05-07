@@ -222,7 +222,7 @@
 
 (reg-event-db
  :set-owner-bounties
- [commiteth.interceptors/confirm-hash-update]
+;; [commiteth.interceptors/confirm-hash-update]
  (fn [db [_ issues]]
    (assoc db
           :owner-bounties issues
@@ -413,17 +413,20 @@
   (str/replace x #"^0x" ""))
 
 (reg-event-fx
-  :revoke-bounty-success
+ :set-pending-revocation
  interceptors
+ (fn [{:keys [db]} [_  issue-id]]
+   {:db (update db ::db/pending-revocations #(conj % issue-id))}))
+
+(reg-event-fx
+ :remove-pending-revocation
+ (fn [{:keys [db]} [_ issue-id]]
+   {:db (update db ::db/pending-revocations #(disj % issue-id))}))
+
+(reg-event-fx
+  :revoke-bounty-success
  (fn [{:keys [db]} [_  {:keys [issue-id owner-address contract-address confirm-hash]}]]
-   ;; replace with dispatch of pending banner
-   ;; confirm-payout dispatch will be called by a component
-   ;; that subscribes to owner-bounties
-   ;; which will get an updated confirm_hash from the scheduler
-   {:dispatch [:confirm-payout {:issue_id         issue-id
-                                :owner_address    owner-address
-                                :contract_address contract-address
-                                :confirm_hash     confirm-hash}]}))
+   {:dispatch [:set-pending-revocation issue-id]}))
 
 (reg-event-fx
  :revoke-bounty-error

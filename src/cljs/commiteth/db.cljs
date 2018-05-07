@@ -19,6 +19,7 @@
                                  ::ui-model/bounty-filter-type|date     nil
                                  ::ui-model/bounty-filter-type|owner    nil}
    ::open-bounty-claims         #{}
+   ::pending-revocations        #{}   
    :owner-bounties              {}
    :top-hunters                 []
    :activity-feed               []})
