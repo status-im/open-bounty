@@ -254,6 +254,11 @@
   [:span.pt2.pointer
    [:img.o-50.pl3.pt2 {:src image-src}]])
 
+(defn check-box [image-src]
+  "generates the appropriate container for a blue arrow"
+  [:span.pr2
+   [:img.w1.v-mid.o-50 {:src image-src}]])
+
 (defn three-dots []
   [:div
    [:div
@@ -316,11 +321,10 @@
         (into [:div]
               (for [revoking-bounty @banner-info]
                 ^{:key (:contract_address revoking-bounty)}
-                ;; TODO change this to green
-                ;; and make it a reusable banner component
-                [:div.relative.pa3.pr4.bg-sob-blue-o-20.br3.nt1
+                [:div.relative.pa3.pr4.bg-sob-green.br3.nt1
                  [:div
-                  [:p [:span.pg-med "Transaction sent."] " Refund is pending until the transaction is completed. Check its status"
+                  [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
+                   [:span.pg-med "Transaction sent."] " Refund is pending until the transaction is completed. Check its status"
                    [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here."]]]]))))))
 
 (defn salute []
