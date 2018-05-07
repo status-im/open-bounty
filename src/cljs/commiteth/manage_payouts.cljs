@@ -15,9 +15,14 @@
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
 
 (defn etherscan-tx-url [tx-id]
-   (str "https://"
-          (when (config/on-testnet?) "ropsten.")
-          "etherscan.io/tx/" tx-id))
+  (str "https://"
+       (when (config/on-testnet?) "ropsten.")
+       "etherscan.io/tx/" tx-id))
+
+(defn etherscan-address-url [address]
+  (str "https://"
+       (when (config/on-testnet?) "ropsten.")
+       "etherscan.io/address/" address))
 
 (def primary-button-button :button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer.shadow-7)
 (def primary-button-link :a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white.shadow-7)
@@ -306,7 +311,17 @@
 
 (defn pending-banner []
   (let [banner-info (rf/subscribe [:pending-revocations])]
-    @banner-info))
+    (fn pending-banner-render []
+      (when @banner-info
+        (into [:div]
+              (for [revoking-bounty @banner-info]
+                ^{:key (:contract_address revoking-bounty)}
+                ;; TODO change this to green
+                ;; and make it a reusable banner component
+                [:div.relative.pa3.pr4.bg-sob-blue-o-20.br3.nt1
+                 [:div
+                  [:p [:span.pg-med "Transaction sent."] " Refund is pending until the transaction is completed. Check its status"
+                   [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here."]]]]))))))
 
 (defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
@@ -385,6 +400,7 @@
           [:div.center.mw9.pa2.pa0-l
            [manage-bounties-title]
            [salute]
+           [pending-banner]
            [:div.dn-l.db-ns.mt4
             [bounty-stats-new @bounty-stats-data]]
            (when (nil? (common/web3))
