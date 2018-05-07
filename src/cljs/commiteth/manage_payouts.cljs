@@ -304,6 +304,10 @@
 (defn count-pill [n]
   [:span.v-top.ml3.ph3.pv1.bg-black-05.gray.br3.f7 n])
 
+(defn pending-banner []
+  (let [banner-info (rf/subscribe [:pending-revocations])]
+    @banner-info))
+
 (defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
     (fn salute-render []

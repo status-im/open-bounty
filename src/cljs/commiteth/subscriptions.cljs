@@ -180,9 +180,16 @@
     (:user-dropdown-open? db)))
 
 (reg-sub
-  :three-dots-open?
+ :three-dots-open?
   (fn [db _]
     (:three-dots-open? db)))
+
+(reg-sub
+ :pending-revocations
+ (fn [db _]
+   (filter #(some (conj #{} (:issue-id %))
+                  (::db/pending-revocations db))
+           (vals (:owner-bounties db)))))
 
 (reg-sub
   ::open-bounty-claims
