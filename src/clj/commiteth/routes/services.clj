@@ -60,6 +60,12 @@
                                    (map update-enabled repos)})
                github-repos))))
 
+(def bounty-renames
+  ;; TODO this needs to go away ASAP we need to be super consistent
+  ;; about keys unless we will just step on each others toes constantly
+  {:user_name :display-name
+   :user_avatar_url :avatar-url
+   :type :item-type})
 
 (defn ^:private enrich-owner-bounties [owner-bounty]
   (let [claims      (map
@@ -67,14 +73,16 @@
                      (bounties-db/bounty-claims (:issue_id owner-bounty)))
         with-claims (assoc owner-bounty :claims claims)]
     (-> with-claims
-        (update :value_usd usd-decimal->str)
+        (rename-keys bounty-renames)
+        (update :value-usd usd-decimal->str)
+        (update :balance-eth eth-decimal->str)
         (assoc :state (bounties/bounty-state with-claims)))))
 
 (defn user-bounties [user]
   (let [owner-bounties (bounties-db/owner-bounties (:id user))]
     (->> owner-bounties
          (map enrich-owner-bounties)
-         (map (juxt :issue_id identity))
+         (map (juxt :issue-id identity))
          (into {}))))
 
 (defn top-hunters []
@@ -103,12 +111,9 @@
                                    (map (fn [[tla balance]]
                                           [tla (format-float bounty balance)]))
                                    (into {})
-                                   (assoc bounty :tokens)))
-        renames {:user_name :display-name
-                 :user-avatar-url :avatar-url
-                 :type :item-type }]
+                                   (assoc bounty :tokens)))]
     (map #(-> %
-              (rename-keys renames)
+              (rename-keys bounty-renames)
               (update :value-usd usd-decimal->str)
               (update :balance-eth eth-decimal->str)
               update-token-values)

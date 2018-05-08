@@ -1,6 +1,7 @@
 (ns commiteth.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
             [commiteth.db :as db]
+            [commiteth.util :as util]
             [commiteth.ui-model :as ui-model]
             [commiteth.common :refer [items-per-page]]
             [clojure.string :as string]))
@@ -10,9 +11,10 @@
   (fn [db _] db))
 
 (reg-sub
-  :page
-  (fn [db _]
-    (:page db)))
+ :route
+ (fn [db _]
+   (or (:route db)
+       {:route-id :bounties})))
 
 (reg-sub
   :user
@@ -87,14 +89,38 @@
  :owner-bounties-stats
  :<- [:owner-bounties]
  (fn [owner-bounties _]
-   (let [sum-dollars (fn sum-dollars [bounties]
-                       (reduce + (map #(js/parseFloat (:value_usd %)) bounties)))
+   (let [sum-field (fn sum-field [field bounties]
+                       (reduce + (map #(js/parseFloat (get % field)) bounties)))
+         sum-crypto (fn sum-crypto [bounties]
+                      (-> (map :tokens bounties)
+                          (util/sum-maps)
+                          (assoc :ETH (sum-field :balance-eth bounties))))
          {:keys [paid unpaid]} (group-by #(if (:paid? %) :paid :unpaid)
                                          (vals owner-bounties))]
      {:paid {:count (count paid)
-             :combined-usd-value (sum-dollars paid)}
+             :combined-usd-value (sum-field :value-usd paid)
+             :crypto (sum-crypto paid)}
       :unpaid {:count (count unpaid)
-               :combined-usd-value (sum-dollars unpaid)}})))
+               :combined-usd-value (sum-field :value-usd unpaid)
+               :crypto (sum-crypto unpaid)}})))
+
+(reg-sub
+ :dashboard/seen-banners
+ (fn [db _] (:dashboard/seen-banners db)))
+
+(reg-sub
+ :dashboard/banner-msg
+ :<- [:user]
+ :<- [:dashboard/seen-banners]
+ (fn [[user seen-banners] _]
+   (cond
+     (not (contains? seen-banners "bounty-issuer-salute"))
+     {:name (or (some-> (:name user) (string/split  #"\s") first)
+                (:login user))
+      :banner-id "bounty-issuer-salute"}
+
+     #_(not (contains? seen-banners "new-dashboard-info"))
+     #_{:banner-id "new-dashboard-info"})))
 
 (reg-sub
   :pagination

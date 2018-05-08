@@ -12,6 +12,7 @@
             [clj-http.client :as http]
             [commiteth.config :refer [env]]
             [digest :refer [sha-256]]
+            [commiteth.db.issues :as db-issues]
             [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [commiteth.util.png-rendering :as png-rendering]
@@ -308,6 +309,24 @@
     (if png-data
       (comment-images/save-image! issue-id hash png-data)
       (log/error "Failed ot generate PNG"))))
+
+(defn post-deploying-comment
+  [issue-id tx-id]
+  (let [{owner :owner
+         repo :repo
+         issue-number :issue_number
+         comment-id :comment_id} (db-issues/get-issue-by-id issue-id)
+        comment (generate-deploying-comment owner repo issue-number tx-id) ]
+    (log/info "Posting comment to" (str owner "/" repo "/" issue-number) ":" comment)
+    (if comment-id
+      (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
+                                    [owner repo comment-id]
+                                    (assoc (self-auth-params) :body comment))]
+        (tentacles/safe-parse (http/request req)))
+      (let [resp (issues/create-comment owner repo issue-number comment (self-auth-params))]
+        (db-issues/update-comment-id issue-id (:id resp))
+        (log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
+        resp))))
 
 (defn update-comment
   "Update comment for an open bounty issue"

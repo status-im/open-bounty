@@ -3,9 +3,11 @@
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repos]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [commiteth.util.util :refer [to-map]]
             [commiteth.eth.multisig-wallet :as multisig]
+            [commiteth.model.bounty :as bnt] 
             [clojure.tools.logging :as log]))
 
 
@@ -19,17 +21,17 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
-(defn deploy-contract [owner owner-address repo issue-id issue-number]
+(defn deploy-contract [owner-address issue-id]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
     (try
       (log/infof "issue %s: Deploying contract to %s" issue-id owner-address)
-      (if-let [transaction-hash (multisig/deploy-multisig {:owner owner-address
-                                                           :internal-tx-id (str "contract-github-issue-" issue-id)})]
+      (if-let [tx-info (multisig/deploy-multisig {:owner owner-address
+                                                  :internal-tx-id [:deploy issue-id]})]
         (do
-          (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id transaction-hash)
-          (github/update-comment (to-map owner repo issue-number transaction-hash))
-          (issues/update-transaction-hash issue-id transaction-hash))
+          (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id (:tx-hash tx-info))
+          (github/update-comment (into tx-info [:issue-id issue-id]))
+          (tracker/track-tx! tx-info))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
 
@@ -42,7 +44,7 @@
     (log/debug "issue %s: Adding bounty for issue %s/%s - owner address: %s"
                issue-id repo issue-number address)
     (if (= 1 created-issue)
-      (deploy-contract owner address repo issue-id issue-number)
+      (deploy-contract address issue-id)
       (log/debug "issue %s: Issue already exists in DB, ignoring"))))
 
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
@@ -97,17 +99,27 @@
   [bounty]
   (assert-keys bounty [:winner_login :payout_address :confirm_hash :payout_hash
                        :claims :tokens :contract_address])
-  (if-let [merged? (:winner_login bounty)]
-    (cond
-      (nil? (:payout_address bounty)) :pending-contributor-address
-      (nil? (:confirm_hash bounty))   :pending-maintainer-confirmation
-      (:payout_hash bounty)           :paid
-      :else                           :merged)
-    (cond ; not yet merged
-      (< 1 (count (:claims bounty)))  :multiple-claims
-      (= 1 (count (:claims bounty)))  :claimed
-      (seq (:tokens bounty))          :funded
-      (:contract_address bounty)      :opened)))
+  ;; Some bounties have been paid out manually, the payout hash
+  ;; was set properly but winner_login was not
+  (let [open-claims (fn open-claims [bounty]
+                      (filter bnt/open? (:claims bounty)))]
+    (if-let [merged-or-paid? (or (:winner_login bounty)
+                                 (:payout_hash bounty))]
+      (cond
+        (:payout_hash bounty)           :paid
+        (nil? (:payout_address bounty)) :pending-contributor-address
+        ;; `confirm_hash` is set by us as soon as a PR is merged and the
+        ;; contributor address is known. Usually end users should not need
+        ;; to be aware of this step.
+        (nil? (:confirm_hash bounty))   :pending-sob-confirmation
+        ;; `payout_hash` is set when the bounty issuer signs the payout
+        (nil? (:payout_hash bounty))    :pending-maintainer-confirmation
+        :else                           :merged)
+      (cond ; not yet merged
+        (< 1 (count (open-claims bounty)))  :multiple-claims
+        (= 1 (count (open-claims bounty)))  :claimed
+        (seq (:tokens bounty))          :funded
+        (:contract_address bounty)      :opened))))
 
 (comment
   (def user 97496)

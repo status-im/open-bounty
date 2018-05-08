@@ -59,7 +59,7 @@
  :initialize-db
  [(inject-cofx :store)]
  (fn [{:keys [db store]} [_]]
-     {:db (merge db/default-db store)}))
+   {:db (merge db/default-db store)}))
 
 
 (reg-event-fx
@@ -70,7 +70,6 @@
                 (do
                   (println "Using injected Web3 constructor with current provider")
                   (new (aget js/window "web3" "constructor") (web3/current-provider injected-web3))))]
-     (println "web3" w3)
      {:db (merge db {:web3 w3})})))
 
 (reg-event-db
@@ -81,8 +80,8 @@
 (reg-event-db
  :set-active-page
  (fn [db [_ page params query]]
-   (assoc db :page page
-             :page-number 1
+   (assoc db :page-number 1
+             :route {:route-id page :params params :query query}
              ::db/open-bounties-filters
              (reduce-kv
               #(let [type (ui-model/query-param->bounty-filter-type %2)]
@@ -222,6 +221,13 @@
    (assoc db
           :owner-bounties issues
           :owner-bounties-loading? false)))
+
+(reg-event-fx
+ :dashboard/mark-banner-as-seen
+ [(inject-cofx :store)]
+ (fn [{:keys [db store]} [_ banner-id]]
+   {:db    (update-in db    [:dashboard/seen-banners] (fnil conj #{}) banner-id)
+    :store (update-in store [:dashboard/seen-banners] (fnil conj #{}) banner-id)}))
 
 (defn get-ls-token [db token]
   (let [login (get-in db [:user :login])]

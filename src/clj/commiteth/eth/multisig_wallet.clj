@@ -2,6 +2,7 @@
   (:require [commiteth.eth.core :as eth]
             [commiteth.config :refer [env]]
             [clojure.tools.logging :as log]
+            [commiteth.eth.web3j :refer [web3j-obj creds-obj]]
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [commiteth.eth.token-data :as token-data])
   (:import [org.web3j
@@ -41,7 +42,7 @@
   `internal-tx-id` is used to identify what issue this multisig is deployed
   for and manage nonces at a later point in time."
   [{:keys [owner internal-tx-id]}]
-  {:pre [(string? owner) (string? internal-tx-id)]}
+  {:pre [(string? owner) (vector? internal-tx-id)]}
   (eth/execute {:internal-tx-id internal-tx-id
                 :from      (eth/eth-account)
                 :contract  (factory-contract-addr)
@@ -87,7 +88,7 @@
 
 (defn send-all
   [{:keys [contract payout-address internal-tx-id]}]
-  {:pre [(string? contract) (string? payout-address) (string? internal-tx-id)]}
+  {:pre [(string? contract) (string? payout-address) (vector? internal-tx-id)]}
   (log/debug "multisig/send-all " contract payout-address internal-tx-id)
   (let [params (eth/format-call-params
                 (:withdraw-everything method-ids)
@@ -106,11 +107,11 @@
     (:address token-details)))
 
 (defn watch-token
-  [bounty-addr token]
+  [{:keys [bounty-addr token internal-tx-id]}]
   (log/debug "multisig/watch-token" bounty-addr token)
   (let [token-address (get-token-address token)]
     (assert token-address)
-    (eth/execute {:internal-tx-id (str "watch-token-" (System/currentTimeMillis) "-" bounty-addr)
+    (eth/execute {:internal-tx-id internal-tx-id
                   :from      (eth/eth-account)
                   :contract  bounty-addr
                   :method-id (:watch method-ids)
@@ -119,8 +120,8 @@
 
 (defn load-bounty-contract [addr]
   (MultiSigTokenWallet/load addr
-    @eth/web3j-obj
-    (eth/creds)
+    @web3j-obj
+    @creds-obj
     (eth/gas-price)
     (BigInteger/valueOf 500000)))
 
