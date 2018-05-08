@@ -13,10 +13,11 @@
   "filters collection of bounties to only those with a field that has been recently set"
   (filter (fn [[issue-id owner-bounty]]
             (let [new-field-value (field-name owner-bounty)
-                  old-field-value     (get-in old-bounties [issue-id field-name])]
-              (println "old value for " field-name " is " old-field-value)
-              (println "new value for " field-name "is " new-field-value)
-              (and (nil? old-field-value) (some? new-field-value))))
+                  old-field-value (get-in old-bounties [issue-id field-name])]
+              (when (and (nil? old-field-value) (some? new-field-value))
+                (println "old value for " field-name " is " old-field-value)
+                (println "new value for " field-name "is " new-field-value)
+                true)))
           new-bounties))
 
 (defn dispatch-confirm-payout [bounty]
