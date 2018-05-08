@@ -475,11 +475,13 @@
                                    (send-transaction-callback issue-id))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
-         {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
-          :dispatch-n [[:payout-confirm-failed issue-id e]
-                       [:set-flash-message
-                        :error
-                        (str "Failed to send transaction" e)]]})))))
+         (if (empty? (::db/pending-revocations db))
+           {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
+            :dispatch-n [[:payout-confirm-failed issue-id e]
+                         [:set-flash-message
+                          :error
+                          (str "Failed to send transaction" e)]]}
+           {:dispatch [:remove-pending-revocation issue-id]}))))))
 
 (reg-event-fx
  :payout-confirmed
