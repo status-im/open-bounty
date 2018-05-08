@@ -222,7 +222,8 @@
 
 (reg-event-db
  :set-owner-bounties
-;; [commiteth.interceptors/confirm-hash-update]
+ [commiteth.interceptors/watch-confirm-hash
+  commiteth.interceptors/watch-payout-receipt]
  (fn [db [_ issues]]
    (assoc db
           :owner-bounties issues
@@ -420,6 +421,7 @@
 
 (reg-event-fx
  :remove-pending-revocation
+ interceptors
  (fn [{:keys [db]} [_ issue-id]]
    {:db (update db ::db/pending-revocations #(disj % issue-id))}))
 

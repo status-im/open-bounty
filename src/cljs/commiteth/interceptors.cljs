@@ -9,12 +9,14 @@
       vals
       (->> (map #(field-name %)))))
 
-(defn filter-updated-bounties [field-name new-bounties old-bounties]
+(defn filter-updated-bounties [field-name old-bounties new-bounties]
   "filters collection of bounties to only those with a field that has been recently set"
   (filter (fn [[issue-id owner-bounty]]
-            (let [new-confirm-hash (field-name owner-bounty)
-                  old-confirm-hash     (get-in old-bounties [issue-id field-name])]
-              (and (nil? old-confirm-hash) (some? new-confirm-hash))))
+            (let [new-field-value (field-name owner-bounty)
+                  old-field-value     (get-in old-bounties [issue-id field-name])]
+              (println "old value for " field-name " is " old-field-value)
+              (println "new value for " field-name "is " new-field-value)
+              (and (nil? old-field-value) (some? new-field-value))))
           new-bounties))
 
 (defn dispatch-confirm-payout [bounty]
@@ -43,6 +45,7 @@
     :id     :watch-confirm-hash
     :after  (fn confirm-hash-update-after
               [context]
+              (println "watch confirm hash interceptor...")
               (let [event-name          (-> context
                                             :coeffects
                                             :event
@@ -83,6 +86,7 @@
     :id     :watch-payout-receipt
     :after  (fn payout-receipt-update-after
               [context]
+              (println "watch payout receipt interceptor...")
               (let [event-name          (-> context
                                             :coeffects
                                             :event
