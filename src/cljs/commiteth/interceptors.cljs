@@ -39,23 +39,26 @@
     :id     :confirm-hash-update
     :after  (fn confirm-hash-update-after
               [context]
-              (let [event-name (-> context
-                                   :coeffects
-                                   :event
-                                   first)
-                    start-ob   (get-in context [:coeffects :db :owner-bounties])
-                    end-ob     (get-in context [:effects :db :owner-bounties])]
-                (when (not-empty start-ob)
+              (let [event-name          (-> context
+                                            :coeffects
+                                            :event
+                                            first)
+                    pending-revocations (get-in context [:coeffects :db ::db/pending-revocations])
+                    start-ob            (get-in context [:coeffects :db :owner-bounties])
+                    end-ob              (get-in context [:effects :db :owner-bounties])]
+                ;; proceed when the change isn't caused by page load
+                (when (not-empty start-ob) 
                   (let [[only-before only-after both] (data/diff
                                                        (bounty-confirm-hashes start-ob)
                                                        (bounty-confirm-hashes end-ob))]
-
-                      (when only-after ;; confirm hashes changed, now find out which ones
-                        (let [updated-bounties (->> end-ob
-                                                    (filter-updated-bounties start-ob)
-                                                    vals)]
-                          ;; for bounties which just had confirm hash set: perform
-                          ;; dispatch side effect but interceptor must return context
-                          (doseq [bounty updated-bounties]
-                            (dispatch-bounty bounty))))))
+                    ;; proceed when confirm hashes have changed and there is a pending revocation
+                    (when (and only-after (not-empty pending-revocations))
+                      (println "pending revocations are " pending-revocations)
+                      (let [updated-bounties (->> end-ob
+                                                  (filter-updated-bounties start-ob)
+                                                  vals)]
+                        ;; for bounties which just had confirm hash set: perform
+                        ;; dispatch side effect but interceptor must return context
+                        (doseq [bounty updated-bounties]
+                          (dispatch-bounty bounty))))))
                 context))))
