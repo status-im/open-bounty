@@ -182,7 +182,7 @@
 (reg-sub
  :three-dots-open?
   (fn [db _]
-    (:three-dots-open? db)))
+    (::db/unclaimed-options db)))
 
 (reg-sub
  :pending-revocations

@@ -259,18 +259,18 @@
   [:span.pr2
    [:img.w1.v-mid.o-50 {:src image-src}]])
 
-(defn three-dots []
+(defn three-dots [issue-id]
   [:div
    [:div
-    {:on-click #(rf/dispatch [:three-dots-open])}
+    {:on-click #(rf/dispatch [:three-dots-open issue-id])}
     [three-dots-box "ic-more-vert-black-24dp-1x.png"]]])
 
 (defn revoke-dropdown [bounty]
-  (let [menu (if @(rf/subscribe [:three-dots-open?])
+  (let [menu (if (contains? @(rf/subscribe [:three-dots-open?]) (:issue-id bounty))
                [:div.ui.menu.revoke.transition {:tab-index -1}]
                [:div.ui.menu.transition.hidden])]
     [:div.fl.w-20
-     [three-dots]
+     [three-dots (:issue-id bounty)]
      (into menu [[:div
                   [:a.pa2
                    {:on-click #(rf/dispatch [:revoke-bounty {:issue-id (:issue-id bounty)}])}

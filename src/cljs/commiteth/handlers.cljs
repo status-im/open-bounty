@@ -544,15 +544,15 @@
 
 (reg-event-db
  :three-dots-open
- (fn [db [_]]
+ (fn [db [_ issue-id]]
    (.addEventListener js/window "click" close-three-dots)
-   (assoc db :three-dots-open? true)))
+   (update db ::db/unclaimed-options (fnil conj #{}) issue-id)))
 
 (reg-event-db
  :three-dots-close
- (fn [db [_]]
+ (fn [db [_ issue-id]]
    (.removeEventListener js/window "click" close-three-dots)
-   (assoc db :three-dots-open? false)))
+   (assoc db ::db/unclaimed-options #{})))
 
 (reg-event-db
  ::open-bounty-claim
