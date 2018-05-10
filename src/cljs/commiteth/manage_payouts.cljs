@@ -270,7 +270,8 @@
                [:div.ui.menu.revoke.transition {:tab-index -1}]
                [:div.ui.menu.transition.hidden])]
     [:div.fl.w-20
-     [three-dots (:issue-id bounty)]
+     (if (empty? @(rf/subscribe [:pending-revocations]))
+       [three-dots (:issue-id bounty)])
      (into menu [[:div
                   [:a.pa2
                    {:on-click #(rf/dispatch [:revoke-bounty {:issue-id (:issue-id bounty)}])}
