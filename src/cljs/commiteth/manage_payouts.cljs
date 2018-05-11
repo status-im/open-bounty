@@ -271,19 +271,20 @@
       (when bounty
         (let [owner-address (:owner_address bounty)]
           ;; width requires a deliberate override of semantic.min.css
-          [:div.ui.active.modal {:style {:width 600}}
-          [:div.ph4.pv3
-           [:h3 "Are you sure you want to request a refund?"]
-           [:p "This will set your bounty"
+          [:div.ui.active.modal.br3 {:style {:width 600}}
+          [:div.pa4
+           [:h3.dark-gray "Are you sure you want to request a refund?"]
+           [:p.silver "This will set your bounty"
             [:span.pg-med " value to $0."]
             " Don't worry, your issue will still be accessible to the community. Remember that the higher the funds, the higher the chance to get the issue solved."]
-           [:p (:issue-title bounty)]
-           [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
-           [ui-balances/usd-value-label (:value-usd bounty)]
-           [:p "To be refunded to "
-            [:a.sob-blue.pg-med
-             {:href (etherscan-address-url owner-address) :target "_blank"}
-             owner-address]]
+           [:div.bg-sob-tint.br3.pa3
+            [:p (:issue-title bounty)]
+            [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
+            [ui-balances/usd-value-label (:value-usd bounty)]
+            [:p "To be refunded to "
+             [:a.sob-blue.pg-med
+              {:href (etherscan-address-url owner-address) :target "_blank"}
+              owner-address]]]
           
            [:button {:on-click #(rf/dispatch [:clear-revoke-modal])}
             "REQUEST REFUND"]
