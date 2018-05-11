@@ -265,6 +265,15 @@
     {:on-click #(rf/dispatch [:three-dots-open issue-id])}
     [three-dots-box "ic-more-vert-black-24dp-1x.png"]]])
 
+(defn revoke-modal []
+  (let [revoke-modal-bounty (rf/subscribe [:revoke-modal-bounty])]
+    (fn []
+      (when @revoke-modal-bounty
+        [:div.ui.active.modal
+         [:div.flash-message.success
+          [:i.close.icon {:on-click #(rf/dispatch [:clear-revoke-modal])}]
+          [:p "Issue is " (:issue-id @revoke-modal-bounty)]]]))))
+
 (defn revoke-dropdown [bounty]
   (let [menu (if (contains? @(rf/subscribe [:three-dots-open?]) (:issue-id bounty))
                [:div.ui.menu.revoke.transition {:tab-index -1}]
@@ -274,7 +283,9 @@
        [three-dots (:issue-id bounty)])
      (into menu [[:div
                   [:a.pa2
-                   {:on-click #(rf/dispatch [:revoke-bounty {:issue-id (:issue-id bounty)}])}
+;;                   {:on-click #(rf/dispatch [:set-flash-message :error "These are the principles"])}
+                   ;;                   {:on-click #(rf/dispatch [:revoke-bounty {:issue-id (:issue-id bounty)}])}
+                   {:on-click #(rf/dispatch [:set-revoke-modal bounty])}
                    "Revoke"]]])]))
 
 (defn unclaimed-bounty [bounty]
@@ -382,7 +393,8 @@
         user (rf/subscribe [:user])
         owner-bounties (rf/subscribe [:owner-bounties])
         bounty-stats-data (rf/subscribe [:owner-bounties-stats])
-        owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
+        owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])
+        revoke-modal-bounty (rf/subscribe [:revoke-modal-bounty])]
     (fn manage-payouts-page-render []
       (cond
         (nil? @user)
@@ -412,6 +424,8 @@
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
+           (when @revoke-modal-bounty
+             [revoke-modal])
            [manage-bounties-nav route-id]
            [:div.cf
             [:div.fr.w-third.pl4.mb3.dn.db-l

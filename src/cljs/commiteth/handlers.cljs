@@ -115,6 +115,16 @@
  (fn [db _]
    (dissoc db :flash-message)))
 
+(reg-event-db
+ :set-revoke-modal
+ (fn [db [_ bounty]]
+   (assoc db :revoke-modal-bounty bounty)))
+
+(reg-event-db
+ :clear-revoke-modal
+ (fn [db [_ bounty]]
+   (dissoc db :revoke-modal-bounty bounty)))
+
 (defn assoc-in-if-not-empty [m path val]
   (if (seq val)
     (assoc-in m path val)

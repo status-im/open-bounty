@@ -42,6 +42,11 @@
     (:flash-message db)))
 
 (reg-sub
+  :revoke-modal-bounty
+  (fn [db _]
+    (:revoke-modal-bounty db)))
+
+(reg-sub
   :open-bounties
   (fn [db _]
     (vec (:open-bounties db))))
