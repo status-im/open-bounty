@@ -453,12 +453,13 @@
 (reg-event-fx
  :revoke-bounty
  interceptors
- (fn [{:keys [db]} [_ {:keys [issue-id]}]]
+ (fn [{:keys [db]} [_ issue-id]]
    {:http {:method     POST
            :url        "/api/user/revoke"
            :on-success #(dispatch [:revoke-bounty-success %])
            :on-error   #(dispatch [:revoke-bounty-error %])
-           :params      {:issue-id issue-id}}}))
+           :params      {:issue-id issue-id}}
+    :dispatch [:clear-revoke-modal]}))
 
 (reg-event-fx
  :confirm-payout

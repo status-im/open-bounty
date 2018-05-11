@@ -283,11 +283,11 @@
             [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
             [:p [ui-balances/usd-value-label (:value-usd bounty)]]
             [:p.silver "To be refunded to: " owner-address]]
-           [:div.pv3 
+           [:div.pt3 
             [primary-button-button
-             {:on-click #(rf/dispatch [:clear-revoke-modal])}
+             {:on-click #(rf/dispatch [:revoke-bounty (:issue-id bounty)])}
              "REQUEST REFUND"]
-            [:span.dark-gray.pointer.fw4.f7.ml4
+            [:span.dark-gray.pointer.fw4.f7.ml3
              {:role     "button"
               :on-click #(rf/dispatch [:clear-revoke-modal])}
              "CANCEL"]]]])))))
@@ -301,8 +301,7 @@
        [three-dots (:issue-id bounty)])
      (into menu [[:div
                   [:a.pa2
-;;                   {:on-click #(rf/dispatch [:set-flash-message :error "These are the principles"])}
-                   ;;                   {:on-click #(rf/dispatch [:revoke-bounty {:issue-id (:issue-id bounty)}])}
+                   
                    {:on-click #(rf/dispatch [:set-revoke-modal bounty])}
                    "Revoke"]]])]))
 
@@ -354,8 +353,9 @@
                 [:div.relative.pa3.pr4.bg-sob-green.br3.nt1
                  [:div
                   [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
-                   [:span.pg-med "Transaction sent."] " Refund is pending until the transaction is completed. Check its status"
-                   [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here."]]]]))))))
+                   [:span.pg-med "Transaction sent."] " Your refund requires two confirmations. After the first one "
+                   [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " completes "]
+                   "you'll be prompted to sign the second via metamask."]]]))))))
 
 (defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
