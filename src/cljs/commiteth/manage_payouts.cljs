@@ -266,13 +266,29 @@
     [three-dots-box "ic-more-vert-black-24dp-1x.png"]]])
 
 (defn revoke-modal []
-  (let [revoke-modal-bounty (rf/subscribe [:revoke-modal-bounty])]
+  (let [bounty @(rf/subscribe [:revoke-modal-bounty])]
     (fn []
-      (when @revoke-modal-bounty
+      (when bounty
         [:div.ui.active.modal
-         [:div.flash-message.success
-          [:i.close.icon {:on-click #(rf/dispatch [:clear-revoke-modal])}]
-          [:p "Issue is " (:issue-id @revoke-modal-bounty)]]]))))
+         [:div
+          [:h3 "Are you sure you want to request a refund?"]
+          [:p "This will set your bounty value to $0. Don't worry, your issue will still be accessible to the community. Remember that the higher the funds, the higher the chance to get the issue solved."]
+          [:p (:issue-title bounty)]
+          ;; tokens
+          ;; eth
+          ;; usd
+          [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
+          [ui-balances/usd-value-label (:value-usd bounty)]
+          [:p "To be refunded to "
+           [:a.sob-blue.pg-med
+            ;; todo let binding
+            {:href (etherscan-address-url (:owner_address bounty)) :target "_blank"}
+            (:owner_address bounty)]]
+          
+          [:button {:on-click #(rf/dispatch [:clear-revoke-modal])}
+           "REQUEST REFUND"]
+          [:button {:on-click #(rf/dispatch [:clear-revoke-modal])}
+           "CANCEL"]]]))))
 
 (defn revoke-dropdown [bounty]
   (let [menu (if (contains? @(rf/subscribe [:three-dots-open?]) (:issue-id bounty))
