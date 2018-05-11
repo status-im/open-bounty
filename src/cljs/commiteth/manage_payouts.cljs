@@ -271,25 +271,25 @@
       (when bounty
         (let [owner-address (:owner_address bounty)]
           ;; width requires a deliberate override of semantic.min.css
-          [:div.ui.active.modal.br3 {:style {:width 600}}
+          [:div.ui.active.modal.br3 {:style {:width 650}}
           [:div.pa4
            [:h3.dark-gray "Are you sure you want to request a refund?"]
            [:p.silver "This will set your bounty"
             [:span.pg-med " value to $0."]
             " Don't worry, your issue will still be accessible to the community. Remember that the higher the funds, the higher the chance to get the issue solved."]
            [:div.bg-sob-tint.br3.pa3
-            [:p (:issue-title bounty)]
-            [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
-            [ui-balances/usd-value-label (:value-usd bounty)]
-            [:p "To be refunded to "
-             [:a.sob-blue.pg-med
-              {:href (etherscan-address-url owner-address) :target "_blank"}
-              owner-address]]]
-          
-           [:button {:on-click #(rf/dispatch [:clear-revoke-modal])}
-            "REQUEST REFUND"]
-           [:button {:on-click #(rf/dispatch [:clear-revoke-modal])}
-            "CANCEL"]]])))))
+            [:p.fw4 (:issue-title bounty)]
+            [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
+            [:p [ui-balances/usd-value-label (:value-usd bounty)]]
+            [:p.silver "To be refunded to: " owner-address]]
+           [:div.pv3 
+            [primary-button-button
+             {:on-click #(rf/dispatch [:clear-revoke-modal])}
+             "REQUEST REFUND"]
+            [:span.dark-gray.pointer.fw4.f7.ml4
+             {:role "button"
+              :on-click #(rf/dispatch [:clear-revoke-modal])}
+             "CANCEL"]]]])))))
 
 (defn revoke-dropdown [bounty]
   (let [menu (if (contains? @(rf/subscribe [:three-dots-open?]) (:issue-id bounty))
