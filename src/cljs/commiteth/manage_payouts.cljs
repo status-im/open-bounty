@@ -271,12 +271,13 @@
       (when bounty
         (let [owner-address (:owner_address bounty)]
           ;; width requires a deliberate override of semantic.min.css
-          [:div.ui.active.modal.br3 {:style {:width 650}}
+          [:div.ui.active.modal.br3 {:style {:top   100
+                                             :width 650}}
           [:div.pa4
            [:h3.dark-gray "Are you sure you want to request a refund?"]
            [:p.silver "This will set your bounty"
             [:span.pg-med " value to $0."]
-            " Don't worry, your issue will still be accessible to the community. Remember that the higher the funds, the higher the chance to get the issue solved."]
+            " Don't worry, your issue will still be accessible to the community. You can check the status of your refund at the top of the dashboard."]
            [:div.bg-sob-tint.br3.pa3
             [:p.fw4 (:issue-title bounty)]
             [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
@@ -287,7 +288,7 @@
              {:on-click #(rf/dispatch [:clear-revoke-modal])}
              "REQUEST REFUND"]
             [:span.dark-gray.pointer.fw4.f7.ml4
-             {:role "button"
+             {:role     "button"
               :on-click #(rf/dispatch [:clear-revoke-modal])}
              "CANCEL"]]]])))))
 
