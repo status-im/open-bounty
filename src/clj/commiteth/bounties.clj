@@ -1,5 +1,6 @@
 (ns commiteth.bounties
   (:require [commiteth.db.issues :as issues]
+            [commiteth.db.bounties :as db-bounties]
             [commiteth.db.users :as users]
             [commiteth.db.repositories :as repos]
             [commiteth.eth.core :as eth]
@@ -21,7 +22,50 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
-(defn deploy-contract [owner-address issue-id]
+(defn transition [{:keys [issue-id tx-info] :as bounty} state]
+  (let [bounty-not= (fn [current db]
+                      (some #(not= (%1 current) (%1 db)) 
+                            (disj (set (keys current)) :tx-info)))
+        bounty-from-db (issues/get-issue-by-id issue-id)
+        bounty (and (bounty-not= bounty bounty-from-db)
+                    (merge bounty-from-db bounty))]
+    (when bounty
+      (case state
+        :deploying
+        (tracker/track-tx! tx-info)
+
+        :opened
+        (do 
+          (tracker/untrack-tx! {:issue-id (:issue-id bounty) 
+                                :tx-hash (:transaction-hash bounty) 
+                                :result (:contract-address bounty) 
+                                :type :deploy})
+          (github/update-bounty-comment-image bounty))
+
+        :pending-sob-confirmation
+        (tracker/track-tx! tx-info)
+
+        :pending-maintainer-confirmation
+        (tracker/untrack-tx! tx-info)
+
+        :paid-with-receipt
+        (db-bounties/update-payout-receipt issue-id (:payout-receipt bounty))
+
+        :watch-set
+        (tracker/track-tx! tx-info)
+
+        :watch-reset
+        (tracker/untrack-tx! tx-info)
+
+        :update-balances
+        (issues/update-balances (:contract-address bounty)
+                                (:balance-eth bounty)
+                                (:tokens bounty)
+                                (:value-usd bounty))
+
+        )
+    (github/update-comment bounty state))))
+(defn deploy-contract [owner-address  issue-id]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
     (try
@@ -30,8 +74,8 @@
                                                   :internal-tx-id [:deploy issue-id]})]
         (do
           (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id (:tx-hash tx-info))
-          (github/update-comment (into tx-info [:issue-id issue-id]))
-          (tracker/track-tx! tx-info))
+          (transition {:issue-id issue-id
+                       :tx-info tx-info} :deploying))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
 
@@ -106,6 +150,7 @@
     (if-let [merged-or-paid? (or (:winner_login bounty)
                                  (:payout_hash bounty))]
       (cond
+        (:payout_receipt bounty)        :paid-with-receipt
         (:payout_hash bounty)           :paid
         (nil? (:payout_address bounty)) :pending-contributor-address
         ;; `confirm_hash` is set by us as soon as a PR is merged and the
@@ -120,6 +165,8 @@
         (= 1 (count (open-claims bounty)))  :claimed
         (seq (:tokens bounty))          :funded
         (:contract_address bounty)      :opened))))
+
+
 
 (comment
   (def user 97496)

@@ -234,7 +234,7 @@
     (str "Contract address: [" addr "](" url-base "/address/" addr ")\n")))
 
 (defn generate-open-comment
-  [owner repo issue-number contract-address eth-balance eth-balance-str tokens]
+  [owner repo issue-number contract-address eth-balance tokens]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance))
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s ETH\n"
@@ -247,14 +247,14 @@
                  (if (on-testnet?)
                    "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
-            eth-balance-str image-url site-url)))
+            eth-balance image-url site-url)))
 
 (defn learn-more-text []
   (let [site-url (md-url (server-address) (server-address))]
     (format "Visit %s to learn more.\n" site-url)))
 
 (defn generate-merged-comment
-  [contract-address eth-balance-str tokens winner-login winner-address-missing?]
+  [contract-address eth-balance tokens winner-login winner-address-missing?]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
                (contract-addr-text contract-address)
@@ -264,7 +264,7 @@
                                  "Pending maintainer confirmation")  "\n")
                "Winner: %s\n"
                (learn-more-text))
-          eth-balance-str winner-login))
+          eth-balance winner-login))
 
 (defn generate-paid-comment
   [contract-address eth-balance-str tokens payee-login]
@@ -294,16 +294,16 @@
                                                   :otp))]
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
-(defn update-bounty-comment-image [issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens]
-  (let [hash (github-comment-hash owner repo issue-number eth-balance)
+(defn update-bounty-comment-image [{:keys [issue-id owner repo issue-number contract-address balance-eth tokens]}]
+  (let [hash (github-comment-hash owner repo issue-number balance-eth)
         issue-url (str owner "/" repo "/issues/" (str issue-number))
         png-data (png-rendering/gen-comment-image
                   contract-address
-                  eth-balance-str
+                  balance-eth
                   tokens
                   issue-url)]
     (log/debug "update-bounty-comment-image" issue-id owner repo issue-number)
-    (log/debug contract-address eth-balance-str)
+    (log/debug contract-address balance-eth)
     (log/debug "hash" hash)
 
     (if png-data
@@ -331,53 +331,43 @@
 (defn update-comment
   "Update comment for an open bounty issue"
   [{:keys [issue-id owner repo comment-id issue-number contract-address 
-           eth-balance eth-balance-str tokens
+           balance-eth tokens
            payout-receipt
-   winner-login winner-address transaction-hash] :as issue}]
-  (let [state (cond (nil? comment-id) :deployed
-                    (not (nil? payout-receipt)) :paid
-                    (not (str/blank? winner-login)) :merged
-                    :else :open)
-        comment (cond (= state :deployed)
-                      (generate-deploying-comment owner repo issue-number transaction-hash)
-                      (= state :open)
-                      (generate-open-comment owner
-                                             repo
-                                             issue-number
-                                             contract-address
-                                             eth-balance
-                                             eth-balance-str
-                                             tokens)
-                      (= state :merged)
-                      (generate-merged-comment contract-address
-                                               eth-balance-str
-                                               tokens
-                                               winner-login
-                                               (str/blank? winner-address))
-                      (= state :paid)
-                      (generate-paid-comment contract-address
-                                             eth-balance-str
-                                             tokens
-                                             winner-login)
-                      )]
-    (when (and (= state :merged) (empty? winner-address)) 
-      (log/warn "issue %s: Cannot sign pending bounty - winner has no payout address" issue-id))
-    (when (= :paid state)
-         (db-bounties/update-payout-receipt issue-id payout-receipt))
-              
-    (when (= :open state)
-      (update-bounty-comment-image issue-id owner repo issue-number contract-address eth-balance eth-balance-str tokens))
-  
+           winner-login winner-address transaction-hash] :as issue}
+   state]
+  (let [comment (case state
+                  :deploying
+                  (generate-deploying-comment owner repo issue-number transaction-hash)
+                  :opened
+                  (generate-open-comment owner
+                                         repo
+                                         issue-number
+                                         contract-address
+                                         balance-eth
+                                         tokens)
+                  (:pending-maintainer-confirmation :pending-contributor-address)
+                  (generate-merged-comment contract-address
+                                           balance-eth
+                                           tokens
+                                           winner-login
+                                           (str/blank? winner-address))
+                  :paid-with-receipt
+                  (generate-paid-comment contract-address
+                                         balance-eth
+                                         tokens
+                                         winner-login)
+                  :else nil)]
     (log/debug (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
-    (if (= state :deployed) 
+    (if (= state :deploying) 
       (let [resp (issues/create-comment owner repo issue-number comment (self-auth-params))
             comment-id (:id resp)]
         (db-issues/update-comment-id issue-id comment-id))
-      (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
-                                    [owner repo comment-id]
-                                    (assoc (self-auth-params) :body comment))]
-        (tentacles/safe-parse (http/request req))))))
+      (when comment
+        (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
+                                      [owner repo comment-id]
+                                      (assoc (self-auth-params) :body comment))]
+          (tentacles/safe-parse (http/request req)))))))
 
 (defn get-issue
   [owner repo issue-number]
