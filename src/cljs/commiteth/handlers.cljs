@@ -404,13 +404,15 @@
 
 
 (defn send-transaction-callback
-  [issue-id]
+  [issue-id pending-revocations]
   (fn [error payout-hash]
     (println "send-transaction-callback" error payout-hash)
     (when error
-      (dispatch [:set-flash-message
-                 :error
-                 (str "Error sending transaction: " error)])
+      (if (empty? pending-revocations)
+        (dispatch [:set-flash-message
+                   :error
+                   (str "Error sending transaction: " error)])
+        (dispatch [:remove-bot-confirmation issue-id]))
       (dispatch [:payout-confirm-failed issue-id]))
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
@@ -444,7 +446,7 @@
            :url        "/api/user/remove-bot-confirmation"
            :params     {:token (get-admin-token db)
                         :issue-id issue-id}
-           :on-success #(println "successfully removed bot confirmation for: " issue-id)
+           :on-success #(dispatch [:remove-pending-revocation issue-id])
            :on-error   #(println "error removing bot confirmation for " issue-id)}}))
 
 (reg-event-fx
@@ -483,6 +485,7 @@
                       confirm-hash     :confirm_hash} issue]]
    (println (:web3 db))
    (let [w3 (:web3 db)
+         pending-revocations (::db/pending-revocations db)
          confirm-method-id (sig->method-id w3 "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
          data (str confirm-method-id
@@ -496,17 +499,14 @@
      (println "data:" data)
      (try
        (web3-eth/send-transaction! w3 payload
-                                   (send-transaction-callback issue-id))
+                                   (send-transaction-callback issue-id pending-revocations))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
-         (if (empty? (::db/pending-revocations db))
-           {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
-            :dispatch-n [[:payout-confirm-failed issue-id e]
-                         [:set-flash-message
-                          :error
-                          (str "Failed to send transaction" e)]]}
-           {:dispatch-n [[:remove-pending-revocation issue-id]
-                         [:remove-bot-confirmation issue-id]]}))))))
+         {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
+          :dispatch-n [[:payout-confirm-failed issue-id e]
+                       [:set-flash-message
+                        :error
+                        (str "Failed to send transaction" e)]]})))))
 
 (reg-event-fx
  :payout-confirmed
