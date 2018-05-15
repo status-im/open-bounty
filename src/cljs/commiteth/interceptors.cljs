@@ -27,6 +27,10 @@
                                  :contract_address (:contract_address bounty)
                                  :confirm_hash     (:confirm_hash bounty)}]))
 
+(defn dispatch-set-pending-revocation [bounty]
+  "update the currently confirming account to owner"
+  (rf/dispatch [:set-pending-revocation (:issue-id bounty) :owner]))
+
 (defn dispatch-remove-pending-revocation [bounty]
   "dispatches a bounty via reframe dispatch"
   (rf/dispatch [:remove-pending-revocation (:issue-id bounty)]))
@@ -68,7 +72,8 @@
                         ;; for bounties which just had confirm hash set: perform
                         ;; dispatch side effect but interceptor must return context
                         (doseq [bounty updated-bounties]
-                          (dispatch-confirm-payout bounty))))))
+                          (dispatch-confirm-payout bounty)
+                          (dispatch-set-pending-revocation bounty))))))
                 context))))
 
 

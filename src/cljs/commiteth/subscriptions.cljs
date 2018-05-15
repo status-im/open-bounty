@@ -192,9 +192,10 @@
 (reg-sub
  :pending-revocations
  (fn [db _]
-   (filter #(some (conj #{} (:issue-id %))
-                  (::db/pending-revocations db))
-           (vals (:owner-bounties db)))))
+   (map (fn [[issue-id revocations]]
+          (merge revocations
+                 (get-in db [:owner-bounties issue-id])))
+        (::db/pending-revocations db))))
 
 (reg-sub
   ::open-bounty-claims

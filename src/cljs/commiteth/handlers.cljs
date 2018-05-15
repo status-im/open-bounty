@@ -426,19 +426,20 @@
 (reg-event-fx
  :set-pending-revocation
  interceptors
- (fn [{:keys [db]} [_  issue-id]]
-   {:db (update db ::db/pending-revocations #(conj % issue-id))}))
+ (fn [{:keys [db]} [_  issue-id confirming-account]]
+   {:db (assoc-in db [::db/pending-revocations issue-id]
+                  {:confirming-account confirming-account})}))
 
 (reg-event-fx
  :remove-pending-revocation
  interceptors
  (fn [{:keys [db]} [_ issue-id]]
-   {:db (update db ::db/pending-revocations #(disj % issue-id))}))
+   {:db (dissoc-in db [::db/pending-revocations issue-id])}))
 
 (reg-event-fx
   :revoke-bounty-success
  (fn [{:keys [db]} [_  {:keys [issue-id owner-address contract-address confirm-hash]}]]
-   {:dispatch [:set-pending-revocation issue-id]}))
+   {:dispatch [:set-pending-revocation issue-id :commiteth]}))
 
 (reg-event-fx
  :revoke-bounty-error
