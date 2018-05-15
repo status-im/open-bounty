@@ -244,10 +244,16 @@
     [:div bottom]]])
 
 (defn small-card-balances [bounty]
-  [:div.f6.fl.w-80
-   [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
-   [:div
-    [ui-balances/usd-value-label (:value-usd bounty)]]])
+  (let [pending-revocations (rf/subscribe [:pending-revocations])]
+    (fn [bounty]
+      [:div.f6.fl.w-80
+       [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
+       [:div
+        [ui-balances/usd-value-label (:value-usd bounty)]]
+       (when (some #(= (:issue-id %)
+                       (:issue-id bounty)) @pending-revocations)
+         [:div.pt1
+          [ui-balances/pending-badge]])])))
 
 (defn three-dots-box [image-src]
   "generates the appropriate container for menu dots"
