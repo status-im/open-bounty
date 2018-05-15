@@ -258,7 +258,7 @@
                          (log/debug "/user/bounties")
                          (ok (user-bounties user)))
                     (POST "/revoke"  {{issue-id :issue-id} :params}
-;;                          :auth-rules authenticated?
+                          :auth-rules authenticated?
                           :current-user user
                           (let [{contract-address :contract_address owner-address :owner_address} (issues/get-issue-by-id issue-id)]
                             (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)

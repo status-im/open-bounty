@@ -437,6 +437,17 @@
    {:db (dissoc-in db [::db/pending-revocations issue-id])}))
 
 (reg-event-fx
+ :remove-bot-confirmation
+ interceptors
+ (fn [{:keys [db]} [_ issue-id]]
+   {:http {:method     POST
+           :url        "/api/user/remove-bot-confirmation"
+           :params     {:token (get-admin-token db)
+                        :issue-id issue-id}
+           :on-success #(println "successfully removed bot confirmation for: " issue-id)
+           :on-error   #(println "error removing bot confirmation for " issue-id)}}))
+
+(reg-event-fx
   :revoke-bounty-success
  (fn [{:keys [db]} [_  {:keys [issue-id owner-address contract-address confirm-hash]}]]
    {:dispatch [:set-pending-revocation issue-id :commiteth]}))
@@ -459,7 +470,8 @@
            :url        "/api/user/revoke"
            :on-success #(dispatch [:revoke-bounty-success %])
            :on-error   #(dispatch [:revoke-bounty-error %])
-           :params      {:issue-id issue-id}}
+           :params      {:token (get-admin-token db)
+                         :issue-id issue-id}}
     :dispatch [:clear-revoke-modal]}))
 
 (reg-event-fx
@@ -493,7 +505,8 @@
                          [:set-flash-message
                           :error
                           (str "Failed to send transaction" e)]]}
-           {:dispatch [:remove-pending-revocation issue-id]}))))))
+           {:dispatch-n [[:remove-pending-revocation issue-id]
+                         [:remove-bot-confirmation issue-id]]}))))))
 
 (reg-event-fx
  :payout-confirmed
