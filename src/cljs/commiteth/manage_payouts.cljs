@@ -358,9 +358,8 @@
                                 [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " completes "]
                                 "you'll be prompted to sign the second via metamask."]
                     :owner [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
-                                [:span.pg-med "Transaction sent."] " Once your metamask transaction is cofirmed "
-                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here  "]
-                                "your revocation will be complete."])]]))))))
+                                [:span.pg-med "Transaction sent."] " Once your metamask transaction is confirmed your revocation will be complete. Follow the final step "
+                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here.  "]])]]))))))
 
 (defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
