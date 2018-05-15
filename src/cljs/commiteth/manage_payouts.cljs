@@ -352,14 +352,14 @@
                 ^{:key (:contract_address revoking-bounty)}
                 [:div.relative.pa3.pr4.bg-sob-green.br3.nt1
                  [:div
-                  (case (:confirming-account bounty)
+                  (case (:confirming-account revoking-bounty)
                     :commiteth [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
                                 [:span.pg-med "Transaction sent."] " Your refund requires two confirmations. After the first one "
                                 [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " completes "]
                                 "you'll be prompted to sign the second via metamask."]
                     :owner [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
-                                [:span.pg-med "Transaction sent."] " Once your metamask transaction is  "
-                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " confirmed "]
+                                [:span.pg-med "Transaction sent."] " Once your metamask transaction is cofirmed "
+                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here  "]
                                 "your revocation will be complete."])]]))))))
 
 (defn salute []
