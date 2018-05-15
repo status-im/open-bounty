@@ -357,7 +357,7 @@
                                          tokens
                                          winner-login)
                   :else nil)]
-    (log/debug (str "Updating " owner "/" repo "/" issue-number
+    (log/info (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
     (if (= state :deploying) 
       (let [resp (issues/create-comment owner repo issue-number comment (self-auth-params))

@@ -75,6 +75,7 @@
         (do
           (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id (:tx-hash tx-info))
           (transition {:issue-id issue-id
+                       :transaction-hash (:tx-hash tx-info)
                        :tx-info tx-info} :deploying))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
