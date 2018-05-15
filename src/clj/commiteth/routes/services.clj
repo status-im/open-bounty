@@ -266,4 +266,12 @@
                                   (ok {:issue-id         issue-id
                                        :execute-hash     execute-hash
                                        :contract-address contract-address})
-                                  (bad-request (str "Unable to withdraw funds from " contract-address)))))))))
+                                  (bad-request (str "Unable to withdraw funds from " contract-address))))))
+                    (POST "/remove-bot-confirmation"  {{issue-id :issue-id} :params}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (do (log/infof "calling remove-bot-confirmation for %s " issue-id)
+                              ;; if this resulted in updating a row, return success
+                              (if (pos? (issues/reset-bot-confirmation issue-id))
+                                (ok (str "Updated execute and confirm hash for " issue-id))
+                                (bad-request (str "Unable to update execute and confirm hash for  " issue-id))))))))

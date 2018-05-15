@@ -428,6 +428,12 @@ UPDATE issues
 SET is_open = :is_open
 WHERE issue_id = :issue_id;
 
+-- :name reset-bot-confirmation :! :n
+-- :doc updates issue's execute and confirm hash
+UPDATE issues
+SET execute_hash = NULL,
+confirm_hash = NULL
+WHERE issue_id = :issue_id;
 
 -- :name issue-exists :1
 -- :doc returns true if given issue exists
