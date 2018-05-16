@@ -82,10 +82,10 @@
         response  @(post (eth-rpc-url) options)
         result   (safe-read-str (:body response))]
     (when internal-tx-id
-      (log/infof "%s: eth-rpc %s" tx-id-str method))
+      (log/debugf "%s: eth-rpc %s" tx-id-str method))
     (log/debugf "%s: eth-rpc req(%s) body: %s" tx-id-str request-id body)
     (if tx-id-str
-      (log/infof "%s: eth-rpc req(%s) result: %s" tx-id-str request-id result)
+      (log/debugf "%s: eth-rpc req(%s) result: %s" tx-id-str request-id result)
       (log/debugf "no-tx-id: eth-rpc req(%s) result: %s" request-id result))
     (cond
       ;; Ignore any responses that have mismatching request ID
