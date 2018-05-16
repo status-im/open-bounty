@@ -238,7 +238,7 @@ SELECT
   AS type,
   issue_id
 FROM issues
-WHERE updated < timezone('utc'::text, now()) - interval '10 minutes'
+WHERE updated < timezone('utc'::text, now()) - interval '30 minutes'
 AND (transaction_hash is not null and contract_address is null
      OR execute_hash is not null and confirm_hash is null
      OR watch_hash is not null);
@@ -634,7 +634,7 @@ SELECT
   updated
 FROM activity_feed_view
 ORDER BY updated DESC
-LIMIT 100;
+LIMIT 1000;
 
 -- :name get-new-users-for-welcome-email :? :*
 -- :doc users who have not been sent a welcome email
