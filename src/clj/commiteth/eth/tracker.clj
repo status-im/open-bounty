@@ -57,8 +57,8 @@
   (prune-txs [this unmined-txs]
     (when (or ((set (map :tx-hash unmined-txs)) (:tx-hash @current-tx))
             (and (:timestamp @current-tx)
-               (t/before? (:timestamp @current-tx) (t/minus (t/now) (t/minutes 10)))))
-      (log/errorf "Current nonce unmined for 10 minutes, force reset. Tx hash: %s, type: %s" 
+               (t/before? (:timestamp @current-tx) (t/minus (t/now) (t/minutes 30)))))
+      (log/errorf "Current nonce unmined for 30 minutes, force reset. Tx hash: %s, type: %s" 
                   (:tx-hash @current-tx) (:type @current-tx))
       (reset! current-tx nil)))
 
