@@ -87,7 +87,7 @@
            ;; special prefix or namespace for derived properties that
            ;; are added to domain records like this
            ;; e.g. `derived/paid?`
-           [id (assoc bounty :paid? (boolean (:payout_hash bounty)))])
+           [id (assoc bounty :paid? (boolean (:payout_receipt bounty)))])
          (into {}))))
 
 (reg-sub
