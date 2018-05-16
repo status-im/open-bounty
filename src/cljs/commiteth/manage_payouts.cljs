@@ -325,7 +325,10 @@
     [:div
      [bounty-title-link bounty {:show-date? false :max-length 60}]
      [:div.f6.mt1.gray
-      "Paid out to " [:span.pg-med.fw5 "@" (:winner_login bounty)]]]
+      "Paid out to " [:span.pg-med.fw5 "@" (or (:winner_login bounty)
+                                               ;; use repo owner for revoked bounties
+                                               ;; where no winner login is set
+                                               (:repo-owner bounty))]]]
     [small-card-balances bounty]]])
 
 (defn expandable-bounty-list [bounty-component bounties]
