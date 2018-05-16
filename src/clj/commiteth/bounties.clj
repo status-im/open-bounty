@@ -125,9 +125,9 @@
   (let [open-claims (fn open-claims [bounty]
                       (filter bnt/open? (:claims bounty)))]
     (if-let [merged-or-paid? (or (:winner_login bounty)
-                                 (:payout_hash bounty))]
+                                 (:payout_receipt bounty))]
       (cond
-        (:payout_hash bounty)           :paid
+        (:payout_receipt bounty)           :paid
         (nil? (:payout_address bounty)) :pending-contributor-address
         ;; `confirm_hash` is set by us as soon as a PR is merged and the
         ;; contributor address is known. Usually end users should not need
