@@ -68,9 +68,10 @@
   ITxTracker
   (try-reserve-nonce [this]
     (let [nonce (get-nonce)
-          monitored-nonces (set (keys current-txs))
+          monitored-nonces (set (keys @current-txs))
           first-available-nonce (some #(if (monitored-nonces %1) nil %1) (iterate inc nonce))]
-      (swap! current-txs assoc nonce nil)))
+      (swap! current-txs assoc first-available-nonce nil)
+      first-available-nonce))
 
   (drop-nonce [this nonce]
     (swap! current-txs dissoc nonce))
@@ -79,7 +80,7 @@
     (swap! current-txs update (:nonce tx-info) merge tx-info))
 
   (untrack-tx [this tx-info]
-    (when (contains? (set (keys current-txs)) (:nonce tx-info))
+    (when (contains? (set (keys @current-txs)) (:nonce tx-info))
       (swap! current-txs dissoc (:nonce tx-info))))
 
   (prune-txs [this unmined-txs]
@@ -98,7 +99,7 @@
   )
 
 
-(def tx-tracker (SequentialTxTracker. (atom nil)))
+(def tx-tracker (ParallelTxTracker. (atom nil)))
 
 (defn try-reserve-nonce! []
   (try-reserve-nonce tx-tracker))
