@@ -328,7 +328,7 @@
       "Paid out to " [:span.pg-med.fw5 "@" (or (:winner_login bounty)
                                                ;; use repo owner for revoked bounties
                                                ;; where no winner login is set
-                                               (:repo-owner bounty))]]]
+                                               (:owner-login bounty))]]]
     [small-card-balances bounty]]])
 
 (defn expandable-bounty-list [bounty-component bounties]

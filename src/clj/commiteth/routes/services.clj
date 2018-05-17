@@ -76,6 +76,7 @@
    :type :item-type
    :repo_name :repo-name
    :repo_owner :repo-owner
+   :owner_login :owner-login
    :issue_number :issue-number
    :issue_id :issue-id
    :value_usd :value-usd

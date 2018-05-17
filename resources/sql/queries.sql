@@ -521,6 +521,7 @@ SELECT
   r.owner            AS repo_owner,
   r.owner_avatar_url AS repo_owner_avatar_url,
   o.address          AS owner_address,
+  o.login            AS owner_login,
   u.address          AS payout_address
 FROM users o, repositories r, issues i LEFT OUTER JOIN users u ON u.login = i.winner_login
 WHERE
