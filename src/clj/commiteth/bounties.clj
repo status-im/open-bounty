@@ -142,30 +142,30 @@
   - :pending-contributor-address
   - :pending-maintainer-confirmation"
   [bounty]
-  (assert-keys bounty [:winner_login :payout_address :confirm_hash :payout_hash
-                       :claims :tokens :contract_address])
+  (assert-keys bounty [:winner-login :payout-address :confirm-hash :payout-hash
+                       :claims :tokens :contract-address])
   ;; Some bounties have been paid out manually, the payout hash
-  ;; was set properly but winner_login was not
+  ;; was set properly but winner-login was not
   (let [open-claims (fn open-claims [bounty]
                       (filter bnt/open? (:claims bounty)))]
-    (if-let [merged-or-paid? (or (:winner_login bounty)
-                                 (:payout_hash bounty))]
+    (if-let [merged-or-paid? (or (:winner-login bounty)
+                                 (:payout-hash bounty))]
       (cond
-        (:payout_receipt bounty)        :paid-with-receipt
-        (:payout_hash bounty)           :paid
-        (nil? (:payout_address bounty)) :pending-contributor-address
-        ;; `confirm_hash` is set by us as soon as a PR is merged and the
+        (:payout-receipt bounty)        :paid-with-receipt
+        (:payout-hash bounty)           :paid
+        (nil? (:payout-address bounty)) :pending-contributor-address
+        ;; `confirm-hash` is set by us as soon as a PR is merged and the
         ;; contributor address is known. Usually end users should not need
         ;; to be aware of this step.
-        (nil? (:confirm_hash bounty))   :pending-sob-confirmation
-        ;; `payout_hash` is set when the bounty issuer signs the payout
-        (nil? (:payout_hash bounty))    :pending-maintainer-confirmation
+        (nil? (:confirm-hash bounty))   :pending-sob-confirmation
+        ;; `payout-hash` is set when the bounty issuer signs the payout
+        (nil? (:payout-hash bounty))    :pending-maintainer-confirmation
         :else                           :merged)
       (cond ; not yet merged
         (< 1 (count (open-claims bounty)))  :multiple-claims
         (= 1 (count (open-claims bounty)))  :claimed
         (seq (:tokens bounty))          :funded
-        (:contract_address bounty)      :opened))))
+        (:contract-address bounty)      :opened))))
 
 
 
