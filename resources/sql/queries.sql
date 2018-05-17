@@ -26,22 +26,27 @@ where u.id = :id;
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users
-SET login = :login,
-name = :name,
-email = :email,
-address = :address
-WHERE id = :id;
-
--- :name update-user-address! :! :n
-UPDATE users
-SET address = :address
+SET address = :address,
+    opts = coalesce(opts, '{}'::jsonb) || coalesce(:opts, '{}'::jsonb)
 WHERE id = :id;
 
 -- :name get-user :? :1
 -- :doc retrieve a user given the user-id.
-SELECT *
-FROM users
-WHERE id = :id;
+SELECT  u.id,
+        u.login,
+        u.name,
+        u.email,
+        u.address,
+        u.created,
+        u.avatar_url,
+        u.opts->'is_hidden_in_hunters' as is_hidden_in_hunters,
+        u.opts->'hide_address_warning' as hide_address_warning,
+        u.opts->'hide_gh_repos_warning' as hide_gh_repos_warning,
+        count(r.*) as repo_count
+FROM users u
+left outer join repositories r on (u.id=r.user_id)
+WHERE u.id = :id
+GROUP BY u.id;
 
 -- :name get-user-by-login :? :1
 -- :doc retrieve a user given GitHub login.
@@ -607,7 +612,7 @@ WHERE
 pr.commit_sha = i.commit_sha
 AND u.id = pr.user_id
 AND i.payout_receipt IS NOT NULL
-AND NOT u.is_hidden_in_hunters
+AND NOT (u.opts->>'is_hidden_in_hunters')::boolean
 GROUP BY u.id
 ORDER BY total_usd DESC
 LIMIT 5;
@@ -635,17 +640,6 @@ SELECT
 FROM activity_feed_view
 ORDER BY updated DESC
 LIMIT 1000;
-
--- :name get-new-users-for-welcome-email :? :*
--- :doc users who have not been sent a welcome email
-SELECT
- id,
- login,
- email,
- name
-FROM users
-WHERE welcome_email_sent = 0;
-
 
 -- :name usage-metrics-by-day :? :*
 -- :doc data for usage metrics chart

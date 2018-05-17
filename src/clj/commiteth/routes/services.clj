@@ -191,21 +191,23 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {:address s/Str
-                                       :is_hidden_in_hunters s/Bool}]
+                          :body [body {(s/optional-key :address) (s/maybe s/Str)
+                                       (s/optional-key :is_hidden_in_hunters) (s/maybe s/Bool)
+                                       (s/optional-key :hide_address_warning) (s/maybe s/Bool)
+                                       (s/optional-key :hide_gh_repos_warning) (s/maybe s/Bool)}]
                           :summary "Updates user's fields."
 
                           (let [user-id (:id user)
                                 {:keys [address]} body]
 
-                            (when-not (eth/valid-address? address)
+                            (when-not (or (nil? address) (eth/valid-address? address))
                               (log/debugf "POST /user: Wrong address %s" address)
                               (bad-request! (format "Invalid Ethereum address: %s" address)))
 
-                            (db/with-tx
-                              (when-not (db/user-exists? {:id user-id})
-                                (not-found! "No such a user."))
-                              (db/update! :users body ["id = ?" user-id]))
+                            
+                            (when-not (db/user-exists? {:id user-id})
+                              (not-found! "No such a user."))
+                            (users/update-user user-id body)
 
                             (ok)))
 

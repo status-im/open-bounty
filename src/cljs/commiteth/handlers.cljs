@@ -242,12 +242,13 @@
 (reg-event-fx
  :load-user-profile
  (fn [{:keys [db]} [_]]
-   {:db   db
-    :http {:method     GET
-           :url        "/api/user"
-           :params {:token (get-admin-token db)}
-           :on-success #(dispatch [:set-user-profile %])
-           :on-error #(dispatch [:sign-out])}}))
+   (when (:user db)
+     {:db   db
+      :http {:method     GET
+             :url        "/api/user"
+             :params {:token (get-admin-token db)}
+             :on-success #(dispatch [:set-user-profile %])
+             :on-error #(dispatch [:sign-out])}})))
 
 (reg-event-fx
  :set-user-profile
@@ -474,6 +475,22 @@
  :metrics-loaded
  (fn [db [_]]
    (dissoc db :metrics-loading?)))
+
+(defn close-warning [event]
+  (when-not (some #(= (.-id %1) "warning_tooltip") (.-path event))
+    (dispatch [:warning-close])))
+
+(reg-event-db
+ :warning-open
+ (fn [db [_]]
+   (.addEventListener js/window "click" close-warning)
+   (assoc db :warning-open? true)))
+
+(reg-event-db
+ :warning-close
+ (fn [db [_]]
+   (.removeEventListener js/window "click" close-warning)
+   (assoc db :warning-open? false)))
 
 (defn close-dropdown []
   (dispatch [:user-dropdown-close]))
