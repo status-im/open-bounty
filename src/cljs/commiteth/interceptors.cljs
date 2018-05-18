@@ -74,6 +74,6 @@
                 (when-let [revoking-bounty (get updated-bounties confirming-issue-id)]
                   (if (:payout_receipt revoking-bounty)
                     (dispatch-remove-pending-revocation revoking-bounty)
-                    (println (str "currently revoking " confirming-issue-id " but confirm hash has not been set yet."))))
+                    (println (str "currently revoking " confirming-issue-id " but payout receipt has not been set yet."))))
                 ;; interceptor must return context
                 context))))
