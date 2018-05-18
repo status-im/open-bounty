@@ -45,7 +45,7 @@
 (defn bounty-item [bounty]
   (let [open-bounty-claims (rf/subscribe [::subs/open-bounty-claims])]
     (fn [bounty]
-      (let [{avatar-url   :repo_owner_avatar_url
+      (let [{avatar-url   :repo-owner-avatar-url
              owner        :repo-owner
              repo-name    :repo-name
              issue-title  :issue-title
@@ -66,6 +66,7 @@
             open-claims-click      #(rf/dispatch [::handlers/open-bounty-claim issue-id])
             close-claims-click     #(rf/dispatch [::handlers/close-bounty-claim issue-id])
             matches-current-issue? (some #{issue-id} @open-bounty-claims)]
+        (.warn js/console "avatar-url" avatar-url)
             [:div
              [:div.open-bounty-item.ph4
               [:div.open-bounty-item-content
