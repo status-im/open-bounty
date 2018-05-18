@@ -425,18 +425,23 @@
 (defn strip-0x [x]
   (str/replace x #"^0x" ""))
 
+(defn set-pending-revocation [location issue-id confirming-account]
+  (assoc-in location [::db/pending-revocations issue-id]
+            {:confirming-account confirming-account}))
+
 (reg-event-fx
  :set-pending-revocation
- interceptors
- (fn [{:keys [db]} [_  issue-id confirming-account]]
-   {:db (assoc-in db [::db/pending-revocations issue-id]
-                  {:confirming-account confirming-account})}))
+ [interceptors (inject-cofx :store)]
+ (fn [{:keys [db store]} [_  issue-id confirming-account]]
+   {:db    (set-pending-revocation db issue-id confirming-account)
+    :store (set-pending-revocation store issue-id confirming-account)}))
 
 (reg-event-fx
  :remove-pending-revocation
- interceptors
- (fn [{:keys [db]} [_ issue-id]]
-   {:db (dissoc-in db [::db/pending-revocations issue-id])}))
+ [interceptors (inject-cofx :store)]
+ (fn [{:keys [db store]} [_ issue-id]]
+   {:db (dissoc-in db [::db/pending-revocations issue-id])
+    :store (dissoc-in store [::db/pending-revocations issue-id])}))
 
 (reg-event-fx
  :remove-bot-confirmation
