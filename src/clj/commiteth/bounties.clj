@@ -58,13 +58,15 @@
         (tracker/untrack-tx! tx-info)
 
         :update-balances
-        (issues/update-balances (:contract-address bounty)
-                                (:balance-eth bounty)
-                                (:tokens bounty)
-                                (:value-usd bounty))
+        (do
+          (github/update-bounty-comment-image bounty)
+          (issues/update-balances (:contract-address bounty)
+                                  (:balance-eth bounty)
+                                  (:tokens bounty)
+                                  (:value-usd bounty)))
 
         )
-    (github/update-comment bounty state))))
+      (github/update-comment bounty state))))
 (defn deploy-contract [owner-address  issue-id]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)

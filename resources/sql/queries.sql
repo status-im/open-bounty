@@ -365,9 +365,9 @@ WHERE watch_hash IS NOT NULL;
 -- :name update-payout-hash :! :n
 -- :doc updates issue with payout transaction hash
 UPDATE issues
-SET payout_hash = :payout-hash,
+SET payout_hash = :payout_hash,
 updated = timezone('utc'::text, now())
-WHERE issue_id = :issue-id;
+WHERE issue_id = :issue_id;
 
 -- :name reset-payout-hash :! :n
 -- :doc sets issue's payout transaction hash to NULL
@@ -380,9 +380,9 @@ WHERE issue_id = :issue_id;
 -- :name update-payout-receipt :! :n
 -- :doc updates issue with payout transaction receipt
 UPDATE issues
-SET payout_receipt = :payout-receipt::jsonb,
+SET payout_receipt = :payout_receipt::jsonb,
 updated = timezone('utc'::text, now())
-WHERE issue_id = :issue-id;
+WHERE issue_id = :issue_id;
 
 -- :name update-issue-open :! :n
 -- :doc updates issue's open status
@@ -556,7 +556,7 @@ SELECT
   r.owner            AS owner,
   r.repo             AS repo
 FROM issues i, repositories r
-WHERE i.issue_number = :issue-number
+WHERE i.issue_number = :issue_number
 AND r.repo_id = i.repo_id
 AND r.owner = :owner
 AND r.repo = :repo;
@@ -564,11 +564,11 @@ AND r.repo = :repo;
 -- :name update-balances :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
-SET balance_eth = :balance-eth,
-    tokens = :token-balances::jsonb,
-    value_usd = :usd-value,
+SET balance_eth = :balance_eth,
+    tokens = :token_balances::jsonb,
+    value_usd = :usd_value,
 updated = timezone('utc'::text, now())
-WHERE contract_address = :contract-address;
+WHERE contract_address = :contract_address;
 
 
 -- :name save-issue-comment-image! :<! :1

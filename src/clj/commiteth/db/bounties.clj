@@ -1,6 +1,7 @@
 (ns commiteth.db.bounties
   (:require [commiteth.db.core :refer [*db*] :as db]
             [commiteth.util.util :refer [to-db-map]]
+            [clojure.tools.logging :as log] 
             [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [rename-keys]]))
 
@@ -69,6 +70,7 @@
 (defn get-bounty
   [owner repo issue-number]
   (jdbc/with-db-connection [con-db *db*]
+ (log/info "get-bounty params:" (to-db-map owner repo issue-number))
     (db/get-bounty con-db (to-db-map owner repo issue-number))))
 
 (defn open-bounty-contracts

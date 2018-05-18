@@ -338,7 +338,7 @@
   (let [comment (case state
                   :deploying
                   (generate-deploying-comment owner repo issue-number transaction-hash)
-                  :opened
+                  (:opened :update-balances)
                   (generate-open-comment owner
                                          repo
                                          issue-number

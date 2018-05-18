@@ -76,9 +76,9 @@
   [contract-address balance-eth token-balances usd-value]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-balances con-db (to-db-map contract-address
-                                                balance-eth
-                                                token-balances
-                                                usd-value))))
+                                          balance-eth
+                                          token-balances
+                                          usd-value))))
 
 (defn update-open-status
   [issue-id is-open]
