@@ -40,6 +40,10 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/confirmed-payouts con-db)))
 
+(defn confirmed-revocation-payouts
+  []
+  (jdbc/with-db-connection [con-db *db*]
+    (db/confirmed-revocation-payouts con-db)))
 
 (defn update-winner-login
   [issue-id login]
@@ -60,6 +64,20 @@
   [issue-id]
   (jdbc/with-db-connection [con-db *db*]
     (db/reset-payout-hash con-db {:issue_id issue-id})))
+
+(def payout-receipt-keys
+  [:issue_id
+   :payout_hash
+   :contract_address
+   :repo
+   :owner
+   :comment_id
+   :issue_number
+   :balance_eth
+   :tokens
+   :confirm_hash
+   :payee_login
+   :updated])
 
 (defn update-payout-receipt
   [issue-id payout-receipt]

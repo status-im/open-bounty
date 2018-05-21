@@ -313,11 +313,9 @@ SELECT
   i.issue_id         AS issue_id,
   u.address          AS payout_address,
   i.execute_hash     AS execute_hash
-FROM issues i, pull_requests p, users u
-WHERE
-p.issue_id = i.issue_id
-AND p.repo_id = i.repo_id
-AND u.id = p.user_id
+FROM issues i, repositories r, users u
+WHERE i.repo_id = r.repo_id
+AND u.id = r.user_id
 AND i.confirm_hash IS NULL
 AND i.execute_hash IS NOT NULL;
 
@@ -345,6 +343,29 @@ AND p.repo_id = i.repo_id
 AND r.repo_id = i.repo_id
 AND p.state = 1
 AND u.id = p.user_id
+AND i.payout_receipt IS NULL
+AND i.payout_hash IS NOT NULL;
+
+-- :name confirmed-revocation-payouts :? :*
+-- :doc lists all recently confirmed bounty revocations
+SELECT
+  i.contract_address AS contract_address,
+  r.owner            AS owner,
+  r.repo             AS repo,
+  i.comment_id       AS comment_id,
+  i.issue_number     AS issue_number,
+  i.issue_id         AS issue_id,
+  i.balance_eth      AS balance_eth,
+  i.tokens           AS tokens,
+  i.value_usd        AS value_usd,
+  u.address          AS payout_address,
+  u.login           AS payee_login,
+  i.confirm_hash    AS confirm_hash,
+  i.payout_hash     AS payout_hash,
+  i.updated         AS updated
+FROM issues i, users u, repositories r
+WHERE r.repo_id = i.repo_id
+AND u.id = r.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
 
@@ -407,6 +428,12 @@ UPDATE issues
 SET is_open = :is_open
 WHERE issue_id = :issue_id;
 
+-- :name reset-bot-confirmation :! :n
+-- :doc updates issue's execute and confirm hash
+UPDATE issues
+SET execute_hash = NULL,
+confirm_hash = NULL
+WHERE issue_id = :issue_id;
 
 -- :name issue-exists :1
 -- :doc returns true if given issue exists
@@ -429,13 +456,17 @@ SELECT
       i.is_open          AS is_open,
       i.winner_login     AS winner_login,
       i.commit_sha       AS commit_sha,
+      u.address          AS owner_address,
+      i.contract_address AS contract_address,
+      i.confirm_hash     AS confirm_hash,
       i.title            AS title,
       i.comment_id       AS comment_id,
       i.repo_id          AS repo_id,
       r.owner            AS owner,
       r.repo             AS repo
-FROM issues i, repositories r
+FROM issues i, repositories r, users u
 WHERE r.repo_id = i.repo_id
+AND r.user_id = u.id
 AND i.issue_id = :issue-id
 
 
@@ -480,6 +511,7 @@ SELECT
   i.balance_eth      AS balance_eth,
   i.tokens           AS tokens,
   i.value_usd        AS value_usd,
+  i.execute_hash     AS execute_hash,
   i.confirm_hash     AS confirm_hash,
   i.payout_hash      AS payout_hash,
   i.payout_receipt   AS payout_receipt,
@@ -489,6 +521,7 @@ SELECT
   r.owner            AS repo_owner,
   r.owner_avatar_url AS repo_owner_avatar_url,
   o.address          AS owner_address,
+  o.login            AS owner_login,
   u.address          AS payout_address
 FROM users o, repositories r, issues i LEFT OUTER JOIN users u ON u.login = i.winner_login
 WHERE

@@ -95,6 +95,12 @@
     (db/update-issue-open con-db {:issue_id issue-id
                                   :is_open is-open})))
 
+(defn reset-bot-confirmation
+  "resets execute and confirm hash to null for given issue id"
+  [issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/reset-bot-confirmation con-db {:issue_id issue-id})))
+
 (defn is-bounty-issue?
   [issue-id]
   (let [res (jdbc/with-db-connection [con-db *db*]

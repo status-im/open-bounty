@@ -1,6 +1,7 @@
 (ns commiteth.handlers
   (:require [commiteth.db :as db]
-            [re-frame.core :refer [dispatch
+            [re-frame.core :refer [debug
+                                   dispatch
                                    reg-event-db
                                    reg-event-fx
                                    reg-fx
@@ -14,11 +15,15 @@
              :refer [reg-co-fx!]]
             [commiteth.ui-model :as ui-model]
             [commiteth.common :as common]
-            [commiteth.routes :as routes]))
+            [commiteth.routes :as routes]
+            [commiteth.interceptors]))
 
 
 (rf-storage/reg-co-fx! :commiteth-sob {:fx :store
                                        :cofx :store})
+
+;; https://github.com/Day8/re-frame/blob/master/docs/Debugging-Event-Handlers.md
+(def interceptors  [(when ^boolean goog.DEBUG debug)])
 
 (reg-fx
  :http
@@ -109,6 +114,16 @@
  :clear-flash-message
  (fn [db _]
    (dissoc db :flash-message)))
+
+(reg-event-db
+ :set-revoke-modal
+ (fn [db [_ bounty]]
+   (assoc db :revoke-modal-bounty bounty)))
+
+(reg-event-db
+ :clear-revoke-modal
+ (fn [db [_ bounty]]
+   (dissoc db :revoke-modal-bounty bounty)))
 
 (defn assoc-in-if-not-empty [m path val]
   (if (seq val)
@@ -217,6 +232,8 @@
 
 (reg-event-db
  :set-owner-bounties
+ [commiteth.interceptors/watch-confirm-hash
+  commiteth.interceptors/watch-payout-receipt]
  (fn [db [_ issues]]
    (assoc db
           :owner-bounties issues
@@ -376,6 +393,7 @@
 
 (reg-event-fx
  :save-payout-hash
+ interceptors
  (fn [{:keys [db]} [_ issue-id payout-hash]]
    {:db   db
     :http {:method     POST
@@ -386,13 +404,15 @@
 
 
 (defn send-transaction-callback
-  [issue-id]
+  [issue-id pending-revocations]
   (fn [error payout-hash]
     (println "send-transaction-callback" error payout-hash)
     (when error
-      (dispatch [:set-flash-message
-                 :error
-                 (str "Error sending transaction: " error)])
+      (if (empty? pending-revocations)
+        (dispatch [:set-flash-message
+                   :error
+                   (str "Error sending transaction: " error)])
+        (dispatch [:remove-bot-confirmation issue-id]))
       (dispatch [:payout-confirm-failed issue-id]))
     (when payout-hash
       (dispatch [:save-payout-hash issue-id payout-hash]))))
@@ -405,14 +425,72 @@
 (defn strip-0x [x]
   (str/replace x #"^0x" ""))
 
+(defn set-pending-revocation [location issue-id confirming-account]
+  (assoc-in location [::db/pending-revocations issue-id]
+            {:confirming-account confirming-account}))
+
+(reg-event-fx
+ :set-pending-revocation
+ [interceptors (inject-cofx :store)]
+ (fn [{:keys [db store]} [_  issue-id confirming-account]]
+   {:db    (set-pending-revocation db issue-id confirming-account)
+    :store (set-pending-revocation store issue-id confirming-account)}))
+
+(reg-event-fx
+ :remove-pending-revocation
+ [interceptors (inject-cofx :store)]
+ (fn [{:keys [db store]} [_ issue-id]]
+   {:db (dissoc-in db [::db/pending-revocations issue-id])
+    :store (dissoc-in store [::db/pending-revocations issue-id])}))
+
+(reg-event-fx
+ :remove-bot-confirmation
+ interceptors
+ (fn [{:keys [db]} [_ issue-id]]
+   {:http {:method     POST
+           :url        "/api/user/remove-bot-confirmation"
+           :params     {:token (get-admin-token db)
+                        :issue-id issue-id}
+           :on-success #(dispatch [:remove-pending-revocation issue-id])
+           :on-error   #(println "error removing bot confirmation for " issue-id)}}))
+
+(reg-event-fx
+  :revoke-bounty-success
+ (fn [{:keys [db]} [_  {:keys [issue-id owner-address contract-address confirm-hash]}]]
+   {:dispatch [:set-pending-revocation issue-id :commiteth]}))
+
+(reg-event-fx
+ :revoke-bounty-error
+ interceptors
+ (fn [{:keys [db]} [_ issue-id response]]
+   {:dispatch [:set-flash-message
+               :error (if (= 400 (:status response))
+                        (:response response)
+                        (str "Failed to initiate revocation for: " issue-id
+                             (:status-text response)))]}))
+
+(reg-event-fx
+ :revoke-bounty
+ interceptors
+ (fn [{:keys [db]} [_ issue-id]]
+   {:http {:method     POST
+           :url        "/api/user/revoke"
+           :on-success #(dispatch [:revoke-bounty-success %])
+           :on-error   #(dispatch [:revoke-bounty-error %])
+           :params      {:token (get-admin-token db)
+                         :issue-id issue-id}}
+    :dispatch [:clear-revoke-modal]}))
+
 (reg-event-fx
  :confirm-payout
+ interceptors
  (fn [{:keys [db]} [_ {issue-id         :issue_id
                       owner-address    :owner_address
                       contract-address :contract_address
                       confirm-hash     :confirm_hash} issue]]
    (println (:web3 db))
    (let [w3 (:web3 db)
+         pending-revocations (::db/pending-revocations db)
          confirm-method-id (sig->method-id w3 "confirmTransaction(uint256)")
          confirm-id (strip-0x confirm-hash)
          data (str confirm-method-id
@@ -426,7 +504,7 @@
      (println "data:" data)
      (try
        (web3-eth/send-transaction! w3 payload
-                                   (send-transaction-callback issue-id))
+                                   (send-transaction-callback issue-id pending-revocations))
        {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
@@ -437,6 +515,7 @@
 
 (reg-event-fx
  :payout-confirmed
+ interceptors
  (fn [{:keys [db]} [_ issue-id]]
    {:dispatch [:load-owner-bounties]
     :db (-> db
@@ -489,6 +568,21 @@
  (fn [db [_]]
    (.removeEventListener js/window "click" close-dropdown)
    (assoc db :user-dropdown-open? false)))
+
+(defn close-three-dots []
+  (dispatch [:three-dots-close]))
+
+(reg-event-db
+ :three-dots-open
+ (fn [db [_ issue-id]]
+   (.addEventListener js/window "click" close-three-dots)
+   (update db ::db/unclaimed-options (fnil conj #{}) issue-id)))
+
+(reg-event-db
+ :three-dots-close
+ (fn [db [_ issue-id]]
+   (.removeEventListener js/window "click" close-three-dots)
+   (assoc db ::db/unclaimed-options #{})))
 
 (reg-event-db
  ::open-bounty-claim

@@ -7,6 +7,7 @@
             [commiteth.routes]
             [commiteth.handlers]
             [commiteth.subscriptions]
+            [commiteth.interceptors]
             [commiteth.activity :refer [activity-page]]
             [commiteth.bounties :refer [bounties-page]]
             [commiteth.repos :refer [repos-page]]

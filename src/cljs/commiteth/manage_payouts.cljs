@@ -6,12 +6,23 @@
             [commiteth.routes :as routes]
             [commiteth.model.bounty :as bnt]
             [commiteth.ui.balances :as ui-balances]
+            [commiteth.config :as config]
             [commiteth.common :as common :refer [human-time]]))
 
 (defn pr-url [{owner :repo_owner
                pr-number :pr_number
                repo :repo_name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
+
+(defn etherscan-tx-url [tx-id]
+  (str "https://"
+       (when (config/on-testnet?) "ropsten.")
+       "etherscan.io/tx/" tx-id))
+
+(defn etherscan-address-url [address]
+  (str "https://"
+       (when (config/on-testnet?) "ropsten.")
+       "etherscan.io/address/" address))
 
 (def primary-button-button :button.f7.ttu.tracked.outline-0.bg-sob-blue.white.pv3.ph4.pg-med.br3.bn.pointer.shadow-7)
 (def primary-button-link :a.dib.tc.f7.ttu.tracked.bg-sob-blue.white.pv2.ph3.pg-med.br2.pointer.hover-white.shadow-7)
@@ -56,6 +67,8 @@
        (if paid?
          "Signed off"
          "Confirm Payment")])))
+
+
 
 (defn confirm-row [bounty claim]
   (let [payout-address-available? (:payout_address bounty)]
@@ -231,16 +244,80 @@
     [:div bottom]]])
 
 (defn small-card-balances [bounty]
-  [:div.f6
-   [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
+  (let [pending-revocations (rf/subscribe [:pending-revocations])]
+    (fn [bounty]
+      [:div.f6.fl.w-80
+       [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
+       [:div
+        [ui-balances/usd-value-label (:value-usd bounty)]]
+       (when (some #(= (:issue-id %)
+                       (:issue-id bounty)) @pending-revocations)
+         [:div.pt1
+          [ui-balances/pending-badge]])])))
+
+(defn three-dots-box [image-src]
+  "generates the appropriate container for menu dots"
+  [:span.pt2.pointer
+   [:img.o-50.pl3.pt2 {:src image-src}]])
+
+(defn check-box [image-src]
+  "generates the appropriate container for a blue arrow"
+  [:span.pr2
+   [:img.w1.v-mid.o-50 {:src image-src}]])
+
+(defn three-dots [issue-id]
+  [:div
    [:div
-    [ui-balances/usd-value-label (:value-usd bounty)]]])
+    {:on-click #(rf/dispatch [:three-dots-open issue-id])}
+    [three-dots-box "ic-more-vert-black-24dp-1x.png"]]])
+
+(defn revoke-modal []
+  (let [bounty @(rf/subscribe [:revoke-modal-bounty])]
+    (fn []
+      (when bounty
+        (let [owner-address (:owner_address bounty)]
+          ;; width requires a deliberate override of semantic.min.css
+          [:div.ui.active.modal.br3 {:style {:top   100
+                                             :width 650}}
+          [:div.pa4
+           [:h3.dark-gray "Are you sure you want to request a refund?"]
+           [:p.silver "This will set your bounty"
+            [:span.pg-med " value to $0."]
+            " Don't worry, your issue will still be accessible to the community. You can check the status of your refund at the top of the dashboard."]
+           [:div.bg-sob-tint.br3.pa3
+            [:p.fw4 (:issue-title bounty)]
+            [ui-balances/token-balances (bnt/crypto-balances bounty) :label]
+            [:p [ui-balances/usd-value-label (:value-usd bounty)]]
+            [:p.silver "To be refunded to: " owner-address]]
+           [:div.pt3 
+            [primary-button-button
+             {:on-click #(rf/dispatch [:revoke-bounty (:issue-id bounty)])}
+             "REQUEST REFUND"]
+            [:span.dark-gray.pointer.fw4.f7.ml3
+             {:role     "button"
+              :on-click #(rf/dispatch [:clear-revoke-modal])}
+             "CANCEL"]]]])))))
+
+(defn revoke-dropdown [bounty]
+  (let [menu (if (contains? @(rf/subscribe [:three-dots-open?]) (:issue-id bounty))
+               [:div.ui.menu.revoke.transition {:tab-index -1}]
+               [:div.ui.menu.transition.hidden])]
+    [:div.fl.w-20
+     (if (empty? @(rf/subscribe [:pending-revocations]))
+       [three-dots (:issue-id bounty)])
+     (into menu [[:div
+                  [:a.pa2
+                   
+                   {:on-click #(rf/dispatch [:set-revoke-modal bounty])}
+                   "Revoke"]]])]))
 
 (defn unclaimed-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
    [square-card
     [bounty-title-link bounty {:show-date? true :max-length 60}]
-    [small-card-balances bounty]]])
+    [:div [small-card-balances bounty]
+     (when (pos? (:value-usd bounty))
+         [revoke-dropdown bounty])]]])
 
 (defn paid-bounty [bounty]
   [:div.w-third-l.fl-l.pa2
@@ -248,7 +325,10 @@
     [:div
      [bounty-title-link bounty {:show-date? false :max-length 60}]
      [:div.f6.mt1.gray
-      "Paid out to " [:span.pg-med.fw5 "@" (:winner_login bounty)]]]
+      "Paid out to " [:span.pg-med.fw5 "@" (or (:winner_login bounty)
+                                               ;; use repo owner for revoked bounties
+                                               ;; where no winner login is set
+                                               (:owner-login bounty))]]]
     [small-card-balances bounty]]])
 
 (defn expandable-bounty-list [bounty-component bounties]
@@ -272,9 +352,27 @@
 (defn count-pill [n]
   [:span.v-top.ml3.ph3.pv1.bg-black-05.gray.br3.f7 n])
 
-(defn salute [name]
+(defn pending-banner []
+  (let [banner-info (rf/subscribe [:pending-revocations])]
+    (fn pending-banner-render []
+      (when @banner-info
+        (into [:div]
+              (for [revoking-bounty @banner-info]
+                ^{:key (:contract_address revoking-bounty)}
+                [:div.relative.pa3.pr4.bg-sob-green.br3.nt1
+                 [:div
+                  (case (:confirming-account revoking-bounty)
+                    :commiteth [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
+                                [:span.pg-med "Transaction sent."] " Your refund requires two confirmations. After the first one "
+                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " completes "]
+                                "you'll be prompted to sign the second via metamask."]
+                    :owner [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
+                                [:span.pg-med "Transaction sent."] " Once your metamask transaction is confirmed your revocation will be complete. Follow the final step "
+                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here.  "]])]]))))))
+
+(defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
-    (fn salute-render [name]
+    (fn salute-render []
       (when @msg-info
         [:div.relative.pa3.pr4.bg-sob-blue-o-20.br3.nt1
          [:div.f3.dark-gray.absolute.top-0.right-0.pa3.b.pointer
@@ -326,7 +424,8 @@
         user (rf/subscribe [:user])
         owner-bounties (rf/subscribe [:owner-bounties])
         bounty-stats-data (rf/subscribe [:owner-bounties-stats])
-        owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])]
+        owner-bounties-loading? (rf/subscribe [:get-in [:owner-bounties-loading?]])
+        revoke-modal-bounty (rf/subscribe [:revoke-modal-bounty])]
     (fn manage-payouts-page-render []
       (cond
         (nil? @user)
@@ -348,13 +447,16 @@
                                (get grouped :pending-contributor-address))]
           [:div.center.mw9.pa2.pa0-l
            [manage-bounties-title]
-           [salute "Andy"]
+           [salute]
+           [pending-banner]
            [:div.dn-l.db-ns.mt4
             [bounty-stats-new @bounty-stats-data]]
            (when (nil? (common/web3))
              [:div.ui.warning.message
               [:i.warning.icon]
               "To sign off claims, please view Status Open Bounty in Status, Mist or Metamask"])
+           (when @revoke-modal-bounty
+             [revoke-modal])
            [manage-bounties-nav route-id]
            [:div.cf
             [:div.fr.w-third.pl4.mb3.dn.db-l

@@ -2,8 +2,8 @@
 
 This directory contains all the underlying smart contracts used by the OpenBounty platform.
 
-- A script `contracts/build.sh` is part of this repository and can be used to
-compile the contracts and copy Java interfaces into `src/java/`.
+-- A script `build.sh` is part of this directory and can be used to
+-compile the contracts and copy Java interfaces into `src/java/`.
 
 In order to run the script the following dependencies have to be met:
 
