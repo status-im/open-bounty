@@ -31,6 +31,16 @@ def dockerreponame = "statusim/openbounty-app"
 				echo "No deployment on automatic trigger, go to Jenkins and push build button to deliver it."
 			}
 		}
+		stage('Testing') {
+			if ( currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause') ){
+			    echo 'Waiting 1 minute for deployment to complete prior starting smoke testing'
+			    sleep 60
+				build job: 'status-openbounty/sob-end-to-end-tests', parameters: [[$class: 'StringParameterValue', name: 'branch', value: "*/Jenkins/experiment"]]
+			} else {
+				echo "No testing on automatic trigger, go to Jenkins and push build button to deliver it and test it."
+			}
+		}
+
 
 	} catch (e) {
     // slackSend color: 'bad', message: REPO + ":" + BRANCH_NAME + ' failed to build. ' + env.BUILD_URL
