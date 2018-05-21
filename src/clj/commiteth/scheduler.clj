@@ -190,7 +190,7 @@
           (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
           (db-bounties/reset-payout-hash issue-id)))
       (catch Throwable ex
-       (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
+       (log/error ex "issue %s: update-payout-receipt exception" issue-id))))))
 
 (defn update-payout-receipts
   "Gets transaction receipt for each confirmed payout and updates payout_hash"

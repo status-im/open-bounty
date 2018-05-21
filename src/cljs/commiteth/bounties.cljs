@@ -66,7 +66,6 @@
             open-claims-click      #(rf/dispatch [::handlers/open-bounty-claim issue-id])
             close-claims-click     #(rf/dispatch [::handlers/close-bounty-claim issue-id])
             matches-current-issue? (some #{issue-id} @open-bounty-claims)]
-        (.warn js/console "avatar-url" avatar-url)
             [:div
              [:div.open-bounty-item.ph4
               [:div.open-bounty-item-content
