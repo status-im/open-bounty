@@ -29,6 +29,12 @@
 .hover-sob-sky:hover, .hover-sob-sky:focus { color: #f2f5f8; }
 .hover-bg-sob-sky:hover, .hover-bg-sob-sky:focus { background-color: #f2f5f8; }
 
+.sob-green { color: #d1ead8; }
+.bg-sob-green { background-color: #d1ead8; }
+.b--sob-green { border-color: #d1ead8; }
+.hover-sob-green:hover, .hover-sob-green:focus { color: #d1ead8; }
+.hover-bg-sob-green:hover, .hover-bg-sob-green:focus { background-color: #d1ead8; }
+
 .sob-tint { color: #f7f9fa; }
 .bg-sob-tint { background-color: #f7f9fa; }
 .b--sob-tint { border-color: #f7f9fa; }

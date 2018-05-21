@@ -1,6 +1,7 @@
 (ns commiteth.routes.services
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
+            [compojure.api.exception :as ex]
             [schema.core :as s]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
@@ -10,8 +11,10 @@
             [commiteth.db.usage-metrics :as usage-metrics]
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties-db]
+            [commiteth.db.issues :as issues]
             [commiteth.bounties :as bounties]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.config :refer [env]]
@@ -19,7 +22,8 @@
                                          eth-decimal->str]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [commiteth.eth.multisig-wallet :as multisig]))
 
 (defn add-bounties-for-existing-issues? []
   (env :add-bounties-for-existing-issues false))
@@ -141,13 +145,28 @@
   (let [whitelist (env :user-whitelist #{})]
     (whitelist user)))
 
+(defn execute-revocation [issue-id contract-address payout-address]
+  (log/info (str "executing revocation for " issue-id "at" contract-address))
+  (try 
+    (let [tx-info (multisig/send-all {:contract       contract-address
+                                      :payout-address payout-address
+                                      :internal-tx-id [:execute issue-id]})]
+      (tracker/track-tx! tx-info)
+      {:execute-hash (:tx-hash tx-info)})
+    (catch Throwable ex
+      (log/errorf ex "error revoking funds for %s" issue-id))))
+
+
 (defapi service-routes
   (when (:dev env)
-    {:swagger {:ui   "/swagger-ui"
-               :spec "/swagger.json"
-               :data {:info {:version     "0.1"
-                             :title       "commitETH API"
-                             :description "commitETH API"}}}})
+    {:swagger    {:ui   "/swagger-ui"
+                  :spec "/swagger.json"
+                  :data {:info {:version     "0.1"
+                                :title       "commitETH API"
+                                :description "commitETH API"}}}
+     :exceptions {:handlers 
+                  {::ex/request-parsing     (ex/with-logging ex/request-parsing-handler :info)
+                   ::ex/response-validation (ex/with-logging ex/response-validation-handler :error)}}})
 
   (context "/api" []
            (GET "/top-hunters" []
@@ -177,11 +196,11 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {:address s/Str
+                          :body [body {:address              s/Str
                                        :is_hidden_in_hunters s/Bool}]
                           :summary "Updates user's fields."
 
-                          (let [user-id (:id user)
+                          (let [user-id           (:id user)
                                 {:keys [address]} body]
 
                             (when-not (eth/valid-address? address)
@@ -212,9 +231,9 @@
                             (log/debug "/bounty/X/payout" params)
                             (let [{issue       :issue
                                    payout-hash :payout-hash} params
-                                  result (bounties-db/update-payout-hash
-                                          (Integer/parseInt issue)
-                                          payout-hash)]
+                                  result                     (bounties-db/update-payout-hash
+                                                              (Integer/parseInt issue)
+                                                              payout-hash)]
                               (log/debug "result" result)
                               (if (= 1 result)
                                 (ok)
@@ -223,4 +242,22 @@
                          :auth-rules authenticated?
                          :current-user user
                          (log/debug "/user/bounties")
-                         (ok (user-bounties user))))))
+                         (ok (user-bounties user)))
+                    (POST "/revoke"  {{issue-id :issue-id} :params}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (let [{contract-address :contract_address owner-address :owner_address} (issues/get-issue-by-id issue-id)]
+                            (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
+                                (if-let [{:keys [execute-hash]} (execute-revocation issue-id contract-address owner-address)]
+                                  (ok {:issue-id         issue-id
+                                       :execute-hash     execute-hash
+                                       :contract-address contract-address})
+                                  (bad-request (str "Unable to withdraw funds from " contract-address))))))
+                    (POST "/remove-bot-confirmation"  {{issue-id :issue-id} :params}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (do (log/infof "calling remove-bot-confirmation for %s " issue-id)
+                              ;; if this resulted in updating a row, return success
+                              (if (pos? (issues/reset-bot-confirmation issue-id))
+                                (ok (str "Updated execute and confirm hash for " issue-id))
+                                (bad-request (str "Unable to update execute and confirm hash for  " issue-id))))))))

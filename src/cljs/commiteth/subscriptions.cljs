@@ -42,6 +42,11 @@
     (:flash-message db)))
 
 (reg-sub
+  :revoke-modal-bounty
+  (fn [db _]
+    (:revoke-modal-bounty db)))
+
+(reg-sub
   :open-bounties
   (fn [db _]
     (vec (:open-bounties db))))
@@ -82,7 +87,10 @@
            ;; special prefix or namespace for derived properties that
            ;; are added to domain records like this
            ;; e.g. `derived/paid?`
-           [id (assoc bounty :paid? (boolean (:payout_hash bounty)))])
+           [id (assoc bounty :paid? (boolean (and (:payout_receipt bounty)
+                                                  ;; bounties with winner logins
+                                                  ;; were not revoked
+                                                  (:winner_login bounty))))])
          (into {}))))
 
 (reg-sub
@@ -178,6 +186,19 @@
   :user-dropdown-open?
   (fn [db _]
     (:user-dropdown-open? db)))
+
+(reg-sub
+ :three-dots-open?
+  (fn [db _]
+    (::db/unclaimed-options db)))
+
+(reg-sub
+ :pending-revocations
+ (fn [db _]
+   (map (fn [[issue-id revocations]]
+          (merge revocations
+                 (get-in db [:owner-bounties issue-id])))
+        (::db/pending-revocations db))))
 
 (reg-sub
   ::open-bounty-claims

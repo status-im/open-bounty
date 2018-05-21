@@ -10,7 +10,7 @@
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
             [commiteth.util.crypto-fiat-value :as fiat-util]
-            [commiteth.util.util :refer [eth-decimal->str]]
+            [commiteth.util.util :as util]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
             [clojure.string :as str]
@@ -125,6 +125,15 @@
            (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))) )
      (log/info "Exit update-confirm-hash")))
 
+(defn update-confirm-hashes
+  "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
+  []
+  (log/info "In update-confirm-hashes")
+  (p :update-confirm-hash
+     (doseq [{:keys [issue-id execute-hash]} (db-bounties/pending-payouts)]
+       
+       (update-confirm-hash issue-id execute-hash)))
+  (log/info "Exit update-confirm-hashes"))
 
 (defn update-watch-hash
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
@@ -163,11 +172,11 @@
     (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
     (try
       (if-let [receipt (eth/get-transaction-receipt payout-hash)]
-        (let [contract-tokens (multisig/token-balances contract-address)
+        (let [contract-tokens      (multisig/token-balances contract-address)
               contract-eth-balance (eth/get-balance-wei contract-address)]
           (if (or
-                (some #(> (second %) 0.0) contract-tokens)
-                (> contract-eth-balance 0))
+               (some #(> (second %) 0.0) contract-tokens)
+               (> contract-eth-balance 0))
             (do
               (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
               (when (multisig/is-confirmed? contract-address confirm-hash)
@@ -176,13 +185,31 @@
                   (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
             (do
               (log/infof "issue %s: Payout has succeeded, payout receipt %s" issue-id receipt)
-              (bounties/transition (assoc issue :payout-receipt receipt) :paid-with-receipt))))
+              (bounties/transition (assoc issue :payout-receipt receipt) :paid))))
         (when (older-than-3h? updated)
           (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
           (db-bounties/reset-payout-hash issue-id)))
       (catch Throwable ex
-        (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
-  (log/info "Exit update-payout-receipt"))
+       (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
+
+(defn update-payout-receipts
+  "Gets transaction receipt for each confirmed payout and updates payout_hash"
+  []
+  (log/info "In update-payout-receipts")
+  (p :update-payout-receipts
+     (doseq [bounty (db-bounties/confirmed-payouts)]
+       (update-payout-receipt bounty))
+     (log/info "Exit update-payout-receipts")))
+
+(defn update-revoked-payout-receipts
+  "Gets transaction receipt for each confirmed revocation and updates payout_hash"
+  []
+  (log/info "In update-revoked-payout-receipts")
+  (p :update-revoked-payout-receipts
+     ;; todo see if confirmed-payouts & confirmed-revocation-payouts can be combined
+     (doseq [bounty (db-bounties/confirmed-revocation-payouts)]
+       (update-payout-receipt bounty))
+     (log/info "Exit update-revoked-payout-receipts")))
 
 (defn abs
   "(abs n) is the absolute value of n"
@@ -310,8 +337,9 @@
     (run-tasks
      [deploy-pending-contracts
       update-issue-contract-address
-      update-confirm-hash
-      update-payout-receipt
+      update-confirm-hashes
+      update-payout-receipts
+      update-revoked-payout-receipts
       update-watch-hash
       check-tx-receipts
       self-sign-bounty

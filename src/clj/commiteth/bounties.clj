@@ -48,7 +48,7 @@
         :pending-maintainer-confirmation
         (tracker/untrack-tx! tx-info)
 
-        :paid-with-receipt
+        :paid
         (db-bounties/update-payout-receipt issue-id (:payout-receipt bounty))
 
         :watch-set
@@ -151,10 +151,9 @@
   (let [open-claims (fn open-claims [bounty]
                       (filter bnt/open? (:claims bounty)))]
     (if-let [merged-or-paid? (or (:winner-login bounty)
-                                 (:payout-hash bounty))]
+                                 (:payout-receipt bounty))]
       (cond
-        (:payout-receipt bounty)        :paid-with-receipt
-        (:payout-hash bounty)           :paid
+        (:payout-receipt bounty)        :paid
         (nil? (:payout-address bounty)) :pending-contributor-address
         ;; `confirm-hash` is set by us as soon as a PR is merged and the
         ;; contributor address is known. Usually end users should not need

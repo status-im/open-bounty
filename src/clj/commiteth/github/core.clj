@@ -351,7 +351,7 @@
                                            tokens
                                            winner-login
                                            (str/blank? winner-address))
-                  :paid-with-receipt
+                  :paid
                   (generate-paid-comment contract-address
                                          balance-eth
                                          tokens

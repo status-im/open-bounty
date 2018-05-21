@@ -5,6 +5,14 @@
   {:pre [(string? tla)]}
   (get {"ETH" "#57a7ed"} tla "#4360df"))
 
+(defn pending-badge []
+  "static component for pending badge"
+  [:div.dib.ph2.pv1.relative
+   {:style {:color "#CCAC00"}}
+   [:div.absolute.top-0.left-0.right-0.bottom-0.o-30.br2
+    {:style {:background-color "#FFD700"}}]
+   [:span.pg-med "Refund pending"]])
+
 (defn balance-badge
   [tla balance]
   {:pre [(keyword? tla)]}

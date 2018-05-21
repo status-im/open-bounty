@@ -21,4 +21,3 @@
 
 (defmacro to-db-map [& vars]
   (into {} (map #(vector (keyword (str/replace (name %1) "-" "_")) %1) vars)))
-
