@@ -150,34 +150,10 @@ RETURNING repo_id, issue_id, issue_number, title, commit_sha, contract_address;
 -- :name update-transaction-hash :! :n
 -- :doc updates transaction-hash for a given issue
 UPDATE issues
-SET transaction_hash = :transaction_hash
+SET transaction_hash = :transaction_hash,
+    updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
-
--- TODO: this is terrible
--- :name update-contract-address :<! :1
--- :doc updates contract-address for a given issue
-WITH t AS (
-    SELECT
-      i.issue_id         AS issue_id,
-      i.issue_number     AS issue_number,
-      i.title            AS title,
-      i.transaction_hash AS transaction_hash,
-      i.contract_address AS contract_address,
-      i.comment_id       AS comment_id,
-      i.repo_id          AS repo_id,
-      r.owner            AS owner,
-      r.repo             AS repo
-    FROM issues i, repositories r
-    WHERE r.repo_id = i.repo_id
-    AND i.issue_id = :issue_id
-)
-UPDATE issues i
-SET contract_address = :contract_address,
-updated = timezone('utc'::text, now())
-FROM t
-WHERE i.issue_id = :issue_id
-RETURNING t.issue_id, t.issue_number, t.title, t.transaction_hash, t.comment_id, i.contract_address, t.owner, t.repo, t.repo_id;
 
 -- :name update-comment-id :! :n
 -- :doc updates comment-id for a given issue
@@ -246,11 +222,61 @@ WHERE pr_id = :pr_id;
 -- Bounties ------------------------------------------------------------------------
 
 
+-- :name unmined-txs :? :*
+-- :doc hashes that haven't been mined for some time
+SELECT
+  CASE WHEN transaction_hash is not null and contract_address is null
+       THEN transaction_hash
+       WHEN execute_hash is not null and confirm_hash is null
+       THEN execute_hash
+       WHEN watch_hash is not null
+       THEN watch_hash
+  END
+  AS tx_hash,
+  CASE WHEN transaction_hash is not null and contract_address is null
+       THEN 'deploy'
+       WHEN execute_hash is not null and confirm_hash is null
+       THEN 'execute'
+       WHEN watch_hash is not null
+       THEN 'watch'
+  END
+  AS type,
+  issue_id
+FROM issues
+WHERE updated < timezone('utc'::text, now()) - interval '30 minutes'
+AND (transaction_hash is not null and contract_address is null
+     OR execute_hash is not null and confirm_hash is null
+     OR watch_hash is not null);
+
+-- :name save-tx-info! :! :n
+-- :doc save tx hash from receipt
+UPDATE issues
+  SET
+  --~ (when (= (:type params) "deploy") "transaction_hash")
+  --~ (when (= (:type params) "execute") "execute_hash")
+  --~ (when (= (:type params) "watch") "watch_hash")
+  = :tx-hash,
+  updated = timezone('utc'::text, now())
+  WHERE issue_id=:issue-id
+
+
+-- :name save-tx-result! :! :n
+-- :doc save tx hash from receipt
+UPDATE issues
+  SET
+  --~ (when (= (:type params) "deploy") "contract_address")
+  --~ (when (= (:type params) "execute") "confirm_hash")
+  --~ (when (= (:type params) "watch") "watch_hash")
+  = :result,
+  updated = timezone('utc'::text, now())
+  WHERE issue_id=:issue-id
+
 -- :name pending-contracts :? :*
 -- :doc bounty issues where deploy contract has failed
 SELECT
   i.issue_id         AS issue_id,
   i.issue_number     AS issue_number,
+  i.transaction_hash AS transaction_hash,
   r.owner            AS owner,
   u.address          AS owner_address,
   r.repo             AS repo
@@ -327,29 +353,9 @@ AND u.id = p.user_id
 AND i.payout_receipt IS NULL
 AND i.payout_hash IS NOT NULL;
 
--- :name update-confirm-hash :! :n
--- :doc updates issue with confirmation hash
-UPDATE issues
-SET confirm_hash = :confirm_hash,
-updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
-
--- :name update-execute-hash :! :n
--- :doc updates issue with execute transaction hash
-UPDATE issues
-SET execute_hash = :execute_hash,
-updated = timezone('utc'::text, now())
-WHERE issue_id = :issue_id;
-
 -- :name update-winner-login :! :n
 UPDATE issues
 SET winner_login = :winner_login
-WHERE issue_id = :issue_id;
-
--- :name update-watch-hash :! :n
--- :doc updates issue with watch transaction hash
-UPDATE issues
-SET watch_hash = :watch_hash
 WHERE issue_id = :issue_id;
 
 -- :name pending-watch-calls :? :*
@@ -419,6 +425,23 @@ SELECT issue_id, issue_number, is_open, winner_login, commit_sha
 FROM issues
 WHERE repo_id = :repo_id
 AND issue_number = :issue_number;
+
+-- :name get-issue-by-id :? :1
+-- :doc get issue from DB by issue-id
+SELECT 
+      i.issue_id         AS issue_id,
+      i.issue_number     AS issue_number,
+      i.is_open          AS is_open,
+      i.winner_login     AS winner_login,
+      i.commit_sha       AS commit_sha,
+      i.title            AS title,
+      i.comment_id       AS comment_id,
+      i.repo_id          AS repo_id,
+      r.owner            AS owner,
+      r.repo             AS repo
+FROM issues i, repositories r
+WHERE r.repo_id = i.repo_id
+AND i.issue_id = :issue-id
 
 
 
@@ -616,7 +639,7 @@ SELECT
   updated
 FROM activity_feed_view
 ORDER BY updated DESC
-LIMIT 100;
+LIMIT 1000;
 
 -- :name usage-metrics-by-day :? :*
 -- :doc data for usage metrics chart

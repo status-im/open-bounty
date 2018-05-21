@@ -4,6 +4,7 @@
             [commiteth.db.repositories :as repos]
             [commiteth.db.comment-images :as comment-images]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.model.bounty :as bnt]
@@ -21,23 +22,18 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
-(defn deploy-contract [owner owner-address repo issue-id issue-number]
+(defn deploy-contract [owner-address issue-id]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
     (try
       (log/infof "issue %s: Deploying contract to %s" issue-id owner-address)
-      (if-let [transaction-hash (multisig/deploy-multisig {:owner owner-address
-                                                           :internal-tx-id (str "contract-github-issue-" issue-id)})]
+      (if-let [tx-info (multisig/deploy-multisig {:owner owner-address
+                                                  :internal-tx-id [:deploy issue-id]})]
         (do
-          (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id transaction-hash)
-          (let [resp (github/post-deploying-comment owner
-                                                    repo
-                                                    issue-number
-                                                    transaction-hash)
-                comment-id (:id resp)]
-            (log/infof "issue %s: post-deploying-comment response: %s" issue-id resp)
-            (issues/update-comment-id issue-id comment-id))
-          (issues/update-transaction-hash issue-id transaction-hash))
+          (log/infof "issue %s: Contract deployed, transaction-hash: %s" issue-id (:tx-hash tx-info))
+          (github/post-deploying-comment issue-id
+                                         (:tx-hash tx-info))
+          (tracker/track-tx! tx-info))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
 
@@ -51,7 +47,7 @@
     (log/debug "issue %s: Adding bounty for issue %s/%s - owner address: %s"
                issue-id repo issue-number owner-address)
     (if (= 1 created-issue)
-      (deploy-contract owner owner-address repo issue-id issue-number)
+      (deploy-contract owner-address issue-id)
       (log/debug "issue %s: Issue already exists in DB, ignoring"))))
 
 (defn maybe-add-bounty-for-issue [repo repo-id issue]
