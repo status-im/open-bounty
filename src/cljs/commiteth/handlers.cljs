@@ -484,10 +484,11 @@
 (reg-event-fx
  :confirm-payout
  interceptors
- (fn [{:keys [db]} [_ {issue-id         :issue_id
-                      owner-address    :owner_address
-                      contract-address :contract_address
-                      confirm-hash     :confirm_hash} issue]]
+ (fn [{:keys [db]} [_ {:keys [issue-id
+                              owner-address
+                              contract-address
+                              confirm-hash] 
+                       :as issue}]]
    (println (:web3 db))
    (let [w3 (:web3 db)
          pending-revocations (::db/pending-revocations db)

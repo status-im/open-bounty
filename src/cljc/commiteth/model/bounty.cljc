@@ -11,20 +11,20 @@
 ;; to communicate what datatypes are returned where.
 
 (defn open? [claim]
-  (assert (find claim :pr_state))
-  (= 0 (:pr_state claim)))
+  (assert (find claim :pr-state))
+  (= 0 (:pr-state claim)))
 
 (defn merged? [claim]
-  (assert (find claim :pr_state))
-  (= 1 (:pr_state claim)))
+  (assert (find claim :pr-state))
+  (= 1 (:pr-state claim)))
 
 (defn paid? [claim]
-  (assert (find claim :payout_hash))
-  (not-empty (:payout_hash claim)))
+  (assert (find claim :payout-hash))
+  (not-empty (:payout-hash claim)))
 
 (defn bot-confirm-unmined? [bounty]
-  (assert (find bounty :confirm_hash))
-  (empty? (:confirm_hash bounty)))
+  (assert (find bounty :confirm-hash))
+  (empty? (:confirm-hash bounty)))
 
 (defn confirming? [bounty]
   (:confirming? bounty))

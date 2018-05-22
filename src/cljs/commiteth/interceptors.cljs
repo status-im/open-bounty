@@ -12,10 +12,7 @@
 
 (defn dispatch-confirm-payout [bounty]
   "dispatches a bounty via reframe dispatch"
-  (rf/dispatch [:confirm-payout {:issue_id         (:issue-id bounty)
-                                 :owner_address    (:owner_address bounty)
-                                 :contract_address (:contract_address bounty)
-                                 :confirm_hash     (:confirm_hash bounty)}]))
+  (rf/dispatch [:confirm-payout bounty]))
 
 (defn dispatch-set-pending-revocation [bounty]
   "update the currently confirming account to owner"

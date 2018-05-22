@@ -67,14 +67,14 @@
 (def bounty-renames
   ;; TODO this needs to go away ASAP we need to be super consistent
   ;; about keys unless we will just step on each others toes constantly
-  {:user_name :display-name
-   :user_avatar_url :avatar-url
+  {:user-name :display-name
+   :user-avatar-url :avatar-url
    :type :item-type})
 
 (defn ^:private enrich-owner-bounties [owner-bounty]
   (let [claims      (map
-                     #(update % :value_usd usd-decimal->str)
-                     (bounties-db/bounty-claims (:issue_id owner-bounty)))
+                     #(update % :value-usd usd-decimal->str)
+                     (bounties-db/bounty-claims (:issue-id owner-bounty)))
         with-claims (assoc owner-bounty :claims claims)]
     (-> with-claims
         (rename-keys bounty-renames)
@@ -246,7 +246,7 @@
                     (POST "/revoke"  {{issue-id :issue-id} :params}
                           :auth-rules authenticated?
                           :current-user user
-                          (let [{contract-address :contract_address owner-address :owner_address} (issues/get-issue-by-id issue-id)]
+                          (let [{:keys [contract-address owner-address]} (issues/get-issue-by-id issue-id)]
                             (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
                                 (if-let [{:keys [execute-hash]} (execute-revocation issue-id contract-address owner-address)]
                                   (ok {:issue-id         issue-id

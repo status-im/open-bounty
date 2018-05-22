@@ -164,33 +164,31 @@
 
 (defn update-payout-receipt
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
-  []
+  [{:keys [payout-hash contract-address confirm-hash issue-id updated] :as issue}]
   (log/info "In update-payout-receipt")
   (p :update-payout-receipt
-     (doseq [{:keys [payout-hash contract-address confirm-hash issue-id updated] :as issue}
-             (db-bounties/confirmed-payouts)]
-    (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
-    (try
-      (if-let [receipt (eth/get-transaction-receipt payout-hash)]
-        (let [contract-tokens      (multisig/token-balances contract-address)
-              contract-eth-balance (eth/get-balance-wei contract-address)]
-          (if (or
-               (some #(> (second %) 0.0) contract-tokens)
-               (> contract-eth-balance 0))
-            (do
-              (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
-              (when (multisig/is-confirmed? contract-address confirm-hash)
-                (log/infof "issue %s: Detected bounty with funds and confirmed payout, calling executeTransaction" issue-id)
-                (let [execute-tx-hash (multisig/execute-tx contract-address confirm-hash)]
-                  (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
-            (do
-              (log/infof "issue %s: Payout has succeeded, payout receipt %s" issue-id receipt)
-              (bounties/transition (assoc issue :payout-receipt receipt) :paid))))
-        (when (older-than-3h? updated)
-          (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
-          (db-bounties/reset-payout-hash issue-id)))
-      (catch Throwable ex
-       (log/error ex "issue %s: update-payout-receipt exception" issue-id))))))
+     (try
+       (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
+       (if-let [receipt (eth/get-transaction-receipt payout-hash)]
+         (let [contract-tokens      (multisig/token-balances contract-address)
+               contract-eth-balance (eth/get-balance-wei contract-address)]
+           (if (or
+                 (some #(> (second %) 0.0) contract-tokens)
+                 (> contract-eth-balance 0))
+             (do
+               (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
+               (when (multisig/is-confirmed? contract-address confirm-hash)
+                 (log/infof "issue %s: Detected bounty with funds and confirmed payout, calling executeTransaction" issue-id)
+                 (let [execute-tx-hash (multisig/execute-tx contract-address confirm-hash)]
+                   (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
+             (do
+               (log/infof "issue %s: Payout has succeeded, payout receipt %s" issue-id receipt)
+               (bounties/transition (assoc issue :payout-receipt receipt) :paid))))
+         (when (older-than-3h? updated)
+           (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
+           (db-bounties/reset-payout-hash issue-id)))
+       (catch Throwable ex
+         (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
 
 (defn update-payout-receipts
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
