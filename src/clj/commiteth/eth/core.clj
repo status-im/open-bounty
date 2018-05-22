@@ -225,7 +225,7 @@
                               (hex->big-integer gas)
                               contract
                               (:data params)
-                              nonce)
+                              (biginteger nonce))
         tx-hash (try
                   (eth-rpc
                     {:method "eth_sendRawTransaction"
