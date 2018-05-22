@@ -223,13 +223,13 @@
                           :auth-rules authenticated?
                           :current-user user
                           (do
-                            (log/debug "/bounty/X/payout" params)
+                            (log/info "/bounty/X/payout" params)
                             (let [{issue       :issue
                                    payout-hash :payout-hash} params
                                   result (bounties-db/update-payout-hash
                                           (Integer/parseInt issue)
                                           payout-hash)]
-                              (log/debug "result" result)
+                              (log/info "result" result)
                               (if (= 1 result)
                                 (ok)
                                 (internal-server-error)))))
