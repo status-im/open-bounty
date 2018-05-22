@@ -247,7 +247,7 @@
                  (if (on-testnet?)
                    "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
-            eth-balance image-url site-url)))
+            (.toPlainString (bigdec eth-balance)) image-url site-url)))
 
 (defn learn-more-text []
   (let [site-url (md-url (server-address) (server-address))]
@@ -264,17 +264,17 @@
                                  "Pending maintainer confirmation")  "\n")
                "Winner: %s\n"
                (learn-more-text))
-          eth-balance winner-login))
+          (.toPlainString (bigdec eth-balance)) winner-login))
 
 (defn generate-paid-comment
-  [contract-address eth-balance-str tokens payee-login]
+  [contract-address eth-balance tokens payee-login]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
                (contract-addr-text contract-address)
                (network-text)
                "Paid to: %s\n"
                (learn-more-text))
-          eth-balance-str payee-login))
+          (.toPlainString (bigdec eth-balance)) payee-login))
 
 (defn make-patch-request [end-point positional query]
   (let [{:keys [auth oauth-token]
@@ -299,7 +299,7 @@
         issue-url (str owner "/" repo "/issues/" (str issue-number))
         png-data (png-rendering/gen-comment-image
                   contract-address
-                  balance-eth
+                  (.toPlainString (bigdec balance-eth))
                   tokens
                   issue-url)]
     (log/debug "update-bounty-comment-image" issue-id owner repo issue-number)
