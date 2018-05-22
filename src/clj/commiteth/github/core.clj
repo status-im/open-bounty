@@ -356,7 +356,7 @@
                                          balance-eth
                                          tokens
                                          winner-login)
-                  :else nil)]
+                  nil)]
     (log/info (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
     (if (= state :deploying) 

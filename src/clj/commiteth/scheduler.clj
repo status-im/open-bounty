@@ -103,26 +103,26 @@
 
 (defn update-confirm-hash
   "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
-  []
+  [issue-id execute-hash]
   (log/info "In update-confirm-hash")
   (p :update-confirm-hash
-     (doseq [{:keys [issue-id execute-hash]} (db-bounties/pending-payouts)]
+     (try
        (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
-       (try
-         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
-           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
-           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
-             (log/infof "issue %s: confirm hash:" issue-id confirm-hash)
-             (bounties/transition {:issue-id issue-id
-                                   :tx-info  {:issue-id issue-id 
-                                              :tx-hash execute-hash 
-                                              :result confirm-hash 
-                                              :type :execute}}
-                                  :pending-maintainer-confirmation)
-        
-             ))
-         (catch Throwable ex
-           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))) )
+       (when-let [receipt (eth/get-transaction-receipt execute-hash)]
+         (log/infof "issue %s: execution receipt for issue " issue-id receipt)
+         (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
+           (log/infof "issue %s: confirm hash: %s" issue-id confirm-hash)
+           (bounties/transition {:issue-id issue-id
+                                 :confirm-hash confirm-hash
+                                 :tx-info  {:issue-id issue-id 
+                                            :tx-hash execute-hash 
+                                            :result confirm-hash 
+                                            :type :execute}}
+                                :pending-maintainer-confirmation)
+
+           ))
+       (catch Throwable ex
+         (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id)))
      (log/info "Exit update-confirm-hash")))
 
 (defn update-confirm-hashes
