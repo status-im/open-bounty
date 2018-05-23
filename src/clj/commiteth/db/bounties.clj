@@ -68,17 +68,17 @@
     (db/reset-payout-hash con-db {:issue_id issue-id})))
 
 (def payout-receipt-keys
-  [:issue_id
-   :payout_hash
-   :contract_address
+  [:issue-id
+   :payout-hash
+   :contract-address
    :repo
    :owner
-   :comment_id
-   :issue_number
-   :balance_eth
+   :comment-id
+   :issue-number
+   :balance-eth
    :tokens
-   :confirm_hash
-   :payee_login
+   :confirm-hash
+   :payee-login
    :updated])
 
 (defn update-payout-receipt

@@ -79,24 +79,14 @@
   []
   (log/info "In self-sign-bounty")
   (p :self-sign-bounty
-     (doseq [{:keys [contract-address winner-address issue-id winner-login] :as issue}
+     (doseq [{:keys [contract-address winner-address issue-id] :as issue}
              (db-bounties/pending-bounties)]
        (try
          ;; TODO(martin) delete this shortly after org-dashboard deploy
          ;; as we're now setting `winner_login` when handling a new claims
          ;; coming in via webhooks (see `commiteth.routes.webhooks/handle-claim`)
          ;(db-bounties/update-winner-login issue-id winner-login)
-         (if (empty? winner-address)
-           (do
-             (log/warn "issue %s: Cannot sign pending bounty - winner has no payout address" issue-id)
-             (bounties/transition {:issue-id issue-id} :pending-contributor-address))
-           (let [tx-info (multisig/send-all {:contract contract-address
-                                             :payout-address winner-address
-                                             :internal-tx-id [:execute issue-id]})]
-             (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address winner-address (:tx-hash tx-info))
-             (bounties/transition {:execute-hash (:tx-hash tx-info)
-                                   :issue-id issue-id
-                                   :tx-info tx-info} :pending-sob-confirmation))) 
+         (bounties/execute-payout issue-id contract-address winner-address)
          (catch Throwable ex 
            (log/error ex "issue %s: self-sign-bounty exception" issue-id)))))
   (log/info "Exit self-sign-bounty"))
@@ -164,7 +154,8 @@
 
 (defn update-payout-receipt
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
-  [{:keys [payout-hash contract-address confirm-hash issue-id updated] :as issue}]
+  [{:keys [payout-hash contract-address confirm-hash issue-id updated] :as bounty}]
+  {:pre [(util/contains-all-keys bounty db-bounties/payout-receipt-keys)]}
   (log/info "In update-payout-receipt")
   (p :update-payout-receipt
      (try
@@ -183,7 +174,7 @@
                    (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
              (do
                (log/infof "issue %s: Payout has succeeded, payout receipt %s" issue-id receipt)
-               (bounties/transition (assoc issue :payout-receipt receipt) :paid))))
+               (bounties/transition (assoc bounty :payout-receipt receipt) :paid))))
          (when (older-than-3h? updated)
            (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
            (db-bounties/reset-payout-hash issue-id)))

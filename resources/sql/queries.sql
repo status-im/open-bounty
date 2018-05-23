@@ -447,6 +447,7 @@ SELECT
       i.payout_receipt   AS payout_receipt,
       i.commit_sha       AS commit_sha,
       u.address          AS owner_address,
+      u.login            AS owner_login,
       i.contract_address AS contract_address,
       i.confirm_hash     AS confirm_hash,
       i.title            AS title,

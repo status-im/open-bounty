@@ -22,12 +22,17 @@
   (let [labels (:labels issue)]
     (some #(= label-name (:name %)) labels)))
 
+(def last-states (atom {}))
+
 (defn transition [{:keys [issue-id tx-info] :as bounty} state]
   (let [bounty-not= (fn [current db]
                       (some #(not= (%1 current) (%1 db)) 
                             (disj (set (keys current)) :tx-info)))
         bounty-from-db (issues/get-issue-by-id issue-id)
-        bounty (and (bounty-not= bounty bounty-from-db)
+        bounty (and (or
+                      (and (= state :pending-contributor-address) 
+                           (not= state (get @last-states issue-id)))
+                      (bounty-not= bounty bounty-from-db))
                     (merge bounty-from-db bounty))]
     (when bounty
       (case state
@@ -64,9 +69,10 @@
                                   (:balance-eth bounty)
                                   (:tokens bounty)
                                   (:value-usd bounty)))
+        nil)
+      (github/update-comment bounty state)))
+  (swap! last-states assoc issue-id state))
 
-        )
-      (github/update-comment bounty state))))
 (defn deploy-contract [owner-address  issue-id]
   (if (empty? owner-address)
     (log/errorf "issue %s: Unable to deploy bounty contract because repo owner has no Ethereum addres" issue-id)
@@ -81,6 +87,20 @@
                        :tx-info tx-info} :deploying))
         (log/errorf "issue %s Failed to deploy contract to %s" issue-id owner-address))
       (catch Exception ex (log/errorf ex "issue %s: deploy-contract exception" issue-id)))))
+
+(defn execute-payout [issue-id contract-address payout-address]
+  (if (empty? payout-address)
+    (do
+      (log/warn "issue %s: Cannot sign pending bounty - winner has no payout address" issue-id)
+      (transition {:issue-id issue-id} :pending-contributor-address))
+    (let [tx-info (multisig/send-all {:contract contract-address
+                                      :payout-address payout-address
+                                      :internal-tx-id [:execute issue-id]})]
+      (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address (:tx-hash tx-info))
+      (transition {:execute-hash (:tx-hash tx-info)
+                   :issue-id issue-id
+                   :tx-info tx-info} :pending-sob-confirmation)
+      tx-info)))
 
 (defn add-bounty-for-issue [repo repo-id issue]
   (let [{issue-id     :id

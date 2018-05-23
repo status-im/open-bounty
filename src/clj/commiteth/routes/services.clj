@@ -19,7 +19,8 @@
             [clojure.tools.logging :as log]
             [commiteth.config :refer [env]]
             [commiteth.util.util :refer [usd-decimal->str
-                                         eth-decimal->str]]
+                                         eth-decimal->str
+                                         to-db-map]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]
@@ -148,11 +149,8 @@
 (defn execute-revocation [issue-id contract-address payout-address]
   (log/info (str "executing revocation for " issue-id "at" contract-address))
   (try 
-    (let [tx-info (multisig/send-all {:contract       contract-address
-                                      :payout-address payout-address
-                                      :internal-tx-id [:execute issue-id]})]
-      (tracker/track-tx! tx-info)
-      {:execute-hash (:tx-hash tx-info)})
+    (let [tx-info (bounties/execute-payout issue-id contract-address payout-address)]
+      (:tx-hash tx-info))
     (catch Throwable ex
       (log/errorf ex "error revoking funds for %s" issue-id))))
 
@@ -197,11 +195,11 @@
                           :auth-rules authenticated?
                           :current-user user
                           :body [body {:address              s/Str
-                                       :is_hidden_in_hunters s/Bool}]
+                                       :is-hidden-in-hunters s/Bool}]
                           :summary "Updates user's fields."
 
                           (let [user-id           (:id user)
-                                {:keys [address]} body]
+                                {:keys [address is-hidden-in-hunters]} body]
 
                             (when-not (eth/valid-address? address)
                               (log/debugf "POST /user: Wrong address %s" address)
@@ -210,7 +208,8 @@
                             (db/with-tx
                               (when-not (db/user-exists? {:id user-id})
                                 (not-found! "No such a user."))
-                              (db/update! :users body ["id = ?" user-id]))
+                              (db/update! :users (to-db-map address is-hidden-in-hunters)
+                                          ["id = ?" user-id]))
 
                             (ok)))
 
@@ -248,7 +247,7 @@
                           :current-user user
                           (let [{:keys [contract-address owner-address]} (issues/get-issue-by-id issue-id)]
                             (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
-                                (if-let [{:keys [execute-hash]} (execute-revocation issue-id contract-address owner-address)]
+                                (if-let [execute-hash (execute-revocation issue-id contract-address owner-address)]
                                   (ok {:issue-id         issue-id
                                        :execute-hash     execute-hash
                                        :contract-address contract-address})

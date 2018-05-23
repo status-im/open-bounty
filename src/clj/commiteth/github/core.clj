@@ -333,7 +333,8 @@
   [{:keys [issue-id owner repo comment-id issue-number contract-address 
            balance-eth tokens
            payout-receipt
-           winner-login winner-address transaction-hash] :as issue}
+           owner-login
+           winner-login transaction-hash] :as issue}
    state]
   (let [comment (case state
                   :deploying
@@ -345,17 +346,23 @@
                                          contract-address
                                          balance-eth
                                          tokens)
-                  (:pending-maintainer-confirmation :pending-contributor-address)
+                  :pending-sob-confirmation
                   (generate-merged-comment contract-address
                                            balance-eth
                                            tokens
-                                           winner-login
-                                           (str/blank? winner-address))
+                                           (or winner-login owner-login)
+                                           false)
+                  :pending-contributor-address
+                  (generate-merged-comment contract-address
+                                           balance-eth
+                                           tokens
+                                           (or winner-login owner-login)
+                                           true)
                   :paid
                   (generate-paid-comment contract-address
                                          balance-eth
                                          tokens
-                                         winner-login)
+                                         (or winner-login owner-login))
                   nil)]
     (log/info (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))

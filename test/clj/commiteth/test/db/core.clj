@@ -36,5 +36,5 @@
             :address "address"
             :created nil
             :welcome_email_sent 0
-            :is_hidden_in_hunters false}
+            :is-hidden-in-hunters false}
           (db/get-user t-conn {:id 1})))))

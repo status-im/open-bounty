@@ -21,3 +21,8 @@
 
 (defmacro to-db-map [& vars]
   (into {} (map #(vector (keyword (str/replace (name %1) "-" "_")) %1) vars)))
+
+(defn contains-all-keys [m ks]
+  {:pre [(map? m) [(vector? ks)]]}
+  (every?
+    #(contains? m %) ks))
