@@ -7,8 +7,12 @@
             [goog.i18n.DateTimePatterns :as DateTimePatterns])
   (:import (goog.i18n DateTimeFormat)))
 
-(defn web3 []
-  (gobj/get js/window "web3"))
+(defn web3
+  "Return the web3 instance injected via Mist or Metamask"
+  []
+  (new (goog.object/getValueByKeys js/window "web3" "constructor")
+     (current-provider
+       (goog.object/get js/window "web3"))))
 
 (defn input [val-ratom props]
   (fn []
