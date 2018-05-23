@@ -41,31 +41,40 @@
         hide-gh-repos-warning (rf/subscribe [:get-in [:user :hide_gh_repos_warning]])
         warning-open? (rf/subscribe [:warning-open?])]
     (fn []
-      (let [[warning-kw warning-text] 
+      (let [[kw title description description-link description-url] 
             (cond 
               (and (not @hide-address-warning) (str/blank? @eth-address)) 
-              [:hide_address_warning "Please set your Ethereum account address"]
+              [:hide_address_warning 
+               "Your ETH address is missing" 
+               "In order to get your rewards, " 
+               "update your Ethereum address" "/app#/settings"]
               (and (not @hide-gh-repos-warning) (or (nil? @repo-count) (= 0 @repo-count))) 
-              [:hide_gh_repos_warning "Please add OpenBounty GitHub App to one of your repos"]
+              [:hide_gh_repos_warning 
+               "GitHub App is not installed"
+               "Please add OpenBounty GitHub App to one of your repos. Check "
+               "this guide on how to setup your account" "https://wiki.status.im/Status_Open_Bounty"]
               :else nil)
             dialog (if @warning-open?
-                     [:div.ui.menu.transition.warning.visible {:tab-index -1}]
-                     [:div.ui.menu.transition.warning.hidden])
+                     [:div.ui.menu.transition.warning.warning-tooltip.visible]
+                     [:div.ui.menu.transition.warning.warning-tooltip.hidden])
             on-change-fn (fn [e]
                            (let [value (-> e .-target .-checked)]
-                             (rf/dispatch [:save-user-fields {warning-kw value}])))]
-        (when warning-text
+                             (rf/dispatch [:save-user-fields {kw value}])))]
+        (when title
           [:div#warning_tooltip.ui.inline.dropdown
            {:on-click #(rf/dispatch [:warning-open])}
-           [:img {:src "warning.png"
-                  :height "32px"
-                  :width "32px" }] 
+           [:img.warning-img {:src "warning.png"
+                              :height "25px"
+                              :width "22px" }] 
            (into dialog 
-                 [ [:div warning-text]
-                  [:div [:input {:type "checkbox"
-                                 :id :hide-warning
-                                 :on-change on-change-fn}]
-                   [:label {:for :hide-warning} "Do not show this again"]]])])))))
+                 [[:div.title-text title]
+                  [:div.title-text
+                   [:div.description-text description
+                    [:a#description-link {:href description-url} description-link]]
+                   [:div.description-text [:input {:type "checkbox"
+                                                   :id :hide-warning
+                                                   :on-change on-change-fn}]
+                    [:label {:for :hide-warning} "Do not show this again"]]]])])))))
 
 (defn user-dropdown [user items mobile?]
   (let [menu (if @(rf/subscribe [:user-dropdown-open?])
@@ -97,7 +106,7 @@
   (let [user (rf/subscribe [:user])]
     (fn []
       (if @user
-        [:div.ui.container.user-component
+        [:div.user-component
          [warning-icon]
          [user-dropdown
           @user
