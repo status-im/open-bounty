@@ -50,7 +50,7 @@
                  [akiroz.re-frame/storage "0.1.2"]
                  [cljsjs/chartjs "2.6.0-0"]
                  [org.web3j/core "2.3.1"]
-                 [cljs-web3 "0.19.0-0-7"]]
+                 [cljs-web3 "0.19.0-0-11"]]
 
   :min-lein-version "2.0.0"
   :source-paths ["src/clj" "src/cljc"]
