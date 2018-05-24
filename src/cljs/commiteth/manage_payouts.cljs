@@ -52,21 +52,18 @@
        (common/human-time updated)]]]]])
 
 (defn confirm-button [bounty claim]
-  (let [paid?   (bnt/paid? claim)
-        merged? (bnt/merged? claim)]
-    (when (and merged? (not paid?))
+  (let [paid?        (bnt/paid? claim)
+        merged?      (bnt/merged? claim)
+        confirming?  (bnt/confirming? bounty)
+        bot-unmined? (bnt/bot-confirm-unmined? bounty)]
+    (when (and merged?
+               (:payout_address bounty)
+               (not paid?)
+               (not confirming?)
+               (not bot-unmined?))
       [primary-button-button
-       (merge {:on-click #(rf/dispatch [:confirm-payout claim])}
-              (if (and merged? (not paid?) (:payout_address bounty))
-                {}
-                {:disabled true})
-              (when (and (or (bnt/confirming? bounty)
-                             (bnt/bot-confirm-unmined? bounty))
-                         merged?)
-                {:class "busy loading" :disabled true}))
-       (if paid?
-         "Signed off"
-         "Confirm Payment")])))
+       {:on-click #(rf/dispatch [:confirm-payout claim])}
+       "Confirm Payment"])))
 
 
 
