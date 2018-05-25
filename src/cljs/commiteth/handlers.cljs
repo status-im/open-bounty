@@ -425,6 +425,14 @@
 (defn strip-0x [x]
   (str/replace x #"^0x" ""))
 
+(reg-event-fx
+ :set-confirming-payout
+ [interceptors (inject-cofx :store)]
+ (fn [{:keys [db store]} [_  issue-id]]
+   {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)
+    :store (assoc-in store [:owner-bounties issue-id :confirming?] true)}))
+
+
 (defn set-pending-revocation [location issue-id confirming-account]
   (assoc-in location [::db/pending-revocations issue-id]
             {:confirming-account confirming-account}))
@@ -503,9 +511,9 @@
                   :data data}]
      (println "data:" data)
      (try
+       (dispatch [:set-confirming-payout issue-id])
        (web3-eth/send-transaction! w3 payload
                                    (send-transaction-callback issue-id pending-revocations))
-       {:db (assoc-in db [:owner-bounties issue-id :confirming?] true)}
        (catch js/Error e
          {:db (assoc-in db [:owner-bounties issue-id :confirm-failed?] true)
           :dispatch-n [[:payout-confirm-failed issue-id e]
@@ -515,20 +523,23 @@
 
 (reg-event-fx
  :payout-confirmed
- interceptors
+ [interceptors [(inject-cofx :store)]]
  (fn [{:keys [db]} [_ issue-id]]
    {:dispatch [:load-owner-bounties]
     :db (-> db
-            (dissoc-in [:owner-bounties issue-id :confirming?])
-            (assoc-in [:owner-bounties  issue-id :confirmed?] true))}))
+            (assoc-in [:owner-bounties  issue-id :confirmed?] true)
+            (dissoc-in [:owner-bounties issue-id :confirming?]))
+    :store (dissoc-in store [:owner-bounties issue-id :confirming?])}))
 
-(reg-event-db
+(reg-event-fx
  :payout-confirm-failed
- (fn [db [_ issue-id e]]
+ [(inject-cofx :store)]
+ (fn [{:keys  [db store]} [_ issue-id e]]
    (println "payout-confirm-failed" issue-id e)
-   (-> db
-       (dissoc-in [:owner-bounties issue-id :confirming?])
-       (assoc-in [:owner-bounties issue-id :confirm-failed?] true))))
+   {:db (-> db
+            (dissoc-in [:owner-bounties issue-id :confirming?])
+            (assoc-in [:owner-bounties issue-id :confirm-failed?] true))
+    :store (dissoc-in store [:owner-bounties issue-id :confirming?])}))
 
 
 (reg-event-fx
