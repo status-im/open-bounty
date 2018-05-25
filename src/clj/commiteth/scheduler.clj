@@ -209,7 +209,6 @@
     (neg? n) (- n)
     :else n))
 
-
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token
   multisig contract. Will be called periodically for all open bounty
@@ -242,9 +241,9 @@
   []
   (log/info "In update-contract-internal-balances")
   (p :update-contract-internal-balances
-     (doseq [{:keys [issue-id bounty-address watch-hash]}
+     (doseq [{:keys [issue-id contract-address watch-hash]}
              (db-bounties/open-bounty-contracts)]
-       (update-bounty-token-balances issue-id bounty-address watch-hash)))
+       (update-bounty-token-balances issue-id contract-address watch-hash)))
   (log/info "Exit update-contract-internal-balances"))
 
 
@@ -258,6 +257,7 @@
 (defn map-float= [m1 m2]
   (and (= (set (keys m1)) (set (keys m2)))
        (every? #(float= (get m1 %1) (get m2 %1)) (keys m1))))
+
 
 (defn update-balances
   []
