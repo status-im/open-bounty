@@ -68,24 +68,26 @@
 
 
 (defn confirm-row [bounty claim]
-  (let [payout-address-available? (:payout_address bounty)]
-    [:div
-     (when-not payout-address-available?
-       [:div.bg-sob-blue-o-20.pv2.ph3.br3.mb3.f6
-        [:p [:span.pg-med (or (:user_name claim) (:user_login claim))
-             "’s payment address is pending."] " You will be able to confirm the payment once the address is provided."]])
-     [:div.cf
-      [:div.dt.fr
+  (let [payout-address-available? (:payout_address bounty)
+        confirmed?                (:confirmed? bounty)]
+    (when-not confirmed?
+      [:div
        (when-not payout-address-available?
-         {:style {:-webkit-filter "grayscale(1)"
-                  :pointer-events "none"}})
-       [:div.dtc.v-mid.pr3.f6
-        [:div
-         [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
-         [:div.dib.mr2.pv1
-          [ui-balances/usd-value-label (:value-usd bounty)]]]]
-       [:div.dtc.v-mid
-        [confirm-button bounty claim]]]]]))
+         [:div.bg-sob-blue-o-20.pv2.ph3.br3.mb3.f6
+          [:p [:span.pg-med (or (:user_name claim) (:user_login claim))
+               "’s payment address is pending."] " You will be able to confirm the payment once the address is provided."]])
+       [:div.cf
+        [:div.dt.fr
+         (when-not payout-address-available?
+           {:style {:-webkit-filter "grayscale(1)"
+                    :pointer-events "none"}})
+         [:div.dtc.v-mid.pr3.f6
+          [:div
+           [ui-balances/token-balances (bnt/crypto-balances bounty) :badge]
+           [:div.dib.mr2.pv1
+            [ui-balances/usd-value-label (:value-usd bounty)]]]]
+         [:div.dtc.v-mid
+          [confirm-button bounty claim]]]]])))
 
 (defn view-pr-button [claim]
   [primary-button-link

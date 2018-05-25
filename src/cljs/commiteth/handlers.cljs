@@ -527,8 +527,8 @@
  (fn [{:keys [db]} [_ issue-id]]
    {:dispatch [:load-owner-bounties]
     :db (-> db
-            (dissoc-in [:owner-bounties issue-id :confirming?])
-            (assoc-in [:owner-bounties  issue-id :confirmed?] true))
+            (assoc-in [:owner-bounties  issue-id :confirmed?] true)
+            (dissoc-in [:owner-bounties issue-id :confirming?]))
     :store (dissoc-in store [:owner-bounties issue-id :confirming?])}))
 
 (reg-event-fx
