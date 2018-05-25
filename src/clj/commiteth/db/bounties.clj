@@ -1,5 +1,7 @@
 (ns commiteth.db.bounties
   (:require [commiteth.db.core :refer [*db*] :as db]
+            [commiteth.util.util :refer [to-db-map]]
+            [clojure.tools.logging :as log] 
             [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [rename-keys]]))
 
@@ -58,7 +60,7 @@
 (defn update-payout-hash
   [issue-id payout-hash]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-payout-hash con-db {:issue_id issue-id :payout_hash payout-hash})))
+    (db/update-payout-hash con-db (to-db-map issue-id payout-hash))))
 
 (defn reset-payout-hash
   [issue-id]
@@ -66,29 +68,29 @@
     (db/reset-payout-hash con-db {:issue_id issue-id})))
 
 (def payout-receipt-keys
-  [:issue_id
-   :payout_hash
-   :contract_address
+  [:issue-id
+   :payout-hash
+   :contract-address
    :repo
    :owner
-   :comment_id
-   :issue_number
-   :balance_eth
+   :comment-id
+   :issue-number
+   :balance-eth
    :tokens
-   :confirm_hash
-   :payee_login
+   :confirm-hash
+   :payee-login
    :updated])
 
 (defn update-payout-receipt
   [issue-id payout-receipt]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-payout-receipt con-db {:issue_id issue-id
-                                      :payout_receipt payout-receipt})))
+    (db/update-payout-receipt con-db (to-db-map issue-id payout-receipt))))
 
 (defn get-bounty
   [owner repo issue-number]
   (jdbc/with-db-connection [con-db *db*]
-    (db/get-bounty con-db {:owner owner :repo repo :issue_number issue-number})))
+ (log/info "get-bounty params:" (to-db-map owner repo issue-number))
+    (db/get-bounty con-db (to-db-map owner repo issue-number))))
 
 (defn open-bounty-contracts
   []

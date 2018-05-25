@@ -19,7 +19,8 @@
             [clojure.tools.logging :as log]
             [commiteth.config :refer [env]]
             [commiteth.util.util :refer [usd-decimal->str
-                                         eth-decimal->str]]
+                                         eth-decimal->str
+                                         to-db-map]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
             [clojure.string :as str]
@@ -67,27 +68,14 @@
 (def bounty-renames
   ;; TODO this needs to go away ASAP we need to be super consistent
   ;; about keys unless we will just step on each others toes constantly
-  {:user_name :display-name
-   :user_avatar_url :avatar-url
-   :issue_title :issue-title
-   :pr_title :pr-title
-   :pr_number :pr-number
-   :pr_id :pr-id
-   :type :item-type
-   :repo_name :repo-name
-   :repo_owner :repo-owner
-   :owner_login :owner-login
-   :issue_number :issue-number
-   :issue_id :issue-id
-   :value_usd :value-usd
-   :claim_count :claim-count
-   :balance_eth :balance-eth
-   :user_has_address :user-has-address})
+  {:user-name :display-name
+   :user-avatar-url :avatar-url
+   :type :item-type})
 
 (defn ^:private enrich-owner-bounties [owner-bounty]
   (let [claims      (map
-                     #(update % :value_usd usd-decimal->str)
-                     (bounties-db/bounty-claims (:issue_id owner-bounty)))
+                     #(update % :value-usd usd-decimal->str)
+                     (bounties-db/bounty-claims (:issue-id owner-bounty)))
         with-claims (assoc owner-bounty :claims claims)]
     (-> with-claims
         (rename-keys bounty-renames)
@@ -103,9 +91,7 @@
          (into {}))))
 
 (defn top-hunters []
-  (let [renames {:user_name :display-name
-                 :avatar_url :avatar-url
-                 :total_usd :total-usd}]
+  (let [renames {:user-name :display-name}]
     (map #(-> %
               (rename-keys renames)
               (update :total-usd usd-decimal->str))
@@ -163,11 +149,8 @@
 (defn execute-revocation [issue-id contract-address payout-address]
   (log/info (str "executing revocation for " issue-id "at" contract-address))
   (try 
-    (let [tx-info (multisig/send-all {:contract       contract-address
-                                      :payout-address payout-address
-                                      :internal-tx-id [:execute issue-id]})]
-      (tracker/track-tx! tx-info)
-      {:execute-hash (:tx-hash tx-info)})
+    (let [tx-info (bounties/execute-payout issue-id contract-address payout-address)]
+      (:tx-hash tx-info))
     (catch Throwable ex
       (log/errorf ex "error revoking funds for %s" issue-id))))
 
@@ -212,11 +195,11 @@
                           :auth-rules authenticated?
                           :current-user user
                           :body [body {:address              s/Str
-                                       :is_hidden_in_hunters s/Bool}]
+                                       :is-hidden-in-hunters s/Bool}]
                           :summary "Updates user's fields."
 
                           (let [user-id           (:id user)
-                                {:keys [address]} body]
+                                {:keys [address is-hidden-in-hunters]} body]
 
                             (when-not (eth/valid-address? address)
                               (log/debugf "POST /user: Wrong address %s" address)
@@ -225,7 +208,8 @@
                             (db/with-tx
                               (when-not (db/user-exists? {:id user-id})
                                 (not-found! "No such a user."))
-                              (db/update! :users body ["id = ?" user-id]))
+                              (db/update! :users (to-db-map address is-hidden-in-hunters)
+                                          ["id = ?" user-id]))
 
                             (ok)))
 
@@ -261,9 +245,9 @@
                     (POST "/revoke"  {{issue-id :issue-id} :params}
                           :auth-rules authenticated?
                           :current-user user
-                          (let [{contract-address :contract_address owner-address :owner_address} (issues/get-issue-by-id issue-id)]
+                          (let [{:keys [contract-address owner-address]} (issues/get-issue-by-id issue-id)]
                             (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
-                                (if-let [{:keys [execute-hash]} (execute-revocation issue-id contract-address owner-address)]
+                                (if-let [execute-hash (execute-revocation issue-id contract-address owner-address)]
                                   (ok {:issue-id         issue-id
                                        :execute-hash     execute-hash
                                        :contract-address contract-address})

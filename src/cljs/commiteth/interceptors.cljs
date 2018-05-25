@@ -12,10 +12,7 @@
 
 (defn dispatch-confirm-payout [bounty]
   "dispatches a bounty via reframe dispatch"
-  (rf/dispatch [:confirm-payout {:issue_id         (:issue-id bounty)
-                                 :owner_address    (:owner_address bounty)
-                                 :contract_address (:contract_address bounty)
-                                 :confirm_hash     (:confirm_hash bounty)}]))
+  (rf/dispatch [:confirm-payout bounty]))
 
 (defn dispatch-set-pending-revocation [bounty]
   "update the currently confirming account to owner"
@@ -45,7 +42,7 @@
                     updated-bounties    (get-in context [:effects :db :owner-bounties])
                     confirming-issue-id (get-confirming-issue-id :commiteth pending-revocations)]
                 (when-let [revoking-bounty (get updated-bounties confirming-issue-id)] 
-                  (if (:confirm_hash revoking-bounty)
+                  (if (:confirm-hash revoking-bounty)
                     (do (dispatch-confirm-payout revoking-bounty)
                         (dispatch-set-pending-revocation revoking-bounty))
                     (println (str "currently revoking " confirming-issue-id " but confirm hash has not been set yet."))))
@@ -72,7 +69,7 @@
                     updated-bounties    (get-in context [:effects :db :owner-bounties])
                     confirming-issue-id (get-confirming-issue-id :owner pending-revocations)]
                 (when-let [revoking-bounty (get updated-bounties confirming-issue-id)]
-                  (if (:payout_receipt revoking-bounty)
+                  (if (:payout-receipt revoking-bounty)
                     (dispatch-remove-pending-revocation revoking-bounty)
                     (println (str "currently revoking " confirming-issue-id " but payout receipt has not been set yet."))))
                 ;; interceptor must return context

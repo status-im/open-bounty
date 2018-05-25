@@ -296,7 +296,7 @@ SELECT
   i.tokens           AS tokens,
   i.value_usd        AS value_usd,
   u.login            AS winner_login,
-  u.address          AS payout_address
+  u.address          AS winner_address
 FROM issues i, pull_requests p, users u, repositories r
 WHERE
 p.issue_id = i.issue_id
@@ -405,23 +405,6 @@ SET payout_receipt = :payout_receipt::jsonb,
 updated = timezone('utc'::text, now())
 WHERE issue_id = :issue_id;
 
-
--- :name update-token-balances :! :n
--- :doc updates issue with given token balances
-UPDATE issues
-SET tokens = :token_balances::jsonb,
-updated = timezone('utc'::text, now())
-WHERE contract_address = :contract_address;
-
-
--- :name update-usd-value :! :n
--- :doc updates issue with given USD value
-UPDATE issues
-SET value_usd = :usd_value,
-value_usd_updated = timezone('utc'::text, now())
-WHERE contract_address = :contract_address;
-
-
 -- :name update-issue-open :! :n
 -- :doc updates issue's open status
 UPDATE issues
@@ -455,12 +438,23 @@ SELECT
       i.issue_number     AS issue_number,
       i.is_open          AS is_open,
       i.winner_login     AS winner_login,
+      i.transaction_hash AS transaction_hash,
+      i.contract_address AS contract_address,
+      i.confirm_hash     AS confirm_hash,
+      i.execute_hash     AS execute_hash,
+      i.payout_hash      AS payout_hash,
+      i.watch_hash       AS watch_hash,
+      i.payout_receipt   AS payout_receipt,
       i.commit_sha       AS commit_sha,
       u.address          AS owner_address,
+      u.login            AS owner_login,
       i.contract_address AS contract_address,
       i.confirm_hash     AS confirm_hash,
       i.title            AS title,
       i.comment_id       AS comment_id,
+      i.balance_eth      AS balance_eth,
+      i.tokens           AS tokens,
+      i.value_usd        AS value_usd,
       i.repo_id          AS repo_id,
       r.owner            AS owner,
       r.repo             AS repo
@@ -601,10 +595,12 @@ AND r.repo_id = i.repo_id
 AND r.owner = :owner
 AND r.repo = :repo;
 
--- :name update-eth-balance :! :n
+-- :name update-balances :! :n
 -- :doc updates balance of a wallet attached to a given issue
 UPDATE issues
 SET balance_eth = :balance_eth,
+    tokens = :token_balances::jsonb,
+    value_usd = :usd_value,
 updated = timezone('utc'::text, now())
 WHERE contract_address = :contract_address;
 
@@ -658,8 +654,8 @@ SELECT
   pr_id,
   issue_number,
   issue_id,
-  user_name,
-  user_avatar_url,
+  user_name as display_name,
+  user_avatar_url as avatar_url,
   balance_eth,
   tokens,
   value_usd,

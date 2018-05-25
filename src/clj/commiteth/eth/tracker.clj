@@ -62,9 +62,44 @@
                   (:tx-hash @current-tx) (:type @current-tx))
       (reset! current-tx nil)))
 
+  ) 
+
+(defrecord ParallelTxTracker [current-txs]
+  ITxTracker
+  (try-reserve-nonce [this]
+    (let [nonce (get-nonce)
+          monitored-nonces (set (keys @current-txs))
+          first-available-nonce (some #(if (monitored-nonces %1) nil %1) (iterate inc nonce))]
+      (swap! current-txs assoc first-available-nonce nil)
+      first-available-nonce))
+
+  (drop-nonce [this nonce]
+    (swap! current-txs dissoc nonce))
+
+  (track-tx [this tx-info]
+    (swap! current-txs update (:nonce tx-info) merge tx-info))
+
+  (untrack-tx [this tx-info]
+    (when (contains? (set (keys @current-txs)) (:nonce tx-info))
+      (swap! current-txs dissoc (:nonce tx-info))))
+
+  (prune-txs [this unmined-txs]
+    (swap! current-txs
+           (fn [txs]
+             (let [unmined-tx-hashes (set (map :tx-hash unmined-txs))
+                   time-threshold (t/minus (t/now) (t/minutes 10))
+                   nonces-to-remove
+                   (->> txs
+                        vals
+                        (filter #(or (unmined-tx-hashes (:tx-hash %1))
+                                     (and (:timestamp %1)
+                                          (t/before? (:timestamp %1) time-threshold))))
+                        (map :nonce))]
+               (apply dissoc txs nonces-to-remove)))))
   )
 
-(def tx-tracker (SequentialTxTracker. (atom nil)))
+
+(def tx-tracker (ParallelTxTracker. (atom nil)))
 
 (defn try-reserve-nonce! []
   (try-reserve-nonce tx-tracker))

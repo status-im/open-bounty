@@ -2,9 +2,10 @@
   (:require [commiteth.eth.core :as eth]
             [commiteth.eth.multisig-wallet :as multisig]
             [commiteth.eth.token-data :as token-data]
-            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [commiteth.db.issues :as issues]
+            [commiteth.eth.tracker :as tracker]
+            [commiteth.util.util :refer [to-map]]
             [taoensso.tufte :as tufte :refer (defnp p profiled profile)]
             [commiteth.db.bounties :as db-bounties]
             [commiteth.bounties :as bounties]
@@ -12,6 +13,7 @@
             [commiteth.util.util :as util]
             [clojure.tools.logging :as log]
             [mount.core :as mount]
+            [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as time-coerce]
             [clj-time.periodic :refer [periodic-seq]]
@@ -30,12 +32,10 @@
   (profile {} (update-watch-hash))
   (profile {} (update-payout-receipt))
   (profile {} (update-contract-internal-balances))
-  (profile {} (update-open-issue-usd-values))
   (profile {} (update-balances))
   (profile {}
            (doseq [i (range 5)]
              (update-contract-internal-balances) 
-             (update-open-issue-usd-values) 
              (update-balances)))
 
   )
@@ -46,43 +46,16 @@
   []
   (log/info "In update-issue-contract-address")
   (p :update-issue-contract-address
-     (doseq [{issue-id         :issue_id
-              transaction-hash :transaction_hash} (issues/list-pending-deployments)]
+     (doseq [{:keys [issue-id transaction-hash] :as issue} (issues/list-pending-deployments)]
        (log/infof "issue %s: pending deployment: %s" issue-id transaction-hash)
        (try 
          (when-let [receipt (eth/get-transaction-receipt transaction-hash)]
            (log/infof "issue %s: update-issue-contract-address: tx receipt: %s" issue-id receipt)
            (if-let [contract-address (multisig/find-created-multisig-address receipt)]
-             (let [_ (tracker/untrack-tx! {:issue-id issue-id 
-                                           :tx-hash transaction-hash 
-                                           :result contract-address 
-                                           :type :deploy})
-                   {owner        :owner
-                    repo         :repo
-                    comment-id   :comment_id
-                    issue-number :issue_number} (issues/get-issue-by-id issue-id)
-                   balance-eth-str (eth/get-balance-eth contract-address 6)
-                   balance-eth (read-string balance-eth-str)]
-               (log/infof "issue %s: Updating comment image" issue-id)
-               (bounties/update-bounty-comment-image issue-id
-                                                     owner
-                                                     repo
-                                                     issue-number
-                                                     contract-address
-                                                     balance-eth
-                                                     balance-eth-str
-                                                     {})
-               (log/infof "issue %s: Updating comment" issue-id)
-               (github/update-comment owner
-                                      repo
-                                      comment-id
-                                      issue-number
-                                      contract-address
-                                      balance-eth
-                                      balance-eth-str
-                                      {}))
+             (bounties/transition (assoc issue :contract-address contract-address) 
+                                  :opened)
              (log/errorf "issue %s: Failed to find contract address in tx logs" issue-id)))
-         (catch Throwable ex
+         (catch Throwable ex 
            (log/errorf ex "issue %s: update-issue-contract-address exception:" issue-id)))))
   (log/info "Exit update-issue-contract-address"))
 
@@ -93,8 +66,8 @@
   label is addded to an issue. This function deploys such contracts."
   []
   (p :deploy-pending-contracts
-     (doseq [{issue-id :issue_id
-              owner-address :owner_address} (db-bounties/pending-contracts)]
+     (doseq [{:keys [issue-id owner-address]} 
+             (db-bounties/pending-contracts)]
        (log/infof "issue %s: Trying to re-deploy failed bounty contract deployment" issue-id)
        (try
          (bounties/deploy-contract owner-address issue-id)
@@ -106,72 +79,48 @@
   []
   (log/info "In self-sign-bounty")
   (p :self-sign-bounty
-     (doseq [{contract-address :contract_address
-           issue-id         :issue_id
-           payout-address   :payout_address
-           repo :repo
-           owner :owner
-           comment-id :comment_id
-           issue-number :issue_number
-           balance-eth :balance_eth
-           tokens :tokens
-           winner-login :winner_login} (db-bounties/pending-bounties)]
+     (doseq [{:keys [contract-address winner-address issue-id] :as issue}
+             (db-bounties/pending-bounties)]
        (try
          ;; TODO(martin) delete this shortly after org-dashboard deploy
          ;; as we're now setting `winner_login` when handling a new claims
          ;; coming in via webhooks (see `commiteth.routes.webhooks/handle-claim`)
-         (db-bounties/update-winner-login issue-id winner-login)
-         (let [value (eth/get-balance-hex contract-address)]
-           (if (empty? payout-address)
-             (do
-               (log/warn "issue %s: Cannot sign pending bounty - winner (%s) has no payout address" issue-id winner-login)
-               (github/update-merged-issue-comment owner
-                                                   repo
-                                                   comment-id
-                                                   contract-address
-                                                   (util/eth-decimal->str balance-eth)
-                                                   tokens
-                                                   winner-login
-                                                   true))
-             (let [tx-info (multisig/send-all {:contract contract-address
-                                               :payout-address payout-address
-                                               :internal-tx-id [:execute issue-id]})]
-               (log/infof "issue %s: Payout self-signed, called sign-all(%s) tx: %s" issue-id contract-address payout-address (:tx-hash tx-info))
-               (tracker/track-tx! tx-info)
-               (github/update-merged-issue-comment owner
-                                                   repo
-                                                   comment-id
-                                                   contract-address
-                                                   (util/eth-decimal->str balance-eth)
-                                                   tokens
-                                                   winner-login
-                                                   false))))
-         (catch Throwable ex
-           (log/errorf ex "issue %s: self-sign-bounty exception" issue-id)))))
+         ;(db-bounties/update-winner-login issue-id winner-login)
+         (bounties/execute-payout issue-id contract-address winner-address)
+         (catch Throwable ex 
+           (log/error ex "issue %s: self-sign-bounty exception" issue-id)))))
   (log/info "Exit self-sign-bounty"))
 
 (defn update-confirm-hash
+  "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
   [issue-id execute-hash]
-  (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
-       (try 
-         (when-let [receipt (eth/get-transaction-receipt execute-hash)]
-           (log/infof "issue %s: execution receipt for issue " issue-id receipt)
-           (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
-             (log/infof "issue %s: confirm hash:%s" issue-id confirm-hash)
-             (tracker/untrack-tx! {:issue-id issue-id 
-                                   :tx-hash execute-hash 
-                                   :result confirm-hash 
-                                   :type :execute})))
-         (catch Throwable ex
-           (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id))))
+  (log/info "In update-confirm-hash")
+  (p :update-confirm-hash
+     (try
+       (log/infof "issue %s: pending payout: %s" issue-id execute-hash)
+       (when-let [receipt (eth/get-transaction-receipt execute-hash)]
+         (log/infof "issue %s: execution receipt for issue " issue-id receipt)
+         (when-let [confirm-hash (multisig/find-confirmation-tx-id receipt)]
+           (log/infof "issue %s: confirm hash: %s" issue-id confirm-hash)
+           (bounties/transition {:issue-id issue-id
+                                 :confirm-hash confirm-hash
+                                 :tx-info  {:issue-id issue-id 
+                                            :tx-hash execute-hash 
+                                            :result confirm-hash 
+                                            :type :execute}}
+                                :pending-maintainer-confirmation)
+
+           ))
+       (catch Throwable ex
+         (log/errorf ex "issue %s: update-confirm-hash exception:" issue-id)))
+     (log/info "Exit update-confirm-hash")))
 
 (defn update-confirm-hashes
   "Gets transaction receipt for each pending payout and updates DB confirm_hash with tranaction ID of commiteth bot account's confirmation."
   []
   (log/info "In update-confirm-hashes")
   (p :update-confirm-hash
-     (doseq [{issue-id     :issue_id
-              execute-hash :execute_hash} (db-bounties/pending-payouts)]
+     (doseq [{:keys [issue-id execute-hash]} (db-bounties/pending-payouts)]
        
        (update-confirm-hash issue-id execute-hash)))
   (log/info "Exit update-confirm-hashes"))
@@ -180,17 +129,19 @@
   "Sets watch-hash to NULL for bounties where watch tx has been mined. Used to avoid unneeded watch transactions in update-bounty-token-balances"
   []
   (p :update-watch-hash
-     (doseq [{issue-id :issue_id
-              watch-hash :watch_hash} (db-bounties/pending-watch-calls)]
+     (doseq [{:keys [issue-id watch-hash]} (db-bounties/pending-watch-calls)]
        (log/infof "issue %s: pending watch call %s" issue-id watch-hash)
-       (try
+       (try 
          (when-let [receipt (eth/get-transaction-receipt watch-hash)]
-           (tracker/untrack-tx! {:issue-id issue-id 
-                                 :tx-hash watch-hash 
-                                 :result nil 
-                                 :type :watch}))
+           (bounties/transition {:issue-id issue-id
+                                 :tx-info
+                                 {:issue-id issue-id 
+                                  :tx-hash watch-hash 
+                                  :result nil 
+                                  :type :watch}} :watch-reset))
          (catch Throwable ex
-           (log/errorf ex "issue %s: update-watch-hash exception:" issue-id))))))
+           (log/errorf ex "issue %s: update-watch-hash exception:" issue-id))
+         ))))
 
 
 (defn older-than-3h?
@@ -201,50 +152,34 @@
     (println "hour diff:" diff)
     (> diff 3)))
 
-(defn update-payout-receipt [bounty]
+(defn update-payout-receipt
+  "Gets transaction receipt for each confirmed payout and updates payout_hash"
+  [{:keys [payout-hash contract-address confirm-hash issue-id updated] :as bounty}]
   {:pre [(util/contains-all-keys bounty db-bounties/payout-receipt-keys)]}
-  (let [{issue-id         :issue_id
-         payout-hash      :payout_hash
-         contract-address :contract_address
-         repo             :repo
-         owner            :owner
-         comment-id       :comment_id
-         issue-number     :issue_number
-         balance-eth      :balance_eth
-         tokens           :tokens
-         confirm-hash     :confirm_hash
-         payee-login      :payee_login
-         updated          :updated} bounty]
-    (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
-    (try
-      (if-let [receipt (eth/get-transaction-receipt payout-hash)]
-        (let [contract-tokens      (multisig/token-balances contract-address)
-              contract-eth-balance (eth/get-balance-wei contract-address)]
-          (if (or
-               (some #(> (second %) 0.0) contract-tokens)
-               (> contract-eth-balance 0))
-            (do
-              (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
-              (when (multisig/is-confirmed? contract-address confirm-hash)
-                (log/infof "issue %s: Detected bounty with funds and confirmed payout, calling executeTransaction" issue-id)
-                (let [execute-tx-hash (multisig/execute-tx contract-address confirm-hash)]
-                  (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
-
-            (do
-              (log/infof "issue %s: Payout has succeeded, payout receipt %s" issue-id receipt)
-              (db-bounties/update-payout-receipt issue-id receipt)
-              (github/update-paid-issue-comment owner
-                                                repo
-                                                comment-id
-                                                contract-address
-                                                (util/eth-decimal->str balance-eth)
-                                                tokens
-                                                payee-login))))
-        (when (older-than-3h? updated)
-          (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
-          (db-bounties/reset-payout-hash issue-id)))
-      (catch Throwable ex
-       (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
+  (log/info "In update-payout-receipt")
+  (p :update-payout-receipt
+     (try
+       (log/infof "issue %s: confirmed payout: %s" issue-id payout-hash)
+       (if-let [receipt (eth/get-transaction-receipt payout-hash)]
+         (let [contract-tokens      (multisig/token-balances contract-address)
+               contract-eth-balance (eth/get-balance-wei contract-address)]
+           (if (or
+                 (some #(> (second %) 0.0) contract-tokens)
+                 (> contract-eth-balance 0))
+             (do
+               (log/infof "issue %s: Contract (%s) still has funds" issue-id contract-address)
+               (when (multisig/is-confirmed? contract-address confirm-hash)
+                 (log/infof "issue %s: Detected bounty with funds and confirmed payout, calling executeTransaction" issue-id)
+                 (let [execute-tx-hash (multisig/execute-tx contract-address confirm-hash)]
+                   (log/infof "issue %s: execute tx: %s" issue-id execute-tx-hash))))
+             (do
+               (log/infof "issue %s: Payout has succeeded, payout receipt %s" issue-id receipt)
+               (bounties/transition (assoc bounty :payout-receipt receipt) :paid))))
+         (when (older-than-3h? updated)
+           (log/warn "issue %s: Resetting payout hash for issue as it has not been mined in 3h" issue-id)
+           (db-bounties/reset-payout-hash issue-id)))
+       (catch Throwable ex
+         (log/error ex "issue %s: update-payout-receipt exception" issue-id)))))
 
 (defn update-payout-receipts
   "Gets transaction receipt for each confirmed payout and updates payout_hash"
@@ -274,7 +209,6 @@
     (neg? n) (- n)
     :else n))
 
-
 (defn update-bounty-token-balances
   "Helper function for updating internal ERC20 token balances to token
   multisig contract. Will be called periodically for all open bounty
@@ -294,7 +228,9 @@
                 (let [tx-info (multisig/watch-token {:bounty-addr bounty-addr 
                                                      :token tla
                                                      :internal-tx-id [:watch issue-id]})]
-                  (tracker/track-tx! tx-info)))))))
+                  (bounties/transition {:issue-id issue-id
+                                        :tx-info tx-info}
+                                       :watch-set)))))))
       (catch Throwable ex
         (log/error ex "bounty %s: update-bounty-token-balances exception" bounty-addr))))
   (log/info "Exit update-bounty-token-balances"))
@@ -305,39 +241,11 @@
   []
   (log/info "In update-contract-internal-balances")
   (p :update-contract-internal-balances
-     (doseq [{issue-id :issue_id
-              bounty-address :contract_address
-              watch-hash :watch_hash}
+     (doseq [{:keys [issue-id contract-address watch-hash]}
              (db-bounties/open-bounty-contracts)]
-       (update-bounty-token-balances issue-id bounty-address watch-hash)))
+       (update-bounty-token-balances issue-id contract-address watch-hash)))
   (log/info "Exit update-contract-internal-balances"))
 
-(defn get-bounty-funds
-  "Get funds in given bounty contract.
-  Returns map of asset -> balance
-   + key total-usd -> current total USD value for all funds"
-  [bounty-addr]
-  (let [token-balances (multisig/token-balances bounty-addr)
-        eth-balance (read-string (eth/get-balance-eth bounty-addr 6))
-        all-funds
-        (merge token-balances
-               {:ETH eth-balance})]
-    (merge all-funds {:total-usd (fiat-util/bounty-usd-value all-funds)})))
-
-
-(defn update-issue-usd-value
-  [bounty-addr]
-  (let [funds (get-bounty-funds bounty-addr)]
-      (issues/update-usd-value bounty-addr
-                               (:total-usd funds))))
-
-(defn update-open-issue-usd-values
-  "Sum up current USD values of all crypto assets in a bounty and store to DB"
-  []
-  (p :update-open-issue-usd-values
-     (doseq [{bounty-addr :contract_address}
-             (db-bounties/open-bounty-contracts)]
-       (update-issue-usd-value bounty-addr))))
 
 (defn float=
   ([x y] (float= x y 0.0000001))
@@ -350,58 +258,45 @@
   (and (= (set (keys m1)) (set (keys m2)))
        (every? #(float= (get m1 %1) (get m2 %1)) (keys m1))))
 
+
 (defn update-balances
   []
   (log/info "In update-balances")
   (p :update-balances
-     (doseq [{contract-address :contract_address
-           owner            :owner
-           repo             :repo
-           comment-id       :comment_id
-           issue-id         :issue_id
-           db-balance-eth   :balance_eth
-           db-tokens        :tokens
-           issue-number     :issue_number} (db-bounties/open-bounty-contracts)]
-    (try
-      (when comment-id
-        (let [balance-eth-str (eth/get-balance-eth contract-address 6)
-              balance-eth (read-string balance-eth-str)
-              token-balances (multisig/token-balances contract-address)]
-          (log/debug "issue" issue-id ": update-balances" balance-eth
-                     balance-eth-str token-balances owner repo issue-number)
+     (doseq [{:keys [contract-address owner 
+                     repo balance-eth tokens
+                     issue-id
+                     issue-number
+                     comment-id] :as issue}
+             (db-bounties/open-bounty-contracts)]
+       (try
+         (when comment-id
+           (let [balance-eth-str (eth/get-balance-eth contract-address 6)
+                 current-balance-eth (read-string balance-eth-str)
+                 token-balances (multisig/token-balances contract-address)]
+             (log/debug "update-balances" balance-eth
+                        balance-eth-str token-balances owner repo issue-number)
 
-          (when (or
-                  (not (float= db-balance-eth balance-eth))
-                  (not (map-float= db-tokens token-balances)))
-            (log/info "balances differ")
-            (log/info "ETH (db):" db-balance-eth (type db-balance-eth) )
-            (log/info "ETH (chain):" balance-eth (type balance-eth) )
-            (log/info "ETH cmp:" (float= db-balance-eth balance-eth))
-            (log/info "tokens (db):" db-tokens (type db-tokens) (type (:SNT db-tokens)))
-            (log/info "tokens (chain):" token-balances (type token-balances) (type (:SNT token-balances)))
-            (log/debug "tokens cmp:" (= db-tokens token-balances))
+             (when (or
+                     (not (float= current-balance-eth balance-eth))
+                     (not (map-float= tokens token-balances)))
+               (log/info "balances differ")
+               (log/info "ETH (db):" balance-eth (type balance-eth) )
+               (log/info "ETH (chain):" current-balance-eth (type current-balance-eth) )
+               (log/info "ETH cmp:" (float= balance-eth current-balance-eth))
+               (log/info "tokens (db):" tokens (type tokens) (type (:SNT tokens)))
+               (log/info "tokens (chain):" token-balances (type token-balances) (type (:SNT token-balances)))
+               (log/debug "tokens cmp:" (= tokens token-balances))
+               (bounties/transition {:issue-id issue-id
+                                     :balance-eth current-balance-eth
+                                     :tokens token-balances
+                                     :value-usd (fiat-util/bounty-usd-value 
+                                         (merge token-balances {:ETH current-balance-eth}))} :update-balances)
 
-            (issues/update-eth-balance contract-address balance-eth)
-            (issues/update-token-balances contract-address token-balances)
-            (bounties/update-bounty-comment-image issue-id
-                                                  owner
-                                                  repo
-                                                  issue-number
-                                                  contract-address
-                                                  balance-eth
-                                                  balance-eth-str
-                                                  token-balances)
-            (github/update-comment owner
-                                   repo
-                                   comment-id
-                                   issue-number
-                                   contract-address
-                                   balance-eth
-                                   balance-eth-str
-                                   token-balances)
-            (update-issue-usd-value contract-address))))
-      (catch Throwable ex 
-        (log/error ex "issue %s: update-balances exception" issue-id)))))
+               
+               )))
+         (catch Throwable ex 
+           (log/error ex "issue %s: update-balances exception" issue-id)))))
   (log/info "Exit update-balances"))
 
 (defn check-tx-receipts 
@@ -446,8 +341,7 @@
     (log/info "run-10-min-interval-tasks" time)
     (run-tasks
      [update-contract-internal-balances
-      update-balances
-      update-open-issue-usd-values])
+      update-balances])
     (log/info "run-10-min-interval-tasks done")))
 
 

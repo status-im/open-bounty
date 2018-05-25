@@ -9,9 +9,9 @@
             [commiteth.config :as config]
             [commiteth.common :as common :refer [human-time]]))
 
-(defn pr-url [{owner :repo_owner
-               pr-number :pr_number
-               repo :repo_name}]
+(defn pr-url [{owner :repo-owner
+               pr-number :pr-number
+               repo :repo-name}]
   (str "https://github.com/" owner "/" repo "/pull/" pr-number))
 
 (defn etherscan-tx-url [tx-id]
@@ -57,7 +57,7 @@
     (when (and merged? (not paid?))
       [primary-button-button
        (merge {:on-click #(rf/dispatch [:confirm-payout claim])}
-              (if (and merged? (not paid?) (:payout_address bounty))
+              (if (and merged? (not paid?) (:payout-address bounty))
                 {}
                 {:disabled true})
               (when (and (or (bnt/confirming? bounty)
@@ -71,11 +71,11 @@
 
 
 (defn confirm-row [bounty claim]
-  (let [payout-address-available? (:payout_address bounty)]
+  (let [payout-address-available? (:payout-address bounty)]
     [:div
      (when-not payout-address-available?
        [:div.bg-sob-blue-o-20.pv2.ph3.br3.mb3.f6
-        [:p [:span.pg-med (or (:user_name claim) (:user_login claim))
+        [:p [:span.pg-med (or (:user-name claim) (:user-login claim))
              "’s payment address is pending."] " You will be able to confirm the payment once the address is provided."]])
      [:div.cf
       [:div.dt.fr
@@ -97,10 +97,10 @@
    "View Pull Request"])
 
 (defn claim-card [bounty claim {:keys [render-view-claim-button?] :as opts}]
-  (let [{user-name :user_name
-         user-login :user_login
-         avatar-url :user_avatar_url} claim
-        winner-login (:winner_login bounty)]
+  (let [{user-name :user-name
+         user-login :user-login
+         avatar-url :user-avatar-url} claim
+        winner-login (:winner-login bounty)]
     [:div.pv2
      [:div.flex
       {:class (when (and (bnt/paid? claim) (not (= user-login winner-login)))
@@ -118,7 +118,7 @@
              [:span "No payout"]))]
         [:div.f6.gray "Submitted a claim via "
          [:a.gray {:href (pr-url claim)}
-          (str (:repo_owner claim) "/" (:repo_name claim) " PR #" (:pr_number claim))]]
+          (str (:repo-owner claim) "/" (:repo-name claim) " PR #" (:pr-number claim))]]
         ;; We render the button twice for difference screen sizes, first button is for small screens:
         ;; 1) db + dn-ns: `display: block` + `display: none` for not-small screens
         ;; 2) dn + db-ns: `display: none` + `display: block` for not-small screens
@@ -139,7 +139,7 @@
           ;; FIXME we remove all bounties that Andy 'won' as this basically
           ;; has been our method for revocations. This needs to be cleaned up ASAP.
           ;; https://github.com/status-im/open-bounty/issues/284
-          (for [bounty (filter #(not= "andytudhope" (:winner_login %)) bounties)
+          (for [bounty (filter #(not= "andytudhope" (:winner-login %)) bounties)
                 ;; Identifying the winning claim like this is a bit
                 ;; imprecise if there have been two PRs for the same
                 ;; bounty by the same contributor
@@ -147,8 +147,8 @@
                 ;; ignore this edge case for a first version
                 :let [winning-claim (->> (:claims bounty)
                                          (filter #(and (bnt/merged? %)
-                                                       (= (:user_login %)
-                                                          (:winner_login bounty))))
+                                                       (= (:user-login %)
+                                                          (:winner-login bounty))))
                                          util/assert-first)]]
             ^{:key (:issue-id bounty)}
             [:div.mb3.br3.shadow-6.bg-white
@@ -176,7 +176,7 @@
                        (str "Current Claims (" (count claims) ")")
                        "Current Claim")]
               (for [[idx claim] (zipmap (range) claims)]
-                ^{:key (:pr_id claim)}
+                ^{:key (:pr-id claim)}
                 [:div
                  {:class (when (> idx 0) "bt b--light-gray pt2")}
                  [claim-card bounty claim {:render-view-claim-button? true}]])]]))))
@@ -275,7 +275,7 @@
   (let [bounty @(rf/subscribe [:revoke-modal-bounty])]
     (fn []
       (when bounty
-        (let [owner-address (:owner_address bounty)]
+        (let [owner-address (:owner-address bounty)]
           ;; width requires a deliberate override of semantic.min.css
           [:div.ui.active.modal.br3 {:style {:top   100
                                              :width 650}}
@@ -325,7 +325,7 @@
     [:div
      [bounty-title-link bounty {:show-date? false :max-length 60}]
      [:div.f6.mt1.gray
-      "Paid out to " [:span.pg-med.fw5 "@" (or (:winner_login bounty)
+      "Paid out to " [:span.pg-med.fw5 "@" (or (:winner-login bounty)
                                                ;; use repo owner for revoked bounties
                                                ;; where no winner login is set
                                                (:owner-login bounty))]]]
@@ -358,17 +358,17 @@
       (when @banner-info
         (into [:div]
               (for [revoking-bounty @banner-info]
-                ^{:key (:contract_address revoking-bounty)}
+                ^{:key (:contract-address revoking-bounty)}
                 [:div.relative.pa3.pr4.bg-sob-green.br3.nt1
                  [:div
                   (case (:confirming-account revoking-bounty)
                     :commiteth [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
                                 [:span.pg-med "Transaction sent."] " Your refund requires two confirmations. After the first one "
-                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " completes "]
+                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract-address revoking-bounty)) :target "_blank"} " completes "]
                                 "you'll be prompted to sign the second via metamask."]
                     :owner [:p.v-mid [check-box "ic-check-circle-black-24dp-2x.png"]
                                 [:span.pg-med "Transaction sent."] " Once your metamask transaction is confirmed your revocation will be complete. Follow the final step "
-                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract_address revoking-bounty)) :target "_blank"} " here.  "]])]]))))))
+                                [:a.sob-blue.pg-med {:href (etherscan-address-url (:contract-address revoking-bounty)) :target "_blank"} " here.  "]])]]))))))
 
 (defn salute []
   (let [msg-info (rf/subscribe [:dashboard/banner-msg])]
