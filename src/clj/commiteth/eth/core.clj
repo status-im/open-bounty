@@ -48,7 +48,10 @@
     (try
       (eth-gasstation-gas-price)
       (catch Throwable t
-        (log/error "Failed to get gas price with ethgasstation API" t)
+        (let [cause (-> t
+                        Throwable->map
+                        :cause)]
+         (log/error "Failed to get gas price with ethgasstation API" cause))
         (gas-price-from-config)))
     (gas-price-from-config)))
 
