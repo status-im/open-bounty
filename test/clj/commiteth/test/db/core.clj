@@ -32,7 +32,7 @@
             :login   "torvalds"
             :name    "Linus Torvalds"
             :email   nil
-            :avatar_url ""
+            :avatar-url ""
             :address "address"
             :created nil
             :welcome-email-sent 0
