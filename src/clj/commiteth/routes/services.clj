@@ -227,7 +227,7 @@
                           :auth-rules authenticated?
                           :current-user user
                           (do
-                            (log/debug "/bounty/X/payout" params)
+                            (log/info "/bounty/X/payout" params)
                             (let [{issue       :issue
                                    payout-hash :payout-hash} params
                                   result                     (bounties-db/update-payout-hash
