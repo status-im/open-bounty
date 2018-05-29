@@ -1,6 +1,7 @@
 (ns commiteth.db.issues
   (:require [commiteth.db.core :refer [*db*] :as db]
             [clojure.java.jdbc :as jdbc]
+            [commiteth.util.util :refer [to-db-map]]
             [clojure.set :refer [rename-keys]]
             [clojure.tools.logging :as log]))
 
@@ -71,29 +72,25 @@
   (jdbc/with-db-connection [con-db *db*]
     (db/list-pending-deployments con-db)))
 
-(defn update-eth-balance
-  [contract-address balance-eth]
+(defn update-balances
+  [contract-address balance-eth token-balances usd-value]
   (jdbc/with-db-connection [con-db *db*]
-    (db/update-eth-balance con-db {:contract_address contract-address
-                                   :balance_eth balance-eth})))
-
-(defn update-token-balances
-  [contract-address balances]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-token-balances con-db {:contract_address contract-address
-                                      :token_balances balances})))
-
-(defn update-usd-value
-  [contract-address usd-value]
-  (jdbc/with-db-connection [con-db *db*]
-    (db/update-usd-value con-db {:contract_address contract-address
-                                 :usd_value usd-value})))
+    (db/update-balances con-db (to-db-map contract-address
+                                          balance-eth
+                                          token-balances
+                                          usd-value))))
 
 (defn update-open-status
   [issue-id is-open]
   (jdbc/with-db-connection [con-db *db*]
     (db/update-issue-open con-db {:issue_id issue-id
                                   :is_open is-open})))
+
+(defn reset-bot-confirmation
+  "resets execute and confirm hash to null for given issue id"
+  [issue-id]
+  (jdbc/with-db-connection [con-db *db*]
+    (db/reset-bot-confirmation con-db {:issue_id issue-id})))
 
 (defn is-bounty-issue?
   [issue-id]

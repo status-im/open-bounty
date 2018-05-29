@@ -1,6 +1,7 @@
 (ns commiteth.routes.services
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
+            [compojure.api.exception :as ex]
             [schema.core :as s]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
@@ -10,16 +11,20 @@
             [commiteth.db.usage-metrics :as usage-metrics]
             [commiteth.db.repositories :as repositories]
             [commiteth.db.bounties :as bounties-db]
+            [commiteth.db.issues :as issues]
             [commiteth.bounties :as bounties]
             [commiteth.eth.core :as eth]
+            [commiteth.eth.tracker :as tracker]
             [commiteth.github.core :as github]
             [clojure.tools.logging :as log]
             [commiteth.config :refer [env]]
             [commiteth.util.util :refer [usd-decimal->str
-                                         eth-decimal->str]]
+                                         eth-decimal->str
+                                         to-db-map]]
             [crypto.random :as random]
             [clojure.set :refer [rename-keys]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [commiteth.eth.multisig-wallet :as multisig]))
 
 (defn add-bounties-for-existing-issues? []
   (env :add-bounties-for-existing-issues false))
@@ -63,26 +68,14 @@
 (def bounty-renames
   ;; TODO this needs to go away ASAP we need to be super consistent
   ;; about keys unless we will just step on each others toes constantly
-  {:user_name :display-name
-   :user_avatar_url :avatar-url
-   :issue_title :issue-title
-   :pr_title :pr-title
-   :pr_number :pr-number
-   :pr_id :pr-id
-   :type :item-type
-   :repo_name :repo-name
-   :repo_owner :repo-owner
-   :issue_number :issue-number
-   :issue_id :issue-id
-   :value_usd :value-usd
-   :claim_count :claim-count
-   :balance_eth :balance-eth
-   :user_has_address :user-has-address})
+  {:user-name :display-name
+   :user-avatar-url :avatar-url
+   :type :item-type})
 
 (defn ^:private enrich-owner-bounties [owner-bounty]
   (let [claims      (map
-                     #(update % :value_usd usd-decimal->str)
-                     (bounties-db/bounty-claims (:issue_id owner-bounty)))
+                     #(update % :value-usd usd-decimal->str)
+                     (bounties-db/bounty-claims (:issue-id owner-bounty)))
         with-claims (assoc owner-bounty :claims claims)]
     (-> with-claims
         (rename-keys bounty-renames)
@@ -98,9 +91,7 @@
          (into {}))))
 
 (defn top-hunters []
-  (let [renames {:user_name :display-name
-                 :avatar_url :avatar-url
-                 :total_usd :total-usd}]
+  (let [renames {:user-name :display-name}]
     (map #(-> %
               (rename-keys renames)
               (update :total-usd usd-decimal->str))
@@ -155,13 +146,25 @@
   (let [whitelist (env :user-whitelist #{})]
     (whitelist user)))
 
+(defn execute-revocation [issue-id contract-address payout-address]
+  (log/info (str "executing revocation for " issue-id "at" contract-address))
+  (try 
+    (let [tx-info (bounties/execute-payout issue-id contract-address payout-address)]
+      (:tx-hash tx-info))
+    (catch Throwable ex
+      (log/errorf ex "error revoking funds for %s" issue-id))))
+
+
 (defapi service-routes
   (when (:dev env)
-    {:swagger {:ui   "/swagger-ui"
-               :spec "/swagger.json"
-               :data {:info {:version     "0.1"
-                             :title       "commitETH API"
-                             :description "commitETH API"}}}})
+    {:swagger    {:ui   "/swagger-ui"
+                  :spec "/swagger.json"
+                  :data {:info {:version     "0.1"
+                                :title       "commitETH API"
+                                :description "commitETH API"}}}
+     :exceptions {:handlers 
+                  {::ex/request-parsing     (ex/with-logging ex/request-parsing-handler :info)
+                   ::ex/response-validation (ex/with-logging ex/response-validation-handler :error)}}})
 
   (context "/api" []
            (GET "/top-hunters" []
@@ -191,12 +194,12 @@
                     (POST "/" []
                           :auth-rules authenticated?
                           :current-user user
-                          :body [body {:address s/Str
-                                       :is_hidden_in_hunters s/Bool}]
+                          :body [body {:address              s/Str
+                                       :is-hidden-in-hunters s/Bool}]
                           :summary "Updates user's fields."
 
-                          (let [user-id (:id user)
-                                {:keys [address]} body]
+                          (let [user-id           (:id user)
+                                {:keys [address is-hidden-in-hunters]} body]
 
                             (when-not (eth/valid-address? address)
                               (log/debugf "POST /user: Wrong address %s" address)
@@ -205,7 +208,8 @@
                             (db/with-tx
                               (when-not (db/user-exists? {:id user-id})
                                 (not-found! "No such a user."))
-                              (db/update! :users body ["id = ?" user-id]))
+                              (db/update! :users (to-db-map address is-hidden-in-hunters)
+                                          ["id = ?" user-id]))
 
                             (ok)))
 
@@ -226,10 +230,10 @@
                             (log/info "/bounty/X/payout" params)
                             (let [{issue       :issue
                                    payout-hash :payout-hash} params
-                                  result (bounties-db/update-payout-hash
-                                          (Integer/parseInt issue)
-                                          payout-hash)]
-                              (log/info "result" result)
+                                  result                     (bounties-db/update-payout-hash
+                                                              (Integer/parseInt issue)
+                                                              payout-hash)]
+                              (log/debug "result" result)
                               (if (= 1 result)
                                 (ok)
                                 (internal-server-error)))))
@@ -237,4 +241,22 @@
                          :auth-rules authenticated?
                          :current-user user
                          (log/debug "/user/bounties")
-                         (ok (user-bounties user))))))
+                         (ok (user-bounties user)))
+                    (POST "/revoke"  {{issue-id :issue-id} :params}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (let [{:keys [contract-address owner-address]} (issues/get-issue-by-id issue-id)]
+                            (do (log/infof "calling revoke-initiate for %s with %s %s" issue-id contract-address owner-address)
+                                (if-let [execute-hash (execute-revocation issue-id contract-address owner-address)]
+                                  (ok {:issue-id         issue-id
+                                       :execute-hash     execute-hash
+                                       :contract-address contract-address})
+                                  (bad-request (str "Unable to withdraw funds from " contract-address))))))
+                    (POST "/remove-bot-confirmation"  {{issue-id :issue-id} :params}
+                          :auth-rules authenticated?
+                          :current-user user
+                          (do (log/infof "calling remove-bot-confirmation for %s " issue-id)
+                              ;; if this resulted in updating a row, return success
+                              (if (pos? (issues/reset-bot-confirmation issue-id))
+                                (ok (str "Updated execute and confirm hash for " issue-id))
+                                (bad-request (str "Unable to update execute and confirm hash for  " issue-id))))))))

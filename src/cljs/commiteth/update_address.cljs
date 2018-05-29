@@ -10,7 +10,7 @@
   (let [db (rf/subscribe [:db])
         updating-user (rf/subscribe [:get-in [:updating-user]])
         address (r/atom @(rf/subscribe [:get-in [:user :address]]))
-        hidden (r/atom @(rf/subscribe [:get-in [:user :is_hidden_in_hunters]]))]
+        hidden (r/atom @(rf/subscribe [:get-in [:user :is-hidden-in-hunters]]))]
 
     (fn []
       (let [web3 (:web3 @db)
@@ -64,7 +64,7 @@
           [:button
            (merge {:on-click
                    #(rf/dispatch [:save-user-fields {:address @address
-                                                     :is_hidden_in_hunters @hidden}])
+                                                     :is-hidden-in-hunters @hidden}])
                    :disabled (str/blank? @address)
                    :class (str "ui button small update-address-button"
                                (when @updating-user

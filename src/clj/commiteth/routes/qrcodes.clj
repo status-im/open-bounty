@@ -12,21 +12,18 @@
   (context "/qr" []
            (GET "/:owner/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [owner repo issue hash]
                 (log/debug "qr PNG GET" owner repo issue hash)
-                (if-let [{address      :contract_address
-                          repo         :repo
-                          issue-id     :issue_id
-                          balance-eth  :balance_eth}
+                (if-let [{:keys [contract-address repo issue-id balance-eth]}
                          (bounties/get-bounty owner
                                               repo
                                               (Integer/parseInt issue))]
                   (do
-                    (log/debug "address:" address)
+                    (log/debug "address:" contract-address)
                     (log/debug owner repo issue balance-eth)
                     (log/debug hash (github/github-comment-hash owner repo issue balance-eth))
-                    (if address
-                      (if-let [{png-data :png_data}
+                    (if contract-address
+                      (if-let [{:keys [png-data]}
                                (comment-images/get-image-data
-                                issue-id hash)]
+                                 issue-id hash)]
                         (do (log/debug "PNG found")
                             {:status 200
                              :content-type "image/png"

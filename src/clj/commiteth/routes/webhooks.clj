@@ -125,8 +125,8 @@
                  :pr_number pr-number
                  :title     pr-title
                  :user_id   user-id
-                 :issue_number (:issue_number issue)
-                 :issue_id (:issue_id issue)
+                 :issue_number (:issue-number issue)
+                 :issue_id (:issue-id issue)
                  :state event-type}]
     ;; TODO: in the opened case if the submitting user has no
     ;; Ethereum address stored, we could post a comment to the
@@ -134,17 +134,17 @@
     ;; merged
     (cond
       open-or-edit? (do
-                      (log/infof "issue %s: PR with reference to bounty issue opened" (:issue_number issue))
+                      (log/infof "issue %s: PR with reference to bounty issue opened" (:issue-number issue))
                       (pull-requests/save (merge pr-data {:state :opened
                                                           :commit_sha head-sha})))
       close? (if merged?
-               (do (log/infof "issue %s: PR with reference to bounty issue merged" (:issue_number issue))
+               (do (log/infof "issue %s: PR with reference to bounty issue merged" (:issue-number issue))
                    (pull-requests/save
                     (merge pr-data {:state :merged
                                     :commit_sha head-sha}))
-                   (issues/update-commit-sha (:issue_id issue) head-sha)
-                   (db-bounties/update-winner-login (:issue_id issue) login))
-               (do (log/infof "issue %s: PR with reference to bounty issue closed with no merge" (:issue_number issue))
+                   (issues/update-commit-sha (:issue-id issue) head-sha)
+                   (db-bounties/update-winner-login (:issue-id issue) login))
+               (do (log/infof "issue %s: PR with reference to bounty issue closed with no merge" (:issue-number issue))
                    (pull-requests/save
                     (merge pr-data {:state :closed
                                     :commit_sha head-sha})))))))
@@ -177,7 +177,7 @@
     (doseq [issue issues]
       (if-not (:commit_sha issue) ; no PR has been merged yet referencing this issue
         (do
-          (log/info "Referenced bounty issue found" owner repo (:issue_number issue))
+          (log/info "Referenced bounty issue found" owner repo (:issue-number issue))
           (handle-claim issue
                         user-id
                         login name

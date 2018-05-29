@@ -45,7 +45,7 @@
 (defn bounty-item [bounty]
   (let [open-bounty-claims (rf/subscribe [::subs/open-bounty-claims])]
     (fn [bounty]
-      (let [{avatar-url   :repo_owner_avatar_url
+      (let [{avatar-url   :repo-owner-avatar-url
              owner        :repo-owner
              repo-name    :repo-name
              issue-title  :issue-title

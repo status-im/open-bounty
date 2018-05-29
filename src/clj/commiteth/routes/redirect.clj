@@ -27,10 +27,10 @@
   [token]
   (let [user (github/get-user token)
         {email   :email
-         user-id :id} user]
-    (log/debug "get-or-create-user" user)
-    (or
-      (users/get-user user-id)
+         user-id :id} user
+        db-user (users/get-user user-id)]
+    (if (:id db-user)
+      db-user
       (create-user token user))))
 
 (defroutes redirect-routes

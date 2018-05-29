@@ -7,6 +7,7 @@
    [mount.core :refer [defstate]]
    [migratus.core :as migratus]
    [mpg.core :as mpg]
+   [hugsql.core]
    [clojure.string :as str])
   (:import org.postgresql.util.PGobject
            java.sql.Array
@@ -92,3 +93,30 @@
 
 (defn update! [& args]
   (apply jdbc/update! *db* args))
+
+(defn convert-keys-to-lisp-case [res]
+  (->> res
+       (map #(vector (keyword (str/replace (name (first %1)) "_" "-")) 
+                     (second %1)))
+       (into {})))
+
+(defn result-one-sql->lisp
+  [this result options]
+  (convert-keys-to-lisp-case (first result)))
+
+(defn result-many-sql->lisp
+  [this result options]
+  (map convert-keys-to-lisp-case result))
+
+(defmethod hugsql.core/hugsql-result-fn :1 [sym]
+  'commiteth.db.core/result-one-sql->lisp)
+
+(defmethod hugsql.core/hugsql-result-fn :one [sym]
+  'commiteth.db.core/result-one-sql->lisp)
+
+(defmethod hugsql.core/hugsql-result-fn :* [sym]
+  'commiteth.db.core/result-many-sql->lisp)
+
+(defmethod hugsql.core/hugsql-result-fn :many [sym]
+  'commiteth.db.core/result-many-sql->lisp)
+

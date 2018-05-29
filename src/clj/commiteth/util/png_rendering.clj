@@ -1,7 +1,6 @@
 (ns commiteth.util.png-rendering
   (:require [commiteth.layout :refer [render]]
             [commiteth.config :refer [env]]
-            [commiteth.github.core :as github]
             [commiteth.db.comment-images :as db]
             [commiteth.db.bounties :as db-bounties]
             [clj.qrgen :as qr]
@@ -57,21 +56,6 @@
       (do (log/error "Failed to generate PNG file" err exit out html)
           nil))))
 
-
-(defn export-comment-image
-  "Retrieve image PNG from DB and write to file"
-  [owner repo issue-number filename]
-  (let [{owner :owner
-         repo :repo
-         issue-id :issue_id
-         balance-eth :balance_eth} (db-bounties/get-bounty owner repo issue-number)
-        hash (github/github-comment-hash
-              owner
-              repo
-              issue-number
-              balance-eth)]
-    (with-open [w (io/output-stream filename)]
-      (.write w (:png_data (db/get-image-data issue-id hash))))))
 
 
 (comment

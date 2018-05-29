@@ -15,6 +15,10 @@
             [commiteth.db.issues :as db-issues]
             [clojure.tools.logging :as log]
             [cheshire.core :as json]
+            [commiteth.util.png-rendering :as png-rendering]
+            [commiteth.db.issues :as db-issues]
+            [commiteth.db.bounties :as db-bounties]
+            [commiteth.db.comment-images :as comment-images]
             [clojure.string :as str])
   (:import [java.util UUID]))
 
@@ -230,7 +234,7 @@
     (str "Contract address: [" addr "](" url-base "/address/" addr ")\n")))
 
 (defn generate-open-comment
-  [owner repo issue-number contract-address eth-balance eth-balance-str tokens]
+  [owner repo issue-number contract-address eth-balance tokens]
   (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance))
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s ETH\n"
@@ -243,14 +247,14 @@
                  (if (on-testnet?)
                    "To fund it, send test ETH or test ERC20/ERC223 tokens to the contract address."
                    "To fund it, send ETH or ERC20/ERC223 tokens to the contract address."))
-            eth-balance-str image-url site-url)))
+            (.toPlainString (bigdec eth-balance)) image-url site-url)))
 
 (defn learn-more-text []
   (let [site-url (md-url (server-address) (server-address))]
     (format "Visit %s to learn more.\n" site-url)))
 
 (defn generate-merged-comment
-  [contract-address eth-balance-str tokens winner-login winner-address-missing?]
+  [contract-address eth-balance tokens winner-login winner-address-missing?]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
                (contract-addr-text contract-address)
@@ -260,17 +264,17 @@
                                  "Pending maintainer confirmation")  "\n")
                "Winner: %s\n"
                (learn-more-text))
-          eth-balance-str winner-login))
+          (.toPlainString (bigdec eth-balance)) winner-login))
 
 (defn generate-paid-comment
-  [contract-address eth-balance-str tokens payee-login]
+  [contract-address eth-balance tokens payee-login]
   (format (str "Balance: %s ETH\n"
                (token-balances-text tokens)
                (contract-addr-text contract-address)
                (network-text)
                "Paid to: %s\n"
                (learn-more-text))
-          eth-balance-str payee-login))
+          (.toPlainString (bigdec eth-balance)) payee-login))
 
 (defn make-patch-request [end-point positional query]
   (let [{:keys [auth oauth-token]
@@ -289,6 +293,22 @@
                                                   :user-agent
                                                   :otp))]
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
+
+(defn update-bounty-comment-image [{:keys [issue-id owner repo issue-number contract-address balance-eth tokens]}]
+  (let [hash (github-comment-hash owner repo issue-number balance-eth)
+        issue-url (str owner "/" repo "/issues/" (str issue-number))
+        png-data (png-rendering/gen-comment-image
+                  contract-address
+                  (.toPlainString (bigdec balance-eth))
+                  tokens
+                  issue-url)]
+    (log/debug "update-bounty-comment-image" issue-id owner repo issue-number)
+    (log/debug contract-address balance-eth)
+    (log/debug "hash" hash)
+
+    (if png-data
+      (comment-images/save-image! issue-id hash png-data)
+      (log/error "Failed ot generate PNG"))))
 
 (defn post-deploying-comment
   [issue-id tx-id]
@@ -310,52 +330,51 @@
 
 (defn update-comment
   "Update comment for an open bounty issue"
-  [owner repo comment-id issue-number contract-address eth-balance eth-balance-str tokens]
-  (let [comment (generate-open-comment owner
-                                       repo
-                                       issue-number
-                                       contract-address
-                                       eth-balance
-                                       eth-balance-str
-                                       tokens)]
-    (log/debug (str "Updating " owner "/" repo "/" issue-number
-                    " comment #" comment-id " with contents: " comment))
-    (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
-                                  [owner repo comment-id]
-                                  (assoc (self-auth-params) :body comment))]
-      (tentacles/safe-parse (http/request req)))))
-
-
-
-(defn update-merged-issue-comment
-  "Update comment for a bounty issue with winning claim (waiting to be
-  signed off by maintainer/user ETH address missing)"
-  [owner repo comment-id contract-address eth-balance-str tokens winner-login winner-address-missing?]
-  (let [comment (generate-merged-comment contract-address
-                                         eth-balance-str
+  [{:keys [issue-id owner repo comment-id issue-number contract-address 
+           balance-eth tokens
+           payout-receipt
+           owner-login
+           winner-login transaction-hash] :as issue}
+   state]
+  (let [comment (case state
+                  :deploying
+                  (generate-deploying-comment owner repo issue-number transaction-hash)
+                  (:opened :update-balances)
+                  (generate-open-comment owner
+                                         repo
+                                         issue-number
+                                         contract-address
+                                         balance-eth
+                                         tokens)
+                  :pending-sob-confirmation
+                  (generate-merged-comment contract-address
+                                           balance-eth
+                                           tokens
+                                           (or winner-login owner-login)
+                                           false)
+                  :pending-contributor-address
+                  (generate-merged-comment contract-address
+                                           balance-eth
+                                           tokens
+                                           (or winner-login owner-login)
+                                           true)
+                  :paid
+                  (generate-paid-comment contract-address
+                                         balance-eth
                                          tokens
-                                         winner-login
-                                         winner-address-missing?)]
-    (log/debug (str "Updating merged bounty issue (" owner "/" repo ")"
-                    " comment#" comment-id " with contents: " comment))
-    (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
-                                  [owner repo comment-id]
-                                  (assoc (self-auth-params) :body comment))]
-      (tentacles/safe-parse (http/request req)))))
-
-(defn update-paid-issue-comment
-  "Update comment for a paid out bounty issue"
-  [owner repo comment-id contract-address eth-balance-str tokens payee-login]
-  (let [comment (generate-paid-comment contract-address
-                                       eth-balance-str
-                                       tokens
-                                       payee-login)]
-    (log/debug (str "Updating paid bounty  (" owner "/" repo ")"
-                    " comment#" comment-id " with contents: " comment))
-    (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
-                                  [owner repo comment-id]
-                                  (assoc (self-auth-params) :body comment))]
-      (tentacles/safe-parse (http/request req)))))
+                                         (or winner-login owner-login))
+                  nil)]
+    (log/info (str "Updating " owner "/" repo "/" issue-number
+                    " comment #" comment-id " with contents: " comment))
+    (if (= state :deploying) 
+      (let [resp (issues/create-comment owner repo issue-number comment (self-auth-params))
+            comment-id (:id resp)]
+        (db-issues/update-comment-id issue-id comment-id))
+      (when comment
+        (let [req (make-patch-request "repos/%s/%s/issues/comments/%s"
+                                      [owner repo comment-id]
+                                      (assoc (self-auth-params) :body comment))]
+          (tentacles/safe-parse (http/request req)))))))
 
 (defn get-issue
   [owner repo issue-number]
