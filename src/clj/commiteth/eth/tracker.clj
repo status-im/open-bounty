@@ -125,9 +125,7 @@
   "Release nonces related to unmined txs,
    and set relevant DB fields to null thereby
    marking them as candidates for re-execution"
-  (doseq [{issue-id :issue_id
-           tx-hash :tx_hash
-           type :type} unmined-txs]
+  (doseq [{:keys [issue-id tx-hash type]} unmined-txs]
     (log/infof "issue %s: resetting tx operation: %s for hash: %s" issue-id type tx-hash)
     (issues/save-tx-info! issue-id nil type))
   (prune-txs tx-tracker unmined-txs))
