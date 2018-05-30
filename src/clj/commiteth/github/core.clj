@@ -366,7 +366,7 @@
                   nil)]
     (log/info (str "Updating " owner "/" repo "/" issue-number
                     " comment #" comment-id " with contents: " comment))
-    (if (= state :deploying) 
+    (if (and (= state :deploying) (nil? comment-id)) 
       (let [resp (issues/create-comment owner repo issue-number comment (self-auth-params))
             comment-id (:id resp)]
         (db-issues/update-comment-id issue-id comment-id))
