@@ -51,4 +51,7 @@
  :user-whitelist #{}
 
  ;; used for blacklisting tokens from token registry data
- :token-blacklist #{}}
+ :token-blacklist #{}
+
+ ;; directory to store qr images, relative to resources/public or absolute path
+ :qr-dir ""}

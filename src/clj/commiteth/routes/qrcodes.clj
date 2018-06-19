@@ -7,7 +7,8 @@
             [clojure.tools.logging :as log])
   (:import [java.io ByteArrayInputStream]))
 
-
+;; TODO(endenwer) qr is handler as static image now. This route is used for old comments.
+;; Remove it when it is not necessary anymore.
 (defapi qr-routes
   (context "/qr" []
            (GET "/:owner/:repo/bounty/:issue{[0-9]{1,9}}/:hash/qr.png" [owner repo issue hash]
@@ -19,7 +20,7 @@
                   (do
                     (log/debug "address:" contract-address)
                     (log/debug owner repo issue balance-eth)
-                    (log/debug hash (github/github-comment-hash owner repo issue balance-eth))
+                    (log/debug hash)
                     (if contract-address
                       (if-let [{:keys [png-data]}
                                (comment-images/get-image-data

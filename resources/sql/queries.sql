@@ -621,6 +621,11 @@ FROM issue_comment
 WHERE issue_id = :issue_id
 AND comment_hash = :hash;
 
+-- :name get-issue-comment-hash :? :1
+-- :doc retrieve image hash for given issue's github comment
+SELECT comment_hash
+FROM issue_comment
+WHERE issue_id = :issue_id;
 
 -- :name top-hunters :? :*
 -- :doc top 5 list of users that have reveived bounty payouts with sum of
