@@ -51,7 +51,7 @@
         (let [cause (-> t
                         Throwable->map
                         :cause)]
-         (log/error "Failed to get gas price with ethgasstation API" cause))
+         (log/debug "Failed to get gas price with ethgasstation API" cause))
         (gas-price-from-config)))
     (gas-price-from-config)))
 
