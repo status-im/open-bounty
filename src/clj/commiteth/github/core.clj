@@ -19,7 +19,8 @@
             [commiteth.db.issues :as db-issues]
             [commiteth.db.bounties :as db-bounties]
             [commiteth.db.comment-images :as comment-images]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.java.io :as io])
   (:import [java.util UUID]))
 
 (def ^:dynamic url "https://api.github.com/")
@@ -179,13 +180,14 @@
 
 
 (defn github-comment-hash
-  [owner repo issue-number balance]
-  (digest/sha-256 (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" owner repo issue-number balance)))
+  [owner repo issue-number balance tokens]
+  (digest/sha-256
+   (str "SALT_Yoh2looghie9jishah7aiphahphoo6udiju" owner repo issue-number balance tokens)))
 
 (defn- get-qr-url
-  [owner repo issue-number balance]
-  (let [hash (github-comment-hash owner repo issue-number balance)]
-    (str (server-address) (format "/qr/%s/%s/bounty/%s/%s/qr.png" owner repo issue-number hash))))
+  [owner repo issue-number balance tokens]
+  (let [hash (github-comment-hash owner repo issue-number balance tokens)]
+    (str (server-address) (format "/qr-image/%s.png" hash))))
 
 (defn- md-url
   ([text url]
@@ -235,7 +237,7 @@
 
 (defn generate-open-comment
   [owner repo issue-number contract-address eth-balance tokens]
-  (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance))
+  (let [image-url (md-image "QR Code" (get-qr-url owner repo issue-number eth-balance tokens))
         site-url  (md-url (server-address) (server-address))]
     (format (str "Current balance: %s ETH\n"
                  (token-balances-text tokens)
@@ -294,8 +296,30 @@
                                                   :otp))]
     (assoc req :body (json/generate-string (or raw-query proper-query)))))
 
+(defn- create-qr-image
+  [issue-id hash data]
+  (let [file-name (str (:qr-dir env) "/" hash ".png")]
+    (when-not (.isDirectory (io/file file-name))
+      (io/make-parents file-name))
+    (with-open [input-stream (io/input-stream data)
+                output-stream (io/output-stream file-name)]
+      (io/copy input-stream output-stream))))
+
+(defn- remove-qr-image
+  [hash]
+  (let [file-name (str (:qr-dir env) "/" hash ".png")]
+    (when (.exists (io/file file-name))
+      (io/delete-file file-name))))
+
+(defn- save-image
+  [issue-id hash png-data]
+  (let [old-hash (comment-images/get-hash issue-id)]
+    (create-qr-image issue-id hash png-data)
+    (comment-images/save-image! issue-id hash png-data)
+    (when (and (not (nil? old-hash)) (not= hash old-hash)) (remove-qr-image old-hash))))
+
 (defn update-bounty-comment-image [{:keys [issue-id owner repo issue-number contract-address balance-eth tokens]}]
-  (let [hash (github-comment-hash owner repo issue-number balance-eth)
+  (let [hash (github-comment-hash owner repo issue-number balance-eth tokens)
         issue-url (str owner "/" repo "/issues/" (str issue-number))
         png-data (png-rendering/gen-comment-image
                   contract-address
@@ -307,7 +331,7 @@
     (log/debug "hash" hash)
 
     (if png-data
-      (comment-images/save-image! issue-id hash png-data)
+      (save-image issue-id hash png-data)
       (log/error "Failed ot generate PNG"))))
 
 (defn post-deploying-comment

@@ -11,6 +11,12 @@
                                    :hash hash
                                    :png_data png-data})))
 
+(defn get-hash
+  [issue-id]
+  (:comment-hash
+   (jdbc/with-db-connection [con-db *db*]
+     (db/get-issue-comment-hash con-db {:issue_id issue-id}))))
+
 (defn get-image-data
   [issue-id hash]
   (jdbc/with-db-connection [con-db *db*]
