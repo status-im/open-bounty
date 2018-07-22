@@ -8,7 +8,7 @@
                  [macchiato/core "0.2.2"]
                  [macchiato/env "0.0.6"]
                  [mount "0.1.11"]
-                 [cljs-web3 "0.19.0-0-7"]
+                 [cljs-web3 "0.19.0-011"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.908"]]
   :min-lein-version "2.0.0"
