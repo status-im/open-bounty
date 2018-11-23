@@ -11,7 +11,7 @@ https://openbounty.status.im
 The `master` branch is automatically deployed here.
 
 Live testnet (Ropsten) version:
-https://openbounty.status.im:444
+https://test-openbounty.status.im
 The `develop` branch is automatically deployed here.
 
 ## Table of contents
